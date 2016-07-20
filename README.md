@@ -1,5 +1,8 @@
 # ArchGDAL
 
+[![Build Status](https://travis-ci.org/yeesian/ArchGDAL.jl.svg?branch=travis)](https://travis-ci.org/yeesian/ArchGDAL.jl)
+[![Coverage Status](https://coveralls.io/repos/github/yeesian/ArchGDAL.jl/badge.svg?branch=master)](https://coveralls.io/github/yeesian/ArchGDAL.jl?branch=master)
+
 ```julia
   | | |_| | | | (_| |  |  Version 0.4.6 (2016-06-19 17:16 UTC)
  _/ |\__'_|_|_|\__'_|  |  Official http://julialang.org/ release
