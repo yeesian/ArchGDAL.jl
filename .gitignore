@@ -1,5 +1,3 @@
 *.jl.cov
 *.jl.*.cov
 *.jl.mem
-test/gdalworkshop/
-test/tmp/*

@@ -1,6 +1,7 @@
 # ArchGDAL
 
 [![Build Status](https://travis-ci.org/yeesian/ArchGDAL.jl.svg?branch=travis)](https://travis-ci.org/yeesian/ArchGDAL.jl)
+[![Build status](https://ci.appveyor.com/api/projects/status/q4nw4rf7solrsn3q/branch/master?svg=true)](https://ci.appveyor.com/project/NgYeeSian/archgdal-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/yeesian/ArchGDAL.jl/badge.svg?branch=master)](https://coveralls.io/github/yeesian/ArchGDAL.jl?branch=master)
 
 ```julia

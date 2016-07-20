@@ -1,98 +1,177 @@
 using FactCheck
 import ArchGDAL; const AG = ArchGDAL
 
+"""
+function to copy fields (not the data) from one layer to another
+parameters:
+  fromLayer: layer object that contains the fields to copy
+  toLayer: layer object to copy the fields into
+"""
+function copyfields(fromlayer, tolayer)
+    featuredefn = AG.borrow_getlayerdefn(fromlayer)
+    for i in 0:(AG.nfield(featuredefn)-1)
+        fd = AG.borrow_getfielddefn(featuredefn, i)
+        if AG.gettype(fd) == GDAL.OFTReal
+            # to deal with errors like
+            # ERROR: GDALError (Warning, code 1):
+            # Value 18740682.1600000001 of field SHAPE_AREA of
+            # feature 1 not successfully written. Possibly due
+            # to too larger number with respect to field width
+            fwidth = AG.getwidth(fd)
+            if fwidth != 0
+                AG.setwidth!(fd, fwidth+1)
+        end end
+        AG.createfield!(tolayer, fd)
+    end
+end
+
+"""
+function to copy attributes from one feature to another
+(this assumes the features have the same attribute fields!)
+parameters:
+  fromFeature: feature object that contains the data to copy
+  toFeature: feature object that the data is to be copied into
+"""
+function copyattributes(fromfeature, tofeature)
+    for i in 0:(AG.nfield(fromfeature)-1)
+        if AG.isfieldset(fromfeature, i)
+            try
+                AG.setfield!(tofeature, i, AG.getfield(fromfeature, i))
+            catch
+                println(fromfeature)
+                println(tofeature)
+                println("$i: $(AG.getfield(fromfeature, i))")
+    end end end
+end
+
+# function reproject(inFN, inEPSG, outEPSG)
+#     AG.fromEPSG(inEPSG) do inspatialref
+#     AG.fromEPSG(outEPSG) do outspatialref
+#     AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
+#     AG.read(inFN) do inDS
+#     AG.create("", "MEMORY") do outDS
+#         inlayer = AG.borrow_getlayer(inDS, 0)
+#         outlayer = AG.createlayer(outDS,
+#                         "outlayer",
+#                         geom = AG.getgeomtype(AG.borrow_getlayerdefn(inlayer)))
+#         copyfields(inlayer, outlayer)
+#         featuredefn = AG.borrow_getlayerdefn(outlayer)
+#         for infeature in inlayer
+#             geom = AG.borrow_getgeom(infeature)
+#             AG.createfeature(featuredefn) do outfeature
+#                 AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
+#                 copyattributes(infeature, outfeature)
+#                 AG.createfeature(outlayer, outfeature)
+#         end end
+#         println(outlayer)
+#     end
+#     end
+#     end
+#     println(AG.toWKT(AG.morphtoESRI!(outspatialref)))
+#     end
+#     end
+# end
+
 AG.registerdrivers() do
 
+facts("Homework 1") do
 AG.read("ospy/data1/sites.shp") do input
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
-    facts("Homework 1(a)") do
-        open("tmp/hw1a.txt", "w") do file
-            for feature in AG.borrow_getlayer(input, 0)
-                id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
-                (x,y) = AG.getpoint(AG.borrow_getgeomfield(feature, 0), 0)
-                write(file, "$id $x $y $cover\n")
-    end end end
+    for feature in AG.borrow_getlayer(input, 0)
+        id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
+        (x,y) = AG.getpoint(AG.borrow_getgeomfield(feature, 0), 0)
+        println("$id $x $y $cover")
+    end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
-    facts("Homework 1(b)") do
-        # version 1
-        AG.create("tmp/hw1b.shp", "ESRI Shapefile") do output
-            inlayer = AG.borrow_getlayer(input, 0)
-            outlayer = AG.createlayer(output, "hw1b", geom=GDAL.wkbPoint)
-            inlayerdefn = AG.borrow_getlayerdefn(inlayer)
-            AG.createfield!(outlayer, AG.borrow_getfielddefn(inlayerdefn, 0))
-            AG.createfield!(outlayer, AG.borrow_getfielddefn(inlayerdefn, 1))
-            for infeature in inlayer
-                id = AG.getfield(infeature, 0)
-                cover = AG.getfield(infeature, 1)
-                if cover == "trees"
-                    AG.createfeature(outlayer) do outfeature
-                        AG.setgeom!(outfeature, AG.borrow_getgeom(infeature))
-                        AG.setfield!(outfeature, 0, id)
-                        AG.setfield!(outfeature, 1, cover)
-        end end end end
-
-        # version 2
-        AG.create("tmp/hw1b.shp", "ESRI Shapefile") do output
-            AG.executesql(input, """SELECT * FROM sites
-                                    WHERE cover = 'trees' """) do results
-                AG.copylayer(output, results, "hw1b")
-end end end end
-    
-#reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
-facts("Homework 2(a)") do
-    # We first create a "tmp/hw2a.shp" file that we use for Homework 2(b)
-    open("ospy/data2/ut_counties.txt", "r") do file
-        AG.create("tmp/hw2a.shp", "ESRI Shapefile") do output
-            layer = AG.createlayer(output, "hw2a", geom=GDAL.wkbPolygon)
-            AG.createfielddefn("name", GDAL.OFTString) do fielddefn
-                AG.setwidth!(fielddefn, 30)
-                AG.createfield!(layer, fielddefn)
-            end
-            for line in readlines(file)
-                (name, coords) = split(line, ":")
-                coordlist = split(coords, ",")
-                AG.createfeature(layer) do feature
-                    AG.setfield!(feature, 0, name)
-                    AG.createpolygon() do poly
-                        ring = AG.unsafe_createlinearring()
-                        for xy in map(split, coordlist)
-                            AG.addpoint!(ring, parse(Float64, xy[1]),
-                                               parse(Float64, xy[2]))
-                        end
-                        AG.addgeomdirectly!(poly, ring)
-                        AG.setgeom!(feature, poly)    
-end end end end end end
-
-# adapted from http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2b.py
-facts("Homework 2(b)") do
-    AG.fromEPSG(4269) do inspatialref
-    AG.fromEPSG(26912) do outspatialref
-    AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
-        AG.read("tmp/hw2a.shp") do input
-        AG.create("tmp/hw2b.shp", "ESRI Shapefile") do output
-            inlayer = AG.borrow_getlayer(input, 0)
-            outlayer = AG.createlayer(output, "hw2b", geom=GDAL.wkbPolygon)
-            infeaturedefn = AG.borrow_getlayerdefn(inlayer)
-            nameindex = AG.getfieldindex(infeaturedefn, "name")
-            fielddefn = AG.borrow_getfielddefn(infeaturedefn, nameindex)
-            AG.createfield!(outlayer, fielddefn)
-            for infeature in inlayer
+    # version 1
+    AG.create("", "MEMORY") do output
+        inlayer = AG.borrow_getlayer(input, 0)
+        outlayer = AG.createlayer(output, "hw1b", geom=GDAL.wkbPoint)
+        inlayerdefn = AG.borrow_getlayerdefn(inlayer)
+        AG.createfield!(outlayer, AG.borrow_getfielddefn(inlayerdefn, 0))
+        AG.createfield!(outlayer, AG.borrow_getfielddefn(inlayerdefn, 1))
+        for infeature in inlayer
+            id = AG.getfield(infeature, 0)
+            cover = AG.getfield(infeature, 1)
+            if cover == "trees"
                 AG.createfeature(outlayer) do outfeature
-                    geom = AG.borrow_getgeom(infeature)
-                    AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
-                    AG.setfield!(outfeature,0,AG.getfield(infeature, nameindex))
+                    AG.setgeom!(outfeature, AG.borrow_getgeom(infeature))
+                    AG.setfield!(outfeature, 0, id)
+                    AG.setfield!(outfeature, 1, cover)
         end end end
-        end
-        open("tmp/hw2b.prj", "w") do file
-            write(file, AG.toWKT(AG.morphtoESRI!(outspatialref)))
-        end
+        println(output)
     end
+
+    # version 2
+    AG.create("", "MEMORY") do output
+        AG.executesql(input, """SELECT * FROM sites
+                                WHERE cover = 'trees' """) do results
+            println(results)
+            AG.copylayer(output, results, "hw1b")
+        end
+        println(output)
+    end
+end
+end
+    
+facts("Homework 2") do
+    # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
+    open("ospy/data2/ut_counties.txt", "r") do file
+    AG.create("", "MEMORY") do output
+        layer = AG.createlayer(output, "hw2a", geom=GDAL.wkbPolygon)
+        println(layer)
+        AG.createfielddefn("name", GDAL.OFTString) do fielddefn
+            AG.setwidth!(fielddefn, 30)
+            AG.createfield!(layer, fielddefn)
+        end
+        println(layer)
+        for line in readlines(file)
+            (name, coords) = split(line, ":")
+            coordlist = split(coords, ",")
+            AG.createfeature(layer) do feature
+                AG.setfield!(feature, 0, name)
+                AG.createpolygon() do poly
+                    ring = AG.unsafe_createlinearring()
+                    for xy in map(split, coordlist)
+                        AG.addpoint!(ring, parse(Float64, xy[1]),
+                                           parse(Float64, xy[2]))
+                    end
+                    AG.addgeomdirectly!(poly, ring)
+                    AG.setgeom!(feature, poly)    
+        end end end
+        println(layer)
+
+        # input = output
+        # # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2b.py
+        # AG.fromEPSG(4269) do inspatialref
+        # AG.fromEPSG(26912) do outspatialref
+        # AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
+        # AG.create("", "MEMORY") do output
+        #     inlayer = AG.borrow_getlayer(input, 0)
+        #     outlayer = AG.createlayer(output, "hw2b", geom=GDAL.wkbPolygon)
+        #     infeaturedefn = AG.borrow_getlayerdefn(inlayer)
+        #     nameindex = AG.getfieldindex(infeaturedefn, "name")
+        #     fielddefn = AG.borrow_getfielddefn(infeaturedefn, nameindex)
+        #     AG.createfield!(outlayer, fielddefn)
+        #     for infeature in inlayer
+        #         AG.createfeature(outlayer) do outfeature
+        #             geom = AG.borrow_getgeom(infeature)
+        #             AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
+        #             AG.setfield!(outfeature,0,AG.getfield(infeature, nameindex))
+        #             println(outfeature)
+        #     end end
+        #     println(layer)
+        # end
+        # end
+        # println(AG.toWKT(AG.morphtoESRI!(outspatialref)))
+        # end
+        # end
     end
     end
 end
 
-facts("Homework 3(a)") do
+facts("Homework 3") do
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
     AG.read("ospy/data3/sites.shp") do sitesDS
         AG.read("ospy/data3/cache_towns.shp") do townsDS
@@ -105,85 +184,14 @@ facts("Homework 3(a)") do
                     for sitefeature in siteslayer
                         id_index = AG.getfieldindex(sitefeature, "ID")
                         println(AG.getfield(sitefeature, id_index))
-end end end end end end
-
-facts("Homework 3(b)") do
-    """
-    function to copy fields (not the data) from one layer to another
-    parameters:
-      fromLayer: layer object that contains the fields to copy
-      toLayer: layer object to copy the fields into
-    """
-    function copyfields(fromlayer, tolayer)
-        featuredefn = AG.borrow_getlayerdefn(fromlayer)
-        for i in 0:(AG.nfield(featuredefn)-1)
-            fd = AG.borrow_getfielddefn(featuredefn, i)
-            if AG.gettype(fd) == GDAL.OFTReal
-                # to deal with errors like
-                # ERROR: GDALError (Warning, code 1):
-                # Value 18740682.1600000001 of field SHAPE_AREA of
-                # feature 1 not successfully written. Possibly due
-                # to too larger number with respect to field width
-                fwidth = AG.getwidth(fd)
-                if fwidth != 0
-                    AG.setwidth!(fd, fwidth+1)
-            end end
-            AG.createfield!(tolayer, fd)
-        end
-    end
-
-    """
-    function to copy attributes from one feature to another
-    (this assumes the features have the same attribute fields!)
-    parameters:
-      fromFeature: feature object that contains the data to copy
-      toFeature: feature object that the data is to be copied into
-    """
-    function copyattributes(fromfeature, tofeature)
-        for i in 0:(AG.nfield(fromfeature)-1)
-            if AG.isfieldset(fromfeature, i)
-                try
-                    AG.setfield!(tofeature, i, AG.getfield(fromfeature, i))
-                catch
-                    println(fromfeature)
-                    println(tofeature)
-                    println("$i: $(AG.getfield(fromfeature, i))")
-        end end end
-    end
-
-    function reproject(inFN, inEPSG, outFN, outEPSG)
-        AG.fromEPSG(inEPSG) do inspatialref
-        AG.fromEPSG(outEPSG) do outspatialref
-        AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
-        AG.read(inFN) do inDS
-        AG.create(outFN, "ESRI Shapefile") do outDS
-            inlayer = AG.borrow_getlayer(inDS, 0)
-            outlayer = AG.createlayer(outDS,
-                            split(split(outFN, "/")[end], ".")[1],
-                            geom = AG.getgeomtype(AG.borrow_getlayerdefn(inlayer)))
-            copyfields(inlayer, outlayer)
-            featuredefn = AG.borrow_getlayerdefn(outlayer)
-            for infeature in inlayer
-                geom = AG.borrow_getgeom(infeature)
-                AG.createfeature(featuredefn) do outfeature
-                    AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
-                    copyattributes(infeature, outfeature)
-                    AG.createfeature(outlayer, outfeature)
-        end end end
-        end
-        end
-        open(replace(outFN, ".shp", ".prj"), "w") do file
-            write(file, AG.toWKT(AG.morphtoESRI!(outspatialref)))
-        end
-        end
-        end
-    end
-
-    for inFN in readdir("./ospy/data3/")
-        if endswith(inFN, ".shp")
-            outFN = replace(inFN, ".shp", "_proj.shp")
-            reproject("./ospy/data3/$(inFN)", 26912, "tmp/$(outFN)", 4269)
-    end end
+    end end end end end
+    
+    #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3b.py
+    # commented out until https://github.com/visr/GDAL.jl/issues/30 is resolved
+    # for inFN in readdir("./ospy/data3/")
+    #     if endswith(inFN, ".shp")
+    #         reproject("./ospy/data3/$(inFN)", 26912, 4269)
+    # end end
 end
 
 AG.read("ospy/data4/aster.img") do ds
@@ -272,7 +280,7 @@ AG.read("ospy/data4/aster.img") do ds
             buffer2 = Array(Float32, ybsize, xbsize)
             buffer3 = Array(Float32, ybsize, xbsize)
             ndvi    = Array(Float32, ybsize, xbsize)
-            AG.create("tmp/ndvi.img", AG.getdriver(ds),
+            AG.create("", "MEM",
                       width=cols, height=rows, nbands=1, dtype=Float32) do outDS
                 for ((i,j),(nrows,ncols)) in AG.blocks(inband2)
                     AG.rasterio!(inband2, buffer2, j, i, ncols, nrows)
@@ -291,19 +299,22 @@ AG.read("ospy/data4/aster.img") do ds
                     # write the data
                     AG.update!(outDS, ndvi, 1, j, i, ncols, nrows)
                 end
+                println(outDS)
                 # flush data to disk, set the NoData value and calculate stats
                 outband = AG.getband(outDS, 1)
-                AG.flushcache!(outband); AG.setnodatavalue!(outband, -99)
+                println(outband)
+                #AG.flushcache!(outband)
+                AG.setnodatavalue!(outband, -99)
                 # georeference the image and set the projection
                 AG.setgeotransform!(outDS, AG.getgeotransform(ds))
                 AG.setproj(outDS, AG.getproj(ds))
 
                 # build pyramids
                 # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
-                AG.buildoverviews(outDS,
-                                  Cint[2,4,8,16,32,64,128], # overview list
-                                  # bandlist (omit to include all bands)
-                                  resampling="NEAREST")     # resampling method
+                # AG.buildoverviews(outDS,
+                #                   Cint[2,4,8,16,32,64,128], # overview list
+                #                   # bandlist (omit to include all bands)
+                #                   resampling="NEAREST")     # resampling method
 end end end end
 
 #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
@@ -352,10 +363,10 @@ facts("Homework 5(b)") do
             data1 = Array(dtype, rows, cols)
             data2 = Array(dtype, rows, cols)
             # create the output image
-            AG.create("tmp/mosiac.img", AG.getdriver(ds1),
-                      width=cols, height=rows, nbands=1,
+            AG.create("", "MEM",width=cols, height=rows, nbands=1,
                       dtype=AG.getdatatype(band1)) do dsout
                 # read in doq1 and write it to the output
+                println("after")
                 AG.rasterio!(band1, data1, 0, 0, cols1, rows1)
                 AG.update!(dsout, data1, 1, xOffset1, yOffset1, cols, rows)
 
@@ -363,8 +374,10 @@ facts("Homework 5(b)") do
                 AG.rasterio!(band2, data2, 0, 0, cols2, rows2)
                 AG.update!(dsout, data2, 1, xOffset2, yOffset2, cols, rows)
 
+                println(dsout)
                 # compute statistics for the output
                 bandout = AG.getband(dsout, 1)
+                println(bandout)
                 AG.flushcache!(bandout)
                 # stats = bandOut.GetStatistics(0, 1)
 
@@ -375,10 +388,11 @@ facts("Homework 5(b)") do
 
                 # build pyramids for the output
                 # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
-                AG.buildoverviews(dsout,
-                                  Cint[2,4,8,16],       # overview list
-                                  # bandlist (omit to include all bands)
-                                  resampling="NEAREST") # resampling method
+                # buildoverviews not supported for in-memory rasters
+                # AG.buildoverviews(dsout,
+                #                   Cint[2,4,8,16],       # overview list
+                #                   # bandlist (omit to include all bands)
+                #                   resampling="NEAREST") # resampling method
 end end end end
 
 end # of AG.registerdrivers()
