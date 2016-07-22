@@ -18,17 +18,6 @@ function createfeature(f::Function, featuredefn::FeatureDefn)
     try f(feature) finally destroy(feature) end
 end
 
-# Doesn't yet work
-# function registerdriver(f::Function, drv::Driver)
-#     register(drv)
-#     try f() finally deregister(drv) end
-# end
-
-# function registerdriver(f::Function, drivername::AbstractString)
-#     drv = getdriver(drivername); register(drv)
-#     try f() finally deregister(drv); destroy(drv) end
-# end
-
 for gdalfunc in (:boundary, :buffer, :centroid, :convexhull, :create,
                  :createcoordtrans, :createcopy, :createfeaturedefn,
                  :createfielddefn, :creategeom, :creategeomcollection,
