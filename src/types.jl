@@ -4,7 +4,7 @@ typealias FeatureDefn           Ptr{GDAL.OGRFeatureDefnH}
 typealias Field                 Ptr{GDAL.OGRField}
 typealias FieldDefn             Ptr{GDAL.OGRFieldDefnH}
 typealias Geometry              Ptr{GDAL.OGRGeometryH}
-typealias GeomFieldDefn         GDAL.OGRGeomFieldDefnH
+typealias GeomFieldDefn         Ptr{GDAL.OGRGeomFieldDefnHS}
 typealias SpatialRef            Ptr{GDAL.OGRSpatialReferenceH}
 typealias CoordTransform        Ptr{GDAL.OGRCoordinateTransformationH}
 typealias Driver                Ptr{GDAL.GDALDriverH}
