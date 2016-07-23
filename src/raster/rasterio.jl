@@ -334,8 +334,8 @@ for (T,GT) in _GDALTYPE
                            xsize::Integer,
                            ysize::Integer,
                            access::GDALRWFlag=GF_Read,
-                           pxspace::Integer=0,
-                           linespace::Integer=0,
+                           pxspace::Integer=Int64(0),
+                           linespace::Integer=Int64(0),
                            extraargs=Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL))
             (rasterband == C_NULL) && error("Can't read invalid rasterband")
             result = GDAL.rasterioex(rasterband,GDAL.GDALRWFlag(access),xoffset,
