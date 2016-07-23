@@ -46,3 +46,13 @@ function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
     end
     stringlist
 end
+
+"Fetch list of (non-empty) metadata domains. (Since: GDAL 1.11)"
+metadatadomainlist{T <: GDAL.GDALMajorObjectH}(obj::Ptr{T}) =
+    unsafe_loadstringlist(ccall((:GDALGetMetadataDomainList,GDAL.libgdal),
+                                Ptr{Cstring},(Ptr{GDAL.GDALMajorObjectH},),obj))
+
+"Fetch metadata. Note that relatively few formats return any metadata."
+metadata{T <: GDAL.GDALMajorObjectH}(obj::Ptr{T}; domain::AbstractString="") =
+    unsafe_loadstringlist(ccall((:GDALGetMetadata,GDAL.libgdal),Ptr{Cstring},
+                            (Ptr{GDAL.GDALMajorObjectH},Cstring),obj,domain))
