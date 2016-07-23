@@ -7,8 +7,6 @@ binary (WKB) representation.
 * `spatialref`: handle to the spatial reference to be assigned to the created
     geometry object. This may be `NULL` (default).
 """
-# * `nBytes`: the number of bytes of data available in pabyData, or -1 if
-#     it is not known, but assumed to be sufficient.
 function unsafe_fromWKB(data, spatialref::SpatialRef=SpatialRef(C_NULL))
     geom = Ref{Geometry}()
     result = ccall((:OGR_G_CreateFromWkb,GDAL.libgdal),GDAL.OGRErr,(Ptr{Cuchar},
@@ -68,8 +66,9 @@ Create an empty geometry of desired type.
 This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
-unsafe_creategeom(geomtype::GDAL.OGRwkbGeometryType) =
-    GDAL.creategeometry(geomtype)
+unsafe_creategeom(geomtype::OGRwkbGeometryType) =
+    GDAL.checknull(ccall((:OGR_G_CreateGeometry,GDAL.libgdal),Geometry,
+                         (GDAL.OGRwkbGeometryType,),geomtype))
 
 """
 Convert to another geometry type.
@@ -79,14 +78,15 @@ Convert to another geometry type.
 * `targettype`: target output geometry type.
 # `options`: (optional) options as a null-terminated vector of strings
 """
-forceto!(geom::Geometry, targettype::GDAL.OGRwkbGeometryType) =
-    GDAL.forceto(geom, targettype, C_NULL)
+forceto!(geom::Geometry, targettype::OGRwkbGeometryType) =
+    GDAL.checknull(ccall((:OGR_G_ForceTo,GDAL.libgdal),Geometry,(Geometry,
+            GDAL.OGRwkbGeometryType,StringList),geom,targettype,C_NULL))
 
 forceto!{T <: AbstractString}(geom::Geometry,
-                              targettype::GDAL.OGRwkbGeometryType,
+                              targettype::OGRwkbGeometryType,
                               options::Vector{T}) =
-    GDAL.checknull(ccall((:OGR_G_ForceTo,libgdal),Geometry,(Geometry,
-        GDAL.OGRwkbGeometryType,StringList),geom,targettype,options))
+    GDAL.checknull(ccall((:OGR_G_ForceTo,GDAL.libgdal),Geometry,(Geometry,
+            GDAL.OGRwkbGeometryType,StringList),geom,targettype,options))
 
 """
 Get the dimension of the geometry. 0 for points, 1 for lines and 2 for surfaces.
@@ -117,25 +117,14 @@ before this call.
 """
 setcoorddim!(geom::Geometry, dim::Integer)=GDAL.setcoordinatedimension(geom,dim)
 
-"""
-Computes and returns the bounding envelope for this geometry
-
-### Parameters
-* `hGeom`: handle of the geometry to get envelope from.
-* `psEnvelope`: the structure in which to place the results.
-"""
+"Computes and returns the bounding envelope for this geometry"
 function getenvelope(geom::Geometry)
     envelope = Ref{Envelope}()
     GDAL.getenvelope(geom, envelope)
     envelope[]
 end
 
-"""
-Computes and returns the bounding envelope (3D) for this geometry
-
-### Parameters
-* `hGeom`: handle of the geometry to get envelope from.
-"""
+"Computes and returns the bounding envelope (3D) for this geometry"
 function getenvelope3d(geom::Geometry)
     envelope = Ref{Envelope3D}()
     GDAL.getenvelope3d(geom, envelope)
@@ -144,30 +133,30 @@ end
 
 """
 Convert a geometry well known binary format.
+
 ### Parameters
 * `geom`: handle on the geometry to convert to a well know binary data from.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
-# * `pabyDstBuffer`: a buffer into which the binary representation is written.
-#     This buffer must be at least OGR_G_WkbSize() byte in size.
-function toWKB(geom::Geometry, order::GDAL.OGRwkbByteOrder = GDAL.wkbNDR)
+function toWKB(geom::Geometry, order::OGRwkbByteOrder=wkbNDR)
     buffer = Array(Cuchar, wkbsize(geom))
-    result = GDAL.exporttowkb(geom, order, pointer(buffer))
+    result = GDAL.exporttowkb(geom,GDAL.OGRwkbByteOrder(order),pointer(buffer))
     @ogrerr result "Failed to export geometry to WKB"
     buffer
 end
 
 """
 Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
+
 ### Parameters
 * `geom`: handle on the geometry to convert to a well know binary data from.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
-# * `pabyDstBuffer`: a buffer into which the binary representation is written.
-#                 This buffer must be at least OGR_G_WkbSize() byte in size.
-function toISOWKB(geom::Geometry, order::GDAL.OGRwkbByteOrder = GDAL.wkbNDR)
+function toISOWKB(geom::Geometry, order::OGRwkbByteOrder=wkbNDR)
     buffer = Array(Cuchar, wkbsize(geom))
-    result = GDAL.exporttoisowkb(geom, order, pointer(buffer))
+    result = ccall((:OGR_G_ExportToIsoWkb,GDAL.libgdal),GDAL.OGRErr,
+                   (Geometry,GDAL.OGRwkbByteOrder,Ptr{Cuchar}),geom,order,
+                   pointer(buffer))
     @ogrerr result "Failed to export geometry to ISO WKB"
     buffer
 end
@@ -196,7 +185,7 @@ function toISOWKT(geom::Geometry)
 end
 
 "Fetch geometry type code"
-getgeomtype(geom::Geometry) = GDAL.getgeometrytype(geom)
+getgeomtype(geom::Geometry) = OGRwkbGeometryType(GDAL.getgeometrytype(geom))
 
 "Fetch WKT name for geometry type."
 getgeomname(geom::Geometry) = GDAL.getgeometryname(geom)
@@ -260,7 +249,7 @@ Returns spatial reference system for geometry.
 
 The object may be shared with many geometry objects, and should not be modified.
 """
-borrow_getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
+getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
 
 """
 Apply arbitrary coordinate transformation to geometry.
@@ -678,14 +667,14 @@ geometry remains owned by the container, and should not be modified. The handle
 is only valid until the next change to the geometry container. Use OGR_G_Clone()
 to make a copy.
 
-For a polygon, `OGR_G_GetGeometryRef(i)` returns the exterior ring if
+For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 `i == 0`, and the interior rings for `i > 0`.
 
 ### Parameters
 * `geom`: the geometry container from which to get a geometry from.
 * `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
 """
-borrow_getgeom(geom::Geometry, i::Integer) = GDAL.getgeometryref(geom, i)
+getgeom(geom::Geometry, i::Integer) = GDAL.getgeometryref(geom, i)
 
 """
 Add a geometry to a geometry container.
@@ -845,44 +834,44 @@ enablenonlineargeom(flag::Bool) = GDAL.setnonlineargeometriesenabledflag(flag)
 "Get flag to enable/disable returning non-linear geometries in the C API."
 nonlineargeomisenabledflag() = GDAL.getnonlineargeometriesenabledflag()
 
-for (geom, wkbgeom) in ((:geomcollection,   GDAL.wkbGeometryCollection),
-                        (:linestring,       GDAL.wkbLineString),
-                        (:linearring,       GDAL.wkbLinearRing),
-                        (:multilinestring,  GDAL.wkbMultiLineString),
-                        (:multipoint,       GDAL.wkbMultiPoint),
-                        (:multipolygon,     GDAL.wkbMultiPolygon),
-                        (:point,            GDAL.wkbPoint),
-                        (:polygon,          GDAL.wkbPolygon))
+for (geom, wkbgeom) in ((:geomcollection,   wkbGeometryCollection),
+                        (:linestring,       wkbLineString),
+                        (:linearring,       wkbLinearRing),
+                        (:multilinestring,  wkbMultiLineString),
+                        (:multipoint,       wkbMultiPoint),
+                        (:multipolygon,     wkbMultiPolygon),
+                        (:point,            wkbPoint),
+                        (:polygon,          wkbPolygon))
     @eval $(symbol("unsafe_create$geom"))() = unsafe_creategeom($wkbgeom)
 end
 
 function unsafe_createpoint(x::Real, y::Real)
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+    geom = unsafe_creategeom(wkbPoint)
     addpoint!(geom, x, y)
     geom
 end
 
 function unsafe_createpoint(x::Real, y::Real, z::Real)
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+    geom = unsafe_creategeom(wkbPoint)
     addpoint!(geom, x, y, z)
     geom
 end
 
 function unsafe_createpoint{T <: Real, U <: Real}(xy::Tuple{T,U})
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+    geom = unsafe_creategeom(wkbPoint)
     addpoint!(geom, xy...)
     geom
 end
 
 function unsafe_createpoint{T <: Real, U <: Real, V <: Real}(xyz::Tuple{T,U,V})
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+    geom = unsafe_creategeom(wkbPoint)
     addpoint!(geom, xyz...)
     geom
 end
 
 # Tuples of Vectors
-for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
-                        (:linearring, GDAL.wkbLinearRing))
+for (geom, wkbgeom) in ((:linestring, wkbLineString),
+                        (:linearring, wkbLinearRing))
     eval(quote 
         function $(symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
                                                  ys::Vector{Cdouble})
@@ -905,20 +894,20 @@ for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
 end
 
 function unsafe_createpolygon(xs::Vector{Cdouble}, ys::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbPolygon)
+    geom = unsafe_creategeom(wkbPolygon)
     addgeomdirectly!(geom, unsafe_createlinearring(xs, ys))
     geom
 end
 
 function unsafe_createpolygon(xs::Vector{Cdouble}, ys::Vector{Cdouble},
                               zs::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbPolygon)
+    geom = unsafe_creategeom(wkbPolygon)
     addgeomdirectly!(geom, unsafe_createlinearring(xs, ys, zs))
     geom
 end
 
 function unsafe_createmultipoint(xs::Vector{Cdouble}, ys::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbMultiPoint)
+    geom = unsafe_creategeom(wkbMultiPoint)
     for (x, y) in zip(xs, ys)
         addgeomdirectly!(geom, unsafe_createpoint(x, y))
     end
@@ -927,7 +916,7 @@ end
 
 function unsafe_createmultipoint(xs::Vector{Cdouble}, ys::Vector{Cdouble},
                                  zs::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbMultiPoint)
+    geom = unsafe_creategeom(wkbMultiPoint)
     for (x, y, z) in zip(xs, ys, zs)
         addgeomdirectly!(geom, unsafe_createpoint(x, y, z))
     end
@@ -937,8 +926,8 @@ end
 # Vectors of Tuples
 for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
                  Vector{Tuple{Cdouble,Cdouble,Cdouble}})
-    for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
-                            (:linearring, GDAL.wkbLinearRing))
+    for (geom, wkbgeom) in ((:linestring, wkbLineString),
+                            (:linearring, wkbLinearRing))
         @eval function $(symbol("unsafe_create$geom"))(coords::$typeargs)
                   geom = unsafe_creategeom($wkbgeom)
                   for coord in coords
@@ -950,13 +939,13 @@ for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
 
     eval(quote
         function unsafe_createpolygon(coords::$typeargs)
-            geom = unsafe_creategeom(GDAL.wkbPolygon)
+            geom = unsafe_creategeom(wkbPolygon)
             addgeomdirectly!(geom, unsafe_createlinearring(coords))
             geom
         end
 
         function unsafe_createmultipoint(coords::$typeargs)
-            geom = unsafe_creategeom(GDAL.wkbMultiPoint)
+            geom = unsafe_creategeom(wkbMultiPoint)
             for point in coords
                 addgeomdirectly!(geom, unsafe_createpoint(point))
             end
@@ -967,11 +956,11 @@ end
 
 for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
                  Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}})
-    for (geom, wkbgeom, f) in ((:polygon,              GDAL.wkbPolygon,
+    for (geom, wkbgeom, f) in ((:polygon,              wkbPolygon,
                                 :unsafe_createlinearring),
-                               (:multilinestring,      GDAL.wkbMultiLineString,
+                               (:multilinestring,      wkbMultiLineString,
                                 :unsafe_createlinestring),
-                               (:multipolygon_noholes, GDAL.wkbMultiPolygon,
+                               (:multipolygon_noholes, wkbMultiPolygon,
                                 :unsafe_createpolygon))
         @eval function $(symbol("unsafe_create$geom"))(coords::$typeargs)
                   geom = unsafe_creategeom($wkbgeom)

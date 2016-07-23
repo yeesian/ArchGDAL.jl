@@ -53,26 +53,29 @@ identifydriver(filename::AbstractString) = GDAL.identifydriver(filename, C_NULL)
 """
 Validate the list of creation options that are handled by a drv.
 
-This is a helper method primarily used by `Create()` and `CreateCopy()` to
+This is a helper method primarily used by `create()` and `createcopy()` to
 validate that the passed in list of creation options is compatible with the
 `GDAL_DMD_CREATIONOPTIONLIST` metadata item defined by some drivers.
 
-See also: `GDALGetDriverCreationOptionList()`
+### Parameters
+* `drv`     the handle of the driver with whom the lists of creation option
+            must be validated
+* `options` the list of creation options. An array of strings, whose last
+            element is a `NULL` pointer
+
+### Returns
+`TRUE` if the list of creation options is compatible with the `create()` and
+`createCopy()` method of the driver, `FALSE` otherwise.
+
+### Additional Remarks
+See also: `options(drv::Driver)`
 
 If the `GDAL_DMD_CREATIONOPTIONLIST` metadata item is not defined, this
 function will return `TRUE`. Otherwise it will check that the keys and values
 in the list of creation options are compatible with the capabilities declared
 by the `GDAL_DMD_CREATIONOPTIONLIST` metadata item. In case of incompatibility
 a (non fatal) warning will be emited and `FALSE` will be returned.
-
-### Parameters
-* `hDriver`     the handle of the driver with whom the lists of creation option
-must be validated
-* `options`     the list of creation options. An array of strings, whose last
-element is a `NULL` pointer
-
-### Returns
-`TRUE` if the list of creation options is compatible with the `Create()` and
-`CreateCopy()` method of the driver, `FALSE` otherwise.
 """
-validate(drv::Driver, options) = Bool(GDAL.validatecreationoptions(drv,options))
+validate{T <: AbstractString}(drv::Driver, options::Vector{T}) = 
+    Bool(ccall((:GDALValidateCreationOptions,GDAL.libgdal),Cint,
+               (Driver,StringList),drv,options))

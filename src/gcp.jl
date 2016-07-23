@@ -25,22 +25,14 @@ Apply GeoTransform to x/y coordinate.
 
 Applies the following computation, converting a (pixel,line) coordinate into a
 georeferenced `(geo_x,geo_y)` location.
-```C
-    *pdfGeoX =  padfGeoTransform[0] + 
-                dfPixel * padfGeoTransform[1] +
-                dfLine * padfGeoTransform[2];
-
-    *pdfGeoY =  padfGeoTransform[3] +
-                dfPixel * padfGeoTransform[4] +
-                dfLine * padfGeoTransform[5];
+```
+    geo_x = geotransform[1] + pixel*geotransform[2] + line*geotransform[3]
+    geo_y = geotransform[4] + pixel*geotransform[5] + line*geotransform[6]
 ```
 ### Parameters
-* `padfGeoTransform`  Six coefficient GeoTransform to apply.
-* `dfPixel`           input pixel position.
-* `dfLine`            input line position.
-* `pdfGeoX`           location for `geo_x` (easting/longitude)
-* `pdfGeoY`           location for `geo_y` (northing/latitude)
-
+* `geotransform`  Six coefficient GeoTransform to apply.
+* `pixel`           input pixel position.
+* `line`            input line position.
 """
 function applygeotransform(geotransform::Vector{Cdouble},
                            pixel::Cdouble,
@@ -63,7 +55,6 @@ being applied to a point.
 * `gt2`     the second geotransform, six values.
 * `gtout`   the output geotransform, six values, may safely be the same
 array as `gt1` or `gt2`.
-
 """
 function composegeotransform!(gt1::Vector{Cdouble}, gt2::Vector{Cdouble},
                               gtout::Vector{Cdouble})

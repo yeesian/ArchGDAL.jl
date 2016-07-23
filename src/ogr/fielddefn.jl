@@ -3,8 +3,8 @@ Create a new field definition.
 
 By default, fields have no width, precision, are nullable and not ignored.
 """
-unsafe_createfielddefn(name::AbstractString, etype::GDAL.OGRFieldType) =
-    GDAL.fld_create(name, etype)
+unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType) =
+    GDAL.fld_create(name, GDAL.OGRFieldType(etype))
 
 "Destroy a field definition."
 destroy(fielddefn::FieldDefn) = GDAL.destroy(fielddefn)
@@ -17,11 +17,11 @@ setname!(fielddefn::FieldDefn, name::AbstractString) =
 getname(fielddefn::FieldDefn) = GDAL.getnameref(fielddefn)
 
 "Fetch the type of this field."
-gettype(fielddefn::FieldDefn) = GDAL.gettype(fielddefn)
+gettype(fielddefn::FieldDefn) = OGRFieldType(GDAL.gettype(fielddefn))
 
 "Set the type of this field."
-settype!(fielddefn::FieldDefn, etype::GDAL.OGRFieldType) =
-    GDAL.settype(fielddefn, etype)
+settype!(fielddefn::FieldDefn, etype::OGRFieldType) =
+    GDAL.settype(fielddefn, GDAL.OGRFieldType(etype))
 
 """
 Fetch subtype of this field.
@@ -32,7 +32,7 @@ Fetch subtype of this field.
 ### Returns
 field subtype.
 """
-getsubtype(fielddefn::FieldDefn) = GDAL.getsubtype(fielddefn)
+getsubtype(fielddefn::FieldDefn) = OGRFieldSubType(GDAL.getsubtype(fielddefn))
 
 """
 Set the subtype of this field.
@@ -44,23 +44,23 @@ OGRFeatureDefn.
 * `fielddefn`: handle to the field definition to set type to.
 * `subtype`: the new field subtype.
 """
-setsubtype!(fielddefn::FieldDefn, subtype::GDAL.OGRFieldSubType) =
-    GDAL.setsubtype(fielddefn, subtype)
+setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType) =
+    GDAL.setsubtype(fielddefn, GDAL.OGRFieldSubType(subtype))
 
 """
 Get the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-getjustify(fielddefn::FieldDefn) = GDAL.getjustify(fielddefn)
+getjustify(fielddefn::FieldDefn) = OGRJustification(GDAL.getjustify(fielddefn))
 
 """
 Set the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-setjustify!(fielddefn::FieldDefn, ejustify::GDAL.OGRJustification) =
-    GDAL.setjustify(fielddefn, ejustify)
+setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification) =
+    GDAL.setjustify(fielddefn, GDAL.OGRJustification(ejustify))
 
 """Get the formatting width for this field.
 
@@ -106,10 +106,11 @@ Set defining parameters for a field in one call.
 * `justify`:    the formatting justification (OJLeft or OJRight), defaults to
                 OJUndefined.
 """
-setparams!(fielddefn::FieldDefn, name::AbstractString, etype::GDAL.OGRFieldType;
+setparams!(fielddefn::FieldDefn, name::AbstractString, etype::OGRFieldType;
            nwidth::Integer=0, nprecision::Integer=0,
-           justify::GDAL.OGRJustification=GDAL.OJUndefined) =
-    GDAL.set(fielddefn, name, etype, nwidth, nprecision, justify)
+           justify::OGRJustification=OJUndefined) =
+    GDAL.set(fielddefn, name, GDAL.OGRFieldType(etype), nwidth, nprecision,
+             GDAL.OGRJustification(justify))
 
 "Return whether this field should be omitted when fetching features."
 isignored(fielddefn::FieldDefn) = Bool(GDAL.isignored(fielddefn))
@@ -179,8 +180,8 @@ isdefaultdriverspecific(fielddefn::FieldDefn) =
     Bool(GDAL.isdefaultdriverspecific(fielddefn))
 
 "Create a new field geometry definition."
-unsafe_creategeomfielddefn(name::AbstractString,etype::GDAL.OGRwkbGeometryType)=
-    GDAL.gfld_create(name, etype)
+unsafe_creategeomfielddefn(name::AbstractString,etype::OGRwkbGeometryType)=
+    GDAL.gfld_create(name, GDAL.OGRwkbGeometryType(etype))
 
 "Destroy a geometry field definition."
 destroy(gfd::GeomFieldDefn) = GDAL.destroy(gfd)
@@ -193,7 +194,7 @@ setname!(gfd::GeomFieldDefn, name::AbstractString) =
 getname(gfd::GeomFieldDefn) = GDAL.getnameref(gfd)
 
 "Fetch geometry type of this field."
-gettype(gfd::GeomFieldDefn) = GDAL.gettype(gfd)
+gettype(gfd::GeomFieldDefn) = OGRwkbGeometryType(GDAL.gettype(gfd))
 
 "Set the geometry type of this field."
 settype!(gfd::GeomFieldDefn, etype::GDAL.OGRwkbGeometryType) =

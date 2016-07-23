@@ -3,7 +3,7 @@
 getname(layer::FeatureLayer) = GDAL.getname(layer)
 
 "Return the layer geometry type."
-getgeomtype(layer::FeatureLayer) = GDAL.getgeomtype(layer)
+getgeomtype(layer::FeatureLayer) = OGRwkbGeometryType(GDAL.getgeomtype(layer))
 
 "Returns the current spatial filter for this layer."
 getspatialfilter(layer::FeatureLayer) = GDAL.getspatialfilter(layer)
@@ -14,7 +14,7 @@ Fetch the spatial reference system for this layer.
 The returned object is owned by the OGRLayer and should not be modified or
 freed by the application.
 """
-borrow_getspatialref(layer::FeatureLayer) = GDAL.getspatialref(layer)
+getspatialref(layer::FeatureLayer) = GDAL.getspatialref(layer)
 
 """
 Set a new spatial filter for the layer, using the geom.
@@ -271,7 +271,7 @@ function createfeature(layer::FeatureLayer, feature::Feature)
 end
 
 unsafe_createfeature(layer::FeatureLayer) =
-    unsafe_createfeature(borrow_getlayerdefn(layer))
+    unsafe_createfeature(getlayerdefn(layer))
 
 """
 Delete feature with fid `i` from layer.
@@ -338,7 +338,7 @@ function setgeom!(feature::Feature, geom::Geometry)
 end
 
 "Fetch an handle to internal feature geometry. It should not be modified."
-borrow_getgeom(feature::Feature) = GDAL.getgeometryref(feature)
+getgeom(feature::Feature) = GDAL.getgeometryref(feature)
 
 "Test if two features are the same."
 equals(feat1::Feature, feat2::Feature) = Bool(GDAL.equals(feat1, feat2))
@@ -361,7 +361,7 @@ Fetch definition for this field.
 an handle to the field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
-borrow_getfielddefn(feature::Feature, i::Integer) =
+getfielddefn(feature::Feature, i::Integer) =
     GDAL.getfielddefnref(feature, i)
 
 # fetchfields(feature::Feature) =
@@ -636,11 +636,11 @@ const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
                          GDAL.OFTRealList => asdoublelist,      #3
                          GDAL.OFTString => asstring,            #4
                          GDAL.OFTStringList => asstringlist,    #5
-                                # const OFTWideString = (UInt32)(6)
-                            # const OFTWideStringList = (UInt32)(7)
+                           # const OFTWideString = (UInt32)(6)
+                       # const OFTWideStringList = (UInt32)(7)
                          GDAL.OFTBinary => asbinary,            #8
-                                      # const OFTDate = (UInt32)(9)
-                                      # const OFTTime = (UInt32)(10)
+                                 # const OFTDate = (UInt32)(9)
+                                 # const OFTTime = (UInt32)(10)
                          GDAL.OFTDateTime => asdatetime,        #11
                          GDAL.OFTInteger64 => asint64,          #12
                          GDAL.OFTInteger64List => asint64list  #,13
@@ -666,14 +666,14 @@ const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
 
 function getfield(feature::Feature, i::Integer)
     if isfieldset(feature, i)
-        _fieldtype = gettype(borrow_getfielddefn(feature, i))
+        _fieldtype = GDAL.OGRFieldType(gettype(getfielddefn(feature, i)))
         _fetchfield = get(_FETCHFIELD, _fieldtype, asnothing)
         return _fetchfield(feature, i)
     end
 end
 
-fetchfield(feature::Feature, name::AbstractString) =
-    fetchfield(feature, getfieldindex(feature, name))
+getfield(feature::Feature, name::AbstractString) =
+    getfield(feature, getfieldindex(feature, name))
 
 """
 Set field to integer value.
@@ -884,7 +884,7 @@ Fetch definition for this geometry field.
 The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
-borrow_getgeomfieldefn(feature::Feature, i::Integer) =
+getgeomfieldefn(feature::Feature, i::Integer) =
     GDAL.getgeomfielddefnref(feature, i)
 
 """
@@ -912,8 +912,7 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
-borrow_getgeomfield(feature::Feature, i::Integer) =
-    GDAL.getgeomfieldref(feature, i)
+getgeomfield(feature::Feature, i::Integer) = GDAL.getgeomfieldref(feature, i)
 
 """
 Set feature geometry of a specified geometry field.
@@ -1159,7 +1158,7 @@ The returned handle to the OGRFeatureDefn is owned by the OGRLayer, and should
 not be modified or freed by the application. It encapsulates the attribute
 schema of the features of the layer.
 """
-borrow_getlayerdefn(layer::FeatureLayer) = GDAL.getlayerdefn(layer)
+getlayerdefn(layer::FeatureLayer) = GDAL.getlayerdefn(layer)
 
 """
 Find the index of field in a layer.
@@ -1197,6 +1196,13 @@ indicating that the extent isn't know. If `force` is `true` then some
 implementations will actually scan the entire layer once to compute the MBR of
 all the features in the layer.
 
+### Parameters
+* `layer`: handle to the layer from which to get extent.
+* `i`:     (optional) the index of the geometry field to compute the extent.
+* `force`: Flag indicating whether the extent should be computed even if it is
+            expensive.
+
+### Additional Remarks
 Depending on the drivers, the returned extent may or may not take the spatial
 filter into account. So it is safer to call GetExtent() without setting a
 spatial filter.
@@ -1206,13 +1212,8 @@ meaningful extents could be collected.
 
 Note that some implementations of this method may alter the read cursor of the
 layer.
-
-### Parameters
-* `layer`: handle to the layer from which to get extent.
-* `force`: Flag indicating whether the extent should be computed even if it is
-            expensive.
 """
-function getextent(i::Integer, layer::FeatureLayer, force::Bool=false)
+function getextent(layer::FeatureLayer, i::Integer, force::Bool=false)
     envelope = Ref{Envelope}()
     result = GDAL.getextentex(i, layer, envelope, force)
     @ogrerr result "Extent not known"

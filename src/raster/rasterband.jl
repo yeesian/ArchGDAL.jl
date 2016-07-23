@@ -30,14 +30,14 @@ width(rb::RasterBand) = GDAL.getrasterbandxsize(rb)
 height(rb::RasterBand) = GDAL.getrasterbandysize(rb)
 
 "Find out if we have update permission for this band."
-getaccess(rb::RasterBand) = GDAL.getrasteraccess(rb)
+getaccess(rb::RasterBand) = GDALAccess(GDAL.getrasteraccess(rb))
 
 """Fetch the band number (1+) within its dataset, or 0 if unknown.
 
 This method may return a value of 0 to indicate overviews, or free-standing
 `GDALRasterBand` objects without a relationship to a dataset.
 """
-indexof(rb::RasterBand) = GDAL.getbandnumber(rb)
+getnumber(rb::RasterBand) = GDAL.getbandnumber(rb)
 
 """
 Fetch the handle to its dataset handle, or `NULL` if this cannot be determined.
@@ -56,7 +56,7 @@ Return a name for the units of this raster's values. For instance, it might be
 getunittype(rb::RasterBand) = GDAL.getrasterunittype(rb)
 
 "Set unit type of `rb` to `unittype`."
-function unittype!(rb::RasterBand, unitstring::AbstractString)
+function setunittype!(rb::RasterBand, unitstring::AbstractString)
     result = GDAL.setrasterunittype(rb, unitstring)
     @cplerr result "Failed to set unit type"
     unitstring
@@ -204,11 +204,13 @@ getsampleoverview(rb::RasterBand, nsamples::Integer) =
     GDAL.getrastersampleoverviewex(rb, nsamples)
 
 "Color Interpretation value for band"
-getcolorinterp(rb::RasterBand) = GDAL.getrastercolorinterpretation(rb)
+getcolorinterp(rb::RasterBand) =
+    GDALColorInterp(GDAL.getrastercolorinterpretation(rb))
 
 "Set color interpretation of a band."
-function setcolorinterp!(rb::RasterBand, color::GDAL.GDALColorInterp)
-    result = GDAL.setrastercolorinterpretation(rb, color)
+function setcolorinterp!(rb::RasterBand, color::GDALColorInterp)
+    result = ccall((:GDALSetRasterColorInterpretation,GDAL.libgdal),GDAL.CPLErr,
+                   (RasterBand,GDAL.GDALColorInterp),rb,color)
     @cplerr result "Failed to set color interpretation"
     color
 end
@@ -220,7 +222,7 @@ If there is no associated color table, the return result is `NULL`. The
 returned color table remains owned by the `GDALRasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.
 """
-colortable(rb::RasterBand) = GDAL.getrastercolortable(rb)
+getcolortable(rb::RasterBand) = GDAL.getrastercolortable(rb)
 
 """
 Set the raster color table.
@@ -230,10 +232,6 @@ owned by the caller after the call.
 
 ### Parameters
 * `colortable` color table to apply (where supported).
-
-### Returns
-`CE_None` on success, or `CE_Failure` on failure. If the action is unsupported
-by the driver, a value of `CE_Failure` is returned, but no error is issued.
 """
 function colortable!(rb::RasterBand, colortable::ColorTable)
     result = GDAL.setrastercolortable(rb, colortable)
@@ -304,12 +302,13 @@ NULL terminated array of strings. Raster values without associated names will
 have an empty string in the returned list. The first entry in the list is for
 raster values of zero, and so on.
 """
-categorynames(band::RasterBand) =
+getcategorynames(band::RasterBand) =
     unsafe_loadstringlist(GDAL.C.GDALGetRasterCategoryNames(band))
 
 "Set the category names for this band."
-function rastercategorynames!(band::RasterBand, names::Vector{ASCIIString})
-    result = GDAL.setrastercategorynames(band, Ptr{Ptr{UInt8}}(pointer(names)))
+function setcategorynames!(band::RasterBand, names::Vector{ASCIIString})
+    result = ccall((:GDALSetRasterCategoryNames,GDAL.libgdal),GDAL.CPLErr,
+                   (RasterBand,StringList),band,names)
     @cplerr result "Failed to set category names for this band"
     result
 end
@@ -375,7 +374,7 @@ See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
 ### Returns
 a valid mask band.
 """
-maskband(band::RasterBand) = GDAL.getmaskband(band)
+getmaskband(band::RasterBand) = GDAL.getmaskband(band)
 
 """
 Return the status flags of the mask band associated with the band.
@@ -415,7 +414,7 @@ See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
 ### Returns
 a valid mask band.
 """
-maskflags(band::RasterBand) = GDAL.getmaskflags(band)
+getmaskflags(band::RasterBand) = GDAL.getmaskflags(band)
 
 """
 Adds a mask band to the current band.

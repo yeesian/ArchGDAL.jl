@@ -46,7 +46,7 @@ Fetch field definition of the passed feature definition.
 an handle to an internal field definition object or NULL if invalid index. This
 object should not be modified or freed by the application.
 """
-borrow_getfielddefn(featuredefn::FeatureDefn, i::Integer) =
+getfielddefn(featuredefn::FeatureDefn, i::Integer) =
     GDAL.getfielddefn(featuredefn, i)
 
 """
@@ -160,7 +160,7 @@ Fetch geometry field definition of the passed feature definition.
 an internal field definition object or `NULL` if invalid index. This object
 should not be modified or freed by the application.
 """
-borrow_getgeomfielddefn(featuredefn::FeatureDefn, i::Integer) =
+getgeomfielddefn(featuredefn::FeatureDefn, i::Integer) =
     GDAL.getgeomfielddefn(featuredefn, i)
 
 """
@@ -227,4 +227,4 @@ function unsafe_createfeature(featuredefn::FeatureDefn)
 end
 
 "Fetch feature definition."
-borrow_getfeaturedefn(feature::Feature) = GDAL.getdefnref(feature)
+getfeaturedefn(feature::Feature) = GDAL.getdefnref(feature)

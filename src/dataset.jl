@@ -1,5 +1,6 @@
 "Copy all the files associated with a dataset."
-function copyfiles(dataset::Dataset, newname::AbstractString,
+function copyfiles(dataset::Dataset,
+                   newname::AbstractString,
                    oldname::AbstractString)
     result = GDAL.copydatasetfiles(dataset, newname, oldname)
     @cplerr result "Failed to copy dataset files"
@@ -13,20 +14,22 @@ similarly configured dataset. The source and destination dataset must have the
 same number of bands, and the same width and height. The bands do not have to
 have the same data type.
 
-This function is primarily intended to support implementation of driver
-specific `CreateCopy()` functions. It implements efficient copying, in
-particular "chunking" the copy in substantial blocks and, if appropriate,
-performing the transfer in a pixel interleaved fashion.
-
-Currently the only papszOptions value supported are : `"INTERLEAVE=PIXEL"` to
-force pixel interleaved operation and `"COMPRESSED=YES"` to force alignment on
+Currently the only `options` supported are : `\"INTERLEAVE=PIXEL\"` to
+force pixel interleaved operation and `\"COMPRESSED=YES\"` to force alignment on
 target dataset block sizes to achieve best compression. More options may be
 supported in the future.
+
+### Additional Remarks
+This function is primarily intended to support implementation of driver
+specific `createcopy()` functions. It implements efficient copying, in
+particular \"chunking\" the copy in substantial blocks and, if appropriate,
+performing the transfer in a pixel interleaved fashion.
 """
 
-function copywholeraster(source::Dataset, dest::Dataset;
-                         progressfunc::Function=GDAL.C.GDALDummyProgress,
-                         progressdata=C_NULL)
+function copywholeraster(source::Dataset,
+                         dest::Dataset;
+                         progressfunc::Function = GDAL.C.GDALDummyProgress,
+                         progressdata = C_NULL)
     result = GDAL.datasetcopywholeraster(source, dest, StringList(C_NULL),
                                         @cplprogress(progressfunc),progressdata)
     @cplerr result "Failed to copy whole raster"
@@ -84,9 +87,9 @@ ensures that all the data and metadata has been written to the dataset
 In some situations, the new dataset can be created in another process through
 the GDAL API Proxy mechanism.
 """
-function unsafe_createcopy(filename::AbstractString, dataset::Dataset,
+function unsafe_createcopy(dataset::Dataset, filename::AbstractString,
         driver::Driver; strict::Bool=false, options=StringList(C_NULL),
-        progressfunc::Function=GDAL.C.GDALDummyProgress,progressdata=C_NULL)
+        progressfunc::Function=GDAL.C.GDALDummyProgress, progressdata=C_NULL)
     (dataset == C_NULL) && error("Can't create copy of closed dataset")
     GDAL.checknull(ccall((:GDALCreateCopy,GDAL.libgdal),Dataset,(Driver,Cstring,
                 Dataset,Cint,StringList,ProgressFunc,Ptr{Void}),driver,filename,
@@ -95,10 +98,10 @@ end
 
 unsafe_createcopy(dataset::Dataset, filename::AbstractString,
                   drivername::AbstractString; kwargs...) =
-    unsafe_createcopy(filename, dataset, getdriver(drivername); kwargs...)
+    unsafe_createcopy(dataset, filename, getdriver(drivername); kwargs...)
 
-unsafe_createcopy(filename::AbstractString, dataset::Dataset; kwargs...) =
-    unsafe_createcopy(filename, dataset, getdriver(dataset); kwargs...)
+unsafe_createcopy(dataset::Dataset, filename::AbstractString; kwargs...) =
+    unsafe_createcopy(dataset, filename, getdriver(dataset); kwargs...)
 
 write(args...; kwargs...) = GDAL.close(unsafe_createcopy(args...; kwargs...))
 
@@ -125,7 +128,7 @@ creating a vector-only dataset for a compatible driver.
 """
 function unsafe_create(filename::AbstractString, driver::Driver;
         width::Integer=0, height::Integer=0, nbands::Integer=0,
-        dtype::DataType=Any, options = StringList(C_NULL))
+        dtype::DataType=Any, options=StringList(C_NULL))
     GDAL.checknull(ccall((:GDALCreate,GDAL.libgdal),Dataset,(Driver,Cstring,
                    Cint,Cint,Cint,GDAL.GDALDataType,StringList),driver,filename,
                    width,height,nbands,_GDALTYPE[dtype],options))
@@ -188,19 +191,19 @@ in a `.zip` archive (see `VSIInstallZipFileHandler()`), a `.tar/.tar.gz/.tgz`
 archive (see `VSIInstallTarFileHandler()`), or a HTTP / FTP server
 (see `VSIInstallCurlFileHandler()`)
 """
-unsafe_read(filename::AbstractString; flags::UInt32=GDAL.GDAL_OF_READONLY,
+unsafe_read(filename::AbstractString; flags=OF_ReadOnly,
             alloweddrivers=StringList(C_NULL), options=StringList(C_NULL),
             siblingfiles=StringList(C_NULL)) =
     GDAL.checknull(ccall((:GDALOpenEx,GDAL.libgdal),Dataset,(Cstring,UInt32,
                          StringList,StringList,StringList),filename,
                          flags,alloweddrivers,options,siblingfiles))
 
-unsafe_update(filename::AbstractString; flags::UInt32=GDAL.GDAL_OF_UPDATE,
+unsafe_update(filename::AbstractString; flags=OF_Update,
               alloweddrivers=StringList(C_NULL), options=StringList(C_NULL),
               siblingfiles=StringList(C_NULL)) =
     GDAL.checknull(ccall((:GDALOpenEx,GDAL.libgdal),Dataset,(Cstring,UInt32,
                          StringList,StringList,StringList),filename,
-                         flags,alloweddrivers,options,siblingfiles))
+                         OF_Update|flags,alloweddrivers,options,siblingfiles))
 
 "Fetch raster width in pixels."
 width(dataset::Dataset) = GDAL.getrasterxsize(dataset)
@@ -229,7 +232,8 @@ The returned filenames will normally be relative or absolute paths depending on
 the path used to originally open the dataset. The strings will be UTF-8 encoded
 """
 filelist(dataset::Dataset) =
-    unsafe_loadstringlist(GDAL.C.GDALGetFileList(Ptr{Void}(dataset)))
+    unsafe_loadstringlist(ccall((:GDALGetFileList,GDAL.libgdal),Ptr{Cstring},
+                                (Dataset,),dataset))
 
 """
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
@@ -237,7 +241,7 @@ Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-borrow_getlayer(dataset::Dataset, i::Integer) = GDAL.datasetgetlayer(dataset, i)
+getlayer(dataset::Dataset, i::Integer) = GDAL.datasetgetlayer(dataset, i)
 
 """
 Fetch the feature layer corresponding to the given name.
@@ -245,7 +249,7 @@ Fetch the feature layer corresponding to the given name.
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-borrow_getlayer(dataset::Dataset, name::AbstractString) =
+getlayer(dataset::Dataset, name::AbstractString) =
     GDAL.datasetgetlayerbyname(dataset, name)
 
 """
@@ -283,7 +287,7 @@ documentation.
 
 createlayer(dataset::Dataset, name::AbstractString;
             spatialref::SpatialRef=SpatialRef(C_NULL),
-            geom::GDAL.OGRwkbGeometryType=GDAL.wkbUnknown,
+            geom::OGRwkbGeometryType=wkbUnknown,
             options=StringList(C_NULL)) =
     GDAL.checknull(ccall((:GDALDatasetCreateLayer,GDAL.libgdal),FeatureLayer,
         (Dataset,Cstring,SpatialRef,GDAL.OGRwkbGeometryType,StringList),dataset,
@@ -395,7 +399,7 @@ returned.
 getproj(dataset::Dataset) = GDAL.getprojectionref(dataset)
 
 "Set the projection reference string for this dataset."
-function setproj(dataset::Dataset, projstring::AbstractString)
+function setproj!(dataset::Dataset, projstring::AbstractString)
     result = GDAL.setprojection(dataset, projstring)
     @cplerr result "Could not set projection"
 end
@@ -417,12 +421,12 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `progressfunc` a function to call to report progress, or `NULL`.
 * `progressdata` application data to pass to the progress function.
 """
-function buildoverviews(dataset::Dataset,
-                        overviewlist::Vector{Cint};
-                        bandlist::Vector{Cint} = Cint[],
-                        resampling::AbstractString = "NEAREST",
-                        progressfunc::Function = GDAL.C.GDALDummyProgress,
-                        progressdata=C_NULL)
+function buildoverviews!(dataset::Dataset,
+                         overviewlist::Vector{Cint};
+                         bandlist::Vector{Cint} = Cint[],
+                         resampling::AbstractString = "NEAREST",
+                         progressfunc::Function = GDAL.C.GDALDummyProgress,
+                         progressdata=C_NULL)
     result = GDAL.buildoverviews(dataset, resampling, length(overviewlist),
                                  overviewlist, length(bandlist), bandlist,
                                  @cplprogress(progressfunc), progressdata)

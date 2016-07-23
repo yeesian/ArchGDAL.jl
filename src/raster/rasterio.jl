@@ -11,11 +11,11 @@ data type (`eBufType`) of the buffer is different than that of the
 if the buffer size (`nBufXSize x nBufYSize`) is different than the size of the
 region being accessed (`nXSize x nYSize`).
 
-The `nPixelSpace`, `nLineSpace` and `nBandSpace` parameters allow reading into
+The `pxspace`, `linespace` and `bandspace` parameters allow reading into
 or writing from various organization of buffers.
 
-For highest performance full resolution data access, read and write on "block
-boundaries" as returned by `GetBlockSize()`, or use the `ReadBlock()` and
+For highest performance full resolution data access, read and write on \"block
+boundaries\" as returned by `GetBlockSize()`, or use the `ReadBlock()` and
 `WriteBlock()` methods.
 
 ### Parameters
@@ -46,18 +46,18 @@ boundaries" as returned by `GetBlockSize()`, or use the `ReadBlock()` and
                 `eBufType * nBufXSize` is used.
 * `bandspace`   The byte offset from the start of one bands data to the start
                 of the next. If defaulted (0) the value will be
-                    `nLineSpace * nBufYSize`
+                    `nlinespace * nBufYSize`
                 implying band sequential organization of the data buffer.
+* `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg structure
+with additional arguments to specify resampling and progress callback, or
+`NULL` for default behaviour. The `GDAL_RASTERIO_RESAMPLING` configuration
+option can also be defined to override the default resampling to one of
+`BILINEAR`, `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
 """
-# * `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg structure
-# with additional arguments to specify resampling and progress callback, or
-# `NULL` for default behaviour. The `GDAL_RASTERIO_RESAMPLING` configuration
-# option can also be defined to override the default resampling to one of
-# `BILINEAR`, `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
 function rasterio!{T <: Real}(dataset::Dataset,
                               buffer::Array{T, 3},
                               bands::Vector{Cint},
-                              access::GDAL.GDALRWFlag = GDAL.GF_Read,
+                              access::GDALRWFlag=GF_Read,
                               pxspace::Integer = 0,
                               linespace::Integer = 0,
                               bandspace::Integer = 0)
@@ -71,7 +71,7 @@ function rasterio!{T <: Real, U <: Integer}(
         bands::Vector{Cint},
         rows::UnitRange{U},
         cols::UnitRange{U},
-        access::GDAL.GDALRWFlag = GDAL.GF_Read,
+        access::GDALRWFlag=GF_Read,
         pxspace::Integer = 0,
         linespace::Integer = 0,
         bandspace::Integer = 0)
@@ -80,29 +80,6 @@ function rasterio!{T <: Real, U <: Integer}(
     rasterio!(dataset, buffer, bands, cols[1], rows[1], xsize, ysize, access,
               pxspace, linespace, bandspace)
 end
-
-# """
-#     GDALDatasetRasterIOEx(GDALDatasetH hDS,
-#                           GDALRWFlag eRWFlag,
-#                           int nXOff,
-#                           int nYOff,
-#                           int nXSize,
-#                           int nYSize,
-#                           void * pData,
-#                           int nBufXSize,
-#                           int nBufYSize,
-#                           GDALDataType eBufType,
-#                           int nBandCount,
-#                           int * panBandMap,
-#                           GSpacing nPixelSpace,
-#                           GSpacing nLineSpace,
-#                           GSpacing nBandSpace,
-#                           GDALRasterIOExtraArg * psExtraArg) -> CPLErr
-# Read/write a region of image data from multiple bands.
-# """
-# function datasetrasterioex{T <: GDALDatasetH}(hDS::Ptr{T},eRWFlag::GDALRWFlag,nDSXOff::Integer,nDSYOff::Integer,nDSXSize::Integer,nDSYSize::Integer,pBuffer,nBXSize::Integer,nBYSize::Integer,eBDataType::GDALDataType,nBandCount::Integer,panBandCount,nPixelSpace::GSpacing,nLineSpace::GSpacing,nBandSpace::GSpacing,psExtraArg)
-#     ccall((:GDALDatasetRasterIOEx,libgdal),CPLErr,(Ptr{GDALDatasetH},GDALRWFlag,Cint,Cint,Cint,Cint,Ptr{Void},Cint,Cint,GDALDataType,Cint,Ptr{Cint},GSpacing,GSpacing,GSpacing,Ptr{GDALRasterIOExtraArg}),hDS,eRWFlag,nDSXOff,nDSYOff,nDSXSize,nDSYSize,pBuffer,nBXSize,nBYSize,eBDataType,nBandCount,panBandCount,nPixelSpace,nLineSpace,nBandSpace,psExtraArg)
-# end
 
 """
 Read/write a region of image data for this band.
@@ -162,9 +139,9 @@ option can also be defined to override the default resampling to one of
 """
 function rasterio!{T <: Real}(rasterband::RasterBand,
                               buffer::Array{T,2},
-                              access::GDAL.GDALRWFlag = GDAL.GF_Read,
-                              pxspace::Integer = 0,
-                              linespace::Integer = 0)
+                              access::GDALRWFlag=GF_Read,
+                              pxspace::Integer=0,
+                              linespace::Integer=0)
     rasterio!(rasterband, buffer, 0, 0, width(rasterband), height(rasterband),
               access, pxspace, linespace)
 end
@@ -174,7 +151,7 @@ function rasterio!{T <: Real, U <: Integer}(
         buffer::Array{T,2},
         rows::UnitRange{U},
         cols::UnitRange{U},
-        access::GDAL.GDALRWFlag = GDAL.GF_Read,
+        access::GDALRWFlag=GF_Read,
         pxspace::Integer = 0,
         linespace::Integer = 0)
     xsize = length(cols); xsize < 1 && error("invalid window width")
@@ -204,7 +181,7 @@ end
 # end
 
 fetch!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
-    rasterio!(rb, buffer, GDAL.GF_Read)
+    rasterio!(rb, buffer, GF_Read)
 
 fetch!{T <: Real}(rb::RasterBand, buffer::Array{T,2}, xoffset::Integer,
                   yoffset::Integer, xsize::Integer, ysize::Integer) =
@@ -228,25 +205,25 @@ fetch{U <: Integer}(rb::RasterBand, rows::UnitRange{U}, cols::UnitRange{U}) =
     rasterio!(rb, Array(getdatatype(rb), length(cols), length(rows)), rows, cols)
 
 update!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
-    rasterio!(rb, buffer, GDAL.GF_Write)
+    rasterio!(rb, buffer, GF_Write)
 
 update!{T <: Real}(rb::RasterBand, buffer::Array{T,2}, xoffset::Integer,
                    yoffset::Integer, xsize::Integer, ysize::Integer) =
-    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GDAL.GF_Write)
+    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GF_Write)
 
 update!{T <: Real, U <: Integer}(rb::RasterBand, buffer::Array{T,2},
                                  rows::UnitRange{U}, cols::UnitRange{U}) =
-    rasterio!(rb, buffer, rows, cols, GDAL.GF_Write)
+    rasterio!(rb, buffer, rows, cols, GF_Write)
 
 fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer) =
     fetch!(getband(dataset, i), buffer)
 
 fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) =
-    rasterio!(dataset, buffer, indices, GDAL.GF_Read)
+    rasterio!(dataset, buffer, indices, GF_Read)
 
 function fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,3})
     nband = nraster(dataset); @assert size(buffer, 3) == nband
-    rasterio!(dataset, buffer, collect(Cint, 1:nband), GDAL.GF_Read)
+    rasterio!(dataset, buffer, collect(Cint, 1:nband), GF_Read)
 end
 
 fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
@@ -306,7 +283,7 @@ update!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer) =
 
 update!{T <: Real}(dataset::Dataset, buffer::Array{T,3},
                    indices::Vector{Cint})=
-    rasterio!(dataset, buffer, indices, GDAL.GF_Write)
+    rasterio!(dataset, buffer, indices, GF_Write)
 
 update!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer) =
@@ -315,7 +292,7 @@ update!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
 update!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint},
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer) =
     rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize,
-              GDAL.GF_Write)
+              GF_Write)
 
 update!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,2},
                         i::Integer, rows::UnitRange{U}, cols::UnitRange{U}) =
@@ -323,7 +300,7 @@ update!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,2},
 
 update!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,3},
             indices::Vector{Cint}, rows::UnitRange{U}, cols::UnitRange{U}) =
-    rasterio!(dataset, buffer, indices, rows, cols, GDAL.GF_Write)
+    rasterio!(dataset, buffer, indices, rows, cols, GF_Write)
 
 for (T,GT) in _GDALTYPE
     eval(quote
@@ -334,17 +311,18 @@ for (T,GT) in _GDALTYPE
                            yoffset::Integer,
                            xsize::Integer,
                            ysize::Integer,
-                           access::GDAL.GDALRWFlag = GDAL.GF_Read,
-                           pxspace::Integer = 0,
-                           linespace::Integer = 0,
-                           bandspace::Integer = 0)
+                           access::GDALRWFlag=GF_Read,
+                           pxspace::Integer=0,
+                           linespace::Integer=0,
+                           bandspace::Integer=0,
+                           extraargs=Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL))
             (dataset == C_NULL) && error("Can't read invalid rasterband")
             xsz, ysz, zsz = size(buffer)
             nband = length(bands); @assert nband == zsz
-            result = GDAL.datasetrasterio(dataset, access, xoffset, yoffset,
-                                          xsize, ysize, pointer(buffer), xsz,
-                                          ysz, $GT, nband, pointer(bands),
-                                          pxspace, linespace, bandspace)
+            result = GDAL.datasetrasterioex(dataset,GDAL.GDALRWFlag(access),
+                        xoffset,yoffset,xsize,ysize,pointer(buffer),xsz,ysz,
+                        $GT,nband,pointer(bands),pxspace,linespace,bandspace,
+                        extraargs)
             @cplerr result "Access in DatasetRasterIO failed."
             buffer
         end
@@ -355,15 +333,63 @@ for (T,GT) in _GDALTYPE
                            yoffset::Integer,
                            xsize::Integer,
                            ysize::Integer,
-                           access::GDAL.GDALRWFlag = GDAL.GF_Read,
-                           pxspace::Integer = 0,
-                           linespace::Integer = 0)
+                           access::GDALRWFlag=GF_Read,
+                           pxspace::Integer=0,
+                           linespace::Integer=0,
+                           extraargs=Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL))
             (rasterband == C_NULL) && error("Can't read invalid rasterband")
-            result = GDAL.rasterio(rasterband, access, xoffset, yoffset, xsize,
-                                   ysize, pointer(buffer), size(buffer)...,
-                                   $GT, pxspace, linespace)
+            result = GDAL.rasterioex(rasterband,GDAL.GDALRWFlag(access),xoffset,
+                        yoffset,xsize,ysize,pointer(buffer),size(buffer)...,
+                        $GT,pxspace,linespace,extraargs)
             @cplerr result "Access in RasterIO failed."
             buffer
         end
     end)
+end
+
+"""
+Read a block of image data efficiently.
+
+This method accesses a "natural" block from the raster band without resampling, 
+or data type conversion. For a more generalized, but potentially less efficient 
+access use RasterIO().
+
+### Parameters
+* `xoffset` the horizontal block offset, with zero indicating the left most 
+            block, 1 the next block and so forth.
+* `yoffset` the vertical block offset, with zero indicating the top most block,
+            1 the next block and so forth.
+* `buffer`  the buffer into which the data will be read. The buffer must be 
+            large enough to hold GetBlockXSize()*GetBlockYSize() words of type 
+            GetRasterDataType().
+"""
+function readblock!(rb::RasterBand, xoffset::Integer, yoffset::Integer, buffer)
+    result = GDAL.readblock(rb, xoffset, yoffset, buffer)
+    @cplerr result "Failed to read block at ($xoffset,$yoffset)"
+    buffer
+end
+
+readblock(rb::RasterBand, xoff::Integer, yoff::Integer) =
+    readblock!(rb,xoff,yoff,Array(getdatatype(rb),width(rb),height(rb)))
+
+"""
+Write a block of image data efficiently.
+
+This method accesses a "natural" block from the raster band without resampling,
+or data type conversion. For a more generalized, but potentially less efficient 
+access use RasterIO().
+
+### Parameters
+* `xoffset` the horizontal block offset, with zero indicating the left most 
+            block, 1 the next block and so forth.
+* `yoffset` the vertical block offset, with zero indicating the left most block,
+            1 the next block and so forth.
+* `buffer`  the buffer from which the data will be written. The buffer must be 
+            large enough to hold GetBlockXSize()*GetBlockYSize() words of type
+            GetRasterDataType().
+"""
+function writeblock!(rb::RasterBand, xoffset::Integer, yoffset::Integer, buffer)
+    result = GDAL.writeblock(rb, xoffset, yoffset, buffer)
+    @cplerr result "Failed to write block at ($xoffset,$yoffset)"
+    buffer
 end

@@ -13,13 +13,13 @@ EPSG GCS or PCS code. It is relatively expensive, and generally involves quite a
 bit of text file scanning. Reasonable efforts should be made to avoid calling it
 many times for the same coordinate system.
 
+### Additional Remarks
 This method is similar to importFromEPSGA() except that EPSG preferred axis
 ordering will not be applied for geographic coordinate systems. EPSG normally
 defines geographic coordinate systems to use lat/long contrary to typical GIS
 use). Since OGR 1.10.0, EPSG preferred axis ordering will also not be applied
 for projected coordinate systems that use northing/easting order.
 
-### Additional Remarks
 The coordinate system definitions are normally read from the EPSG derived
 support files such as pcs.csv, gcs.csv, pcs.override.csv, gcs.override.csv and
 falling back to search for a PROJ.4 epsg init file or a definition in epsg.wkt.
@@ -34,29 +34,6 @@ function fromEPSG!(spref::SpatialRef, code::Integer)
     spref
 end
 
-"""
-Create SRS based on EPSG GCS or PCS code.
-
-This method will create the spatial reference based on the passed in EPSG GCS
-or PCS code. It is relatively expensive, and generally involves quite a bit of
-text file scanning. Reasonable efforts should be made to avoid calling it
-many times for the same coordinate system.
-
-This method is similar to importFromEPSGA() except that EPSG preferred axis
-ordering will not be applied for geographic coordinate systems. EPSG normally
-defines geographic coordinate systems to use lat/long contrary to typical GIS
-use). Since OGR 1.10.0, EPSG preferred axis ordering will also not be applied
-for projected coordinate systems that use northing/easting order.
-
-### Additional Remarks
-The coordinate system definitions are normally read from the EPSG derived
-support files such as pcs.csv, gcs.csv, pcs.override.csv, gcs.override.csv and
-falling back to search for a PROJ.4 epsg init file or a definition in epsg.wkt.
-
-These support files are normally searched for in /usr/local/share/gdal or in the
-directory identified by the GDAL_DATA configuration option. See CPLFindFile()
-for details.
-"""
 unsafe_fromEPSG(code::Integer) = fromEPSG!(unsafe_newspatialref(), code)
 
 """
@@ -75,16 +52,6 @@ function fromEPSGA!(spref::SpatialRef, code::Integer)
     spref
 end
 
-"""
-Create SRS based on EPSG GCS or PCS code.
-
-This method is similar to importFromEPSG() except that EPSG preferred axis
-ordering will be applied for geographic and projected coordinate systems. EPSG
-normally defines geographic coordinate systems to use lat/long, and also there
-are also a few projected coordinate systems that use northing/easting order
-contrary to typical GIS use). See OGRSpatialReference::importFromEPSG() for more
-details on operation of this method.
-"""
 unsafe_fromEPSGA(code::Integer) = fromEPSGA!(unsafe_newspatialref(), code)
 
 """
@@ -95,17 +62,14 @@ contents of the passed WKT string. Only as much of the input string as needed to
 construct this SRS is consumed from the input string, and the input string
 pointer is then updated to point to the remaining (unused) input.
 """
-function fromWKT!{T <: AbstractString}(spref::SpatialRef, wktstr::Vector{T})
+function fromWKT!(spref::SpatialRef, wktstr::AbstractString)
     result = ccall((:OSRImportFromWkt,GDAL.libgdal),GDAL.OGRErr,
-                   (SpatialRef, StringList),spref,wktstr)
+                   (SpatialRef, StringList),spref,[wktstr])
     @ogrerr result "Failed to initialize SRS based on WKT string: $wktstr"
     spref
 end
-fromWKT!(spref::SpatialRef, wktstr::AbstractString) = fromWKT!(spref, [wkt])
 
 "Create SRS from WKT string."
-unsafe_fromWKT{T <: AbstractString}(wktstr::Vector{T}) =
-    unsafe_newspatialref(wktstr[1])
 unsafe_fromWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
 
 """
@@ -117,16 +81,16 @@ equivalents, it is also possible to import `"+init=epsg:n"` style definitions.
 These are passed to `importFromEPSG()`. Other init strings (such as the state
 plane zones) are not currently supported.
 
-Example: `pszProj4 = "+proj=utm +zone=11 +datum=WGS84"`
+Example: `pszProj4 = \"+proj=utm +zone=11 +datum=WGS84\"`
 
 Some parameters, such as grids, recognized by PROJ.4 may not be well understood
 and translated into the OGRSpatialReference model. It is possible to add the
 `+wktext` parameter which is a special keyword that OGR recognized as meaning
-"embed the entire PROJ.4 string in the WKT and use it literally when converting
-back to PROJ.4 format".
+\"embed the entire PROJ.4 string in the WKT and use it literally when converting
+back to PROJ.4 format\".
 
-For example: `"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
-+ellps=intl +units=m +nadgrids=nzgd2kgrid0005.gsb +wktext"`
+For example: `\"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
++ellps=intl +units=m +nadgrids=nzgd2kgrid0005.gsb +wktext\"`
 """
 function fromPROJ4!(spref::SpatialRef, projstr::AbstractString)
     result = GDAL.importfromproj4(spref, projstr)
@@ -134,28 +98,7 @@ function fromPROJ4!(spref::SpatialRef, projstr::AbstractString)
     spref
 end
 
-"""
-Construct Spatial Reference System from PROJ.4 coordinate string.
-
-The OGRSpatialReference is initialized from the passed PROJ.4 style coordinate
-system string. In addition to many `+proj` formulations which have OGC
-equivalents, it is also possible to import `"+init=epsg:n"` style definitions.
-These are passed to `importFromEPSG()`. Other init strings (such as the state
-plane zones) are not currently supported.
-
-Example: `pszProj4 = "+proj=utm +zone=11 +datum=WGS84"`
-
-Some parameters, such as grids, recognized by PROJ.4 may not be well understood
-and translated into the OGRSpatialReference model. It is possible to add the
-`+wktext` parameter which is a special keyword that OGR recognized as meaning
-"embed the entire PROJ.4 string in the WKT and use it literally when converting
-back to PROJ.4 format".
-
-For example: `"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
-+ellps=intl +units=m +nadgrids=nzgd2kgrid0005.gsb +wktext"`
-"""
-unsafe_fromPROJ4(proj::AbstractString) =
-    fromPROJ4!(unsafe_newspatialref(), proj)
+unsafe_fromPROJ4(proj::AbstractString) = fromPROJ4!(unsafe_newspatialref(),proj)
 
 """
 Import coordinate system from ESRI .prj format(s).
@@ -177,38 +120,14 @@ At this time there is no equivalent `exportToESRI()` method. Writing old style
 and `exportToWkt()` methods can be used to generate output suitable to write to
 new style (Arc 8) .prj files.
 """
-function fromESRI!{T <: AbstractString}(spref::SpatialRef,esristr::Vector{T})
+function fromESRI!(spref::SpatialRef, esristr::AbstractString)
     result = ccall((:OSRImportFromESRI,GDAL.libgdal),GDAL.OGRErr,
-                   (SpatialRef,StringList),spref,esristr)
+                   (SpatialRef,StringList),spref,[esristr])
     @ogrerr result "Failed to initialize SRS based on ESRI string: $xmlstr"
     spref
 end
-fromESRI!(spref::SpatialRef,proj::AbstractString) = fromESRI!(spref, [proj])
 
-"""
-Construct coordinate system from ESRI .prj format(s).
-
-This function will read the text loaded from an ESRI .prj file, and translate it
-into an OGRSpatialReference definition. This should support many (but by no
-means all) old style (Arc/Info 7.x) .prj files, as well as the newer pseudo-OGC
-WKT .prj files. Note that new style .prj files are in OGC WKT format, but
-require some manipulation to correct datum names, and units on some projection
-parameters. This is addressed within `importFromESRI()` by an automatic call to
-`morphFromESRI()`.
-
-Currently only `GEOGRAPHIC`, `UTM`, `STATEPLANE`, `GREATBRITIAN_GRID`, `ALBERS`,
-`EQUIDISTANT_CONIC`, `TRANSVERSE (mercator)`, `POLAR`, `MERCATOR` and
-`POLYCONIC` projections are supported from old style files.
-
-At this time there is no equivalent `exportToESRI()` method. Writing old style
-.prj files is not supported by OGRSpatialReference. However the `morphToESRI()`
-and `exportToWkt()` methods can be used to generate output suitable to write to
-new style (Arc 8) .prj files.
-"""
-unsafe_fromESRI{T <: AbstractString}(proj::Vector{T}) =
-    fromESRI!(unsafe_newspatialref(),proj)
-unsafe_fromESRI(proj::AbstractString) =
-    fromESRI!(unsafe_newspatialref(), proj)
+unsafe_fromESRI(proj::AbstractString) = fromESRI!(unsafe_newspatialref(), proj)
 
 "Import coordinate system from XML format (GML only currently)."
 function fromXML!(spref::SpatialRef, xmlstr::AbstractString)
@@ -217,8 +136,8 @@ function fromXML!(spref::SpatialRef, xmlstr::AbstractString)
     spref
 end
 
-unsafe_fromXML(xmlstr::AbstractString) =
-    fromXML!(unsafe_newspatialref(), xmlstr)
+"Construct coordinate system from XML format (GML only currently)."
+unsafe_fromXML(xmlstr::AbstractString) = fromXML!(unsafe_newspatialref(),xmlstr)
 
 """
 Set spatial reference from a URL.
@@ -250,7 +169,6 @@ function toWKT(spref::SpatialRef)
     # julia(17412,0x7fff7bf15000) malloc: *** error for object 0x1078e5d90:
     # pointer being freed was not allocated
     # *** set a breakpoint in malloc_error_break to debug
-
     # signal (6): Abort trap: 6
     # __pthread_kill at /usr/lib/system/libsystem_kernel.dylib (unknown line)
     # Abort trap: 6
@@ -282,7 +200,7 @@ end
                      char **) -> OGRErr
 Export coordinate system in PROJ.4 format.
 """
-function toProj4(spref::SpatialRef)
+function toPROJ4(spref::SpatialRef)
     projptr = Ref{Ptr{UInt8}}()
     result = ccall((:OSRExportToProj4,GDAL.libgdal),GDAL.OGRErr,
                    (SpatialRef,StringList),spref,projptr)
@@ -430,7 +348,7 @@ function setattrvalue!(spref::SpatialRef, path::AbstractString,
     value
 end
 
-function setattrvalue!(spref::SpatialRef, path::AbstractString)
+function setattr!(spref::SpatialRef, path::AbstractString)
     result = GDAL.setattrvalue(spref, path, Ptr{UInt8}(C_NULL))
     @ogrerr result "Failed to set attribute $path"
 end
@@ -439,13 +357,13 @@ end
 Fetch indicated attribute of named node.
 
 This method uses GetAttrNode() to find the named node, and then extracts the
-value of the indicated child. Thus a call to GetAttrValue("UNIT",1) would
-return the second child of the UNIT node, which is normally the length of the
-linear unit in meters.
+value of the indicated child. Thus a call to `getattrvalue(spref,"UNIT",1)`
+would return the second child of the UNIT node, which is normally the length of
+the linear unit in meters.
 
 Parameters
-pszNodeName the tree node to look for (case insensitive).
-iAttr   the child of the node to fetch (zero based).
+`name` the tree node to look for (case insensitive).
+`i`    the child of the node to fetch (zero based).
 
 Returns
 the requested value, or NULL if it fails for any reason.

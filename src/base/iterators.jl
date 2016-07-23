@@ -5,7 +5,8 @@ Base.length(layer::FeatureLayer) = nfeature(layer, true)
 
 function Base.done(layer::FeatureLayer, state::Vector{Feature})
     destroy(state[1])
-    ptr = ccall((:OGR_L_GetNextFeature,GDAL.libgdal), Feature,(FeatureLayer,),layer)
+    ptr = ccall((:OGR_L_GetNextFeature,GDAL.libgdal), Feature,(FeatureLayer,),
+                layer)
     state[1] = ptr
     (ptr == C_NULL)
 end
@@ -31,8 +32,8 @@ Base.start(obj::BlockIterator) = 0
 function Base.next(obj::BlockIterator, iter::Int)
     j = floor(Int, iter / obj.ni)
     i = iter % obj.ni
-    nrows = ((i+1)* obj.ybsize < obj.rows) ? obj.ybsize : obj.rows - i* obj.ybsize
-    ncols = ((j+1)* obj.xbsize < obj.cols) ? obj.xbsize : obj.cols - j*obj.xbsize
+    nrows = ((i+1)* obj.ybsize < obj.rows) ? obj.ybsize : obj.rows-i*obj.ybsize
+    ncols = ((j+1)* obj.xbsize < obj.cols) ? obj.xbsize : obj.cols-j*obj.xbsize
     (((i,j),(nrows,ncols)), iter+1)
 end
 Base.done(obj::BlockIterator, iter::Int) = (iter == obj.n)
