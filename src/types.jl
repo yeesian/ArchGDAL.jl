@@ -4,15 +4,44 @@ typealias FeatureDefn           Ptr{GDAL.OGRFeatureDefnH}
 typealias Field                 Ptr{GDAL.OGRField}
 typealias FieldDefn             Ptr{GDAL.OGRFieldDefnH}
 typealias Geometry              Ptr{GDAL.OGRGeometryH}
-typealias GeomFieldDefn         Ptr{GDAL.OGRGeomFieldDefnHS}
+typealias GeomFieldDefn         GDAL.OGRGeomFieldDefnH
 typealias SpatialRef            Ptr{GDAL.OGRSpatialReferenceH}
 typealias CoordTransform        Ptr{GDAL.OGRCoordinateTransformationH}
 typealias Driver                Ptr{GDAL.GDALDriverH}
 typealias RasterBand            Ptr{GDAL.GDALRasterBandH}
 typealias Dataset               Ptr{GDAL.GDALDatasetH}
-typealias Envelope              Ptr{GDAL.OGREnvelope}
-typealias Envelope3D            Ptr{GDAL.OGREnvelope3D}
 typealias ProgressFunc          Ptr{GDAL.GDALProgressFunc}
+
+"""
+The GDALRasterAttributeTable (or RAT) is used to encapsulate a table used to
+provide attribute information about pixel values.
+
+Each row in the table applies to a range of pixel values (or a single value in
+some cases), and might have attributes such as the histogram count for that 
+range, the color pixels of that range should be drawn names of classes or any 
+other generic information.
+
+Raster attribute tables can be used to represent histograms, color tables, and 
+classification information.
+
+Each column in a raster attribute table has a name, a type (integer, floating 
+point or string), and a GDALRATFieldUsage. The usage distinguishes columns with 
+particular understood purposes (such as color, histogram count, name) and 
+columns that have specific purposes not understood by the library (long label, 
+suitability_for_growing_wheat, etc).
+
+In the general case each row has a column indicating the minimum pixel values 
+falling into that category, and a column indicating the maximum pixel value. 
+These are indicated with usage values of GFU_Min, and GFU_Max. In other cases 
+where each row is a discrete pixel value, one column of usage GFU_MinMax can be 
+used.
+
+In other cases all the categories are of equal size and regularly spaced and 
+the categorization information can be determine just by knowing the value at 
+which the categories start, and the size of a category. This is called \"Linear 
+Binning\" and the information is kept specially on the raster attribute table 
+as a whole.
+"""
 typealias RasterAttributeTable  Ptr{GDAL.GDALRasterAttributeTableH}
 typealias StyleTable            Ptr{GDAL.OGRStyleTableH}
 typealias ColorTable            Ptr{GDAL.GDALColorTableH}
@@ -429,7 +458,7 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
                  # const GDAL_OF_BLOCK_ACCESS_MASK = 0x0300
 
 Base.|(x::GDALOpenFlag,y::UInt8) = UInt8(x) | y
-Base.|(x::UInt8,y::GDALOpenFlag) = x & UInt8(y)
+Base.|(x::UInt8,y::GDALOpenFlag) = x | UInt8(y)
 Base.|(x::GDALOpenFlag,y::GDALOpenFlag) = UInt8(x) | UInt8(y)
 
 "Get data type size in bits."
@@ -445,7 +474,7 @@ typename(dt::GDALDataType) =
 gettype(name::AbstractString) = GDALDataType(GDAL.getdatatypebyname(name))
 
 "Return the smallest data type that can fully express both input data types."
-typeunion(dt1::GDAL.GDALDataType,dt2::GDAL.GDALDataType) =
+typeunion(dt1::GDALDataType,dt2::GDALDataType) =
     GDALDataType(ccall((:GDALDataTypeUnion,GDAL.libgdal),GDAL.GDALDataType,
                        (GDAL.GDALDataType,GDAL.GDALDataType),dt1,dt2))
 

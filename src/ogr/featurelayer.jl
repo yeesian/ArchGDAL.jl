@@ -6,7 +6,8 @@ getname(layer::FeatureLayer) = GDAL.getname(layer)
 getgeomtype(layer::FeatureLayer) = OGRwkbGeometryType(GDAL.getgeomtype(layer))
 
 "Returns the current spatial filter for this layer."
-getspatialfilter(layer::FeatureLayer) = GDAL.getspatialfilter(layer)
+getspatialfilter(layer::FeatureLayer) =
+    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Void}(layer)))
 
 """
 Fetch the spatial reference system for this layer.
@@ -33,7 +34,6 @@ remains the responsibility of the caller, and may be safely destroyed.
 
 ### Parameters
 * `layer`  handle to the layer on which to set the spatial filter.
-* `i`      (optional) index of the geometry field for the spatial filter.
 * `geom`   handle to the geometry to use as a filtering region. NULL may be
            passed indicating that the current spatial filter should be cleared,
            but no new one instituted.
@@ -50,8 +50,8 @@ successive calls are done with different iGeomField values.
 setspatialfilter!(layer::FeatureLayer, geom::Geometry) =
     GDAL.setspatialfilter(layer, geom)
 
-setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry) =
-    GDAL.setspatialfilterex(layer, geom)
+clearspatialfilter!(layer::FeatureLayer) =
+    GDAL.setspatialfilter(layer, Geometry(C_NULL))
 
 """
 Set a new rectangular spatial filter for the layer.
@@ -71,10 +71,6 @@ The only way to clear a spatial filter set with this method is to call
 setspatialfilter!(layer::FeatureLayer, xmin::Real, ymin::Real,
                   xmax::Real, ymax::Real) = 
     GDAL.setspatialfilterrect(layer, xmin, ymin, xmax, ymax)
-
-setspatialfilter!(layer::FeatureLayer, i::Integer, xmin::Real, ymin::Real,
-                  xmax::Real, ymax::Real) = 
-    GDAL.setspatialfilterrectex(layer, i, xmin, ymin, xmax, ymax)
 
 """
 Set a new spatial filter.
@@ -106,7 +102,7 @@ setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry) =
     GDAL.setspatialfilterex(layer, i, geom)
 
 clearspatialfilter!(layer::FeatureLayer, i::Integer) = 
-    GDAL.setspatialfilterex(layer, i, C_NULL)
+    GDAL.setspatialfilterex(layer, i, Geometry(C_NULL))
 
 """
 Set a new rectangular spatial filter.
@@ -209,7 +205,8 @@ available on the current layer use the `TestCapability()` method with a value of
 * `i`: the index indicating how many steps into the result set to seek.
 """
 function setnextbyindex!(layer::FeatureLayer, i::Integer)
-    result = GDAL.setnextbyindex(layer, i)
+    result = ccall((:OGR_L_SetNextByIndex,GDAL.libgdal),GDAL.OGRErr,
+                   (FeatureLayer,GDAL.GIntBig),layer,i)
     @ogrerr result "Failed to move the cursor to index $i"
 end
 
@@ -340,9 +337,6 @@ end
 "Fetch an handle to internal feature geometry. It should not be modified."
 getgeom(feature::Feature) = GDAL.getgeometryref(feature)
 
-"Test if two features are the same."
-equals(feat1::Feature, feat2::Feature) = Bool(GDAL.equals(feat1, feat2))
-
 """
 Fetch number of fields on this feature.
 
@@ -415,7 +409,7 @@ Clear a field, marking it as unset.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-unsetfield(feature::Feature, i::Integer) = GDAL.unsetfield(feature, i)
+unsetfield!(feature::Feature, i::Integer) = GDAL.unsetfield(feature, i)
 
 # """
 #     OGR_F_GetRawFieldRef(OGRFeatureH hFeat,
@@ -661,16 +655,26 @@ getfield(feature::Feature, name::AbstractString) =
 """
 Set field to integer value.
 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `feature`: handle to the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 * `value`: the value to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Integer) =
+setfield!(feature::Feature, i::Integer, value::Cint) =
     GDAL.setfieldinteger(feature, i, value)
 
 """
 Set field to 64 bit integer value.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
 
 ### Parameters
 * `feature`: handle to the feature that owned the field.
@@ -683,6 +687,11 @@ setfield!(feature::Feature, i::Integer, value::Int64) =
 """
 Set field to double value.
 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `feature`: handle to the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
@@ -694,6 +703,11 @@ setfield!(feature::Feature, i::Integer, value::Cdouble) =
 """
 Set field to string value.
 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `feature`: handle to the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
@@ -703,11 +717,13 @@ setfield!(feature::Feature, i::Integer, value::AbstractString) =
     GDAL.setfieldstring(feature, i, value)
 
 """
-    OGR_F_SetFieldIntegerList(OGRFeatureH hFeat,
-                              int iField,
-                              int nCount,
-                              int * panValues) -> void
 Set field to list of integers value.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
@@ -718,11 +734,13 @@ setfield!(feature::Feature, i::Integer, value::Vector{Cint}) =
     GDAL.setfieldintegerlist(feature, i, length(value), value)
 
 """
-    OGR_F_SetFieldInteger64List(OGRFeatureH hFeat,
-                                int iField,
-                                int nCount,
-                                const GIntBig * panValues) -> void
 Set field to list of 64 bit integers value.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
@@ -733,11 +751,13 @@ setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GIntBig}) =
     GDAL.setfieldintegerlist(feature, i, length(value), value)
 
 """
-    OGR_F_SetFieldDoubleList(OGRFeatureH hFeat,
-                             int iField,
-                             int nCount,
-                             double * padfValues) -> void
 Set field to list of doubles value.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
@@ -748,10 +768,13 @@ setfield!(feature::Feature, i::Integer, value::Vector{Cdouble}) =
     GDAL.setfielddoublelist(feature, i, length(value), value)
 
 """
-    OGR_F_SetFieldStringList(OGRFeatureH hFeat,
-                             int iField,
-                             char ** papszValues) -> void
 Set field to list of strings value.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
@@ -777,11 +800,13 @@ setfield!{T <: AbstractString}(feature::Feature, i::Integer, value::Vector{T}) =
 # end
 
 """
-    OGR_F_SetFieldBinary(OGRFeatureH hFeat,
-                         int iField,
-                         int nBytes,
-                         GByte * pabyData) -> void
 Set field to binary data.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
@@ -792,16 +817,13 @@ setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GByte}) =
     GDAL.setfieldbinary(feature, i, sizeof(value), value)
 
 """
-    OGR_F_SetFieldDateTime(OGRFeatureH hFeat,
-                           int iField,
-                           int nYear,
-                           int nMonth,
-                           int nDay,
-                           int nHour,
-                           int nMinute,
-                           int nSecond,
-                           int nTZFlag) -> void
 Set field to datetime.
+
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
+fields will be assigned a string representation of the value, but not 
+necessarily taking into account formatting constraints on this field. Other 
+field types may be unaffected.
+
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
@@ -867,7 +889,7 @@ Fetch definition for this geometry field.
 The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
-getgeomfieldefn(feature::Feature, i::Integer) =
+getgeomfielddefn(feature::Feature, i::Integer) =
     GDAL.getgeomfielddefnref(feature, i)
 
 """
@@ -877,13 +899,13 @@ This is a cover for the OGRFeatureDefn::GetGeomFieldIndex() method.
 
 ### Parameters
 * `feature`: the feature on which the geometry field is found.
-* `name`: the name of the geometry field to search for.
+* `name`: the name of the geometry field to search for. (defaults to \"\")
 
 ### Returns
 the geometry field index, or -1 if no matching geometry field is found.
 """
-getgeomfieldindex(feature::Feature, name::AbstractString) =
-    GDAL.getgeomfieldindex(feature, i)
+getgeomfieldindex(feature::Feature, name::AbstractString="") =
+    GDAL.getgeomfieldindex(feature, name)
 
 """
 Fetch pointer to the feature geometry.
@@ -1085,7 +1107,7 @@ Returns the native media type for the feature.
 
 The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
-e.g. "application/vnd.geo+json" for JSON.
+e.g. \"application/vnd.geo+json\" for JSON.
 """
 getmediatype(feature::Feature) = GDAL.getnativemediatype(feature)
 
@@ -1094,7 +1116,7 @@ Sets the native media type for the feature.
 
 The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
-e.g. "application/vnd.geo+json" for JSON.
+e.g. \"application/vnd.geo+json\" for JSON.
 """
 setmediatype!(feature::Feature, mediatype::AbstractString) =
     GDAL.setnativemediatype(feature, mediatype)
@@ -1226,73 +1248,73 @@ The capability codes that can be tested are represented as strings, but
 implement class specific capabilities, but this can't generally be discovered by
 the caller.
 
-* `OLCRandomRead` / "RandomRead": TRUE if the GetFeature() method is
+* `OLCRandomRead` / \"RandomRead\": TRUE if the GetFeature() method is
     implemented in an optimized way for this layer, as opposed to the default
     implementation using ResetReading() and GetNextFeature() to find the
     requested feature id.
 
-* `OLCSequentialWrite` / "SequentialWrite": TRUE if the CreateFeature() method
+* `OLCSequentialWrite` / \"SequentialWrite\": TRUE if the CreateFeature() method
     works for this layer. Note this means that this particular layer is
     writable. The same OGRLayer class may returned FALSE for other layer
     instances that are effectively read-only.
 
-* `OLCRandomWrite` / "RandomWrite": TRUE if the SetFeature() method is
+* `OLCRandomWrite` / \"RandomWrite\": TRUE if the SetFeature() method is
     operational on this layer. Note this means that this particular layer is
     writable. The same OGRLayer class may returned FALSE for other layer
     instances that are effectively read-only.
 
-* `OLCFastSpatialFilter` / "FastSpatialFilter": TRUE if this layer implements
+* `OLCFastSpatialFilter` / \"FastSpatialFilter\": TRUE if this layer implements
     spatial filtering efficiently. Layers that effectively read all features,
     and test them with the OGRFeature intersection methods should return FALSE.
     This can be used as a clue by the application whether it should build and
     maintain its own spatial index for features in this layer.
 
-* `OLCFastFeatureCount` / "FastFeatureCount": TRUE if this layer can return a
+* `OLCFastFeatureCount` / \"FastFeatureCount\": TRUE if this layer can return a
     feature count (via GetFeatureCount()) efficiently. i.e. without counting the
     features. In some cases this will return TRUE until a spatial filter is
     installed after which it will return FALSE.
 
-* `OLCFastGetExtent` / "FastGetExtent": TRUE if this layer can return its data
+* `OLCFastGetExtent` / \"FastGetExtent\": TRUE if this layer can return its data
     extent (via GetExtent()) efficiently, i.e. without scanning all the
     features. In some cases this will return TRUE until a spatial filter is
     installed after which it will return FALSE.
 
-* `OLCFastSetNextByIndex` / "FastSetNextByIndex": TRUE if this layer can perform
+* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": TRUE if this layer can perform
     the SetNextByIndex() call efficiently, otherwise FALSE.
 
-* `OLCCreateField` / "CreateField": TRUE if this layer can create new fields on
+* `OLCCreateField` / \"CreateField\": TRUE if this layer can create new fields on
     the current layer using CreateField(), otherwise FALSE.
 
-* `OLCCreateGeomField` / "CreateGeomField": (GDAL >= 1.11) TRUE if this layer
+* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) TRUE if this layer
     can create new geometry fields on the current layer using CreateGeomField(),
     otherwise FALSE.
 
-* `OLCDeleteField` / "DeleteField": TRUE if this layer can delete existing
+* `OLCDeleteField` / \"DeleteField\": TRUE if this layer can delete existing
     fields on the current layer using DeleteField(), otherwise FALSE.
 
-* `OLCReorderFields` / "ReorderFields": TRUE if this layer can reorder existing
+* `OLCReorderFields` / \"ReorderFields\": TRUE if this layer can reorder existing
     fields on the current layer using ReorderField() or ReorderFields(),
     otherwise FALSE.
 
-* `OLCAlterFieldDefn` / "AlterFieldDefn": TRUE if this layer can alter the
+* `OLCAlterFieldDefn` / \"AlterFieldDefn\": TRUE if this layer can alter the
     definition of an existing field on the current layer using AlterFieldDefn(),
     otherwise FALSE.
 
-* `OLCDeleteFeature` / "DeleteFeature": TRUE if the DeleteFeature() method is
+* `OLCDeleteFeature` / \"DeleteFeature\": TRUE if the DeleteFeature() method is
     supported on this layer, otherwise FALSE.
 
-* `OLCStringsAsUTF8` / "StringsAsUTF8": TRUE if values of OFTString fields are
+* `OLCStringsAsUTF8` / \"StringsAsUTF8\": TRUE if values of OFTString fields are
     assured to be in UTF-8 format. If FALSE the encoding of fields is uncertain,
     though it might still be UTF-8.
 
-* `OLCTransactions` / "Transactions": TRUE if the StartTransaction(),
+* `OLCTransactions` / \"Transactions\": TRUE if the StartTransaction(),
     CommitTransaction() and RollbackTransaction() methods work in a meaningful
     way, otherwise FALSE.
 
-* `OLCIgnoreFields` / "IgnoreFields": TRUE if fields, geometry and style will be
+* `OLCIgnoreFields` / \"IgnoreFields\": TRUE if fields, geometry and style will be
     omitted when fetching features as set by SetIgnoredFields() method.
 
-* `OLCCurveGeometries` / "CurveGeometries": TRUE if this layer supports writing
+* `OLCCurveGeometries` / \"CurveGeometries\": TRUE if this layer supports writing
     curve geometries or may return such geometries. (GDAL 2.0).
 """
 testcapability(layer::FeatureLayer, capability::AbstractString) =
@@ -1419,7 +1441,7 @@ accordingly.
             elements which is a permutation of
                 `[0, GetLayerDefn()->OGRFeatureDefn::GetFieldCount()-1]`.
 """
-function recordfields!(layer::FeatureLayer, indices::Vector{Cint})
+function reorderfields!(layer::FeatureLayer, indices::Vector{Cint})
     result = GDAL.reorderfields(layer, indices)
     @ogrerr result "Failed to reorder the fields of layer according to $indices"
 end
@@ -1558,17 +1580,21 @@ function synctodisk!(layer::FeatureLayer)
     @ogrerr result "Failed to flush pending changes to disk"
 end
 
-"OGR_L_GetFeaturesRead(OGRLayerH hLayer) -> GIntBig"
+"""
+Return the total number of features read.
+
+Warning: not all drivers seem to update this count properly.
+"""
 getfeaturesread(layer::FeatureLayer) = GDAL.getfeaturesread(layer)
 
 """This method returns the name of the underlying database column being used as
-the FID column, or "" if not supported.
+the FID column, or \"\" if not supported.
 """
 getfidcolname(layer::FeatureLayer) = GDAL.getfidcolumn(layer)
 
 """
 This method returns the name of the underlying database column being used as
-the geometry column, or "" if not supported.
+the geometry column, or \"\" if not supported.
 """
 getgeomcolname(layer::FeatureLayer) = GDAL.getgeometrycolumn(layer)
 

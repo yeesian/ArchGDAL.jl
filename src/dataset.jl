@@ -427,9 +427,11 @@ function buildoverviews!(dataset::Dataset,
                          resampling::AbstractString = "NEAREST",
                          progressfunc::Function = GDAL.C.GDALDummyProgress,
                          progressdata=C_NULL)
-    result = GDAL.buildoverviews(dataset, resampling, length(overviewlist),
-                                 overviewlist, length(bandlist), bandlist,
-                                 @cplprogress(progressfunc), progressdata)
+    result = ccall((:GDALBuildOverviews,GDAL.libgdal),GDAL.CPLErr,(Dataset,
+                  Cstring,Cint,Ptr{Cint},Cint,Ptr{Cint},ProgressFunc,Ptr{Void}),
+                  dataset,resampling,length(overviewlist),overviewlist,
+                  length(bandlist),bandlist,@cplprogress(progressfunc),
+                  progressdata)
     @cplerr result "Failed to build overviews"
 end
 

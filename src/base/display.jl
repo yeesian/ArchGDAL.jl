@@ -130,6 +130,18 @@ function Base.show(io::IO, feature::Feature)
 end
 
 function Base.show(io::IO, spref::SpatialRef)
-    println(io, "Spatial Reference System")
-    print(io, "$(toWKT(spref, true))")
+    if spref == C_NULL
+        print(io, "NULL Spatial Reference System")
+    else
+        print(io, "Spatial Reference System: $(toPROJ4(spref))")
+    end
+end
+
+function Base.show(io::IO, geom::Geometry)
+    if geom == C_NULL
+        print(io, "NULL Geometry")
+    else
+        print(io, "Geometry: ")
+        print(io, "$(toWKT(geom))")
+    end
 end

@@ -144,7 +144,15 @@ setnullable!(fielddefn::FieldDefn, nullable::Bool) =
     GDAL.setnullable(fielddefn, nullable)
 
 "Get default field value"
-getdefault(fielddefn::FieldDefn) = GDAL.getdefault(fielddefn)
+function getdefault(fielddefn::FieldDefn)
+    result = ccall((:OGR_Fld_GetDefault,GDAL.libgdal),Ptr{UInt8},(FieldDefn,),
+                   fielddefn)
+    if result == Ptr{UInt8}(C_NULL)
+        return ""
+    else
+        return bytestring(result)
+    end
+end
 
 """
 Set default field value.
@@ -180,11 +188,12 @@ isdefaultdriverspecific(fielddefn::FieldDefn) =
     Bool(GDAL.isdefaultdriverspecific(fielddefn))
 
 "Create a new field geometry definition."
-unsafe_creategeomfielddefn(name::AbstractString,etype::OGRwkbGeometryType)=
+unsafe_creategeomfielddefn(name::AbstractString, etype::OGRwkbGeometryType) =
     GDAL.gfld_create(name, GDAL.OGRwkbGeometryType(etype))
 
 "Destroy a geometry field definition."
-destroy(gfd::GeomFieldDefn) = GDAL.destroy(gfd)
+destroy(gfd::GeomFieldDefn) =
+    ccall((:OGR_GFld_Destroy,GDAL.libgdal),Void,(GeomFieldDefn,),gfd)
 
 "Set the name of this field."
 setname!(gfd::GeomFieldDefn, name::AbstractString) =
@@ -197,11 +206,13 @@ getname(gfd::GeomFieldDefn) = GDAL.getnameref(gfd)
 gettype(gfd::GeomFieldDefn) = OGRwkbGeometryType(GDAL.gettype(gfd))
 
 "Set the geometry type of this field."
-settype!(gfd::GeomFieldDefn, etype::GDAL.OGRwkbGeometryType) =
-    GDAL.settype(gfd, etype)
+settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType) =
+    ccall((:OGR_GFld_SetType,GDAL.libgdal),Void,(GeomFieldDefn,
+          GDAL.OGRwkbGeometryType),gfd,etype)
 
-"Fetch spatial reference system of this field."
-getspatialref(gfd::GeomFieldDefn) = GDAL.getspatialref(gfd)
+"Fetch spatial reference system of this field. May return NULL"
+getspatialref(gfd::GeomFieldDefn) = ccall((:OGR_GFld_GetSpatialRef,
+                     GDAL.libgdal),SpatialRef,(GeomFieldDefn,),gfd)
 
 """
 Set the spatial reference of this field.
@@ -209,7 +220,6 @@ Set the spatial reference of this field.
 This function drops the reference of the previously set SRS object and acquires
 a new reference on the passed object (if non-NULL).
 """
-# should reference be increased by 1?
 setspatialref!(gfd::GeomFieldDefn, spatialref::SpatialRef) =
     GDAL.setspatialref(gfd, spatialref)
 
@@ -242,4 +252,6 @@ setnullable!(gfd::GeomFieldDefn, nullable::Bool)=GDAL.setnullable(gfd, nullable)
 isignored(gfd::GeomFieldDefn) = Bool(GDAL.isignored(gfd))
 
 "Set whether this field should be omitted when fetching features."
-setignored(gfd::GeomFieldDefn, ignore::Bool) = GDAL.setignored(gfd, ignore)
+setignored!(gfd::GeomFieldDefn, ignore::Bool) = 
+    ccall((:OGR_GFld_SetIgnored,GDAL.libgdal),Void,(GeomFieldDefn,Cint),gfd,
+          ignore)
