@@ -208,31 +208,6 @@ function toPROJ4(spref::SpatialRef)
     bytestring(projptr[])
 end
 
-# """
-#     OSRExportToPCI(OGRSpatialReferenceH,
-#                    char **,
-#                    char **,
-#                    double **) -> OGRErr
-# Export coordinate system in PCI projection definition.
-# """
-# function exporttopci(arg1::Ptr{OGRSpatialReferenceH},arg2,arg3,arg4)
-#     ccall((:OSRExportToPCI,libgdal),OGRErr,(Ptr{OGRSpatialReferenceH},Ptr{Cstring},Ptr{Cstring},Ptr{Ptr{Cdouble}}),arg1,arg2,arg3,arg4)
-# end
-
-
-# """
-#     OSRExportToUSGS(OGRSpatialReferenceH,
-#                     long *,
-#                     long *,
-#                     double **,
-#                     long *) -> OGRErr
-# Export coordinate system in USGS GCTP projection definition.
-# """
-# function exporttousgs(arg1::Ptr{OGRSpatialReferenceH},arg2,arg3,arg4,arg5)
-#     ccall((:OSRExportToUSGS,libgdal),OGRErr,(Ptr{OGRSpatialReferenceH},Ptr{Clong},Ptr{Clong},Ptr{Ptr{Cdouble}},Ptr{Clong}),arg1,arg2,arg3,arg4,arg5)
-# end
-
-
 """
 Export coordinate system in XML format.
 
@@ -240,9 +215,6 @@ Converts the loaded coordinate reference system into XML format to the extent
 possible. LOCAL_CS coordinate systems are not translatable. An empty string will
 be returned along with OGRERR_NONE.
 """
-# ### Parameters
-# pXML  pointer to which dynamically allocated XML definition will be assigned.
-# pszDialect  currently ignored. The dialect used is GML based.
 function toXML(spref::SpatialRef)
     projptr = Ref{Ptr{UInt8}}()
     result = ccall((:OSRExportToXML,GDAL.libgdal),GDAL.OGRErr,
@@ -250,18 +222,6 @@ function toXML(spref::SpatialRef)
     @ogrerr result "Failed to convert this SRS into XML"
     bytestring(projptr[])
 end
-
-# """
-#     OSRExportToPanorama(OGRSpatialReferenceH,
-#                         long *,
-#                         long *,
-#                         long *,
-#                         long *,
-#                         double *) -> OGRErr
-# """
-# function exporttopanorama(arg1::Ptr{OGRSpatialReferenceH},arg2,arg3,arg4,arg5,arg6)
-#     ccall((:OSRExportToPanorama,libgdal),OGRErr,(Ptr{OGRSpatialReferenceH},Ptr{Clong},Ptr{Clong},Ptr{Clong},Ptr{Clong},Ptr{Cdouble}),arg1,arg2,arg3,arg4,arg5,arg6)
-# end
 
 "Export coordinate system in Mapinfo style CoordSys format."
 function toMICoordSys(spref::SpatialRef)
@@ -271,17 +231,6 @@ function toMICoordSys(spref::SpatialRef)
     @ogrerr result "Failed to convert this SRS into XML"
     bytestring(projptr[])
 end
-
-# """
-#     OSRExportToERM(OGRSpatialReferenceH,
-#                    char *,
-#                    char *,
-#                    char *) -> OGRErr
-# Convert coordinate system to ERMapper format.
-# """
-# function exporttoerm(arg1::Ptr{OGRSpatialReferenceH},arg2,arg3,arg4)
-#     ccall((:OSRExportToERM,libgdal),OGRErr,(Ptr{OGRSpatialReferenceH},Cstring,Cstring,Cstring),arg1,arg2,arg3,arg4)
-# end
 
 """
 Convert in place to ESRI WKT format.

@@ -645,24 +645,7 @@ const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
                          GDAL.OFTInteger64 => asint64,          #12
                          GDAL.OFTInteger64List => asint64list  #,13
                     # const OFTMaxType = (UInt32)(13)
-                        )
-
-# function fetchfield(feature::Feature, i::Integer)
-#     const FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
-#                         GDAL.OFTInteger => asint,
-#                         GDAL.OFTInteger64 => asint64,
-#                         GDAL.OFTReal => asdouble,
-#                         GDAL.OFTString => asstring)
-#     asnothing(feature::Feature, i::Integer) = nothing
-#     if isfieldset(feature, i)
-#         _fieldtype = fieldtype(borrowfieldefn(feature, i))
-#         _fetchfield = get(FETCHFIELD, _fieldtype, asnothing)
-#         return _fetchfield(feature, i)
-#     end
-# end
-
-# fetchfield(feature::Feature, name::AbstractString) =
-#     fetchfield(feature, fieldindex(feature, name))
+                    )
 
 function getfield(feature::Feature, i::Integer)
     if isfieldset(feature, i)

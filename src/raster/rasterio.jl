@@ -160,26 +160,6 @@ function rasterio!{T <: Real, U <: Integer}(
               access, pxspace, linespace)
 end
 
-# """
-#     GDALRasterIOEx(GDALRasterBandH hBand,
-#                    GDALRWFlag eRWFlag,
-#                    int nXOff,
-#                    int nYOff,
-#                    int nXSize,
-#                    int nYSize,
-#                    void * pData,
-#                    int nBufXSize,
-#                    int nBufYSize,
-#                    GDALDataType eBufType,
-#                    GSpacing nPixelSpace,
-#                    GSpacing nLineSpace,
-#                    GDALRasterIOExtraArg * psExtraArg) -> CPLErr
-# Read/write a region of image data for this band.
-# """
-# function rasterioex{T <: GDALRasterBandH}(hRBand::Ptr{T},eRWFlag::GDALRWFlag,nDSXOff::Integer,nDSYOff::Integer,nDSXSize::Integer,nDSYSize::Integer,pBuffer,nBXSize::Integer,nBYSize::Integer,eBDataType::GDALDataType,nPixelSpace::GSpacing,nLineSpace::GSpacing,psExtraArg)
-#     ccall((:GDALRasterIOEx,libgdal),CPLErr,(Ptr{GDALRasterBandH},GDALRWFlag,Cint,Cint,Cint,Cint,Ptr{Void},Cint,Cint,GDALDataType,GSpacing,GSpacing,Ptr{GDALRasterIOExtraArg}),hRBand,eRWFlag,nDSXOff,nDSYOff,nDSXSize,nDSYSize,pBuffer,nBXSize,nBYSize,eBDataType,nPixelSpace,nLineSpace,psExtraArg)
-# end
-
 fetch!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
     rasterio!(rb, buffer, GF_Read)
 
