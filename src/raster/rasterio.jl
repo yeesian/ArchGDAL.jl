@@ -317,16 +317,16 @@ for (T,GT) in _GDALTYPE
                            bandspace::Integer=0,
                            extraargs=Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL))
             (dataset == C_NULL) && error("Can't read invalid rasterband")
-            xsz, ysz, zsz = size(buffer)
-            nband = length(bands); @assert nband == zsz
+            xbsize, ybsize, zbsize = size(buffer)
+            nband = length(bands); @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                            (Dataset,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
                             Ptr{Void},Cint,Cint,GDAL.GDALDataType,Cint,
                             Ptr{Cint},GDAL.GSpacing,GDAL.GSpacing,GDAL.GSpacing,
-                            Ptr{GDALRasterIOExtraArg}),dataset,
-                            GDAL.GDALRWFlag(access),xoffset,yoffset,xsize,ysize,
-                            pointer(buffer),xsz,ysz,$GT,nband,pointer(bands),
-                            pxspace,linespace,bandspace,extraargs)
+                            Ptr{GDAL.GDALRasterIOExtraArg}),dataset,access,
+                            xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,
+                            ybsize,$GT,nband,pointer(bands),pxspace,linespace,
+                            bandspace,extraargs)
             @cplerr result "Access in DatasetRasterIO failed."
             buffer
         end
@@ -342,13 +342,14 @@ for (T,GT) in _GDALTYPE
                            linespace::Integer=0,
                            extraargs=Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL))
             (rasterband == C_NULL) && error("Can't read invalid rasterband")
+            xbsize, ybsize = size(buffer)
             result = ccall((:GDALRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                            (RasterBand,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
                             Ptr{Void},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
-                            GDAL.GSpacing,Ptr{GDALRasterIOExtraArg}),rasterband,
-                            GDAL.GDALRWFlag(access),xoffset,yoffset,xsize,ysize,
-                            pointer(buffer),size(buffer)...,$GT,pxspace,
-                            linespace,extraargs)
+                            GDAL.GSpacing,Ptr{GDAL.GDALRasterIOExtraArg}),
+                            rasterband,access,xoffset,yoffset,xsize,ysize,
+                            pointer(buffer),xbsize,ybsize,$GT,pxspace,linespace,
+                            extraargs)
             @cplerr result "Access in RasterIO failed."
             buffer
         end
