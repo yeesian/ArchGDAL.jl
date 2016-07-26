@@ -31,7 +31,7 @@ function copywholeraster{T <: AbstractString}(
         source::Dataset, dest::Dataset, options::Vector{T};
         progressfunc::Function=GDAL.C.GDALDummyProgress, progressdata=C_NULL)
     result = ccall((:GDALDatasetCopyWholeRaster,GDAL.libgdal),GDAL.CPLErr,
-                   (Dataset,Dataset,Ptr{Ptr{Uint8}},ProgressFunc,Ptr{Void}),
+                   (Dataset,Dataset,Ptr{Ptr{UInt8}},ProgressFunc,Ptr{Void}),
                    source,dest,options,@cplprogress(progressfunc),progressdata)
     @cplerr result "Failed to copy whole raster"
 end
