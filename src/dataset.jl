@@ -1,11 +1,3 @@
-"Copy all the files associated with a dataset."
-function copyfiles(dataset::Dataset,
-                   newname::AbstractString,
-                   oldname::AbstractString)
-    result = GDAL.copydatasetfiles(dataset, newname, oldname)
-    @cplerr result "Failed to copy dataset files"
-end
-
 """
 Copy all dataset raster data.
 
@@ -53,8 +45,8 @@ projection, geotransform and so forth are all to be copied from the
 provided template dataset.
 
 ### Parameters
-* `filename`      the name for the new dataset. UTF-8 encoded.
 * `dataset`       the dataset being duplicated.
+* `filename`      the name for the new dataset. UTF-8 encoded.
 * `strict`        `TRUE` if the copy must be strictly equivelent, or more
 normally `FALSE` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation

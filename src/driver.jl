@@ -80,3 +80,19 @@ a (non fatal) warning will be emited and `FALSE` will be returned.
 validate{T <: AbstractString}(drv::Driver, options::Vector{T}) = 
     Bool(ccall((:GDALValidateCreationOptions,GDAL.libgdal),Cint,
                (Driver,StringList),drv,options))
+
+"Copy all the files associated with a dataset."
+function copyfiles(drv::Driver,
+                   newname::AbstractString,
+                   oldname::AbstractString)
+    result = GDAL.copydatasetfiles(drv, newname, oldname)
+    @cplerr result "Failed to copy dataset files"
+end
+
+"Copy all the files associated with a dataset."
+function copyfiles(drvname::AbstractString,
+                   newname::AbstractString,
+                   oldname::AbstractString)
+    result = GDAL.copydatasetfiles(getdriver(drvname), newname, oldname)
+    @cplerr result "Failed to copy dataset files"
+end

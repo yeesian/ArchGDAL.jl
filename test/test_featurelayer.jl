@@ -3,6 +3,11 @@ import ArchGDAL; const AG = ArchGDAL
 
 AG.registerdrivers() do
     AG.read("data/point.geojson") do dataset
+        AG.createcopy(dataset, "tmp/point.geojson") do tmpcopy
+            @fact AG.nlayer(tmpcopy) --> 1
+            AG.deletelayer!(tmpcopy, 0)
+            @fact AG.nlayer(tmpcopy) --> 0
+        end
         layer = AG.getlayer(dataset, 0)
         println(AG.getspatialref(layer))
         println("FID Column name: $(AG.getfidcolname(layer))")
@@ -118,6 +123,8 @@ AG.registerdrivers() do
         println("rubbish index: $(AG.findfieldindex(layer,"rubbish", false))")
     end
 end
+
+rm("tmp/point.geojson")
 
 # Untested:
 # setgeomfielddirectly!(feature::Feature, i::Integer, geom::Geometry)
