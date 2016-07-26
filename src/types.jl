@@ -457,9 +457,11 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
                  # const GDAL_OF_RESERVED_1 = 0x0300
                  # const GDAL_OF_BLOCK_ACCESS_MASK = 0x0300
 
-Base.|(x::GDALOpenFlag,y::UInt8) = UInt8(x) | y
-Base.|(x::UInt8,y::GDALOpenFlag) = x | UInt8(y)
-Base.|(x::GDALOpenFlag,y::GDALOpenFlag) = UInt8(x) | UInt8(y)
+import Base.|
+
+|(x::GDALOpenFlag,y::UInt8) = UInt8(x) | y
+|(x::UInt8,y::GDALOpenFlag) = x | UInt8(y)
+|(x::GDALOpenFlag,y::GDALOpenFlag) = UInt8(x) | UInt8(y)
 
 "Get data type size in bits."
 typesize(dt::GDALDataType) =
