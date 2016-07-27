@@ -57,7 +57,6 @@ within the context of the GDAL/OGR heap.
 """
 destroy(geom::Geometry) = GDAL.destroygeometry(geom)
 
-
 "Returns a copy of the geometry with the original spatial reference system."
 unsafe_clone(geom::Geometry) = GDAL.clone(geom)
 
@@ -190,10 +189,10 @@ end
 "Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known text format."
 function toISOWKT(geom::Geometry)
     isowkt_ptr = Ref{Ptr{UInt8}}()
-    result = GDAL.exporttoisowkt(point, result)
+    result = GDAL.exporttoisowkt(point, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
     wkt = bytestring(isowkt_ptr[])
-    GDAL.C.OGRFree(Ptr{UInt8}(wkt_ptr[]))
+    GDAL.C.OGRFree(Ptr{UInt8}(isowkt_ptr[]))
     wkt
 end
 

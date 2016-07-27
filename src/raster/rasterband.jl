@@ -315,7 +315,6 @@ NULL terminated array of strings. Raster values without associated names will
 have an empty string in the returned list. The first entry in the list is for
 raster values of zero, and so on.
 """
-
 getcategorynames(band::RasterBand) = 
     unsafe_loadstringlist(ccall((:GDALGetRasterCategoryNames,GDAL.libgdal),
                                 Ptr{Cstring},(RasterBand,),band))
