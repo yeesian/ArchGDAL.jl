@@ -55,7 +55,13 @@ Return a name for the units of this raster's values. For instance, it might be
 """
 getunittype(rb::RasterBand) = GDAL.getrasterunittype(rb)
 
-"Set unit type of `rb` to `unittype`."
+"""
+Set unit type of `rb` to `unittype`.
+
+Values should be one of \"\" (the default indicating it is unknown), \"m\" 
+indicating meters, or \"ft\" indicating feet, though other nonstandard values
+are allowed.
+"""
 function setunittype!(rb::RasterBand, unitstring::AbstractString)
     result = GDAL.setrasterunittype(rb, unitstring)
     @cplerr result "Failed to set unit type"
@@ -76,7 +82,7 @@ For file formats that don't know this intrinsically, a value of 0 is returned.
 getoffset(rb::RasterBand) = GDAL.getrasteroffset(rb, C_NULL)
 
 "Set scaling offset."
-function setoffset!(band::RasterBand, value::Cdouble)
+function setoffset!(band::RasterBand, value::Real)
     result = GDAL.setrasteroffset(band, value)
     @cplerr result "Failed to set scaling offset."
     value
@@ -131,12 +137,13 @@ function deletenodatavalue!(rb::RasterBand)
 end
 
 "Fetch the list of category names for this raster."
-getcategorynames(rb::RasterBand) =
-    unsafe_loadstringlist(GDAL.getrastercategorynames(rb))
+getcategorynames(rb::RasterBand) = unsafe_loadstringlist(ccall(
+    (:GDALGetRasterCategoryNames,GDAL.libgdal),StringList,(RasterBand,),rb))
 
 "Set the category names for this band."
-function getcategorynames!(rb::RasterBand, names)
-    result = GDAL.setrastercategorynames(rb, names)
+function setcategorynames!(rb::RasterBand, names)
+    result = ccall((:GDALSetRasterCategoryNames,GDAL.libgdal),GDAL.CPLErr,
+                   (RasterBand,StringList),rb,names)
     @cplerr result "Failed to set category names"
 end
 
@@ -149,7 +156,13 @@ getmaximum(rb::RasterBand) = GDAL.getrastermaximum(rb, C_NULL)
 "Fetch default Raster Attribute Table."
 getdefaultRAT(rb::RasterBand) = GDAL.getdefaultrat(rb)
 
-"Set default Raster Attribute Table."
+"""
+Set default Raster Attribute Table.
+
+Associates a default RAT with the band. If not implemented for the format a 
+CPLE_NotSupported error will be issued. If successful a copy of the RAT is made,
+the original remains owned by the caller.
+"""
 function setdefaultRAT!(rb::RasterBand, rat::RasterAttributeTable)
     result = GDAL.setdefaultrat(rb, rat)
     @cplerr result "Failed to set default raster attribute table"
@@ -166,7 +179,7 @@ width and height. The bands do not have to have the same data type.
 It implements efficient copying, in particular "chunking" the copy in
 substantial blocks.
 
-Currently the only `papszOptions` value supported is : "COMPRESSED=YES" to
+Currently the only `options` value supported is : "COMPRESSED=YES" to
 force alignment on target dataset block sizes to achieve best compression.
 More options may be supported in the future.
 
@@ -177,11 +190,13 @@ More options may be supported in the future.
 * `progressfunc`  progress reporting function.
 * `progressdata`  callback data for progress function.
 """
-function copywholeraster(source::RasterBand, dest::RasterBand;
-                         options=StringList(C_NULL), progressdata=C_NULL,
-                         progressfunc::Function = GDAL.C.GDALDummyProgress)
-    result = GDAL.rasterbandcopywholeraster(source, dest, options,
-                             @cplprogress(progressfunc),progressdata)
+function copywholeraster!(source::RasterBand, dest::RasterBand;
+                          options=StringList(C_NULL), progressdata=C_NULL,
+                          progressfunc::Function = GDAL.C.GDALDummyProgress)
+    result = ccall((:GDALRasterBandCopyWholeRaster,GDAL.libgdal),GDAL.CPLErr,
+                   (RasterBand,RasterBand,Ptr{Ptr{UInt8}},ProgressFunc,
+                   Ptr{Void}),source,dest,options,@cplprogress(progressfunc),
+                   progressdata)
     @cplerr result "Failed to copy whole raster"
 end
 
@@ -201,7 +216,8 @@ was passed in will be returned if it has not overviews, or if none of the
 overviews have enough samples.
 """
 getsampleoverview(rb::RasterBand, nsamples::Integer) =
-    GDAL.getrastersampleoverviewex(rb, nsamples)
+    GDAL.checknull(ccall((:GDALGetRasterSampleOverviewEx,GDAL.libgdal),
+                         RasterBand,(RasterBand,GDAL.GUIntBig),rb,nsamples))
 
 "Color Interpretation value for band"
 getcolorinterp(rb::RasterBand) =
@@ -233,7 +249,7 @@ owned by the caller after the call.
 ### Parameters
 * `colortable` color table to apply (where supported).
 """
-function colortable!(rb::RasterBand, colortable::ColorTable)
+function setcolortable!(rb::RasterBand, colortable::ColorTable)
     result = GDAL.setrastercolortable(rb, colortable)
     @cplwarn result "CPLError $(result): action is unsupported by the driver"
     colortable
@@ -254,13 +270,10 @@ images in one file from another outside the overview architecture.
 
 ### Parameters
 * `rb`              the source (base level) band.
-* `noverviews`      the number of downsampled bands being generated.
 * `overviewbands`   the list of downsampled bands to be generated.
-* `resampling`      Resampling algorithm (eg. "AVERAGE").
-
-### Keyword Arguments
-* `progressfunc`    progress report function.
-* `progressdata`    progress function callback data.
+* `resampling`      (optional) Resampling algorithm (eg. "AVERAGE").
+* `progressfunc`    (optional) progress report function.
+* `progressdata`    (optional) progress function callback data.
 
 ### Additional Remarks
 The output bands need to exist in advance.
@@ -270,13 +283,13 @@ metadata) so that only a given RGB triplet (in case of a RGB image) will be
 considered as the nodata value and not each value of the triplet independantly
 per band.
 """
-function regenerateoverviews!(rb::RasterBand, noverviews::Integer,
-                              overviewbands::Vector{Ptr{GDAL.GDALRasterBandH}},
+function regenerateoverviews!(rb::RasterBand,
+                              overviewbands::Vector{RasterBand},
                               resampling::AbstractString = "NEAREST",
                               progressfunc::Function = GDAL.C.GDALDummyProgress,
                               progressdata=C_NULL)
-    result = GDAL.regenerateoverviews(rb, noverviews, overviewbands, resampling,
-                                      @cplprogress(progressfunc), progressdata)
+    result = GDAL.regenerateoverviews(rb, length(overviewbands), overviewbands,
+                          resampling, @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to regenerate overviews"
     result
 end
@@ -302,8 +315,9 @@ NULL terminated array of strings. Raster values without associated names will
 have an empty string in the returned list. The first entry in the list is for
 raster values of zero, and so on.
 """
-getcategorynames(band::RasterBand) =
-    unsafe_loadstringlist(GDAL.C.GDALGetRasterCategoryNames(band))
+getcategorynames(band::RasterBand) = 
+    unsafe_loadstringlist(ccall((:GDALGetRasterCategoryNames,GDAL.libgdal),
+                                Ptr{Cstring},(RasterBand,),band))
 
 "Set the category names for this band."
 function setcategorynames!(band::RasterBand, names::Vector{ASCIIString})
@@ -339,8 +353,8 @@ allows the imaginary component of a complex constant value to be specified.
 * `imagvalue`    Imaginary component of fill value, defaults to zero
 """
 function fillraster!(band::RasterBand,
-                     realvalue::Cdouble,
-                     imagvalue::Cdouble = 0)
+                     realvalue::Real,
+                     imagvalue::Real = 0)
     result = GDAL.fillraster(band, realvalue, imagvalue)
     @cplerr result "Failed to fill raster band"
 end

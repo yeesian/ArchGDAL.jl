@@ -44,6 +44,12 @@ AG.registerdrivers() do
                     156.0f0,206.0f0,214.0f0,181.0f0,206.0f0,173.0f0,222.0f0,
                     206.0f0,255.0f0,214.0f0,173.0f0,214.0f0,255.0f0,214.0f0,
                     247.0f0,255.0f0,230.0f0,206.0f0,197.0f0])
+
+            println(AG.metadatadomainlist(dataset))
+            println(AG.metadata(dataset))
+            for d in AG.metadatadomainlist(dataset)
+                println("domain $d: $(AG.metadata(dataset, domain=d))")
+            end
         end
 
         # Techniques for Creating Files

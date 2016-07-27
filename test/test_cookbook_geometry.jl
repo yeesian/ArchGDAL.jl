@@ -623,8 +623,9 @@ facts("Force polygon to multipolygon") do
     AG.fromWKT([wkt]) do poly
         println("Before: $(AG.toWKT(poly))")
         if AG.getgeomtype(poly) == AG.wkbPolygon
-            poly = AG.forceto!(poly, AG.wkbMultiPolygon)
-            println("After: $(AG.toWKT(poly))")
+            AG.forceto(poly, AG.wkbMultiPolygon) do mpoly
+                println("After: $mpoly")
+            end
         end
     end
 end
