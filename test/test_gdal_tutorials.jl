@@ -53,7 +53,6 @@ AG.registerdrivers() do
         end
 
         # Techniques for Creating Files
-
         #@test GDAL.getmetadataitem(driver, "DCAP_CREATE", "") == "YES"
         #@test GDAL.getmetadataitem(driver, "DCAP_CREATECOPY", "") == "YES"
 

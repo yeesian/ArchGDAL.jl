@@ -8,7 +8,6 @@ cd(dirname(@__FILE__)) do
     include("test_dataset.jl")
     include("test_rasterband.jl")
     include("test_rasterattrtable.jl")
-    
     include("test_ospy_examples.jl")
     include("test_geos_operations.jl")
     include("test_gdal_tutorials.jl")
