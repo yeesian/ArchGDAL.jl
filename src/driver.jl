@@ -90,9 +90,6 @@ function copyfiles(drv::Driver,
 end
 
 "Copy all the files associated with a dataset."
-function copyfiles(drvname::AbstractString,
-                   newname::AbstractString,
-                   oldname::AbstractString)
-    result = GDAL.copydatasetfiles(getdriver(drvname), newname, oldname)
-    @cplerr result "Failed to copy dataset files"
-end
+copyfiles(drvname::AbstractString, newname::AbstractString,
+          oldname::AbstractString) =
+    copyfiles(getdriver(drvname), newname, oldname)
