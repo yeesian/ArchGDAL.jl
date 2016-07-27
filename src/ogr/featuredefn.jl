@@ -68,7 +68,7 @@ This function should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRFieldDefn passed in is copied,
 and remains the responsibility of the caller.
 """
-addfielddefn(featuredefn::FeatureDefn, fielddefn::FieldDefn) =
+addfielddefn!(featuredefn::FeatureDefn, fielddefn::FieldDefn) =
     GDAL.addfielddefn(featuredefn, fielddefn)
 
 """
@@ -120,7 +120,8 @@ For layers with multiple geometry fields, this method only returns the geometry
 type of the first geometry column. For other columns, use
     `OGR_GFld_GetType(OGR_FD_GetGeomFieldDefn(OGR_L_GetLayerDefn(hLayer), i))`.
 """
-getgeomtype(featuredefn::FeatureDefn) = GDAL.getgeomtype(featuredefn)
+getgeomtype(featuredefn::FeatureDefn) =
+    OGRwkbGeometryType(GDAL.getgeomtype(featuredefn))
 
 """
 Assign the base geometry type for the passed layer (same as the featuredefn).
@@ -130,8 +131,9 @@ type. The default upon creation is `wkbUnknown` which allows for any geometry
 type. The geometry type should generally not be changed after any OGRFeatures
 have been created against this definition.
 """
-setgeomtype!(featuredefn::FeatureDefn, etype::GDAL.OGRwkbGeometryType) =
-    GDAL.setgeomtype(featuredefn, etype)
+setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType) =
+    ccall((:OGR_FD_SetGeomType,GDAL.libgdal),Void,(FeatureDefn,
+          GDAL.OGRwkbGeometryType),featuredefn,etype)
 
 "Determine whether the geometry can be omitted when fetching features."
 isgeomignored(featuredefn::FeatureDefn) = GDAL.isgeometryignored(featuredefn)
@@ -172,7 +174,7 @@ name (case insensitively) is returned.
 ### Returns
 the geometry field index, or -1 if no match found.
 """
-getgeomfieldindex(featuredefn::FeatureDefn, name::AbstractString) =
+getgeomfieldindex(featuredefn::FeatureDefn, name::AbstractString="") =
     GDAL.getgeomfieldindex(featuredefn, name)
 
 """

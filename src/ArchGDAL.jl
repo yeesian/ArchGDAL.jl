@@ -1,5 +1,4 @@
 module ArchGDAL
-    __precompile__(true)
 
     import GDAL
 
@@ -11,6 +10,8 @@ module ArchGDAL
     include("dataset.jl")
     include("raster/rasterband.jl")
     include("raster/rasterio.jl")
+    include("raster/rasterattributetable.jl")
+    include("raster/colortable.jl")
     include("ogr/geometry.jl")
     include("ogr/featurelayer.jl")
     include("ogr/featuredefn.jl")

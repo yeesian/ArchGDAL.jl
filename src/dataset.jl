@@ -1,11 +1,3 @@
-"Copy all the files associated with a dataset."
-function copyfiles(dataset::Dataset,
-                   newname::AbstractString,
-                   oldname::AbstractString)
-    result = GDAL.copydatasetfiles(dataset, newname, oldname)
-    @cplerr result "Failed to copy dataset files"
-end
-
 """
 Copy all dataset raster data.
 
@@ -39,7 +31,7 @@ function copywholeraster{T <: AbstractString}(
         source::Dataset, dest::Dataset, options::Vector{T};
         progressfunc::Function=GDAL.C.GDALDummyProgress, progressdata=C_NULL)
     result = ccall((:GDALDatasetCopyWholeRaster,GDAL.libgdal),GDAL.CPLErr,
-                   (Dataset,Dataset,Ptr{Ptr{Uint8}},ProgressFunc,Ptr{Void}),
+                   (Dataset,Dataset,Ptr{Ptr{UInt8}},ProgressFunc,Ptr{Void}),
                    source,dest,options,@cplprogress(progressfunc),progressdata)
     @cplerr result "Failed to copy whole raster"
 end
@@ -53,8 +45,8 @@ projection, geotransform and so forth are all to be copied from the
 provided template dataset.
 
 ### Parameters
-* `filename`      the name for the new dataset. UTF-8 encoded.
 * `dataset`       the dataset being duplicated.
+* `filename`      the name for the new dataset. UTF-8 encoded.
 * `strict`        `TRUE` if the copy must be strictly equivelent, or more
 normally `FALSE` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
@@ -427,9 +419,11 @@ function buildoverviews!(dataset::Dataset,
                          resampling::AbstractString = "NEAREST",
                          progressfunc::Function = GDAL.C.GDALDummyProgress,
                          progressdata=C_NULL)
-    result = GDAL.buildoverviews(dataset, resampling, length(overviewlist),
-                                 overviewlist, length(bandlist), bandlist,
-                                 @cplprogress(progressfunc), progressdata)
+    result = ccall((:GDALBuildOverviews,GDAL.libgdal),GDAL.CPLErr,(Dataset,
+                  Cstring,Cint,Ptr{Cint},Cint,Ptr{Cint},ProgressFunc,Ptr{Void}),
+                  dataset,resampling,length(overviewlist),overviewlist,
+                  length(bandlist),bandlist,@cplprogress(progressfunc),
+                  progressdata)
     @cplerr result "Failed to build overviews"
 end
 

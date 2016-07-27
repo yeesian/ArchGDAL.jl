@@ -3,7 +3,7 @@ unsafe_newspatialref(wkt::AbstractString="") = GDAL.newspatialreference(wkt)
 
 destroy(spref::SpatialRef) = GDAL.destroyspatialreference(spref)
 
-clone(spref::SpatialRef) = GDAL.clone(spref)
+unsafe_clone(spref::SpatialRef) = GDAL.clone(spref)
 
 """
 Initialize SRS based on EPSG GCS or PCS code.
