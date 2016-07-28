@@ -45,6 +45,8 @@ as a whole.
 typealias RasterAttributeTable  Ptr{GDAL.GDALRasterAttributeTableH}
 typealias StyleTable            Ptr{GDAL.OGRStyleTableH}
 typealias ColorTable            Ptr{GDAL.GDALColorTableH}
+typealias StyleManager          Ptr{GDAL.OGRStyleMgrH}
+typealias StyleTool             Ptr{GDAL.OGRStyleToolH}
 typealias StringList            Ptr{Ptr{UInt8}}
 
 @enum(CPLErr,
