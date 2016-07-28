@@ -350,14 +350,14 @@ Note that some implementations of this method may alter the read cursor of the
 layer.
 """
 function getextent(layer::FeatureLayer, i::Integer, force::Bool=false)
-    envelope = Ref{Envelope}()
-    result = GDAL.getextentex(i, layer, envelope, force)
+    envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0,0,0,0))
+    result = GDAL.getextentex(layer, i, envelope, force)
     @ogrerr result "Extent not known"
     envelope[]
 end
 
 function getextent(layer::FeatureLayer, force::Bool=false)
-    envelope = Ref{Envelope}()
+    envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0,0,0,0))
     result = GDAL.getextent(layer, envelope, force)
     @ogrerr result "Extent not known"
     envelope[]

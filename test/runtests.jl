@@ -3,6 +3,7 @@ cd(dirname(@__FILE__)) do
     include("test_geometry.jl")
     include("test_types.jl")
     include("test_drivers.jl")
+    include("test_feature.jl")
     include("test_featurelayer.jl")
     include("test_fielddefn.jl")
     include("test_dataset.jl")
