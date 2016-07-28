@@ -303,7 +303,7 @@ AG.read("ospy/data4/aster.img") do ds
                 # flush data to disk, set the NoData value and calculate stats
                 outband = AG.getband(outDS, 1)
                 println(outband)
-                #AG.flushcache!(outband)
+                # AG.flushcache!(outband)
                 AG.setnodatavalue!(outband, -99)
                 # georeference the image and set the projection
                 AG.setgeotransform!(outDS, AG.getgeotransform(ds))

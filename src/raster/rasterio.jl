@@ -358,9 +358,6 @@ function readblock!(rb::RasterBand, xoffset::Integer, yoffset::Integer, buffer)
     buffer
 end
 
-readblock(rb::RasterBand, xoff::Integer, yoff::Integer) =
-    readblock!(rb,xoff,yoff,Array(getdatatype(rb),width(rb),height(rb)))
-
 """
 Write a block of image data efficiently.
 
