@@ -214,7 +214,7 @@ AG.read("ospy/data4/aster.img") do ds
                 # create a string to print out
                 s = "$(AG.getfield(feature, id)) "
                 for j in 1:AG.nraster(ds)
-                    data = AG.fetch(ds, j, xOffset, yOffset, 1, 1)
+                    data = AG.read(ds, j, xOffset, yOffset, 1, 1)
                     s = "$s $(data[1,1]) "
                 end
                 println(s)
@@ -228,7 +228,7 @@ AG.read("ospy/data4/aster.img") do ds
         @time begin
             count = 0
             total = 0
-            data = AG.fetch(ds, 1)
+            data = AG.read(ds, 1)
             for (cols,rows) in AG.windows(AG.getband(ds, 1))
                 window = data[cols, rows]
                 count = count + sum(window .> 0)
@@ -297,7 +297,7 @@ AG.read("ospy/data4/aster.img") do ds
                         end
                     end
                     # write the data
-                    AG.update!(outDS, ndvi, 1, j, i, ncols, nrows)
+                    AG.write!(outDS, ndvi, 1, j, i, ncols, nrows)
                 end
                 println(outDS)
                 # flush data to disk, set the NoData value and calculate stats
@@ -368,11 +368,11 @@ facts("Homework 5(b)") do
                 # read in doq1 and write it to the output
                 println("after")
                 AG.rasterio!(band1, data1, 0, 0, cols1, rows1)
-                AG.update!(dsout, data1, 1, xOffset1, yOffset1, cols, rows)
+                AG.write!(dsout, data1, 1, xOffset1, yOffset1, cols, rows)
 
                 # read in doq2 and write it to the output
                 AG.rasterio!(band2, data2, 0, 0, cols2, rows2)
-                AG.update!(dsout, data2, 1, xOffset2, yOffset2, cols, rows)
+                AG.write!(dsout, data2, 1, xOffset2, yOffset2, cols, rows)
 
                 println(dsout)
                 # compute statistics for the output

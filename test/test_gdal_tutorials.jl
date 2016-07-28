@@ -28,7 +28,7 @@ AG.registerdrivers() do
 
             # Reading Raster Data
             @fact AG.width(band) --> 100
-            data = map(Float32, AG.fetch(dataset, 1))
+            data = map(Float32, AG.read(dataset, 1))
             @fact data[:,1] --> roughly(Float32[107.0f0,123.0f0,132.0f0,115.0f0,
                     132.0f0,132.0f0,140.0f0,132.0f0,132.0f0,132.0f0,107.0f0,
                     132.0f0,107.0f0,132.0f0,132.0f0,107.0f0,123.0f0,115.0f0,
