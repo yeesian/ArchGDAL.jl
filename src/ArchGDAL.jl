@@ -17,6 +17,7 @@ module ArchGDAL
     include("ogr/featurelayer.jl")
     include("ogr/featuredefn.jl")
     include("ogr/fielddefn.jl")
+    include("ogr/styletable.jl")
     include("context.jl")
     include("base/iterators.jl")
     include("base/display.jl")
