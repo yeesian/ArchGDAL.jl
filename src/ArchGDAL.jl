@@ -13,6 +13,7 @@ module ArchGDAL
     include("raster/rasterattributetable.jl")
     include("raster/colortable.jl")
     include("ogr/geometry.jl")
+    include("ogr/feature.jl")
     include("ogr/featurelayer.jl")
     include("ogr/featuredefn.jl")
     include("ogr/fielddefn.jl")
