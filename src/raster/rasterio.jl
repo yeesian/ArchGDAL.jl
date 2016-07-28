@@ -160,125 +160,125 @@ function rasterio!{T <: Real, U <: Integer}(
               access, pxspace, linespace)
 end
 
-fetch!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
+read!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
     rasterio!(rb, buffer, GF_Read)
 
-fetch!{T <: Real}(rb::RasterBand, buffer::Array{T,2}, xoffset::Integer,
+read!{T <: Real}(rb::RasterBand, buffer::Array{T,2}, xoffset::Integer,
                   yoffset::Integer, xsize::Integer, ysize::Integer) =
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
 
-fetch!{T <: Real, U <: Integer}(rb::RasterBand, buffer::Array{T,2},
-                                rows::UnitRange{U}, cols::UnitRange{U}) =
+read!{T <: Real, U <: Integer}(rb::RasterBand, buffer::Array{T,2},
+                               rows::UnitRange{U}, cols::UnitRange{U}) =
     rasterio!(rb, buffer, rows, cols)
 
-fetch(rb::RasterBand) =
+read(rb::RasterBand) =
     rasterio!(rb, Array(getdatatype(rb), width(rb), height(rb)))
 
-function fetch(rb::RasterBand, xoffset::Integer, yoffset::Integer,
+function read(rb::RasterBand, xoffset::Integer, yoffset::Integer,
                xsize::Integer, ysize::Integer)
     buffer = Array(getdatatype(rb), width(rb), height(rb))
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
 end
 
 
-fetch{U <: Integer}(rb::RasterBand, rows::UnitRange{U}, cols::UnitRange{U}) =
+read{U <: Integer}(rb::RasterBand, rows::UnitRange{U}, cols::UnitRange{U}) =
     rasterio!(rb, Array(getdatatype(rb), length(cols), length(rows)), rows, cols)
 
-update!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
+write!{T <: Real}(rb::RasterBand, buffer::Array{T,2}) =
     rasterio!(rb, buffer, GF_Write)
 
-update!{T <: Real}(rb::RasterBand, buffer::Array{T,2}, xoffset::Integer,
+write!{T <: Real}(rb::RasterBand, buffer::Array{T,2}, xoffset::Integer,
                    yoffset::Integer, xsize::Integer, ysize::Integer) =
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GF_Write)
 
-update!{T <: Real, U <: Integer}(rb::RasterBand, buffer::Array{T,2},
+write!{T <: Real, U <: Integer}(rb::RasterBand, buffer::Array{T,2},
                                  rows::UnitRange{U}, cols::UnitRange{U}) =
     rasterio!(rb, buffer, rows, cols, GF_Write)
 
-fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer) =
-    fetch!(getband(dataset, i), buffer)
+read!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer) =
+    read!(getband(dataset, i), buffer)
 
-fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) =
+read!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) =
     rasterio!(dataset, buffer, indices, GF_Read)
 
-function fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,3})
+function read!{T <: Real}(dataset::Dataset, buffer::Array{T,3})
     nband = nraster(dataset); @assert size(buffer, 3) == nband
     rasterio!(dataset, buffer, collect(Cint, 1:nband), GF_Read)
 end
 
-fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
+read!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer) =
-    fetch!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
+    read!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
 
-fetch!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint},
+read!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint},
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer) =
     rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)
 
-fetch!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,2},
+read!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,2},
                 i::Integer, rows::UnitRange{U}, cols::UnitRange{U}) =
-    fetch!(getband(dataset, i), buffer, rows, cols)
+    read!(getband(dataset, i), buffer, rows, cols)
 
-fetch!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,3},
+read!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,3},
                 indices::Vector{Cint}, rows::UnitRange{U}, cols::UnitRange{U}) =
     rasterio!(dataset, buffer, indices, rows, cols)
 
-fetch(dataset::Dataset, i::Integer) = fetch(getband(dataset, i))
+read(dataset::Dataset, i::Integer) = read(getband(dataset, i))
 
-function fetch(dataset::Dataset, indices::Vector{Cint})
+function read(dataset::Dataset, indices::Vector{Cint})
     buffer = Array(getdatatype(getband(dataset, indices[1])),
                    width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices)
 end
 
-function fetch(dataset::Dataset)
+function read(dataset::Dataset)
     buffer = Array(getdatatype(getband(dataset, 1)),
                    width(dataset), height(dataset), nraster(dataset))
-    fetch!(dataset, buffer)
+    read!(dataset, buffer)
 end
 
-fetch(dataset::Dataset, i::Integer, xoffset::Integer, yoffset::Integer,
+read(dataset::Dataset, i::Integer, xoffset::Integer, yoffset::Integer,
       xsize::Integer, ysize::Integer) =
-    fetch(getband(dataset, i), xoffset, yoffset, xsize, ysize)
+    read(getband(dataset, i), xoffset, yoffset, xsize, ysize)
 
-function fetch{T <: Integer}(dataset::Dataset, indices::Vector{T},
+function read{T <: Integer}(dataset::Dataset, indices::Vector{T},
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer)
     buffer = Array(getdatatype(getband(dataset, indices[1])),
                    width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
 end
 
-fetch{U <: Integer}(dataset::Dataset, i::Integer, rows::UnitRange{U},
+read{U <: Integer}(dataset::Dataset, i::Integer, rows::UnitRange{U},
                     cols::UnitRange{U}) =
-    fetch(getband(dataset, i), rows, cols)
+    read(getband(dataset, i), rows, cols)
 
-function fetch{U <: Integer}(dataset::Dataset, indices::Vector{Cint},
+function read{U <: Integer}(dataset::Dataset, indices::Vector{Cint},
                              rows::UnitRange{U}, cols::UnitRange{U})
     buffer = Array(getdatatype(getband(dataset, indices[1])),
                    width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices, rows, cols)
 end
 
-update!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer) =
-    update!(getband(dataset, i), buffer)
+write!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer) =
+    write!(getband(dataset, i), buffer)
 
-update!{T <: Real}(dataset::Dataset, buffer::Array{T,3},
+write!{T <: Real}(dataset::Dataset, buffer::Array{T,3},
                    indices::Vector{Cint})=
     rasterio!(dataset, buffer, indices, GF_Write)
 
-update!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
+write!{T <: Real}(dataset::Dataset, buffer::Array{T,2}, i::Integer,
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer) =
-    update!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
+    write!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
 
-update!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint},
+write!{T <: Real}(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint},
         xoffset::Integer, yoffset::Integer, xsize::Integer, ysize::Integer) =
     rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize,
               GF_Write)
 
-update!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,2},
+write!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,2},
                         i::Integer, rows::UnitRange{U}, cols::UnitRange{U}) =
-    update!(getband(dataset, i), buffer, rows, cols)
+    write!(getband(dataset, i), buffer, rows, cols)
 
-update!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,3},
+write!{T <: Real, U <: Integer}(dataset::Dataset, buffer::Array{T,3},
             indices::Vector{Cint}, rows::UnitRange{U}, cols::UnitRange{U}) =
     rasterio!(dataset, buffer, indices, rows, cols, GF_Write)
 
