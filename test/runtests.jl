@@ -6,6 +6,7 @@ cd(dirname(@__FILE__)) do
     include("test_feature.jl")
     include("test_featurelayer.jl")
     include("test_fielddefn.jl")
+    include("test_styletable.jl")
     include("test_dataset.jl")
     include("test_rasterband.jl")
     include("test_rasterattrtable.jl")

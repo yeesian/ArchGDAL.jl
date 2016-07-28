@@ -8,7 +8,7 @@ OGRStyleMgr factory.
 an handle to the new style manager object.
 """
 unsafe_createstylemanager(styletable::StyleTable = StyleTable(C_NULL)) =
-    GDAL.create(styletable)
+    GDAL.sm_create(styletable)
 
 """
 Destroy Style Manager.
@@ -58,6 +58,10 @@ Get the number of parts in a style.
 ### Returns
 the number of parts (style tools) in the style.
 """
+npart(stylemanager::StyleManager) =
+    ccall((:OGR_SM_GetPartCount,GDAL.libgdal),Cint,(StyleManager,Ptr{UInt8}),
+          stylemanager,C_NULL)
+
 npart(stylemanager::StyleManager,stylestring::AbstractString) =
     ccall((:OGR_SM_GetPartCount,GDAL.libgdal),Cint,(StyleManager,Ptr{UInt8}),
           stylemanager,stylestring)
@@ -67,7 +71,7 @@ Fetch a part (style tool) from the current style.
 
 ### Parameters
 * `stylemanager`: handle to the style manager.
-* `nPartId`: the part number (0-based index).
+* `id`: the part number (0-based index).
 * `stylestring`: (optional) the style string on which to operate. If not
     provided, then the current style string stored in the style manager is used.
 
@@ -297,7 +301,7 @@ Return the r,g,b,a components of a color encoded in #RRGGBB[AA] format.
 function getrgba(styletool::StyleTool,color::AbstractString)
     red = Ref{Cint}(0); green = Ref{Cint}(0)
     blue = Ref{Cint}(0); alpha = Ref{Cint}(0)
-    result = getrgbfromstring(styletool, color, red, rgeen, blue, alpha)
+    result = GDAL.getrgbfromstring(styletool, color, red, green, blue, alpha)
     Bool(result) || error("Error in getting RGBA from Styletool")
     (red[], green[], blue[], alpha[])
 end
