@@ -1,4 +1,12 @@
 """
+Duplicate feature.
+
+The newly created feature is owned by the caller, and will have it's own 
+reference to the OGRFeatureDefn.
+"""
+unsafe_clone(feature::Feature) = GDAL.clone(feature)
+
+"""
 Destroy the feature passed in.
 
 The feature is deleted, but within the context of the GDAL/OGR heap. This is
