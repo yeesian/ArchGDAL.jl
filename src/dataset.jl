@@ -302,6 +302,18 @@ copylayer(dataset::Dataset, layer::FeatureLayer, name::AbstractString;
 """
 Execute an SQL statement against the data store.
 
+The result of an SQL query is either NULL for statements that are in error, or
+that have no results set, or an OGRLayer pointer representing a results set from
+the query. Note that this OGRLayer is in addition to the layers in the data
+store and must be destroyed with ReleaseResultSet() before the dataset is closed
+(destroyed).
+
+For more information on the SQL dialect supported internally by OGR review the 
+OGR SQL document. Some drivers (i.e. Oracle and PostGIS) pass the SQL directly
+through to the underlying RDBMS.
+
+Starting with OGR 1.10, the SQLITE dialect can also be used.
+
 ### Parameters
 * **dataset**: the dataset handle.
 * **query**: the SQL statement to execute.
@@ -318,7 +330,9 @@ Deallocate with ReleaseResultSet().
 unsafe_executesql(dataset::Dataset, query::AbstractString;
                   dialect::AbstractString = "",
                   spatialfilter::Geometry = Geometry(C_NULL)) =
-    GDAL.datasetexecutesql(dataset, query, spatialfilter, dialect)
+    ccall((:GDALDatasetExecuteSQL,GDAL.libgdal),FeatureLayer,(Dataset,Cstring,
+          Geometry,Cstring),dataset,query,spatialfilter,dialect)
+
 
 """
 Release results of ExecuteSQL().
