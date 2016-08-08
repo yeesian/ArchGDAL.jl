@@ -1,6 +1,33 @@
-function registerdrivers(f::Function)
-    GDAL.allregister()
-    try f() finally GDAL.destroydrivermanager() end
+function registerdrivers(f::Function;
+                         globalconfig::Vector=[],
+                         threadconfig::Vector=[])
+    # Save the current settings
+    globalsettings=Dict([k=>getconfigoption(k) for (k,v) in globalconfig])
+    localsettings=Dict([k=>getthreadconfigoption(k) for (k,v) in threadconfig])
+    # Set the user settings
+    for (k,v) in threadconfig; setthreadconfigoption(k, v) end
+    for (k,v) in globalconfig; setconfigoption(k, v) end
+    
+    try 
+        GDAL.allregister(); f()
+    finally
+        GDAL.destroydrivermanager()
+        # Restore previous settings
+        for (k,v) in globalsettings
+            if v == ""
+                clearconfigoption(k)
+            else
+                setconfigoption(k, v)
+            end
+        end
+        for (k,v) in localsettings
+            if v == ""
+                clearthreadconfigoption(k)
+            else 
+                setthreadconfigoption(k, v)
+            end
+        end
+    end
 end
 
 function executesql(f::Function, dataset::Dataset, args...)
