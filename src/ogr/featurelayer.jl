@@ -410,11 +410,11 @@ the caller.
     features. In some cases this will return TRUE until a spatial filter is
     installed after which it will return FALSE.
 
-* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": TRUE if this layer can perform
-    the SetNextByIndex() call efficiently, otherwise FALSE.
+* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": TRUE if this layer can 
+    perform the SetNextByIndex() call efficiently, otherwise FALSE.
 
-* `OLCCreateField` / \"CreateField\": TRUE if this layer can create new fields on
-    the current layer using CreateField(), otherwise FALSE.
+* `OLCCreateField` / \"CreateField\": TRUE if this layer can create new fields
+    on the current layer using CreateField(), otherwise FALSE.
 
 * `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) TRUE if this layer
     can create new geometry fields on the current layer using CreateGeomField(),
@@ -423,9 +423,9 @@ the caller.
 * `OLCDeleteField` / \"DeleteField\": TRUE if this layer can delete existing
     fields on the current layer using DeleteField(), otherwise FALSE.
 
-* `OLCReorderFields` / \"ReorderFields\": TRUE if this layer can reorder existing
-    fields on the current layer using ReorderField() or ReorderFields(),
-    otherwise FALSE.
+* `OLCReorderFields` / \"ReorderFields\": TRUE if this layer can reorder
+    existing fields on the current layer using ReorderField() or
+    ReorderFields(), otherwise FALSE.
 
 * `OLCAlterFieldDefn` / \"AlterFieldDefn\": TRUE if this layer can alter the
     definition of an existing field on the current layer using AlterFieldDefn(),
@@ -442,14 +442,25 @@ the caller.
     CommitTransaction() and RollbackTransaction() methods work in a meaningful
     way, otherwise FALSE.
 
-* `OLCIgnoreFields` / \"IgnoreFields\": TRUE if fields, geometry and style will be
-    omitted when fetching features as set by SetIgnoredFields() method.
+* `OLCIgnoreFields` / \"IgnoreFields\": TRUE if fields, geometry and style will
+    be omitted when fetching features as set by SetIgnoredFields() method.
 
-* `OLCCurveGeometries` / \"CurveGeometries\": TRUE if this layer supports writing
-    curve geometries or may return such geometries. (GDAL 2.0).
+* `OLCCurveGeometries` / \"CurveGeometries\": TRUE if this layer supports
+    writing curve geometries or may return such geometries. (GDAL 2.0).
 """
 testcapability(layer::FeatureLayer, capability::AbstractString) =
     Bool(GDAL.testcapability(layer, capability))
+
+listcapability(layer::FeatureLayer) = Dict([
+    c => testcapability(layer,c) for c in
+    (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
+     GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
+     GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
+     GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
+     GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
+     GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
+     GDAL.OLCMeasuredGeometries)
+])
 
 """
 Create a new field on a layer.

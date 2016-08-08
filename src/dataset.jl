@@ -265,16 +265,16 @@ options. These options are normally documented in the format specific
 documentation.
 
 ### Parameters
-* **dataset**: the dataset
-* **name**: the name for the new layer. This should ideally not match any
+* `dataset`: the dataset
+* `name`: the name for the new layer. This should ideally not match any
     existing layer on the datasource.
 
 ### Optional Parameters
-* **spatialref**: the coordinate system to use for the new layer, or `NULL`
+* `spatialref`: the coordinate system to use for the new layer, or `NULL`
     (default) if no coordinate system is available.
-* **geom**: the geometry type for the layer. Use wkbUnknown (default) if
+* `geom`: the geometry type for the layer. Use wkbUnknown (default) if
     there are no constraints on the types geometry to be written.
-* **options**: a StringList of name=value (driver-specific) options.
+* `options`: a StringList of name=value (driver-specific) options.
 """
 
 createlayer(dataset::Dataset, name::AbstractString;
@@ -289,15 +289,49 @@ createlayer(dataset::Dataset, name::AbstractString;
 Duplicate an existing layer.
 
 ### Parameters
-* **dataset**: the dataset handle.
-* **layer**: source layer.
-* **name**: the name of the layer to create.
-* **papszOptions**: a StringList of name=value (driver-specific) options.
+* `dataset`: the dataset handle.
+* `layer`: source layer.
+* `name`: the name of the layer to create.
+* `papszOptions`: a StringList of name=value (driver-specific) options.
 """
 copylayer(dataset::Dataset, layer::FeatureLayer, name::AbstractString;
           options=StringList(C_NULL)) =
     GDAL.checknull(ccall((:GDALDatasetCopyLayer,GDAL.libgdal),FeatureLayer,
         (Dataset,FeatureLayer,Cstring,StringList),dataset,layer,name,options))
+
+"""
+Test if capability is available. TRUE if capability available otherwise FALSE.
+
+One of the following dataset capability names can be passed into this function,
+and a TRUE or FALSE value will be returned indicating whether or not the
+capability is available for this object.
+
+* `ODsCCreateLayer`: True if this datasource can create new layers.
+* `ODsCDeleteLayer`: True if this datasource can delete existing layers.
+* `ODsCCreateGeomFieldAfterCreateLayer`: True if the layers of this datasource
+        support CreateGeomField() just after layer creation.
+* `ODsCCurveGeometries`: True if this datasource supports curve geometries.
+* `ODsCTransactions`: True if this datasource supports (efficient) transactions.
+* `ODsCEmulatedTransactions`: True if this datasource supports transactions 
+        through emulation.
+
+The #define macro forms of the capability names should be used in preference to
+the strings themselves to avoid misspelling.
+
+### Parameters
+* `dataset`: the dataset handle.
+* `capability`: the capability to test.
+"""
+testcapability(dataset::Dataset, capability::AbstractString) =
+    Bool(GDAL.datasettestcapability(dataset, capability))
+
+listcapability(dataset::Dataset) = Dict([
+    c => testcapability(dataset,c) for c in
+    (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
+     GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
+     GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
+])
+
 
 """
 Execute an SQL statement against the data store.
@@ -315,10 +349,10 @@ through to the underlying RDBMS.
 Starting with OGR 1.10, the SQLITE dialect can also be used.
 
 ### Parameters
-* **dataset**: the dataset handle.
-* **query**: the SQL statement to execute.
-* **spatialfilter**: geometry which represents a spatial filter. Can be NULL.
-* **dialect**: allows control of the statement dialect. If set to NULL, the
+* `dataset`: the dataset handle.
+* `query`: the SQL statement to execute.
+* `spatialfilter`: geometry which represents a spatial filter. Can be NULL.
+* `dialect`: allows control of the statement dialect. If set to NULL, the
     OGR SQL engine will be used, except for RDBMS drivers that will use their
     dedicated SQL engine, unless OGRSQL is explicitly passed as the dialect.
     Starting with OGR 1.10, the SQLITE dialect can also be used.
@@ -342,8 +376,8 @@ ExecuteSQL() call on the same GDALDataset. Failure to deallocate a results set
 before destroying the GDALDataset may cause errors.
 
 ### Parameters
-* **dataset**: the dataset handle.
-* **layer**: the result of a previous ExecuteSQL() call.
+* `dataset`: the dataset handle.
+* `layer`: the result of a previous ExecuteSQL() call.
 """
 releaseresultset(dataset::Dataset, layer::FeatureLayer) =
     GDAL.datasetreleaseresultset(dataset, layer)

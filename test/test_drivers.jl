@@ -40,6 +40,7 @@ facts("Testing ConfigOptions") do
     end
 end
 
+facts("Test Driver Capabilities") do
 AG.registerdrivers() do
     drivers = AG.drivers()
     println(drivers)
@@ -51,4 +52,26 @@ AG.registerdrivers() do
                                        ["COMPRESS=LZW"],["INTERLEAVE=PIXEL"]]
         println("isvalid: $(AG.validate(AG.getdriver("GTiff"), options)) for $options")
     end
+    AG.read("data/point.geojson") do dataset
+        @fact AG.listcapability(dataset) --> Dict(
+            "CreateLayer"=>false,
+            "DeleteLayer"=>false,
+            "CreateGeomFieldAfterCreateLayer"=>false,
+            "CurveGeometries"=>false,
+            "Transactions"=>false,
+            "EmulatedTransactions"=>false
+        )
+        @fact AG.listcapability(AG.getlayer(dataset,0)) --> Dict(
+            "SequentialWrite"=>false,    "DeleteField"=>false,
+            "IgnoreFields"=>false,       "FastSpatialFilter"=>false,
+            "DeleteFeature"=>false,      "FastFeatureCount"=>true,
+            "StringsAsUTF8"=>true,       "CreateGeomField"=>false,
+            "ReorderFields"=>false,      "MeasuredGeometries"=>false,
+            "FastSetNextByIndex"=>false, "CreateField"=>false,
+            "RandomWrite"=>false,        "RandomRead"=>false,
+            "CurveGeometries"=>false,    "FastGetExtent"=>true,
+            "Transactions"=>false,       "AlterFieldDefn"=>false
+        )
+    end
+end
 end
