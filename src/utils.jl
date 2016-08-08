@@ -91,29 +91,16 @@ clearconfigoption(option::AbstractString) =
 """
 Get the value of a configuration option.
 
+The value is the value of a (key, value) option set with `setconfigoption()`.
+If the given option was not defined with `setconfigoption()`, it tries to find
+it in environment variables.
+
 ### Parameters
 * `option`  the key of the option to retrieve
 * `default` a default value if the key does not match existing defined options
 
 ### Returns
 the value associated to the key, or the default value if not found.
-
-The value is the value of a (key, value) option set with `setconfigoption()`.
-If the given option was no defined with `setconfigoption()`, it tries to find
-it in environment variables.
-
-To override temporary a potentially existing option with a new value, you can 
-use the following snippet :
-
-    // backup old value
-    const char* pszOldValTmp = CPLGetConfigOption(pszKey, NULL);
-    char* pszOldVal = pszOldValTmp ? CPLStrdup(pszOldValTmp) : NULL;
-    // override with new value
-    CPLSetConfigOption(pszKey, pszNewVal);
-    // do something useful
-    // restore old value
-    CPLSetConfigOption(pszKey, pszOldVal);
-    CPLFree(pszOldVal);
 """
 function getconfigoption(option::AbstractString, default::AbstractString)
     result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
