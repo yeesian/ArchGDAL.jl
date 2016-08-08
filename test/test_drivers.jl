@@ -1,6 +1,22 @@
 using FactCheck
 import ArchGDAL; const AG = ArchGDAL
 
+facts("Testing ConfigOptions") do
+    @fact AG.getconfigoption("GDAL_CACHEMAX") --> ""
+    AG.setconfigoption("GDAL_CACHEMAX","64")
+    @fact AG.getconfigoption("GDAL_CACHEMAX") --> "64"
+    AG.clearconfigoption("GDAL_CACHEMAX")
+    @fact AG.getconfigoption("GDAL_CACHEMAX", "32") --> "32"
+    @fact AG.getconfigoption("GDAL_CACHEMAX") --> ""
+
+    @fact AG.getthreadconfigoption("GDAL_CACHEMAX") --> ""
+    AG.setthreadconfigoption("GDAL_CACHEMAX","64")
+    @fact AG.getthreadconfigoption("GDAL_CACHEMAX") --> "64"
+    AG.clearthreadconfigoption("GDAL_CACHEMAX")
+    @fact AG.getthreadconfigoption("GDAL_CACHEMAX", "32") --> "32"
+    @fact AG.getthreadconfigoption("GDAL_CACHEMAX") --> ""
+end
+
 AG.registerdrivers() do
     drivers = AG.drivers()
     println(drivers)
@@ -13,8 +29,3 @@ AG.registerdrivers() do
         println("isvalid: $(AG.validate(AG.getdriver("GTiff"), options)) for $options")
     end
 end
-
-# Untested
-# destroy(drv::Driver) = GDAL.destroydriver(drv)
-# register(drv::Driver) = GDAL.registerdriver(drv)
-# deregister(drv::Driver) = GDAL.deregisterdriver(drv)
