@@ -82,25 +82,30 @@ function Base.show(io::IO, layer::FeatureLayer)
     print(io, "Layer: $(getname(layer)) ")
     println(io, "($layergeomtype), nfeatures = $(nfeature(layer))")
     println(io, "Feature Definition:")
-    featuredefn = getlayerdefn(layer)
+    print(io, "$(getlayerdefn(layer))")
+end
+
+function Base.show(io::IO, featuredefn::FeatureDefn)
     n = ngeomfield(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
         gfd = getgeomfielddefn(featuredefn, i-1)
-        print(io, "  Geometry (index $(i-1)): $(getname(gfd)) ")
-        println(io, "($(gettype(gfd)))")
+        println(io, "  Geometry (index $(i-1)): $gfd")
     end
     n > 3 && println(io, "  ...\n  Number of Geometries: $n")
-    
+
     n = nfield(featuredefn)
     nfielddisplay = min(n, 5)
     for i in 1:nfielddisplay
         fd = getfielddefn(featuredefn, i-1)
-        print(io, "     Field (index $(i-1)): $(getname(fd)) ")
-        println(io, "($(gettype(fd)))")
+        println(io, "     Field (index $(i-1)): $fd")
     end
     n > 5 && print(io, "...\n Number of Fields: $n")
 end
+
+Base.show(io::IO, fd::FieldDefn) = print(io, "$(getname(fd)) ($(gettype(fd)))")
+Base.show(io::IO, gfd::GeomFieldDefn) =
+    print(io, "$(getname(gfd)) ($(gettype(gfd)))")
 
 function Base.show(io::IO, feature::Feature)
     feature == C_NULL && (println(io, "NULL Feature"); return)
@@ -122,11 +127,23 @@ end
 
 function Base.show(io::IO, spref::SpatialRef)
     spref == C_NULL && (print(io, "NULL Spatial Reference System"); return)
-    print(io, "Spatial Reference System: $(toPROJ4(spref))")
+    projstr = toPROJ4(spref)
+    if length(projstr) > 45
+        projstart = projstr[1:35]
+        projend = projstr[end-4:end]
+        print(io, "Spatial Reference System: $projstart ... $projend")
+    else
+        print(io, "Spatial Reference System: $projstr")
+    end
 end
 
 function Base.show(io::IO, geom::Geometry)
     geom == C_NULL && (print(io, "NULL Geometry"); return)
     print(io, "Geometry: ")
-    print(io, "$(toWKT(geom))")
+    geomwkt = toWKT(geom)
+    if length(geomwkt) > 60
+        print(io, "$(geomwkt[1:50]) ... $(geomwkt[end-4:end])")
+    else
+        print(io, "$geomwkt")
+    end
 end
