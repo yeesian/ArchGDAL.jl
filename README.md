@@ -30,15 +30,14 @@ Number of feature layers: 1
 julia> read("data/point.geojson") do dataset
            print(AG.getlayer(dataset, 0))
        end;
-Layer: OGRGeoJSON (wkbPoint), nfeatures = 4
-Feature Definition:
-  Geometry (index 0):  (wkbPoint)
-     Field (index 0): FID (OFTReal)
-     Field (index 1): pointname (OFTString)
+Layer: OGRGeoJSON, nfeatures = 4
+  Geometry 0 (): [wkbPoint], POINT (100 0), POINT (100.2785 0.0893), ...
+     Field 0 (FID): [OFTReal], 2.0, 3.0, 0.0, 3.0
+     Field 1 (pointname): [OFTString], point-a, point-b, a, b
 
 julia> read("data/point.geojson") do dataset
            AG.getfeature(AG.getlayer(dataset, 0), 2) do feature
-               print(feature)
+              print(feature)
            end
        end;
 Feature

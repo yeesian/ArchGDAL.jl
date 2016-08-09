@@ -8,7 +8,13 @@ function Base.done(layer::FeatureLayer, state::Vector{Feature})
     ptr = ccall((:OGR_L_GetNextFeature,GDAL.libgdal), Feature,(FeatureLayer,),
                 layer)
     state[1] = ptr
-    (ptr == C_NULL)
+    
+    if ptr == C_NULL
+        resetreading!(layer)
+        return true
+    else
+        return false
+    end
 end
 
 immutable BlockIterator
