@@ -76,13 +76,66 @@ function Base.show(io::IO, rasterband::RasterBand)
     end
 end
 
+# assumes that the layer is reset, and will reset it after display
 function Base.show(io::IO, layer::FeatureLayer)
     layer == C_NULL && (println(io, "NULL Layer"); return)
     layergeomtype = getgeomtype(layer)
-    print(io, "Layer: $(getname(layer)) ")
-    println(io, "($layergeomtype), nfeatures = $(nfeature(layer))")
-    println(io, "Feature Definition:")
-    print(io, "$(getlayerdefn(layer))")
+    println(io, "Layer: $(getname(layer)), nfeatures = $(nfeature(layer))")
+    featuredefn = getlayerdefn(layer)
+    
+    # Print Geometries
+    n = ngeomfield(featuredefn)
+    ngeomdisplay = min(n, 3)
+    for i in 1:ngeomdisplay
+        gfd = getgeomfielddefn(featuredefn, i-1)
+        display = "  Geometry $(i-1) ($(getname(gfd))): [$(gettype(gfd))]"
+        if length(display) > 75
+            println(io, "$display[1:70]...")
+            continue
+        end
+        if ngeomdisplay == 1 # only support printing of a single geom column
+            for f in layer
+                geomwkt = toWKT(getgeom(f))
+                length(geomwkt) > 25 && (geomwkt = "$(geomwkt[1:20])...)")
+                newdisplay = "$display, $geomwkt"
+                if length(newdisplay) > 75
+                    display = "$display, ..."
+                    break
+                else
+                    display = newdisplay
+                end
+            end
+        end
+        println(io, display)
+        resetreading!(layer)
+    end
+    n > 3 && println(io, "  ...\n  Number of Geometries: $n")
+    
+    # Print Features
+    n = nfield(featuredefn)
+    nfielddisplay = min(n, 5)
+    for i in 1:nfielddisplay
+        fd = getfielddefn(featuredefn, i-1)
+        display = "     Field $(i-1) ($(getname(fd))): [$(gettype(fd))]"
+        if length(display) > 75
+            println(io, "$display[1:70]...")
+            continue
+        end
+        for f in layer
+            field = getfield(f, i-1)
+            length(field) > 25 && (field = "$(field[1:20])...")
+            newdisplay = "$display, $field"
+            if length(newdisplay) > 75
+                display = "$display, ..."
+                break
+            else
+                display = newdisplay
+            end
+        end
+        println(io, display)
+        resetreading!(layer)
+    end
+    n > 5 && print(io, "...\n Number of Fields: $n")
 end
 
 function Base.show(io::IO, featuredefn::FeatureDefn)

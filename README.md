@@ -3,6 +3,8 @@
 [![Build Status](https://travis-ci.org/yeesian/ArchGDAL.jl.svg?branch=master)](https://travis-ci.org/yeesian/ArchGDAL.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/yeesian/ArchGDAL.jl?svg=true&branch=master)](https://ci.appveyor.com/project/NgYeeSian/archgdal-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/yeesian/ArchGDAL.jl/badge.svg?branch=master)](https://coveralls.io/github/yeesian/ArchGDAL.jl?branch=master)
+[![codecov](https://codecov.io/gh/yeesian/ArchGDAL.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/yeesian/ArchGDAL.jl)
+
 
 ```julia
   | | |_| | | | (_| |  |  Version 0.4.6 (2016-06-19 17:16 UTC)
@@ -30,15 +32,14 @@ Number of feature layers: 1
 julia> read("data/point.geojson") do dataset
            print(AG.getlayer(dataset, 0))
        end;
-Layer: OGRGeoJSON (wkbPoint), nfeatures = 4
-Feature Definition:
-  Geometry (index 0):  (wkbPoint)
-     Field (index 0): FID (OFTReal)
-     Field (index 1): pointname (OFTString)
+Layer: OGRGeoJSON, nfeatures = 4
+  Geometry 0 (): [wkbPoint], POINT (100 0), POINT (100.2785 0.0893), ...
+     Field 0 (FID): [OFTReal], 2.0, 3.0, 0.0, 3.0
+     Field 1 (pointname): [OFTString], point-a, point-b, a, b
 
 julia> read("data/point.geojson") do dataset
            AG.getfeature(AG.getlayer(dataset, 0), 2) do feature
-               print(feature)
+              print(feature)
            end
        end;
 Feature
