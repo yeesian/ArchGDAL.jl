@@ -66,10 +66,10 @@ AG.registerdrivers() do
             "IgnoreFields"=>false,       "FastSpatialFilter"=>false,
             "DeleteFeature"=>false,      "FastFeatureCount"=>true,
             "StringsAsUTF8"=>true,       "CreateGeomField"=>false,
-            "ReorderFields"=>false,      "MeasuredGeometries"=>false,
-            "FastSetNextByIndex"=>false, "CreateField"=>false,
-            "RandomWrite"=>false,        "RandomRead"=>false,
-            "CurveGeometries"=>false,    "FastGetExtent"=>true,
+            "ReorderFields"=>false,      "MeasuredGeometries"=>true,
+            "FastSetNextByIndex"=>true, "CreateField"=>false,
+            "RandomWrite"=>false,        "RandomRead"=>true,
+            "CurveGeometries"=>false,    "FastGetExtent"=>false,
             "Transactions"=>false,       "AlterFieldDefn"=>false
         )
     end
