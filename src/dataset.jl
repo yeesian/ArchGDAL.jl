@@ -327,7 +327,7 @@ testcapability(dataset::Dataset, capability::AbstractString) =
 
 
 function listcapability(dataset::Dataset)
-    d = Dict{String, Bool}
+    d = Dict{String, Bool}()
     capabilities = (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
         GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
         GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
