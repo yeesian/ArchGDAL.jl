@@ -33,7 +33,7 @@ AG.registerdrivers() do
                 AG.setgeomfield!(f, 0, poly)
             end
             @fact AG.toWKT(AG.getgeomfield(f,0)) --> "POLYGON ((0 100,100 0))"
-            
+
             AG.setstylestring!(f, "@Name")
             @fact AG.getstylestring(f) --> "@Name"
             AG.setstylestring!(f, "NewName")
@@ -56,7 +56,7 @@ AG.registerdrivers() do
             AG.setmediatype!(f, "mediatype2")
             @fact AG.getmediatype(f) --> "mediatype2"
 
-            @fact AG.validate(f, GDAL.OGR_F_VAL_NULL, false) --> false
+            @fact AG.validate(f, GDAL.OGR_F_VAL_NULL, false) --> true
             @fact AG.validate(f, GDAL.OGR_F_VAL_GEOM_TYPE, false) --> false
             @fact AG.validate(f, GDAL.OGR_F_VAL_WIDTH, false) --> true
             @fact AG.validate(f, GDAL.OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT, false) --> true
