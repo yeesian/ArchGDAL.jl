@@ -1,6 +1,7 @@
 module ArchGDAL
 
     using Compat
+    import Compat.String
     import GDAL
 
     include("utils.jl")
