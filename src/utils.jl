@@ -40,7 +40,7 @@ function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
     i = 1
     item = unsafe_load(pstringlist, i)
     while Ptr{UInt8}(item) != C_NULL
-        push!(stringlist, bytestring(item))
+        push!(stringlist, unsafe_string(item))
         i += 1
         item = unsafe_load(pstringlist, i)
     end
@@ -105,13 +105,13 @@ the value associated to the key, or the default value if not found.
 function getconfigoption(option::AbstractString, default::AbstractString)
     result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
                    Cstring),option,default)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
 function getconfigoption(option::AbstractString)
     result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
                    Ptr{UInt8}),option,C_NULL)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
 """
@@ -146,11 +146,11 @@ clearthreadconfigoption(option::AbstractString) =
 function getthreadconfigoption(option::AbstractString, default::AbstractString)
     result = ccall((:CPLGetThreadLocalConfigOption,GDAL.libgdal),Ptr{UInt8},
                    (Cstring,Cstring),option,default)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
 function getthreadconfigoption(option::AbstractString)
     result = ccall((:CPLGetThreadLocalConfigOption,GDAL.libgdal),Ptr{UInt8},
                    (Cstring,Ptr{UInt8}),option,C_NULL)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end

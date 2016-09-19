@@ -79,11 +79,11 @@ Tries to force the provided geometry to the specified geometry type.
 # `options`: (optional) options as a null-terminated vector of strings
 
 It can promote 'single' geometry type to their corresponding collection type
-(see OGR_GT_GetCollection()) or the reverse. non-linear geometry type to their 
-corresponding linear geometry type (see OGR_GT_GetLinear()), by possibly 
-approximating circular arcs they may contain. Regarding conversion from linear 
-geometry types to curve geometry types, only "wraping" will be done. No attempt 
-to retrieve potential circular arcs by de-approximating stroking will be done. 
+(see OGR_GT_GetCollection()) or the reverse. non-linear geometry type to their
+corresponding linear geometry type (see OGR_GT_GetLinear()), by possibly
+approximating circular arcs they may contain. Regarding conversion from linear
+geometry types to curve geometry types, only "wraping" will be done. No attempt
+to retrieve potential circular arcs by de-approximating stroking will be done.
 For that, OGRGeometry::getCurveGeometry() can be used.
 
 The passed in geometry is cloned and a new one returned.
@@ -181,7 +181,7 @@ function toWKT(geom::Geometry)
     wkt_ptr = Ref{Ptr{UInt8}}()
     result = GDAL.exporttowkt(geom, wkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to WKT"
-    wkt = bytestring(wkt_ptr[])
+    wkt = unsafe_string(wkt_ptr[])
     GDAL.C.OGRFree(Ptr{UInt8}(wkt_ptr[]))
     wkt
 end
@@ -191,7 +191,7 @@ function toISOWKT(geom::Geometry)
     isowkt_ptr = Ref{Ptr{UInt8}}()
     result = GDAL.exporttoisowkt(point, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
-    wkt = bytestring(isowkt_ptr[])
+    wkt = unsafe_string(isowkt_ptr[])
     GDAL.C.OGRFree(Ptr{UInt8}(isowkt_ptr[]))
     wkt
 end
@@ -246,14 +246,14 @@ Convert a geometry into GeoJSON format.
 A GeoJSON fragment or NULL in case of error.
 """
 toJSON(geom::Geometry, options) =
-    bytestring(ccall((:OGR_G_ExportToJsonEx,GDAL.libgdal), Cstring,
+    unsafe_string(ccall((:OGR_G_ExportToJsonEx,GDAL.libgdal), Cstring,
                (Geometry,Ptr{Ptr{UInt8}}), geom, options))
 
 "Create a geometry object from its GeoJSON representation"
 unsafe_fromJSON(data::AbstractString) = GDAL.creategeometryfromjson(data)
 
 "Assign spatial reference to this object."
-setspatialref!(geom::Geometry, spatialref::SpatialRef) = 
+setspatialref!(geom::Geometry, spatialref::SpatialRef) =
     GDAL.assignspatialreference(geom, spatialref)
 
 """
@@ -787,11 +787,11 @@ The ownership of the returned geometry belongs to the caller.
 unsafe_getlineargeom(geom::Geometry, stepsize::Real=0) =
     GDAL.getlineargeometry(geom, stepsize, C_NULL)
 
-unsafe_getlineargeom{T <: AbstractString}(geom::Geometry, options::Vector{T}) = 
+unsafe_getlineargeom{T <: AbstractString}(geom::Geometry, options::Vector{T}) =
     GDAL.getlineargeometry(geom, 0, options)
 
 unsafe_getlineargeom{T <: AbstractString}(geom::Geometry, stepsize::Real,
-                                   options::Vector{T}) = 
+                                   options::Vector{T}) =
     GDAL.getlineargeometry(geom, stepsize, options)
 
 """
@@ -893,7 +893,7 @@ end
 # Tuples of Vectors
 for (geom, wkbgeom) in ((:linestring, wkbLineString),
                         (:linearring, wkbLinearRing))
-    eval(quote 
+    eval(quote
         function $(Symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
                                                  ys::Vector{Cdouble})
             geom = unsafe_creategeom($wkbgeom)
@@ -955,7 +955,7 @@ for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
                       addpoint!(geom, coord...)
                   end
                   geom
-              end 
+              end
     end
 
     eval(quote
