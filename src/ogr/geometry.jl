@@ -863,7 +863,7 @@ for (geom, wkbgeom) in ((:geomcollection,   wkbGeometryCollection),
                         (:multipolygon,     wkbMultiPolygon),
                         (:point,            wkbPoint),
                         (:polygon,          wkbPolygon))
-    @eval $(symbol("unsafe_create$geom"))() = unsafe_creategeom($wkbgeom)
+    @eval $(Symbol("unsafe_create$geom"))() = unsafe_creategeom($wkbgeom)
 end
 
 function unsafe_createpoint(x::Real, y::Real)
@@ -894,7 +894,7 @@ end
 for (geom, wkbgeom) in ((:linestring, wkbLineString),
                         (:linearring, wkbLinearRing))
     eval(quote 
-        function $(symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
+        function $(Symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
                                                  ys::Vector{Cdouble})
             geom = unsafe_creategeom($wkbgeom)
             for (x,y) in zip(xs, ys)
@@ -903,7 +903,7 @@ for (geom, wkbgeom) in ((:linestring, wkbLineString),
             geom
         end
 
-        function $(symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
+        function $(Symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
                              ys::Vector{Cdouble},zs::Vector{Cdouble})
             geom = unsafe_creategeom($wkbgeom)
             for (x,y,z) in zip(xs, ys, zs)
@@ -949,7 +949,7 @@ for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
                  Vector{Tuple{Cdouble,Cdouble,Cdouble}})
     for (geom, wkbgeom) in ((:linestring, wkbLineString),
                             (:linearring, wkbLinearRing))
-        @eval function $(symbol("unsafe_create$geom"))(coords::$typeargs)
+        @eval function $(Symbol("unsafe_create$geom"))(coords::$typeargs)
                   geom = unsafe_creategeom($wkbgeom)
                   for coord in coords
                       addpoint!(geom, coord...)
@@ -983,7 +983,7 @@ for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
                                 :unsafe_createlinestring),
                                (:multipolygon_noholes, wkbMultiPolygon,
                                 :unsafe_createpolygon))
-        @eval function $(symbol("unsafe_create$geom"))(coords::$typeargs)
+        @eval function $(Symbol("unsafe_create$geom"))(coords::$typeargs)
                   geom = unsafe_creategeom($wkbgeom)
                   for coord in coords
                       addgeomdirectly!(geom, $(f)(coord))

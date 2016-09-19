@@ -1,7 +1,7 @@
 """
 Duplicate feature.
 
-The newly created feature is owned by the caller, and will have it's own 
+The newly created feature is owned by the caller, and will have it's own
 reference to the OGRFeatureDefn.
 """
 unsafe_clone(feature::Feature) = GDAL.clone(feature)
@@ -78,25 +78,25 @@ getfielddefn(feature::Feature, i::Integer) =
     GDAL.getfielddefnref(feature, i)
 
 # fetchfields(feature::Feature) =
-#     Dict([getname(borrowfieldefn(feature, i-1)) => fetchfield(feature, i-1)
-#          for i in 1:nfield(feature)])
+#     Dict(getname(borrowfieldefn(feature, i-1)) => fetchfield(feature, i-1)
+#          for i in 1:nfield(feature))
 
 # fetchfields{T <: Integer}(feature::Feature, indices::UnitRange{T}) =
-#     Dict([getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
-#          for i in indices])
+#     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
+#          for i in indices)
 
 # fetchfields{T <: Integer}(feature::Feature, indices::Vector{T}) =
-#     Dict([getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
-#          for i in indices])
+#     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
+#          for i in indices)
 
 # fetchfields(feature::Feature, names::Vector{ASCIIString}) =
-#     Dict([name => fetchfield(feature, getfieldindex(feature, name))
-#          for name in names])
+#     Dict(name => fetchfield(feature, getfieldindex(feature, name))
+#          for name in names)
 
 # borrowgeomfields(feature::Feature) =
-#     Dict([getname(borrowgeomfieldefn(feature, i)) =>
+#     Dict(getname(borrowgeomfieldefn(feature, i)) =>
 #           toWKT(borrowgeomfield(feature, i))
-#           for i in 1:ngeomfield(feature)])
+#           for i in 1:ngeomfield(feature))
 
 """
 Fetch the field index given field name.
@@ -210,8 +210,8 @@ Fetch field value as a list of 64 bit integers.
 * `iField`: the field to fetch, from 0 to GetFieldCount()-1.
 * `pnCount`: an integer to put the list count (number of integers) into.
 ### Returns
-the field value. This list is internal, and should not be modified, or freed. 
-Its lifetime may be very brief. If *pnCount is zero on return the returned 
+the field value. This list is internal, and should not be modified, or freed.
+Its lifetime may be very brief. If *pnCount is zero on return the returned
 pointer may be NULL or non-NULL.
 """
 function asint64list(feature::Feature, i::Integer)
@@ -231,8 +231,8 @@ Fetch field value as a list of doubles.
 * `iField`: the field to fetch, from 0 to GetFieldCount()-1.
 * `pnCount`: an integer to put the list count (number of doubles) into.
 ### Returns
-the field value. This list is internal, and should not be modified, or freed. 
-Its lifetime may be very brief. If *pnCount is zero on return the returned 
+the field value. This list is internal, and should not be modified, or freed.
+Its lifetime may be very brief. If *pnCount is zero on return the returned
 pointer may be NULL or non-NULL.
 """
 function asdoublelist(feature::Feature, i::Integer)
@@ -250,7 +250,7 @@ Fetch field value as a list of strings.
 * `hFeat`: handle to the feature that owned the field.
 * `iField`: the field to fetch, from 0 to GetFieldCount()-1.
 ### Returns
-the field value. This list is internal, and should not be modified, or freed. 
+the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
 asstringlist(feature::Feature, i::Integer) =
@@ -266,7 +266,7 @@ Fetch field value as binary.
 * `iField`: the field to fetch, from 0 to GetFieldCount()-1.
 * `pnBytes`: location to place count of bytes returned.
 ### Returns
-the field value. This list is internal, and should not be modified, or freed. 
+the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
 function asbinary(feature::Feature, i::Integer)
@@ -374,9 +374,9 @@ getfield(feature::Feature, name::AbstractString) =
 """
 Set field to integer value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -390,9 +390,9 @@ setfield!(feature::Feature, i::Integer, value::Cint) =
 """
 Set field to 64 bit integer value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -406,9 +406,9 @@ setfield!(feature::Feature, i::Integer, value::Int64) =
 """
 Set field to double value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -422,9 +422,9 @@ setfield!(feature::Feature, i::Integer, value::Cdouble) =
 """
 Set field to string value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -438,9 +438,9 @@ setfield!(feature::Feature, i::Integer, value::AbstractString) =
 """
 Set field to list of integers value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -455,9 +455,9 @@ setfield!(feature::Feature, i::Integer, value::Vector{Cint}) =
 """
 Set field to list of 64 bit integers value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -472,9 +472,9 @@ setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GIntBig}) =
 """
 Set field to list of doubles value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -489,9 +489,9 @@ setfield!(feature::Feature, i::Integer, value::Vector{Cdouble}) =
 """
 Set field to list of strings value.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -521,9 +521,9 @@ setfield!{T <: AbstractString}(feature::Feature, i::Integer, value::Vector{T}) =
 """
 Set field to binary data.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters
@@ -538,9 +538,9 @@ setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GByte}) =
 """
 Set field to datetime.
 
-OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString 
-fields will be assigned a string representation of the value, but not 
-necessarily taking into account formatting constraints on this field. Other 
+OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
+fields will be assigned a string representation of the value, but not
+necessarily taking into account formatting constraints on this field. Other
 field types may be unaffected.
 
 ### Parameters

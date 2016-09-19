@@ -2,13 +2,13 @@ function registerdrivers(f::Function;
                          globalconfig::Vector=[],
                          threadconfig::Vector=[])
     # Save the current settings
-    globalsettings=Dict([k=>getconfigoption(k) for (k,v) in globalconfig])
-    localsettings=Dict([k=>getthreadconfigoption(k) for (k,v) in threadconfig])
+    globalsettings=Dict(k=>getconfigoption(k) for (k,v) in globalconfig)
+    localsettings=Dict(k=>getthreadconfigoption(k) for (k,v) in threadconfig)
     # Set the user settings
     for (k,v) in threadconfig; setthreadconfigoption(k, v) end
     for (k,v) in globalconfig; setconfigoption(k, v) end
-    
-    try 
+
+    try
         GDAL.allregister(); f()
     finally
         GDAL.destroydrivermanager()
@@ -23,7 +23,7 @@ function registerdrivers(f::Function;
         for (k,v) in localsettings
             if v == ""
                 clearthreadconfigoption(k)
-            else 
+            else
                 setthreadconfigoption(k, v)
             end
         end
@@ -68,7 +68,7 @@ for gdalfunc in (:boundary, :buffer, :centroid, :clone, :convexhull, :create,
                  :update)
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
-            obj = $(symbol("unsafe_$gdalfunc"))(args...; kwargs...)
+            obj = $(Symbol("unsafe_$gdalfunc"))(args...; kwargs...)
             try f(obj) finally destroy(obj) end
         end
     end)
