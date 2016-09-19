@@ -35,7 +35,7 @@ That is it expects a "StringList", in the sense of the CPL functions, as a
 NULL terminated array of strings.
 """
 function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
-    stringlist = Vector{ASCIIString}()
+    stringlist = Vector{String}()
     (pstringlist == C_NULL) && return stringlist
     i = 1
     item = unsafe_load(pstringlist, i)
@@ -67,11 +67,11 @@ key can be got later with the `getconfigoption()` method.
 * `option`  the key of the option
 * `value`   the value of the option, or NULL to clear a setting.
 
-This mechanism is similar to environment variables, but options set with 
-`setconfigoption()` overrides, for `getconfigoption()` point of view, values 
+This mechanism is similar to environment variables, but options set with
+`setconfigoption()` overrides, for `getconfigoption()` point of view, values
 defined in the environment.
 
-If `setconfigoption()` is called several times with the same key, the value 
+If `setconfigoption()` is called several times with the same key, the value
 provided during the last call will be used.
 """
 setconfigoption(option::AbstractString, value::AbstractString) =
@@ -81,7 +81,7 @@ setconfigoption(option::AbstractString, value::AbstractString) =
 """
 This function can be used to clear a setting.
 
-Note: it will not unset an existing environment variable; it will 
+Note: it will not unset an existing environment variable; it will
 just unset a value previously set by `setconfigoption()`.
 """
 clearconfigoption(option::AbstractString) =
@@ -135,7 +135,7 @@ setthreadconfigoption(option::AbstractString, value::AbstractString) =
 """
 This function can be used to clear a setting.
 
-Note: it will not unset an existing environment variable; it will 
+Note: it will not unset an existing environment variable; it will
 just unset a value previously set by `setthreadconfigoption()`.
 """
 clearthreadconfigoption(option::AbstractString) =

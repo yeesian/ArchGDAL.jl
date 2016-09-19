@@ -316,7 +316,7 @@ getcategorynames(band::RasterBand) =
                                 Ptr{Cstring},(RasterBand,),band))
 
 "Set the category names for this band."
-function setcategorynames!(band::RasterBand, names::Vector{ASCIIString})
+function setcategorynames!(band::RasterBand, names::Vector{String})
     result = ccall((:GDALSetRasterCategoryNames,GDAL.libgdal),GDAL.CPLErr,
                    (RasterBand,StringList),band,names)
     @cplerr result "Failed to set category names for this band"

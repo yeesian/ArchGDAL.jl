@@ -89,7 +89,7 @@ getfielddefn(feature::Feature, i::Integer) =
 #     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
 #          for i in indices)
 
-# fetchfields(feature::Feature, names::Vector{ASCIIString}) =
+# fetchfields(feature::Feature, names::Vector{String}) =
 #     Dict(name => fetchfield(feature, getfieldindex(feature, name))
 #          for name in names)
 

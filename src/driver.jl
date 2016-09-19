@@ -34,7 +34,7 @@ ndriver() = GDAL.getdrivercount()
 
 "Returns a listing of all registered drivers"
 function drivers()
-    dlist = Dict{ASCIIString,ASCIIString}()
+    dlist = Dict{String,String}()
     for i in 0:(ndriver()-1)
         dlist[shortname(getdriver(i))] = longname(getdriver(i))
     end

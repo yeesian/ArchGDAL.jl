@@ -48,7 +48,7 @@ AG.registerdrivers() do
     println(AG.identifydriver("data/point.geojson"))
     println(AG.identifydriver("data/utmsmall.tif"))
     println(AG.identifydriver("data/A.tif"))
-    for options in Vector{ASCIIString}[["COMPRESS=LZW","INTERLEAVE=PIXEL"],
+    for options in Vector{String}[["COMPRESS=LZW","INTERLEAVE=PIXEL"],
                                        ["COMPRESS=LZW"],["INTERLEAVE=PIXEL"]]
         println("isvalid: $(AG.validate(AG.getdriver("GTiff"), options)) for $options")
     end
