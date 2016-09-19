@@ -451,16 +451,32 @@ the caller.
 testcapability(layer::FeatureLayer, capability::AbstractString) =
     Bool(GDAL.testcapability(layer, capability))
 
-listcapability(layer::FeatureLayer) = Dict(
-    c => testcapability(layer,c) for c in
-    (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
-     GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
-     GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
-     GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
-     GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
-     GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
-     GDAL.OLCMeasuredGeometries)
-)
+function listcapability(layer::FeatureLayer)
+    d = Dict{String, Bool}()
+    capabilities = (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
+        GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
+        GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
+        GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
+        GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
+        GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
+        GDAL.OLCMeasuredGeometries)
+    for c in capabilities
+        d[c] = testcapability(layer,c)
+    end
+    d
+end
+
+# TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
+# listcapability(layer::FeatureLayer) = Dict(
+#     c => testcapability(layer,c) for c in
+#     (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
+#      GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
+#      GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
+#      GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
+#      GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
+#      GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
+#      GDAL.OLCMeasuredGeometries)
+# )
 
 """
 Create a new field on a layer.

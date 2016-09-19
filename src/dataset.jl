@@ -325,12 +325,25 @@ the strings themselves to avoid misspelling.
 testcapability(dataset::Dataset, capability::AbstractString) =
     Bool(GDAL.datasettestcapability(dataset, capability))
 
-listcapability(dataset::Dataset) = Dict(
-    c => testcapability(dataset,c) for c in
-    (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
-     GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
-     GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
-)
+
+function listcapability(dataset::Dataset)
+    d = Dict{String, Bool}
+    capabilities = (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
+        GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
+        GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
+    for c in capabilities
+        d[c] = testcapability(dataset,c)
+    end
+    d
+end
+
+# TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
+# listcapability(dataset::Dataset) = Dict(
+#     c => testcapability(dataset,c) for c in
+#     (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
+#      GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
+#      GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
+# )
 
 
 """

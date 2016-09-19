@@ -1,5 +1,6 @@
 module ArchGDAL
 
+    using Compat
     import GDAL
 
     include("utils.jl")
