@@ -150,7 +150,7 @@ function getdefault(fielddefn::FieldDefn)
     if result == Ptr{UInt8}(C_NULL)
         return ""
     else
-        return bytestring(result)
+        return unsafe_string(result)
     end
 end
 

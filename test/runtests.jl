@@ -18,3 +18,5 @@ cd(dirname(@__FILE__)) do
     # left out until https://github.com/visr/GDAL.jl/issues/30 is resolved
     # include("test_cookbook_projection.jl")
 end
+
+FactCheck.exitstatus()

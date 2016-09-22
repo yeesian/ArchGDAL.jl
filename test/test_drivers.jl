@@ -48,7 +48,7 @@ AG.registerdrivers() do
     println(AG.identifydriver("data/point.geojson"))
     println(AG.identifydriver("data/utmsmall.tif"))
     println(AG.identifydriver("data/A.tif"))
-    for options in Vector{ASCIIString}[["COMPRESS=LZW","INTERLEAVE=PIXEL"],
+    for options in Vector{String}[["COMPRESS=LZW","INTERLEAVE=PIXEL"],
                                        ["COMPRESS=LZW"],["INTERLEAVE=PIXEL"]]
         println("isvalid: $(AG.validate(AG.getdriver("GTiff"), options)) for $options")
     end
@@ -66,10 +66,10 @@ AG.registerdrivers() do
             "IgnoreFields"=>false,       "FastSpatialFilter"=>false,
             "DeleteFeature"=>false,      "FastFeatureCount"=>true,
             "StringsAsUTF8"=>true,       "CreateGeomField"=>false,
-            "ReorderFields"=>false,      "MeasuredGeometries"=>false,
-            "FastSetNextByIndex"=>false, "CreateField"=>false,
-            "RandomWrite"=>false,        "RandomRead"=>false,
-            "CurveGeometries"=>false,    "FastGetExtent"=>true,
+            "ReorderFields"=>false,      "MeasuredGeometries"=>true,
+            "FastSetNextByIndex"=>true, "CreateField"=>false,
+            "RandomWrite"=>false,        "RandomRead"=>true,
+            "CurveGeometries"=>false,    "FastGetExtent"=>false,
             "Transactions"=>false,       "AlterFieldDefn"=>false
         )
     end

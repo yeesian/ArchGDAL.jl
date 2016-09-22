@@ -172,7 +172,7 @@ function toWKT(spref::SpatialRef)
     # signal (6): Abort trap: 6
     # __pthread_kill at /usr/lib/system/libsystem_kernel.dylib (unknown line)
     # Abort trap: 6
-    bytestring(wktptr[])
+    unsafe_string(wktptr[])
 end
 
 """
@@ -187,7 +187,7 @@ function toWKT(spref::SpatialRef, simplify::Bool)
     wktptr = Ref{Cstring}()
     result = GDAL.exporttoprettywkt(spref, wktptr, simplify)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
-    wktstr = bytestring(wktptr[])
+    wktstr = unsafe_string(wktptr[])
     # should we call OGRFree() on wktptr?
     # Note that the returned WKT string should be freed with OGRFree()
     # when no longer needed. It is the responsibility of the caller.
@@ -205,7 +205,7 @@ function toPROJ4(spref::SpatialRef)
     result = ccall((:OSRExportToProj4,GDAL.libgdal),GDAL.OGRErr,
                    (SpatialRef,StringList),spref,projptr)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
-    bytestring(projptr[])
+    unsafe_string(projptr[])
 end
 
 """
@@ -220,7 +220,7 @@ function toXML(spref::SpatialRef)
     result = ccall((:OSRExportToXML,GDAL.libgdal),GDAL.OGRErr,
                    (SpatialRef,StringList,Ptr{UInt8}),spref,projptr,C_NULL)
     @ogrerr result "Failed to convert this SRS into XML"
-    bytestring(projptr[])
+    unsafe_string(projptr[])
 end
 
 "Export coordinate system in Mapinfo style CoordSys format."
@@ -229,14 +229,14 @@ function toMICoordSys(spref::SpatialRef)
     result = ccall((:OSRExportToMICoordSys,GDAL.libgdal),GDAL.OGRErr,
                    (SpatialRef,StringList),spref,projptr)
     @ogrerr result "Failed to convert this SRS into XML"
-    bytestring(projptr[])
+    unsafe_string(projptr[])
 end
 
 """
 Convert in place to ESRI WKT format.
 
 The value nodes of this coordinate system are modified in various manners more
-closely map onto the ESRI concept of WKT format. This includes renaming a 
+closely map onto the ESRI concept of WKT format. This includes renaming a
 variety of projections and arguments, and stripping out nodes note recognised by
 ESRI (like AUTHORITY and AXIS).
 """
