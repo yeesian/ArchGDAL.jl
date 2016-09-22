@@ -471,7 +471,7 @@ typesize(dt::GDALDataType) =
 
 "name (string) corresponding to GDAL data type"
 typename(dt::GDALDataType) =
-    bytestring(ccall((:GDALGetDataTypeName,GDAL.libgdal),Cstring,
+    unsafe_string(ccall((:GDALGetDataTypeName,GDAL.libgdal),Cstring,
                      (GDAL.GDALDataType,),dt))
 
 "Returns GDAL data type by symbolic name."
@@ -491,7 +491,7 @@ iscomplex(dtype::GDALDataType) =
 
 "Get name of AsyncStatus data type."
 getname(dtype::GDALAsyncStatusType) =
-    bytestring(ccall((:GDALGetAsyncStatusTypeName,GDAL.libgdal),Cstring,
+    unsafe_string(ccall((:GDALGetAsyncStatusTypeName,GDAL.libgdal),Cstring,
                      (GDAL.GDALAsyncStatusType,),dtype))
 
 "Get AsyncStatusType by symbolic name."
@@ -500,7 +500,7 @@ asyncstatustype(name::AbstractString) =
 
 "Return name (string) corresponding to color interpretation"
 getname(obj::GDALColorInterp) =
-    bytestring(ccall((:GDALGetColorInterpretationName,GDAL.libgdal),Cstring,
+    unsafe_string(ccall((:GDALGetColorInterpretationName,GDAL.libgdal),Cstring,
                      (GDAL.GDALColorInterp,),obj))
 
 "Get color interpretation corresponding to the given symbolic name."
@@ -509,17 +509,17 @@ colorinterp(name::AbstractString) =
 
 "Get name of palette interpretation."
 getname(obj::GDALPaletteInterp) =
-    bytestring(ccall((:GDALGetPaletteInterpretationName,GDAL.libgdal),Cstring,
+    unsafe_string(ccall((:GDALGetPaletteInterpretationName,GDAL.libgdal),Cstring,
                      (GDAL.GDALPaletteInterp,),obj))
 
 "Fetch human readable name for a field type."
 getname(obj::OGRFieldType) = 
-    bytestring(ccall((:OGR_GetFieldTypeName,GDAL.libgdal),Cstring,
+    unsafe_string(ccall((:OGR_GetFieldTypeName,GDAL.libgdal),Cstring,
                      (GDAL.OGRFieldType,),obj))
 
 "Fetch human readable name for a field subtype."
 getname(obj::OGRFieldSubType) =
-    bytestring(ccall((:OGR_GetFieldSubTypeName,GDAL.libgdal),Cstring,
+    unsafe_string(ccall((:OGR_GetFieldSubTypeName,GDAL.libgdal),Cstring,
                      (GDAL.OGRFieldSubType,),obj))
 
 "Return if type and subtype are compatible."

@@ -35,12 +35,12 @@ That is it expects a "StringList", in the sense of the CPL functions, as a
 NULL terminated array of strings.
 """
 function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
-    stringlist = Vector{ASCIIString}()
+    stringlist = Vector{String}()
     (pstringlist == C_NULL) && return stringlist
     i = 1
     item = unsafe_load(pstringlist, i)
     while Ptr{UInt8}(item) != C_NULL
-        push!(stringlist, bytestring(item))
+        push!(stringlist, unsafe_string(item))
         i += 1
         item = unsafe_load(pstringlist, i)
     end
@@ -67,11 +67,11 @@ key can be got later with the `getconfigoption()` method.
 * `option`  the key of the option
 * `value`   the value of the option, or NULL to clear a setting.
 
-This mechanism is similar to environment variables, but options set with 
-`setconfigoption()` overrides, for `getconfigoption()` point of view, values 
+This mechanism is similar to environment variables, but options set with
+`setconfigoption()` overrides, for `getconfigoption()` point of view, values
 defined in the environment.
 
-If `setconfigoption()` is called several times with the same key, the value 
+If `setconfigoption()` is called several times with the same key, the value
 provided during the last call will be used.
 """
 setconfigoption(option::AbstractString, value::AbstractString) =
@@ -81,7 +81,7 @@ setconfigoption(option::AbstractString, value::AbstractString) =
 """
 This function can be used to clear a setting.
 
-Note: it will not unset an existing environment variable; it will 
+Note: it will not unset an existing environment variable; it will
 just unset a value previously set by `setconfigoption()`.
 """
 clearconfigoption(option::AbstractString) =
@@ -105,13 +105,13 @@ the value associated to the key, or the default value if not found.
 function getconfigoption(option::AbstractString, default::AbstractString)
     result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
                    Cstring),option,default)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
 function getconfigoption(option::AbstractString)
     result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
                    Ptr{UInt8}),option,C_NULL)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
 """
@@ -135,7 +135,7 @@ setthreadconfigoption(option::AbstractString, value::AbstractString) =
 """
 This function can be used to clear a setting.
 
-Note: it will not unset an existing environment variable; it will 
+Note: it will not unset an existing environment variable; it will
 just unset a value previously set by `setthreadconfigoption()`.
 """
 clearthreadconfigoption(option::AbstractString) =
@@ -146,11 +146,11 @@ clearthreadconfigoption(option::AbstractString) =
 function getthreadconfigoption(option::AbstractString, default::AbstractString)
     result = ccall((:CPLGetThreadLocalConfigOption,GDAL.libgdal),Ptr{UInt8},
                    (Cstring,Cstring),option,default)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
 function getthreadconfigoption(option::AbstractString)
     result = ccall((:CPLGetThreadLocalConfigOption,GDAL.libgdal),Ptr{UInt8},
                    (Cstring,Ptr{UInt8}),option,C_NULL)
-    return (result == C_NULL) ? bytestring() : bytestring(result)
+    return (result == C_NULL) ? "" : unsafe_string(result)
 end

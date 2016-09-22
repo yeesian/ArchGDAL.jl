@@ -69,7 +69,7 @@ The only way to clear a spatial filter set with this method is to call
 `OGRLayer::SetSpatialFilter(NULL)`.
 """
 setspatialfilter!(layer::FeatureLayer, xmin::Real, ymin::Real,
-                  xmax::Real, ymax::Real) = 
+                  xmax::Real, ymax::Real) =
     GDAL.setspatialfilterrect(layer, xmin, ymin, xmax, ymax)
 
 """
@@ -98,10 +98,10 @@ generalized.
     indicating that the current spatial filter should be cleared, but
     no new one instituted.
 """
-setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry) = 
+setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry) =
     GDAL.setspatialfilterex(layer, i, geom)
 
-clearspatialfilter!(layer::FeatureLayer, i::Integer) = 
+clearspatialfilter!(layer::FeatureLayer, i::Integer) =
     GDAL.setspatialfilterex(layer, i, Geometry(C_NULL))
 
 """
@@ -115,7 +115,7 @@ Set a new rectangular spatial filter.
 * `ymax`: the maximum Y coordinate for the rectangular region.
 """
 setspatialfilter!(layer::FeatureLayer, i::Integer, xmin::Real, ymin::Real,
-               xmax::Real, ymax::Real) = 
+               xmax::Real, ymax::Real) =
     GDAL.setspatialfilterrectex(layer, i, xmin, ymin, xmax, ymax)
 
 """
@@ -410,7 +410,7 @@ the caller.
     features. In some cases this will return TRUE until a spatial filter is
     installed after which it will return FALSE.
 
-* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": TRUE if this layer can 
+* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": TRUE if this layer can
     perform the SetNextByIndex() call efficiently, otherwise FALSE.
 
 * `OLCCreateField` / \"CreateField\": TRUE if this layer can create new fields
@@ -451,16 +451,32 @@ the caller.
 testcapability(layer::FeatureLayer, capability::AbstractString) =
     Bool(GDAL.testcapability(layer, capability))
 
-listcapability(layer::FeatureLayer) = Dict([
-    c => testcapability(layer,c) for c in
-    (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
-     GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
-     GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
-     GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
-     GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
-     GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
-     GDAL.OLCMeasuredGeometries)
-])
+function listcapability(layer::FeatureLayer)
+    d = Dict{String, Bool}()
+    capabilities = (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
+        GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
+        GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
+        GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
+        GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
+        GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
+        GDAL.OLCMeasuredGeometries)
+    for c in capabilities
+        d[c] = testcapability(layer,c)
+    end
+    d
+end
+
+# TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
+# listcapability(layer::FeatureLayer) = Dict(
+#     c => testcapability(layer,c) for c in
+#     (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
+#      GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
+#      GDAL.OLCCreateField,       GDAL.OLCDeleteField,     GDAL.OLCReorderFields,
+#      GDAL.OLCAlterFieldDefn,    GDAL.OLCTransactions,    GDAL.OLCDeleteFeature,
+#      GDAL.OLCFastSetNextByIndex,GDAL.OLCStringsAsUTF8,   GDAL.OLCIgnoreFields,
+#      GDAL.OLCCreateGeomField,   GDAL.OLCCurveGeometries,
+#      GDAL.OLCMeasuredGeometries)
+# )
 
 """
 Create a new field on a layer.
@@ -804,7 +820,7 @@ unless the GEOS support is compiled in. The recognized list of options is:
 
 * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
     be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into 
+* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
     MultiPolygons, or LineStrings to MultiLineStrings.
 * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
     from the fields of the input layer.
@@ -825,7 +841,7 @@ function intersection(input::FeatureLayer, method::FeatureLayer,
                       result::FeatureLayer; options = StringList(C_NULL),
                       progressfunc::Function = GDAL.C.GDALDummyProgress,
                       progressdata = C_NULL)
-    result = GDAL.intersection(input, method, result, options, 
+    result = GDAL.intersection(input, method, result, options,
                                @cplprogress(progressfunc),progressdata)
     @ogrerr result "Failed to compute the intersection of the two layers"
 end
@@ -918,7 +934,7 @@ function symdifference(input::FeatureLayer, method::FeatureLayer,
                        result::FeatureLayer; options = StringList(C_NULL),
                        progressfunc::Function = GDAL.C.GDALDummyProgress,
                        progressdata = C_NULL)
-    result = GDAL.symdifference(input, method, result, options, 
+    result = GDAL.symdifference(input, method, result, options,
                                 @cplprogress(progressfunc), progressdata)
     @ogrerr result "Failed to compute the sym difference of the two layers"
 end
@@ -968,7 +984,7 @@ function identity(input::FeatureLayer, method::FeatureLayer,
                   result::FeatureLayer; options = StringList(C_NULL),
                   progressfunc::Function = GDAL.C.GDALDummyProgress,
                   progressdata = C_NULL)
-    result = GDAL.identity(input, method, result, options, 
+    result = GDAL.identity(input, method, result, options,
                            @cplprogress(progressfunc), progressdata)
     @ogrerr result "Failed to compute the identity of the two layers"
 end
@@ -1012,7 +1028,7 @@ function update(input::FeatureLayer, method::FeatureLayer,
                 result::FeatureLayer; options = StringList(C_NULL),
                 progressfunc::Function = GDAL.C.GDALDummyProgress,
                 progressdata = C_NULL)
-    result = GDAL.update(input, method, result, options, 
+    result = GDAL.update(input, method, result, options,
                          @cplprogress(progressfunc), progressdata)
     @ogrerr result "Failed to update the layer"
 end
@@ -1056,7 +1072,7 @@ function clip(input::FeatureLayer, method::FeatureLayer,
               result::FeatureLayer; options = StringList(C_NULL),
               progressfunc::Function = GDAL.C.GDALDummyProgress,
               progressdata = C_NULL)
-    result = GDAL.clip(input, method, result, options, 
+    result = GDAL.clip(input, method, result, options,
                        @cplprogress(progressfunc), progressdata)
     @ogrerr result "Failed to clip the input layer"
 end
@@ -1100,7 +1116,7 @@ function erase(input::FeatureLayer, method::FeatureLayer,
                result::FeatureLayer; options = StringList(C_NULL),
                progressfunc::Function = GDAL.C.GDALDummyProgress,
                progressdata = C_NULL)
-    result = GDAL.erase(input, method, result, options, 
+    result = GDAL.erase(input, method, result, options,
                         @cplprogress(progressfunc), progressdata)
     @ogrerr result "Failed to remove areas covered by the method layer."
 end

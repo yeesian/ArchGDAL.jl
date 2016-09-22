@@ -261,7 +261,7 @@ This function attempts to create a new layer on the dataset with the indicated
 name, coordinate system, geometry type.
 
 The papszOptions argument can be used to control driver specific creation
-options. These options are normally documented in the format specific 
+options. These options are normally documented in the format specific
 documentation.
 
 ### Parameters
@@ -312,7 +312,7 @@ capability is available for this object.
         support CreateGeomField() just after layer creation.
 * `ODsCCurveGeometries`: True if this datasource supports curve geometries.
 * `ODsCTransactions`: True if this datasource supports (efficient) transactions.
-* `ODsCEmulatedTransactions`: True if this datasource supports transactions 
+* `ODsCEmulatedTransactions`: True if this datasource supports transactions
         through emulation.
 
 The #define macro forms of the capability names should be used in preference to
@@ -325,12 +325,25 @@ the strings themselves to avoid misspelling.
 testcapability(dataset::Dataset, capability::AbstractString) =
     Bool(GDAL.datasettestcapability(dataset, capability))
 
-listcapability(dataset::Dataset) = Dict([
-    c => testcapability(dataset,c) for c in
-    (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
-     GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
-     GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
-])
+
+function listcapability(dataset::Dataset)
+    d = Dict{String, Bool}()
+    capabilities = (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
+        GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
+        GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
+    for c in capabilities
+        d[c] = testcapability(dataset,c)
+    end
+    d
+end
+
+# TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
+# listcapability(dataset::Dataset) = Dict(
+#     c => testcapability(dataset,c) for c in
+#     (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
+#      GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
+#      GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
+# )
 
 
 """
@@ -342,7 +355,7 @@ the query. Note that this OGRLayer is in addition to the layers in the data
 store and must be destroyed with ReleaseResultSet() before the dataset is closed
 (destroyed).
 
-For more information on the SQL dialect supported internally by OGR review the 
+For more information on the SQL dialect supported internally by OGR review the
 OGR SQL document. Some drivers (i.e. Oracle and PostGIS) pass the SQL directly
 through to the underlying RDBMS.
 

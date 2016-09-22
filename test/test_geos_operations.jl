@@ -1,27 +1,27 @@
 using FactCheck
 import ArchGDAL; const AG = ArchGDAL
 
-function equivalent_to_wkt(geom::ArchGDAL.Geometry, wkt::ASCIIString)
+function equivalent_to_wkt(geom::ArchGDAL.Geometry, wkt::String)
     fromWKT(wkt) do test_geom
         @fact toWKT(geom) --> toWKT(test_geom)
     end
 end
 
-function factcheck(f::Function, geom::ASCIIString, expected::ASCIIString)
+function factcheck(f::Function, geom::String, expected::String)
     result = f(fromWKT(geom))
     equivalent_to_wkt(result, expected)
 end
 
-function factcheck(f::Function, geom::ASCIIString, expected::Bool)
+function factcheck(f::Function, geom::String, expected::Bool)
     @fact f(parseWKT(geom)) --> expected
 end
 
-function factcheck(f::Function, g1::ASCIIString, g2::ASCIIString, expected::ASCIIString)
+function factcheck(f::Function, g1::String, g2::String, expected::String)
     result = f(parseWKT(g1),parseWKT(g2))
     equivalent_to_wkt(result, expected)
 end
 
-function factcheck(f::Function, g1::ASCIIString, g2::ASCIIString, expected::Bool)
+function factcheck(f::Function, g1::String, g2::String, expected::Bool)
     @fact f(parseWKT(g1),parseWKT(g2)) --> expected
 end
 

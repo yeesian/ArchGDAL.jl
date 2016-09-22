@@ -58,7 +58,7 @@ getunittype(rb::RasterBand) = GDAL.getrasterunittype(rb)
 """
 Set unit type of `rb` to `unittype`.
 
-Values should be one of \"\" (the default indicating it is unknown), \"m\" 
+Values should be one of \"\" (the default indicating it is unknown), \"m\"
 indicating meters, or \"ft\" indicating feet, though other nonstandard values
 are allowed.
 """
@@ -136,10 +136,6 @@ function deletenodatavalue!(rb::RasterBand)
     @cplerr result "Could not delete nodatavalue"
 end
 
-"Fetch the list of category names for this raster."
-getcategorynames(rb::RasterBand) = unsafe_loadstringlist(ccall(
-    (:GDALGetRasterCategoryNames,GDAL.libgdal),StringList,(RasterBand,),rb))
-
 "Set the category names for this band."
 function setcategorynames!(rb::RasterBand, names)
     result = ccall((:GDALSetRasterCategoryNames,GDAL.libgdal),GDAL.CPLErr,
@@ -159,7 +155,7 @@ getdefaultRAT(rb::RasterBand) = GDAL.getdefaultrat(rb)
 """
 Set default Raster Attribute Table.
 
-Associates a default RAT with the band. If not implemented for the format a 
+Associates a default RAT with the band. If not implemented for the format a
 CPLE_NotSupported error will be issued. If successful a copy of the RAT is made,
 the original remains owned by the caller.
 """
@@ -315,12 +311,12 @@ NULL terminated array of strings. Raster values without associated names will
 have an empty string in the returned list. The first entry in the list is for
 raster values of zero, and so on.
 """
-getcategorynames(band::RasterBand) = 
+getcategorynames(band::RasterBand) =
     unsafe_loadstringlist(ccall((:GDALGetRasterCategoryNames,GDAL.libgdal),
                                 Ptr{Cstring},(RasterBand,),band))
 
 "Set the category names for this band."
-function setcategorynames!(band::RasterBand, names::Vector{ASCIIString})
+function setcategorynames!(band::RasterBand, names::Vector{String})
     result = ccall((:GDALSetRasterCategoryNames,GDAL.libgdal),GDAL.CPLErr,
                    (RasterBand,StringList),band,names)
     @cplerr result "Failed to set category names for this band"
