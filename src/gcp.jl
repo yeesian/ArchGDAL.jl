@@ -9,7 +9,7 @@ converts the equation from being pixel to geo to being geo to pixel.
 * `gt_out`      Output geotransform (six doubles - updated).
 
 ### Returns
-`TRUE` on success or `FALSE` if the equation is uninvertable.
+`gt_out`
 """
 function invgeotransform!(gt_in::Vector{Cdouble}, gt_out::Vector{Cdouble})
     result = Bool(GDAL.invgeotransform(pointer(gt_in), pointer(gt_out)))
@@ -38,7 +38,7 @@ function applygeotransform(geotransform::Vector{Cdouble},
                            pixel::Cdouble,
                            line::Cdouble)
     geo_xy = Array(Cdouble, 2)
-    geo_x = pointer(geo_xy);
+    geo_x = pointer(geo_xy)
     geo_y = geo_x + sizeof(Cdouble)
     GDAL.applygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
     geo_xy

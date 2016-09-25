@@ -1,22 +1,24 @@
 function Base.show(io::IO, drv::Driver)
-    drv == C_NULL && (print(io, "NULL Driver"); return)
+    drv.ptr == C_NULL && (print(io, "NULL Driver"); return)
     print(io, "Driver: $(shortname(drv))/$(longname(drv))")
 end
 
 function Base.show(io::IO, dataset::Dataset)
-    dataset == C_NULL && (print(io, "NULL Dataset"); return)
+    dataset.ptr == C_NULL && (print(io, "NULL Dataset"); return)
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
-    print(io, "File(s): ")
+    println(io, "File(s): ")
     for (i,filename) in enumerate(filelist(dataset))
-        print(io, "$filename ")
-        # display up to 4 filenames per line
-        if i % 4 == 0 println() end
+        println(io, "  $filename")
+        if i > 5
+            println(io, "  ...")
+            break
+        end
     end
     nrasters = nraster(dataset)
     if nrasters > 0
         print(io, "\nDataset (width x height): ")
         println(io, "$(width(dataset)) x $(height(dataset)) (pixels)")
-        println(io, "Number of raster bands: $(nrasters)")
+        println(io, "Number of raster bands: $nrasters")
         for i in 1:min(nrasters, 3)
             print(io, "  ")
             summarize(io, getband(dataset, i))
@@ -26,19 +28,17 @@ function Base.show(io::IO, dataset::Dataset)
 
     nlayers = nlayer(dataset)
     if nlayers > 0
-        println(io, "\nNumber of feature layers: $(nlayers)")
+        println(io, "\nNumber of feature layers: $nlayers")
         ndisplay = min(nlayers, 5) # display up to 5 layers
         for i in 1:ndisplay
             layer = getlayer(dataset, i-1)
             layergeomtype = getgeomtype(layer)
-            print(io, "  Layer $(i-1): $(getname(layer)) ")
-            println(io, "($layergeomtype), nfeatures = $(nfeature(layer))")
+            println(io, "  Layer $(i-1): $(getname(layer)) ($layergeomtype)")
         end
         if nlayers > 5
             print(io, "  Remaining layers: ")
             for i in 6:nlayers
-                layer = getlayer(dataset, i-1)
-                print(io, "$(getname(layer)) ")
+                print(io, "$(getname(getlayer(dataset, i-1))) ")
                 # display up to 5 layer names per line
                 if i % 5 == 0 println() end
             end
@@ -47,7 +47,7 @@ function Base.show(io::IO, dataset::Dataset)
 end
 
 function summarize(io::IO, rasterband::RasterBand)
-    rasterband == C_NULL && (print(io, "NULL RasterBand"); return)
+    rasterband.ptr == C_NULL && (print(io, "NULL RasterBand"); return)
     access = getaccess(rasterband)
     color = getname(getcolorinterp(rasterband))
     xsize = width(rasterband)
@@ -58,7 +58,7 @@ function summarize(io::IO, rasterband::RasterBand)
 end
 
 function Base.show(io::IO, rasterband::RasterBand)
-    rasterband == C_NULL && (print(io, "NULL RasterBand"); return)
+    rasterband.ptr == C_NULL && (print(io, "NULL RasterBand"); return)
     summarize(io, rasterband)
     (x,y) = getblocksize(rasterband)
     sc = getscale(rasterband)
@@ -66,8 +66,8 @@ function Base.show(io::IO, rasterband::RasterBand)
     norvw = noverview(rasterband)
     ut = getunittype(rasterband)
     nv = getnodatavalue(rasterband)
-    print(io, "    blocksize: $(x)x$(y), nodata: $nv, ")
-    println(io, "units: $(sc)px + $(ofs)$ut")
+    print(io, "    blocksize: $(x)×$(y), nodata: $nv, ")
+    println(io, "units: $(sc)px + $ofs$ut")
     print(io, "    overviews: ")
     for i in 1:norvw
         ovr_band = getoverview(rasterband, i-1)
@@ -78,9 +78,9 @@ end
 
 # assumes that the layer is reset, and will reset it after display
 function Base.show(io::IO, layer::FeatureLayer)
-    layer == C_NULL && (println(io, "NULL Layer"); return)
+    layer.ptr == C_NULL && (println(io, "NULL Layer"); return)
     layergeomtype = getgeomtype(layer)
-    println(io, "Layer: $(getname(layer)), nfeatures = $(nfeature(layer))")
+    println(io, "Layer: $(getname(layer))")
     featuredefn = getlayerdefn(layer)
     
     # Print Geometries
@@ -139,6 +139,7 @@ function Base.show(io::IO, layer::FeatureLayer)
 end
 
 function Base.show(io::IO, featuredefn::FeatureDefn)
+    featuredefn.ptr == C_NULL && (print(io, "NULL FeatureDefn"); return)
     n = ngeomfield(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
@@ -156,12 +157,18 @@ function Base.show(io::IO, featuredefn::FeatureDefn)
     n > 5 && print(io, "...\n Number of Fields: $n")
 end
 
-Base.show(io::IO, fd::FieldDefn) = print(io, "$(getname(fd)) ($(gettype(fd)))")
-Base.show(io::IO, gfd::GeomFieldDefn) =
+function Base.show(io::IO, fd::FieldDefn)
+    fd.ptr == C_NULL && (print(io, "NULL FieldDefn"); return)
+    print(io, "$(getname(fd)) ($(gettype(fd)))")
+end
+
+function Base.show(io::IO, gfd::GeomFieldDefn)
+    gfd.ptr == C_NULL && (return print(io, "NULL GeomFieldDefn"))
     print(io, "$(getname(gfd)) ($(gettype(gfd)))")
+end
 
 function Base.show(io::IO, feature::Feature)
-    feature == C_NULL && (println(io, "NULL Feature"); return)
+    feature.ptr == C_NULL && (println(io, "NULL Feature"); return)
     println(io, "Feature")
     n = ngeomfield(feature)
     for i in 1:min(n, 3)
@@ -179,7 +186,7 @@ function Base.show(io::IO, feature::Feature)
 end
 
 function Base.show(io::IO, spref::SpatialRef)
-    spref == C_NULL && (print(io, "NULL Spatial Reference System"); return)
+    spref.ptr == C_NULL && (return print(io, "NULL Spatial Reference System"))
     projstr = toPROJ4(spref)
     if length(projstr) > 45
         projstart = projstr[1:35]
@@ -191,7 +198,7 @@ function Base.show(io::IO, spref::SpatialRef)
 end
 
 function Base.show(io::IO, geom::Geometry)
-    geom == C_NULL && (print(io, "NULL Geometry"); return)
+    geom.ptr == C_NULL && (return print(io, "NULL Geometry"))
     print(io, "Geometry: ")
     geomwkt = toWKT(geom)
     if length(geomwkt) > 60

@@ -7,13 +7,19 @@ binary (WKB) representation.
 * `spatialref`: handle to the spatial reference to be assigned to the created
     geometry object. This may be `NULL` (default).
 """
-function unsafe_fromWKB(data, spatialref::SpatialRef=SpatialRef(C_NULL))
-    geom = Ref{Geometry}()
-    result = ccall((:OGR_G_CreateFromWkb,GDAL.libgdal),GDAL.OGRErr,(Ptr{Cuchar},
-                    SpatialRef,Ptr{Geometry},Cint),data,spatialref,geom,
-                    sizeof(data))
+function unsafe_fromWKB(
+        data,
+        spatialref::SpatialRef = SpatialRef(C_NULL)
+    )
+    geom = Ref{GDALGeometry}()
+    result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
+        data::Ptr{Cuchar},
+        spatialref.ptr::GDALSpatialRef,
+        geom::Ptr{GDALGeometry},
+        sizeof(data)::Cint
+    )
     @ogrerr result "Failed to create geometry from WKB"
-    geom[]
+    Geometry(geom[])
 end
 
 """
@@ -27,26 +33,34 @@ Create a geometry object of the appropriate type from its well known text
 * `spatialref`: handle to the spatial reference to be assigned to the created
     geometry object. This may be `NULL` (default).
 """
-function unsafe_fromWKT{T <: AbstractString}(data::Vector{T},
-                        spatialref::SpatialRef=SpatialRef(C_NULL))
-    geom = Ref{Geometry}()
-    result = ccall((:OGR_G_CreateFromWkt,GDAL.libgdal),GDAL.OGRErr,
-                   (Ptr{Ptr{UInt8}},SpatialRef,Ptr{Geometry}),data,spatialref,
-                   geom)
+function unsafe_fromWKT{T <: AbstractString}(
+        data::Vector{T},
+        spatialref::SpatialRef = SpatialRef(C_NULL)
+    )
+    geom = Ref{GDALGeometry}()
+    result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
+        data::StringList,
+        spatialref.ptr::GDALSpatialRef,
+        geom::Ptr{GDALGeometry}
+    )
     @ogrerr result "Failed to create geometry from WKT"
-    geom[]
+    Geometry(geom[])
 end
 
 # potential clash with `unsafe_fromWKT` for SpatialRef averted by the second
 # argument
-function unsafe_fromWKT(data::AbstractString,
-                        spatialref::SpatialRef=SpatialRef(C_NULL))
-    geom = Ref{Geometry}()
-    result = ccall((:OGR_G_CreateFromWkt,GDAL.libgdal),GDAL.OGRErr,
-                   (Ptr{Ptr{UInt8}},SpatialRef,Ptr{Geometry}),[data],spatialref,
-                   geom)
+function unsafe_fromWKT(
+        data::AbstractString,
+        spatialref::SpatialRef = SpatialRef(C_NULL)
+    )
+    geom = Ref{GDALGeometry}()
+    result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
+        [data]::StringList,
+        spatialref.ptr::GDALSpatialRef,
+        geom::Ptr{GDALGeometry}
+    )
     @ogrerr result "Failed to create geometry from WKT"
-    geom[]
+    Geometry(geom[])
 end
 
 """
@@ -55,10 +69,10 @@ Destroy geometry object.
 Equivalent to invoking delete on a geometry, but it guaranteed to take place
 within the context of the GDAL/OGR heap.
 """
-destroy(geom::Geometry) = GDAL.destroygeometry(geom)
+destroy(geom::Geometry) = (GDAL.destroygeometry(geom.ptr); geom.ptr = C_NULL)
 
 "Returns a copy of the geometry with the original spatial reference system."
-unsafe_clone(geom::Geometry) = GDAL.clone(geom)
+unsafe_clone(geom::Geometry) = Geometry(GDAL.clone(geom.ptr))
 
 """
 Create an empty geometry of desired type.
@@ -67,8 +81,9 @@ This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
 unsafe_creategeom(geomtype::OGRwkbGeometryType) =
-    GDAL.checknull(ccall((:OGR_G_CreateGeometry,GDAL.libgdal),Geometry,
-                         (GDAL.OGRwkbGeometryType,),geomtype))
+    Geometry(GDAL.checknull(@gdal(OGR_G_CreateGeometry::GDALGeometry,
+        geomtype::GDAL.OGRwkbGeometryType
+    )))
 
 """
 Tries to force the provided geometry to the specified geometry type.
@@ -88,17 +103,17 @@ For that, OGRGeometry::getCurveGeometry() can be used.
 
 The passed in geometry is cloned and a new one returned.
 """
-unsafe_forceto(geom::Geometry, targettype::OGRwkbGeometryType) =
-    GDAL.checknull(ccall((:OGR_G_ForceTo,GDAL.libgdal),Geometry,(Geometry,
-        GDAL.OGRwkbGeometryType,StringList),unsafe_clone(geom),targettype,
-        C_NULL))
-
-unsafe_forceto{T <: AbstractString}(geom::Geometry,
-                                    targettype::OGRwkbGeometryType,
-                                    options::Vector{T}) =
-    GDAL.checknull(ccall((:OGR_G_ForceTo,GDAL.libgdal),Geometry,(Geometry,
-        GDAL.OGRwkbGeometryType,StringList),unsafe_clone(geom),targettype,
-        options))
+function unsafe_forceto(
+        geom::Geometry,
+        targettype::OGRwkbGeometryType,
+        options = StringList(C_NULL)
+    )
+    Geometry(GDAL.checknull(@gdal(OGR_G_ForceTo::GDALGeometry,
+        unsafe_clone(geom).ptr::GDALGeometry,
+        targettype::GDAL.OGRwkbGeometryType,
+        options::StringList
+    )))
+end
 
 """
 Get the dimension of the geometry. 0 for points, 1 for lines and 2 for surfaces.
@@ -107,7 +122,7 @@ This function corresponds to the SFCOM IGeometry::GetDimension() method. It
 indicates the dimension of the geometry, but does not indicate the dimension of
 the underlying space (as indicated by OGR_G_GetCoordinateDimension() function).
 """
-getdim(geom::Geometry) = GDAL.getdimension(geom)
+getdim(geom::Geometry) = GDAL.getdimension(geom.ptr)
 
 """
 Get the dimension of the coordinates in this geometry.
@@ -116,7 +131,7 @@ Get the dimension of the coordinates in this geometry.
 In practice this will return 2 or 3. It can also return 0 in the case of an
 empty point.
 """
-getcoorddim(geom::Geometry) = GDAL.getcoordinatedimension(geom)
+getcoorddim(geom::Geometry) = GDAL.getcoordinatedimension(geom.ptr)
 
 """
 Set the coordinate dimension.
@@ -127,19 +142,21 @@ dimension of a geometry collection, a compound curve, a polygon, etc. will
 affect the children geometries. This will also remove the M dimension if present
 before this call.
 """
-setcoorddim!(geom::Geometry, dim::Integer)=GDAL.setcoordinatedimension(geom,dim)
+function setcoorddim!(geom::Geometry, dim::Integer)
+    GDAL.setcoordinatedimension(geom.ptr ,dim)
+end
 
 "Computes and returns the bounding envelope for this geometry"
 function getenvelope(geom::Geometry)
-    envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0,0,0,0))
-    GDAL.getenvelope(geom, envelope)
+    envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
+    GDAL.getenvelope(geom.ptr, envelope)
     envelope[]
 end
 
 "Computes and returns the bounding envelope (3D) for this geometry"
 function getenvelope3d(geom::Geometry)
-    envelope = Ref{GDAL.OGREnvelope3D}(GDAL.OGREnvelope3D(0,0,0,0,0,0))
-    GDAL.getenvelope3d(geom, envelope)
+    envelope = Ref{GDAL.OGREnvelope3D}(GDAL.OGREnvelope3D(0, 0, 0, 0, 0, 0))
+    GDAL.getenvelope3d(geom.ptr, envelope)
     envelope[]
 end
 
@@ -152,7 +169,11 @@ Convert a geometry well known binary format.
 """
 function toWKB(geom::Geometry, order::OGRwkbByteOrder=wkbNDR)
     buffer = Array(Cuchar, wkbsize(geom))
-    result = GDAL.exporttowkb(geom,GDAL.OGRwkbByteOrder(order),pointer(buffer))
+    result = @gdal(OGR_G_ExportToWkb::GDAL.OGRErr,
+        geom.ptr::GDALGeometry,
+        order::GDAL.OGRwkbByteOrder,
+        buffer::Ptr{Cuchar}
+    )
     @ogrerr result "Failed to export geometry to WKB"
     buffer
 end
@@ -166,20 +187,22 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 """
 function toISOWKB(geom::Geometry, order::OGRwkbByteOrder=wkbNDR)
     buffer = Array(Cuchar, wkbsize(geom))
-    result = ccall((:OGR_G_ExportToIsoWkb,GDAL.libgdal),GDAL.OGRErr,
-                   (Geometry,GDAL.OGRwkbByteOrder,Ptr{Cuchar}),geom,order,
-                   pointer(buffer))
+    result = @gdal(OGR_G_ExportToIsoWkb::GDAL.OGRErr,
+        geom.ptr::GDALGeometry,
+        order::GDAL.OGRwkbByteOrder,
+        buffer::Ptr{Cuchar}
+    )
     @ogrerr result "Failed to export geometry to ISO WKB"
     buffer
 end
 
 "Returns size (in bytes) of related binary representation."
-wkbsize(geom::Geometry) = GDAL.wkbsize(geom)
+wkbsize(geom::Geometry) = GDAL.wkbsize(geom.ptr)
 
 "Convert a geometry into well known text format."
 function toWKT(geom::Geometry)
     wkt_ptr = Ref{Ptr{UInt8}}()
-    result = GDAL.exporttowkt(geom, wkt_ptr)
+    result = GDAL.exporttowkt(geom.ptr, wkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to WKT"
     wkt = unsafe_string(wkt_ptr[])
     GDAL.C.OGRFree(Ptr{UInt8}(wkt_ptr[]))
@@ -189,7 +212,7 @@ end
 "Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known text format."
 function toISOWKT(geom::Geometry)
     isowkt_ptr = Ref{Ptr{UInt8}}()
-    result = GDAL.exporttoisowkt(point, isowkt_ptr)
+    result = GDAL.exporttoisowkt(geom.ptr, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
     wkt = unsafe_string(isowkt_ptr[])
     GDAL.C.OGRFree(Ptr{UInt8}(isowkt_ptr[]))
@@ -197,13 +220,13 @@ function toISOWKT(geom::Geometry)
 end
 
 "Fetch geometry type code"
-getgeomtype(geom::Geometry) = OGRwkbGeometryType(GDAL.getgeometrytype(geom))
+getgeomtype(geom::Geometry) = OGRwkbGeometryType(GDAL.getgeometrytype(geom.ptr))
 
 "Fetch WKT name for geometry type."
-getgeomname(geom::Geometry) = GDAL.getgeometryname(geom)
+getgeomname(geom::Geometry) = GDAL.getgeometryname(geom.ptr)
 
 "Convert geometry to strictly 2D."
-flattento2d!(geom::Geometry) = GDAL.flattento2d(geom)
+flattento2d!(geom::Geometry) = (GDAL.flattento2d(geom.ptr); geom)
 
 """
 Force rings to be closed.
@@ -211,7 +234,7 @@ Force rings to be closed.
 If this geometry, or any contained geometries has polygon rings that are not
 closed, they will be closed by adding the starting point at the end.
 """
-closerings!(geom::Geometry) = GDAL.closerings(geom)
+closerings!(geom::Geometry) = (GDAL.closerings(geom.ptr); geom)
 
 """
 Create geometry from GML.
@@ -224,18 +247,18 @@ The following GML2 elements are parsed : Point, LineString, Polygon, MultiPoint,
 MultiLineString, MultiPolygon, MultiGeometry.
 """
 # warning: might clash with fromGML for SpatialRefs if they exist in the future
-unsafe_fromGML(data) = GDAL.createfromgml(data)
+unsafe_fromGML(data) = Geometry(GDAL.createfromgml(data))
 
 "Convert a geometry into GML format."
-toGML(geom::Geometry) = GDAL.exporttogml(geom)
+toGML(geom::Geometry) = GDAL.exporttogml(geom.ptr)
 
 "Convert a geometry into KML format."
 # * `altitudemode`: value to write in altitudeMode element, or NULL.
-toKML(geom::Geometry) = GDAL.exporttokml(geom, Ptr{UInt8}(C_NULL))
-toKML(geom::Geometry, altitudemode) = GDAL.exporttokml(geom, altitudemode)
+toKML(geom::Geometry, altitudemode = Ptr{UInt8}(C_NULL)) =
+    GDAL.exporttokml(geom.ptr, altitudemode)
 
 "Convert a geometry into GeoJSON format."
-toJSON(geom::Geometry) = GDAL.exporttojson(geom)
+toJSON(geom::Geometry) = GDAL.exporttojson(geom.ptr)
 
 """
 Convert a geometry into GeoJSON format.
@@ -246,22 +269,25 @@ Convert a geometry into GeoJSON format.
 A GeoJSON fragment or NULL in case of error.
 """
 toJSON(geom::Geometry, options) =
-    unsafe_string(ccall((:OGR_G_ExportToJsonEx,GDAL.libgdal), Cstring,
-               (Geometry,Ptr{Ptr{UInt8}}), geom, options))
+    unsafe_string(@gdal(OGR_G_ExportToJsonEx::Cstring,
+        geom.ptr::GDALGeometry,
+        options::StringList
+    ))
 
 "Create a geometry object from its GeoJSON representation"
-unsafe_fromJSON(data::AbstractString) = GDAL.creategeometryfromjson(data)
+unsafe_fromJSON(data::AbstractString) =
+    Geometry(GDAL.creategeometryfromjson(data))
 
 "Assign spatial reference to this object."
 setspatialref!(geom::Geometry, spatialref::SpatialRef) =
-    GDAL.assignspatialreference(geom, spatialref)
+    (GDAL.assignspatialreference(geom.ptr, spatialref.ptr); geom)
 
 """
 Returns spatial reference system for geometry.
 
 The object may be shared with many geometry objects, and should not be modified.
 """
-getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
+getspatialref(geom::Geometry) = SpatialRef(GDAL.getspatialreference(geom.ptr))
 
 """
 Apply arbitrary coordinate transformation to geometry.
@@ -271,7 +297,7 @@ Apply arbitrary coordinate transformation to geometry.
 * `coordtransform`: handle on the transformation to apply.
 """
 function transform!(geom::Geometry, coordtransform::CoordTransform)
-    result = GDAL.transform(geom, coordtransform)
+    result = GDAL.transform(geom.ptr, coordtransform.ptr)
     @ogrerr result "Failed to transform geometry"
     geom
 end
@@ -279,7 +305,7 @@ end
 
 "Transform geometry to new spatial reference system."
 function transform!(geom::Geometry, spatialref::SpatialRef)
-    result = GDAL.transformto(geom, spatialref)
+    result = GDAL.transformto(geom.ptr, spatialref.ptr)
     @ogrerr result "Failed to transform geometry to the new SRS"
     geom
 end
@@ -291,7 +317,8 @@ Compute a simplified geometry.
 * `geom`: the geometry.
 * `tol`: the distance tolerance for the simplification.
 """
-simplify!(geom::Geometry, tol::Real) = GDAL.simplify(geom, tol)
+unsafe_simplify(geom::Geometry, tol::Real) =
+    Geometry(GDAL.simplify(geom.ptr, tol))
 
 """
 Simplify the geometry while preserving topology.
@@ -300,8 +327,8 @@ Simplify the geometry while preserving topology.
 * `geom`: the geometry.
 * `tol`: the distance tolerance for the simplification.
 """
-simplifypreservetopology!(geom::Geometry, tol::Real) =
-    GDAL.simplifypreservetopology(geom, tol)
+unsafe_simplifypreservetopology(geom::Geometry, tol::Real) =
+    Geometry(GDAL.simplifypreservetopology(geom.ptr, tol))
 
 """
 Return a Delaunay triangulation of the vertices of the geometry.
@@ -313,7 +340,7 @@ Return a Delaunay triangulation of the vertices of the geometry.
     will return a GEOMETRYCOLLECTION containing triangular POLYGONs.
 """
 unsafe_delaunaytriangulation(geom::Geometry, tol::Real, onlyedges::Bool) =
-    GDAL.delaunaytriangulation(geom, tol, onlyedges)
+    Geometry(GDAL.delaunaytriangulation(geom.ptr, tol, onlyedges))
 
 """
 Modify the geometry such it has no segment longer than the given distance.
@@ -326,7 +353,7 @@ computation is performed in 2d only
 * `maxlength`: the maximum distance between 2 points after segmentization
 """
 function segmentize!(geom::Geometry, maxlength::Real)
-    GDAL.segmentize(geom, maxlength)
+    GDAL.segmentize(geom.ptr, maxlength)
     geom
 end
 
@@ -337,28 +364,28 @@ Determines whether two geometries intersect. If GEOS is enabled, then this is
 done in rigorous fashion otherwise TRUE is returned if the envelopes (bounding
 boxes) of the two geometries overlap.
 """
-intersects(g1::Geometry, g2::Geometry) = Bool(GDAL.intersects(g1, g2))
+intersects(g1::Geometry, g2::Geometry) = Bool(GDAL.intersects(g1.ptr, g2.ptr))
 
 "Returns TRUE if the geometries are equivalent."
-equals(geom1::Geometry, geom2::Geometry) = Bool(GDAL.equals(geom1, geom2))
+equals(g1::Geometry, g2::Geometry) = Bool(GDAL.equals(g1.ptr, g2.ptr))
 
 "Returns TRUE if the geometries are disjoint."
-disjoint(geom1::Geometry, geom2::Geometry) = Bool(GDAL.disjoint(geom1, geom2))
+disjoint(g1::Geometry, g2::Geometry) = Bool(GDAL.disjoint(g1.ptr, g2.ptr))
 
 "Returns TRUE if the geometries are touching."
-touches(geom1::Geometry, geom2::Geometry) = Bool(GDAL.touches(geom1, geom2))
+touches(g1::Geometry, g2::Geometry) = Bool(GDAL.touches(g1.ptr, g2.ptr))
 
 "Returns TRUE if the geometries are crossing."
-crosses(geom1::Geometry, geom2::Geometry) = Bool(GDAL.crosses(geom1, geom2))
+crosses(g1::Geometry, g2::Geometry) = Bool(GDAL.crosses(g1.ptr, g2.ptr))
 
-"Returns TRUE if geom1 is contained within geom2."
-within(geom1::Geometry, geom2::Geometry) = Bool(GDAL.within(geom1, geom2))
+"Returns TRUE if g1 is contained within g2."
+within(g1::Geometry, g2::Geometry) = Bool(GDAL.within(g1.ptr, g2.ptr))
 
-"Returns TRUE if geom1 contains geom2."
-contains(geom1::Geometry, geom2::Geometry) = Bool(GDAL.contains(geom1, geom2))
+"Returns TRUE if g1 contains g2."
+contains(g1::Geometry, g2::Geometry) = Bool(GDAL.contains(g1.ptr, g2.ptr))
 
 "Returns TRUE if the geometries overlap."
-overlaps(geom1::Geometry, geom2::Geometry) = Bool(GDAL.overlaps(geom1, geom2))
+overlaps(g1::Geometry, g2::Geometry) = Bool(GDAL.overlaps(g1.ptr, g2.ptr))
 
 """
 Returns the boundary of the geometry.
@@ -366,7 +393,7 @@ Returns the boundary of the geometry.
 A new geometry object is created and returned containing the boundary of the
 geometry on which the method is invoked.
 """
-unsafe_boundary(geom::Geometry) = GDAL.boundary(geom)
+unsafe_boundary(geom::Geometry) = Geometry(GDAL.boundary(geom.ptr))
 
 """
 Returns the convex hull of the geometry.
@@ -374,7 +401,7 @@ Returns the convex hull of the geometry.
 A new geometry object is created and returned containing the convex hull of the
 geometry on which the method is invoked.
 """
-unsafe_convexhull(geom::Geometry) = GDAL.convexhull(geom)
+unsafe_convexhull(geom::Geometry) = Geometry(GDAL.convexhull(geom.ptr))
 
 """
 Compute buffer of geometry.
@@ -397,8 +424,8 @@ accuracy of the result.
 * `quadsegs`: the number of segments used to approximate a 90 degree
     (quadrant) of curvature.
 """
-unsafe_buffer(geom::Geometry, dist::Real, quadsegs::Integer=8) =
-    GDAL.buffer(geom, dist, quadsegs)
+unsafe_buffer(geom::Geometry, dist::Real, quadsegs::Integer = 30) =
+    Geometry(GDAL.buffer(geom.ptr, dist, quadsegs))
 
 """
 Returns a new geometry representing the intersection of the geometries, or NULL
@@ -408,8 +435,8 @@ Generates a new geometry which is the region of intersection of the two
 geometries operated on. The OGR_G_Intersects() function can be used to test if
 two geometries intersect.
 """
-unsafe_intersection(geom1::Geometry, geom2::Geometry) =
-    GDAL.intersection(geom1, geom2)
+unsafe_intersection(g1::Geometry, g2::Geometry) =
+    Geometry(GDAL.intersection(g1.ptr, g2.ptr))
 
 """
 Returns a new geometry representing the union of the geometries.
@@ -417,10 +444,10 @@ Returns a new geometry representing the union of the geometries.
 Generates a new geometry which is the region of union of the two geometries
 operated on.
 """
-unsafe_union(geom1::Geometry, geom2::Geometry) = GDAL.union(geom1, geom2)
+unsafe_union(g1::Geometry, g2::Geometry) = Geometry(GDAL.union(g1.ptr, g2.ptr))
 
 "Compute the union of the geometry using cascading."
-unsafe_union(geom::Geometry) = GDAL.unioncascaded(geom)
+unsafe_union(geom::Geometry) = Geometry(GDAL.unioncascaded(geom.ptr))
 
 """
 Returns a point guaranteed to lie on the surface.
@@ -430,7 +457,7 @@ the current implementation based on GEOS can operate on other geometry types
 than the types that are supported by SQL/MM-Part 3 : surfaces (polygons) and
 multisurfaces (multipolygons).
 """
-unsafe_pointonsurface(geom::Geometry) = GDAL.pointonsurface(geom)
+unsafe_pointonsurface(geom::Geometry) = Geometry(GDAL.pointonsurface(geom.ptr))
 
 """
 Generates a new geometry which is the region of this geometry with the region of
@@ -440,23 +467,24 @@ the other geometry removed.
 A new geometry representing the difference of the geometries, or NULL
 if the difference is empty.
 """
-unsafe_difference(geom1::Geometry, geom2::Geometry) =
-    GDAL.difference(geom1, geom2)
+unsafe_difference(g1::Geometry, g2::Geometry) =
+    Geometry(GDAL.difference(g1.ptr, g2.ptr))
 
 """
 Returns a new geometry representing the symmetric difference of the geometries
 or NULL if the difference is empty or an error occurs.
 """
-unsafe_symdifference(g1::Geometry, g2::Geometry) = GDAL.symdifference(g1, g2)
+unsafe_symdifference(g1::Geometry, g2::Geometry) =
+    Geometry(GDAL.symdifference(g1.ptr, g2.ptr))
 
 "Returns the distance between the geometries or -1 if an error occurs."
-distance(geom1::Geometry, geom2::Geometry) = GDAL.distance(geom1, geom2)
+distance(g1::Geometry, g2::Geometry) = GDAL.distance(g1.ptr, g2.ptr)
 
 "Returns the length of the geometry, or 0.0 for unsupported geometry types."
-geomlength(geom::Geometry) = GDAL.length(geom)
+geomlength(geom::Geometry) = GDAL.length(geom.ptr)
 
 "Returns the area of the geometry or 0.0 for unsupported geometry types."
-geomarea(geom::Geometry) = GDAL.area(geom)
+geomarea(geom::Geometry) = GDAL.area(geom.ptr)
 
 """
 Compute the geometry centroid.
@@ -471,7 +499,7 @@ defines the operation for surfaces (polygons). SQL/MM-Part 3 defines the
 operation for surfaces and multisurfaces (multipolygons).
 """
 function centroid!(geom::Geometry, centroid::Geometry)
-    result = GDAL.centroid(geom, centroid)
+    result = GDAL.centroid(geom.ptr, centroid.ptr)
     @ogrerr result "Failed to compute the geometry centroid"
     centroid
 end
@@ -490,7 +518,7 @@ Fetch point at given distance along curve.
 a point or NULL.
 """
 unsafe_pointalongline(geom::Geometry, distance::Real) =
-    GDAL.value(geom, distance)
+    Geometry(GDAL.value(geom.ptr, distance))
 
 """
 Clear geometry information.
@@ -498,19 +526,19 @@ Clear geometry information.
 This restores the geometry to its initial state after construction, and before
 assignment of actual geometry.
 """
-empty!(geom::Geometry) = GDAL.empty(geom)
+empty!(geom::Geometry) = (GDAL.empty(geom.ptr); geom)
 
 "Returns TRUE if the geometry has no points, otherwise FALSE."
-isempty(geom::Geometry) = Bool(GDAL.isempty(geom))
+isempty(geom::Geometry) = Bool(GDAL.isempty(geom.ptr))
 
 "Returns TRUE if the geometry is valid, otherwise FALSE."
-isvalid(geom::Geometry) = Bool(GDAL.isvalid(geom))
+isvalid(geom::Geometry) = Bool(GDAL.isvalid(geom.ptr))
 
 "Returns TRUE if the geometry is simple, otherwise FALSE."
-issimple(geom::Geometry) = Bool(GDAL.issimple(geom))
+issimple(geom::Geometry) = Bool(GDAL.issimple(geom.ptr))
 
 "Returns TRUE if the geometry is a ring, otherwise FALSE."
-isring(geom::Geometry) = Bool(GDAL.isring(geom))
+isring(geom::Geometry) = Bool(GDAL.isring(geom.ptr))
 
 """
 Polygonizes a set of sparse edges.
@@ -524,10 +552,10 @@ impossible due to topological inconsistencies.
 a handle to a newly allocated geometry now owned by the caller, or NULL on
 failure.
 """
-unsafe_polygonize(geom::Geometry) = GDAL.polygonize(geom)
+unsafe_polygonize(geom::Geometry) = Geometry(GDAL.polygonize(geom.ptr))
 
 "Fetch number of points from a geometry."
-npoint(geom::Geometry) = GDAL.getpointcount(geom)
+npoint(geom::Geometry) = GDAL.getpointcount(geom.ptr)
 
 # """
 #     OGR_G_GetPoints(OGRGeometryH hGeom,
@@ -561,13 +589,13 @@ npoint(geom::Geometry) = GDAL.getpointcount(geom)
 
 
 "Fetch the x coordinate of a point from a geometry, at index i."
-getx(geom::Geometry, i::Integer) = GDAL.getx(geom, i)
+getx(geom::Geometry, i::Integer) = GDAL.getx(geom.ptr, i)
 
 "Fetch the y coordinate of a point from a geometry, at index i."
-gety(geom::Geometry, i::Integer) = GDAL.gety(geom, i)
+gety(geom::Geometry, i::Integer) = GDAL.gety(geom.ptr, i)
 
 "Fetch the z coordinate of a point from a geometry, at index i."
-getz(geom::Geometry, i::Integer) = GDAL.getz(geom, i)
+getz(geom::Geometry, i::Integer) = GDAL.getz(geom.ptr, i)
 
 """
 Fetch a point in line string or a point geometry, at index i.
@@ -576,13 +604,10 @@ Fetch a point in line string or a point geometry, at index i.
 * `i`: the vertex to fetch, from 0 to getNumPoints()-1, zero for a point.
 """
 getpoint!(geom::Geometry, i::Integer, x, y, z) =
-    GDAL.getpoint(geom, i, x, y, z)
+    (GDAL.getpoint(geom.ptr, i, x, y, z); (x[], y[], z[]))
 
-function getpoint(geom::Geometry, i::Integer)
-    x = Ref{Cdouble}(); y = Ref{Cdouble}(); z = Ref{Cdouble}()
-    getpoint!(geom, i, x, y, z)
-    (x[], y[], z[])
-end
+getpoint(geom::Geometry, i::Integer) =
+    getpoint!(geom, i, Ref{Cdouble}(), Ref{Cdouble}(), Ref{Cdouble}())
 
 """
 Set number of points in a geometry.
@@ -591,7 +616,8 @@ Set number of points in a geometry.
 * `geom`: the geometry.
 * `n`: the new number of points for geometry.
 """
-setpointcount!(geom::Geometry, n::Integer) = GDAL.setpointcount(geom, n)
+setpointcount!(geom::Geometry, n::Integer) =
+    (GDAL.setpointcount(geom.ptr, n); geom)
 
 """
 Set the location of a vertex in a point or linestring geometry.
@@ -604,7 +630,7 @@ Set the location of a vertex in a point or linestring geometry.
 * `z`: input Z coordinate to assign (defaults to zero).
 """
 setpoint!(geom::Geometry, i::Integer, x::Real, y::Real, z::Real) =
-    GDAL.setpoint(geom, i, x, y, z)
+    (GDAL.setpoint(geom.ptr, i, x, y, z); geom)
 
 """
 Set the location of a vertex in a point or linestring geometry.
@@ -616,7 +642,7 @@ Set the location of a vertex in a point or linestring geometry.
 * `y`: input Y coordinate to assign.
 """
 setpoint!(geom::Geometry, i::Integer, x::Real, y::Real) =
-    GDAL.setpoint_2d(geom, i, x, y)
+    (GDAL.setpoint_2d(geom.ptr, i, x, y); geom)
 
 """
 Add a point to a geometry (line string or point).
@@ -627,7 +653,8 @@ Add a point to a geometry (line string or point).
 * `y`: y coordinate of point to add.
 * `z`: z coordinate of point to add.
 """
-addpoint!(geom::Geometry, x::Real, y::Real, z::Real) = GDAL.addpoint(geom,x,y,z)
+addpoint!(geom::Geometry, x::Real, y::Real, z::Real) =
+    (GDAL.addpoint(geom.ptr, x, y, z); geom)
 
 """
 Add a point to a geometry (line string or point).
@@ -637,7 +664,8 @@ Add a point to a geometry (line string or point).
 * `x`: x coordinate of point to add.
 * `y`: y coordinate of point to add.
 """
-addpoint!(geom::Geometry, x::Real, y::Real) = GDAL.addpoint_2d(geom, x, y)
+addpoint!(geom::Geometry, x::Real, y::Real) =
+    (GDAL.addpoint_2d(geom.ptr, x, y); geom)
 
 # """
 #     OGR_G_SetPoints(OGRGeometryH hGeom,
@@ -669,7 +697,7 @@ addpoint!(geom::Geometry, x::Real, y::Real) = GDAL.addpoint_2d(geom, x, y)
 
 
 "The number of elements in a geometry or number of geometries in container."
-ngeom(geom::Geometry) = GDAL.getgeometrycount(geom)
+ngeom(geom::Geometry) = GDAL.getgeometrycount(geom.ptr)
 
 """
 Fetch geometry from a geometry container.
@@ -686,7 +714,7 @@ For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 * `geom`: the geometry container from which to get a geometry from.
 * `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
 """
-getgeom(geom::Geometry, i::Integer) = GDAL.getgeometryref(geom, i)
+getgeom(geom::Geometry, i::Integer) = Geometry(GDAL.getgeometryref(geom.ptr, i))
 
 """
 Add a geometry to a geometry container.
@@ -704,8 +732,9 @@ interior rings.
 * `subgeom`: geometry to add to the existing geometry.
 """
 function addgeom!(geomcontainer::Geometry, subgeom::Geometry)
-    result = GDAL.addgeometry(geomcontainer, subgeom)
+    result = GDAL.addgeometry(geomcontainer.ptr, subgeom.ptr)
     @ogrerr result "Failed to add geometry. The geometry type could be illegal"
+    geomcontainer
 end
 
 """
@@ -724,8 +753,9 @@ interior rings.
 * `subgeom`: geometry to add to the existing geometry.
 """
 function addgeomdirectly!(geomcontainer::Geometry, subgeom::Geometry)
-    result = GDAL.addgeometrydirectly(geomcontainer, subgeom)
+    result = GDAL.addgeometrydirectly(geomcontainer.ptr, subgeom.ptr)
     @ogrerr result "Failed to add geometry. The geometry type could be illegal"
+    geomcontainer
 end
 
 """
@@ -740,8 +770,9 @@ Remove a geometry from an exiting geometry container.
     geometries in it.
 """
 function removegeom!(geom::Geometry, i::Integer, todelete::Bool = true)
-    result = GDAL.removegeometry(geom, i, todelete)
+    result = GDAL.removegeometry(geom.ptr, i, todelete)
     @ogrerr result "Failed to remove geometry. The index could be out of range."
+    geom
 end
 
 """
@@ -754,8 +785,9 @@ Remove all geometries from an exiting geometry container.
     geometries in it.
 """
 function removeallgeoms!(geom::Geometry, todelete::Bool = true)
-    result = GDAL.removegeometry(geom, -1, todelete)
+    result = GDAL.removegeometry(geom.ptr, -1, todelete)
     @ogrerr result "Failed to remove all geometries."
+    geom
 end
 
 """
@@ -767,7 +799,7 @@ Returns if this geometry is or has curve geometry.
     CIRCULARSTRING.
 """
 hascurvegeom(geom::Geometry, nonlinear::Bool) =
-    Bool(GDAL.hascurvegeometry(geom, nonlinear))
+    Bool(GDAL.hascurvegeometry(geom.ptr, nonlinear))
 
 """
 Return, possibly approximate, linear version of this geometry.
@@ -784,15 +816,17 @@ The ownership of the returned geometry belongs to the caller.
 * `options`: options as a null-terminated list of strings or NULL.
     See OGRGeometryFactory::curveToLineString() for valid options.
 """
-unsafe_getlineargeom(geom::Geometry, stepsize::Real=0) =
-    GDAL.getlineargeometry(geom, stepsize, C_NULL)
+unsafe_getlineargeom(geom::Geometry, stepsize::Real = 0) =
+    Geometry(GDAL.getlineargeometry(geom.ptr, stepsize, C_NULL))
 
 unsafe_getlineargeom{T <: AbstractString}(geom::Geometry, options::Vector{T}) =
-    GDAL.getlineargeometry(geom, 0, options)
+    Geometry(GDAL.getlineargeometry(geom.ptr, 0, options))
 
-unsafe_getlineargeom{T <: AbstractString}(geom::Geometry, stepsize::Real,
-                                   options::Vector{T}) =
-    GDAL.getlineargeometry(geom, stepsize, options)
+function unsafe_getlineargeom{T <: AbstractString}(
+        geom::Geometry, stepsize::Real, options::Vector{T}
+    )
+    Geometry(GDAL.getlineargeometry(geom.ptr, stepsize, options))
+end
 
 """
 Return curve version of this geometry.
@@ -807,7 +841,8 @@ The ownership of the returned geometry belongs to the caller.
 
 The reverse function is OGR_G_GetLinearGeometry().
 """
-unsafe_getcurvegeom(geom::Geometry) = GDAL.getcurvegeometry(geom, C_NULL)
+unsafe_getcurvegeom(geom::Geometry) =
+    Geometry(GDAL.getcurvegeometry(geom.ptr, C_NULL))
 
 """
 Build a ring from a bunch of arcs.
@@ -820,12 +855,16 @@ Build a ring from a bunch of arcs.
     points of the ring are the same.
 * `tol`: whether two arcs are considered close enough to be joined.
 """
-function unsafe_polygonfromedges(lines::Geometry, besteffort::Bool,
-                                 autoclose::Bool, tol::Real)
+function unsafe_polygonfromedges(
+        lines::Geometry,
+        besteffort::Bool,
+        autoclose::Bool,
+        tol::Real
+    )
     perr = Ref{GDAL.OGRErr}()
     result = GDAL.buildpolygonfromedges(lines, besteffort, autoclose, tol, perr)
-    @ogrerr peErr[] "Failed to build polygon from edges."
-    result
+    @ogrerr perr[] "Failed to build polygon from edges."
+    Geometry(result)
 end
 
 """
@@ -850,10 +889,10 @@ other libraries or applications.
 ### Returns
 a point or NULL.
 """
-enablenonlineargeom(flag::Bool) = GDAL.setnonlineargeometriesenabledflag(flag)
+setnonlineargeomflag!(flag::Bool) = GDAL.setnonlineargeometriesenabledflag(flag)
 
 "Get flag to enable/disable returning non-linear geometries in the C API."
-nonlineargeomisenabledflag() = Bool(GDAL.getnonlineargeometriesenabledflag())
+getnonlineargeomflag() = Bool(GDAL.getnonlineargeometriesenabledflag())
 
 for (geom, wkbgeom) in ((:geomcollection,   wkbGeometryCollection),
                         (:linestring,       wkbLineString),

@@ -68,7 +68,7 @@ AG.registerdrivers() do
             layer = AG.getlayer(dataset, 0)
             @fact AG.getname(layer) --> "OGRGeoJSON"
             layerbyname = AG.getlayer(dataset, "OGRGeoJSON")
-            @fact layerbyname --> layer
+            @fact layerbyname.ptr --> layer.ptr
             AG.resetreading!(layer)
 
             featuredefn = AG.getlayerdefn(layer)

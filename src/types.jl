@@ -1,53 +1,41 @@
-typealias FeatureLayer          Ptr{GDAL.OGRLayerH}
-typealias Feature               Ptr{GDAL.OGRFeatureH}
-typealias FeatureDefn           Ptr{GDAL.OGRFeatureDefnH}
-typealias Field                 Ptr{GDAL.OGRField}
-typealias FieldDefn             Ptr{GDAL.OGRFieldDefnH}
-typealias Geometry              Ptr{GDAL.OGRGeometryH}
-typealias GeomFieldDefn         GDAL.OGRGeomFieldDefnH
-typealias SpatialRef            Ptr{GDAL.OGRSpatialReferenceH}
-typealias CoordTransform        Ptr{GDAL.OGRCoordinateTransformationH}
-typealias Driver                Ptr{GDAL.GDALDriverH}
-typealias RasterBand            Ptr{GDAL.GDALRasterBandH}
-typealias Dataset               Ptr{GDAL.GDALDatasetH}
-typealias ProgressFunc          Ptr{GDAL.GDALProgressFunc}
+typealias GDALColorTable      Ptr{GDAL.GDALColorTableH}
+typealias GDALCoordTransform  Ptr{GDAL.OGRCoordinateTransformationH}
+typealias GDALDataset         Ptr{GDAL.GDALDatasetH}
+typealias GDALDriver          Ptr{GDAL.GDALDriverH}
+typealias GDALFeature         Ptr{GDAL.OGRFeatureH}
+typealias GDALFeatureDefn     Ptr{GDAL.OGRFeatureDefnH}
+typealias GDALFeatureLayer    Ptr{GDAL.OGRLayerH}
+typealias GDALField           Ptr{GDAL.OGRField}
+typealias GDALFieldDefn       Ptr{GDAL.OGRFieldDefnH}
+typealias GDALGeometry        Ptr{GDAL.OGRGeometryH}
+typealias GDALGeomFieldDefn   GDAL.OGRGeomFieldDefnH
+typealias GDALProgressFunc    Ptr{GDAL.GDALProgressFunc}
+typealias GDALRasterAttrTable Ptr{GDAL.GDALRasterAttributeTableH}
+typealias GDALRasterBand      Ptr{GDAL.GDALRasterBandH}
+typealias GDALSpatialRef      Ptr{GDAL.OGRSpatialReferenceH}
+typealias GDALStyleManager    Ptr{GDAL.OGRStyleMgrH}
+typealias GDALStyleTable      Ptr{GDAL.OGRStyleTableH}
+typealias GDALStyleTool       Ptr{GDAL.OGRStyleToolH}
 
-"""
-The GDALRasterAttributeTable (or RAT) is used to encapsulate a table used to
-provide attribute information about pixel values.
+typealias StringList          Ptr{Ptr{UInt8}}
 
-Each row in the table applies to a range of pixel values (or a single value in
-some cases), and might have attributes such as the histogram count for that 
-range, the color pixels of that range should be drawn names of classes or any 
-other generic information.
-
-Raster attribute tables can be used to represent histograms, color tables, and 
-classification information.
-
-Each column in a raster attribute table has a name, a type (integer, floating 
-point or string), and a GDALRATFieldUsage. The usage distinguishes columns with 
-particular understood purposes (such as color, histogram count, name) and 
-columns that have specific purposes not understood by the library (long label, 
-suitability_for_growing_wheat, etc).
-
-In the general case each row has a column indicating the minimum pixel values 
-falling into that category, and a column indicating the maximum pixel value. 
-These are indicated with usage values of GFU_Min, and GFU_Max. In other cases 
-where each row is a discrete pixel value, one column of usage GFU_MinMax can be 
-used.
-
-In other cases all the categories are of equal size and regularly spaced and 
-the categorization information can be determine just by knowing the value at 
-which the categories start, and the size of a category. This is called \"Linear 
-Binning\" and the information is kept specially on the raster attribute table 
-as a whole.
-"""
-typealias RasterAttributeTable  Ptr{GDAL.GDALRasterAttributeTableH}
-typealias StyleTable            Ptr{GDAL.OGRStyleTableH}
-typealias ColorTable            Ptr{GDAL.GDALColorTableH}
-typealias StyleManager          Ptr{GDAL.OGRStyleMgrH}
-typealias StyleTool             Ptr{GDAL.OGRStyleToolH}
-typealias StringList            Ptr{Ptr{UInt8}}
+type ColorTable;      ptr::GDALColorTable         end
+type CoordTransform;  ptr::GDALCoordTransform     end
+type Dataset;         ptr::GDALDataset            end
+type Driver;          ptr::GDALDriver             end
+type Feature;         ptr::GDALFeature            end
+type FeatureDefn;     ptr::GDALFeatureDefn        end
+type FeatureLayer;    ptr::GDALFeatureLayer       end
+type Field;           ptr::GDALField              end
+type FieldDefn;       ptr::GDALFieldDefn          end
+type Geometry;        ptr::GDALGeometry           end
+type GeomFieldDefn;   ptr::GDALGeomFieldDefn      end
+type RasterAttrTable; ptr::GDALRasterAttrTable    end
+type RasterBand;      ptr::GDALRasterBand         end
+type SpatialRef;      ptr::GDALSpatialRef         end
+type StyleManager;    ptr::GDALStyleManager       end
+type StyleTable;      ptr::GDALStyleTable         end
+type StyleTool;       ptr::GDALStyleTool          end
 
 @enum(CPLErr,
       CE_None       = (UInt32)(0),
@@ -467,32 +455,39 @@ import Base.|
 
 "Get data type size in bits."
 typesize(dt::GDALDataType) =
-    ccall((:GDALGetDataTypeSize,GDAL.libgdal),Cint,(GDAL.GDALDataType,),dt)
+    @gdal(GDALGetDataTypeSize::Cint,
+        dt::GDAL.GDALDataType
+    )
 
 "name (string) corresponding to GDAL data type"
 typename(dt::GDALDataType) =
-    unsafe_string(ccall((:GDALGetDataTypeName,GDAL.libgdal),Cstring,
-                     (GDAL.GDALDataType,),dt))
+    unsafe_string(@gdal(GDALGetDataTypeName::Cstring,
+        dt::GDAL.GDALDataType
+    ))
 
 "Returns GDAL data type by symbolic name."
 gettype(name::AbstractString) = GDALDataType(GDAL.getdatatypebyname(name))
 
 "Return the smallest data type that can fully express both input data types."
 typeunion(dt1::GDALDataType,dt2::GDALDataType) =
-    GDALDataType(ccall((:GDALDataTypeUnion,GDAL.libgdal),GDAL.GDALDataType,
-                       (GDAL.GDALDataType,GDAL.GDALDataType),dt1,dt2))
+    GDALDataType(@gdal(GDALDataTypeUnion::GDAL.GDALDataType,
+        dt1::GDAL.GDALDataType,
+        dt2::GDAL.GDALDataType
+    ))
 
 """
-`TRUE` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}`
+`true` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}`
 """
 iscomplex(dtype::GDALDataType) =
-    Bool(ccall((:GDALDataTypeIsComplex,GDAL.libgdal),Cint,
-               (GDAL.GDALDataType,),dtype))
+    Bool(@gdal(GDALDataTypeIsComplex::Cint,
+        dtype::GDAL.GDALDataType
+    ))
 
 "Get name of AsyncStatus data type."
 getname(dtype::GDALAsyncStatusType) =
-    unsafe_string(ccall((:GDALGetAsyncStatusTypeName,GDAL.libgdal),Cstring,
-                     (GDAL.GDALAsyncStatusType,),dtype))
+    unsafe_string(@gdal(GDALGetAsyncStatusTypeName::Cstring,
+        dtype::GDAL.GDALAsyncStatusType
+    ))
 
 "Get AsyncStatusType by symbolic name."
 asyncstatustype(name::AbstractString) =
@@ -500,8 +495,9 @@ asyncstatustype(name::AbstractString) =
 
 "Return name (string) corresponding to color interpretation"
 getname(obj::GDALColorInterp) =
-    unsafe_string(ccall((:GDALGetColorInterpretationName,GDAL.libgdal),Cstring,
-                     (GDAL.GDALColorInterp,),obj))
+    unsafe_string(@gdal(GDALGetColorInterpretationName::Cstring,
+        obj::GDAL.GDALColorInterp
+    ))
 
 "Get color interpretation corresponding to the given symbolic name."
 colorinterp(name::AbstractString) =
@@ -509,20 +505,25 @@ colorinterp(name::AbstractString) =
 
 "Get name of palette interpretation."
 getname(obj::GDALPaletteInterp) =
-    unsafe_string(ccall((:GDALGetPaletteInterpretationName,GDAL.libgdal),Cstring,
-                     (GDAL.GDALPaletteInterp,),obj))
+    unsafe_string(@gdal(GDALGetPaletteInterpretationName::Cstring,
+        obj::GDAL.GDALPaletteInterp
+    ))
 
 "Fetch human readable name for a field type."
 getname(obj::OGRFieldType) = 
-    unsafe_string(ccall((:OGR_GetFieldTypeName,GDAL.libgdal),Cstring,
-                     (GDAL.OGRFieldType,),obj))
+    unsafe_string(@gdal(OGR_GetFieldTypeName::Cstring,
+        obj::GDAL.OGRFieldType
+    ))
 
 "Fetch human readable name for a field subtype."
 getname(obj::OGRFieldSubType) =
-    unsafe_string(ccall((:OGR_GetFieldSubTypeName,GDAL.libgdal),Cstring,
-                     (GDAL.OGRFieldSubType,),obj))
+    unsafe_string(@gdal(OGR_GetFieldSubTypeName::Cstring,
+        obj::GDAL.OGRFieldSubType
+    ))
 
 "Return if type and subtype are compatible."
 arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType) =
-    Bool(ccall((:OGR_AreTypeSubTypeCompatible,GDAL.libgdal),Cint,
-               (GDAL.OGRFieldType,GDAL.OGRFieldSubType),dtype,subtype))
+    Bool(@gdal(OGR_AreTypeSubTypeCompatible::Cint,
+        dtype::GDAL.OGRFieldType,
+        subtype::GDAL.OGRFieldSubType
+    ))
