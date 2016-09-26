@@ -35,21 +35,6 @@ facts("Test methods for rasterband") do
             AG.deletenodatavalue!(rb)
             @fact AG.getnodatavalue(rb) --> roughly(-1e10)
 
-            AG.createcolortable(AG.GPI_RGB) do ct
-                AG.createcolorramp!(ct,
-                    128, GDAL.GDALColorEntry(0,0,0,0),
-                    255, GDAL.GDALColorEntry(0,0,255,0)
-                )
-                AG.setcolortable!(rb, ct)
-                println(AG.getcolortable(rb))
-                AG.clearcolortable!(rb)
-                
-                AG.createRAT(ct) do rat
-                    AG.setdefaultRAT!(rb, rat)
-                    println(AG.getdefaultRAT(rb))
-                end
-            end
-
             AG.createcopy(dataset, "tmp/utmsmall.tif") do dest
                 destband = AG.getband(dest, 1)
                 AG.copywholeraster!(rb, destband)
@@ -59,9 +44,9 @@ facts("Test methods for rasterband") do
                 @fact AG.noverview(destband) --> 3
                 println(destband)
 
-                @fact AG.getcolorinterp(rb) --> AG.GCI_PaletteIndex
-                AG.setcolorinterp!(rb, AG.GCI_RedBand)
-                @fact AG.getcolorinterp(rb) --> AG.GCI_RedBand
+                @fact AG.getcolorinterp(destband) --> AG.GCI_GrayIndex
+                AG.setcolorinterp!(destband, AG.GCI_RedBand)
+                @fact AG.getcolorinterp(destband) --> AG.GCI_RedBand
 
                 println(AG.getsampleoverview(destband, 100))
                 println(AG.getsampleoverview(destband, 200))
@@ -80,6 +65,21 @@ facts("Test methods for rasterband") do
                     AG.getoverview(destband, 0),
                     AG.getoverview(destband, 2)
                 ])
+
+                AG.createcolortable(AG.GPI_RGB) do ct
+                    AG.createcolorramp!(ct,
+                        128, GDAL.GDALColorEntry(0,0,0,0),
+                        255, GDAL.GDALColorEntry(0,0,255,0)
+                    )
+                    AG.setcolortable!(destband, ct)
+                    println(AG.getcolortable(destband))
+                    AG.clearcolortable!(destband)
+                    
+                    AG.createRAT(ct) do rat
+                        AG.setdefaultRAT!(destband, rat)
+                        println(AG.getdefaultRAT(destband))
+                    end
+                end
             end
 
             rm("tmp/utmsmall.tif")
