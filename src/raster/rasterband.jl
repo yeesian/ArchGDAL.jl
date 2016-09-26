@@ -251,7 +251,7 @@ If there is no associated color table, the return result is `NULL`. The
 returned color table remains owned by the `GDALRasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.
 """
-getcolortable(rb::RasterBand) = GDAL.getrastercolortable(rb.ptr)
+getcolortable(rb::RasterBand) = ColorTable(GDAL.getrastercolortable(rb.ptr))
 
 """
 Set the raster color table.
@@ -263,13 +263,13 @@ owned by the caller after the call.
 * `colortable` color table to apply (where supported).
 """
 function setcolortable!(rb::RasterBand, colortable::ColorTable)
-    result = GDAL.setrastercolortable(rb.ptr, colortable)
+    result = GDAL.setrastercolortable(rb.ptr, colortable.ptr)
     @cplwarn result "CPLError $(result): action is unsupported by the driver"
     colortable
 end
 
 function clearcolortable!(rb::RasterBand)
-    result = GDAL.setrastercolortable(rb.ptr, C_NULL)
+    result = GDAL.setrastercolortable(rb.ptr, GDALColorTable(C_NULL))
     @cplwarn result "CPLError $(result): action is unsupported by the driver"
 end
 
@@ -296,13 +296,20 @@ metadata) so that only a given RGB triplet (in case of a RGB image) will be
 considered as the nodata value and not each value of the triplet independantly
 per band.
 """
-function regenerateoverviews!(rb::RasterBand,
-                              overviewbands::Vector{RasterBand},
-                              resampling::AbstractString = "NEAREST",
-                              progressfunc::Function = GDAL.C.GDALDummyProgress,
-                              progressdata=C_NULL)
-    result = GDAL.regenerateoverviews(rb.ptr, length(overviewbands),
-        overviewbands, resampling, @cplprogress(progressfunc), progressdata
+function regenerateoverviews!(
+        rb::RasterBand,
+        overviewbands::Vector{RasterBand},
+        resampling::AbstractString  = "NEAREST",
+        progressfunc::Function      = GDAL.C.GDALDummyProgress,
+        progressdata                = C_NULL
+    )
+    result = @gdal(GDALRegenerateOverviews::GDAL.CPLErr,
+        rb.ptr::GDALRasterBand,
+        length(overviewbands)::Cint,
+        GDALRasterBand[band.ptr for band in overviewbands]::Ptr{GDALRasterBand},
+        resampling::Cstring,
+        @cplprogress(progressfunc)::GDALProgressFunc,
+        progressdata::Ptr{Void}
     )
     @cplerr result "Failed to regenerate overviews"
     result
