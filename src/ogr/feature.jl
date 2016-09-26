@@ -252,7 +252,9 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
 asstringlist(feature::Feature, i::Integer) =
-    unsafe_loadstringlist(GDAL.C.OGR_F_GetFieldAsStringList(feature.ptr, i))
+    unsafe_loadstringlist(
+        GDAL.C.OGR_F_GetFieldAsStringList(Ptr{Void}(feature.ptr), Cint(i))
+    )
 
 """
     OGR_F_GetFieldAsBinary(OGRFeatureH hFeat,
@@ -466,7 +468,7 @@ field types may be unaffected.
 * `panValues`: the values to assign.
 """
 setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GIntBig}) =
-    (GDAL.setfieldintegerlist(feature.ptr, i, length(value), value); feature)
+    (GDAL.setfieldinteger64list(feature.ptr, i, length(value), value); feature)
 
 """
 Set field to list of doubles value.

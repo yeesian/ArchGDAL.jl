@@ -1,10 +1,10 @@
 function Base.show(io::IO, drv::Driver)
-    drv.ptr == C_NULL && (print(io, "NULL Driver"); return)
+    drv.ptr == C_NULL && (return print(io, "NULL Driver"))
     print(io, "Driver: $(shortname(drv))/$(longname(drv))")
 end
 
 function Base.show(io::IO, dataset::Dataset)
-    dataset.ptr == C_NULL && (print(io, "NULL Dataset"); return)
+    dataset.ptr == C_NULL && (return print(io, "NULL Dataset"))
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
     println(io, "File(s): ")
     for (i,filename) in enumerate(filelist(dataset))
@@ -47,7 +47,7 @@ function Base.show(io::IO, dataset::Dataset)
 end
 
 function summarize(io::IO, rasterband::RasterBand)
-    rasterband.ptr == C_NULL && (print(io, "NULL RasterBand"); return)
+    rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     access = getaccess(rasterband)
     color = getname(getcolorinterp(rasterband))
     xsize = width(rasterband)
@@ -58,7 +58,7 @@ function summarize(io::IO, rasterband::RasterBand)
 end
 
 function Base.show(io::IO, rasterband::RasterBand)
-    rasterband.ptr == C_NULL && (print(io, "NULL RasterBand"); return)
+    rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     summarize(io, rasterband)
     (x,y) = getblocksize(rasterband)
     sc = getscale(rasterband)
@@ -78,7 +78,7 @@ end
 
 # assumes that the layer is reset, and will reset it after display
 function Base.show(io::IO, layer::FeatureLayer)
-    layer.ptr == C_NULL && (println(io, "NULL Layer"); return)
+    layer.ptr == C_NULL && (return println(io, "NULL Layer"))
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")
     featuredefn = getlayerdefn(layer)
@@ -139,7 +139,7 @@ function Base.show(io::IO, layer::FeatureLayer)
 end
 
 function Base.show(io::IO, featuredefn::FeatureDefn)
-    featuredefn.ptr == C_NULL && (print(io, "NULL FeatureDefn"); return)
+    featuredefn.ptr == C_NULL && (return print(io, "NULL FeatureDefn"))
     n = ngeomfield(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
@@ -158,7 +158,7 @@ function Base.show(io::IO, featuredefn::FeatureDefn)
 end
 
 function Base.show(io::IO, fd::FieldDefn)
-    fd.ptr == C_NULL && (print(io, "NULL FieldDefn"); return)
+    fd.ptr == C_NULL && (return print(io, "NULL FieldDefn"))
     print(io, "$(getname(fd)) ($(gettype(fd)))")
 end
 
@@ -168,7 +168,7 @@ function Base.show(io::IO, gfd::GeomFieldDefn)
 end
 
 function Base.show(io::IO, feature::Feature)
-    feature.ptr == C_NULL && (println(io, "NULL Feature"); return)
+    feature.ptr == C_NULL && (return println(io, "NULL Feature"))
     println(io, "Feature")
     n = ngeomfield(feature)
     for i in 1:min(n, 3)

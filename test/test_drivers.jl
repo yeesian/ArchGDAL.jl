@@ -44,7 +44,7 @@ facts("Test Driver Capabilities") do
 AG.registerdrivers() do
     drivers = AG.listdrivers()
     println(drivers)
-    AG.options(AG.getdriver("GTiff"))
+    println(AG.driveroptions("GTiff"))
     println(AG.identifydriver("data/point.geojson"))
     println(AG.identifydriver("data/utmsmall.tif"))
     println(AG.identifydriver("data/A.tif"))
