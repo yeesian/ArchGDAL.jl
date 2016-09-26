@@ -226,15 +226,20 @@ end
 facts("Simplify") do
     AG.fromWKT("POLYGON EMPTY") do g1
         @fact AG.isempty(g1) --> true
-        AG.simplify!(g1, 43.2)
-        @fact AG.isempty(g1) --> true
+        AG.simplify(g1, 43.2) do g2
+            @fact AG.isempty(g2) --> false
+        end
     end
 
     AG.fromWKT("POLYGON((56.528666666700 25.2101666667, 56.529000000000 25.2105000000, 56.528833333300 25.2103333333, 56.528666666700 25.2101666667))") do g1
-        @fact AG.toWKT(AG.simplify!(g1, 0.0)) --> "POLYGON EMPTY"
+        AG.simplify(g1, 0.0) do g2
+            @fact AG.toWKT(g2) --> "POLYGON EMPTY"
+        end
     end
 
     AG.fromWKT("POLYGON((56.528666666700 25.2101666667, 56.529000000000 25.2105000000, 56.528833333300 25.2103333333, 56.528666666700 25.2101666667))") do g1
-        @fact AG.toWKT(AG.simplifypreservetopology!(g1, 43.2)) --> "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
+        AG.simplifypreservetopology(g1, 43.2) do g2
+            @fact AG.toWKT(g2) --> "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
+        end
     end
 end

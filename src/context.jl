@@ -46,7 +46,7 @@ end
 
 function createfeature(f::Function, layer::FeatureLayer)
     feature = unsafe_createfeature(layer)
-    try f(feature); createfeature(layer, feature) finally destroy(feature) end
+    try f(feature); createfeature!(layer, feature) finally destroy(feature) end
 end
 
 function createfeature(f::Function, featuredefn::FeatureDefn)
@@ -60,21 +60,21 @@ function createfeature(f::Function, featuredefn::FeatureDefn)
     try f(feature) finally destroy(feature); dereference(featuredefn) end
 end
 
-for gdalfunc in (:boundary, :buffer, :centroid, :clone, :convexhull, :create,
-                 :createcolortable, :createcoordtrans, :createcopy,
-                 :createfeaturedefn, :createfielddefn, :creategeom,
-                 :creategeomcollection, :creategeomfieldcollection,
-                 :creategeomfielddefn, :createlinearring, :createlinestring,
-                 :createmultilinestring, :createmultipoint, :createmultipolygon,
-                 :createmultipolygon_noholes, :createpoint, :createpolygon,
-                 :createRAT, :createstylemanager, :createstyletable,
-                 :createstyletool, :delaunaytriangulation, :difference,
-                 :forceto, :fromEPSG, :fromEPSGA, :fromESRI, :fromGML,
-                 :fromJSON, :fromPROJ4, :fromURL, :fromWKB, :fromWKT, :fromXML,
-                 :getcurvegeom, :getfeature, :getlineargeom, :intersection,
-                 :newspatialref, :nextfeature, :pointalongline, :pointonsurface,
-                 :polygonfromedges, :polygonize, :read, :symdifference, :union,
-                 :update)
+for gdalfunc in (
+        :boundary, :buffer, :centroid, :clone, :convexhull, :create,
+        :createcolortable, :createcoordtrans, :createcopy, :createfeaturedefn,
+        :createfielddefn, :creategeom, :creategeomcollection,
+        :creategeomfieldcollection, :creategeomfielddefn, :createlinearring,
+        :createlinestring, :createmultilinestring, :createmultipoint,
+        :createmultipolygon, :createmultipolygon_noholes, :createpoint,
+        :createpolygon, :createRAT, :createstylemanager, :createstyletable,
+        :createstyletool, :delaunaytriangulation, :difference, :forceto,
+        :fromEPSG, :fromEPSGA, :fromESRI, :fromGML, :fromJSON, :fromPROJ4,
+        :fromURL, :fromWKB, :fromWKT, :fromXML, :getcurvegeom, :getfeature,
+        :getlineargeom, :getpart, :intersection, :newspatialref, :nextfeature,
+        :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
+        :simplify, :simplifypreservetopology, :symdifference, :union, :update
+    )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
             obj = $(Symbol("unsafe_$gdalfunc"))(args...; kwargs...)

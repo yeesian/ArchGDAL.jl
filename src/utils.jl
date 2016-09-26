@@ -1,3 +1,13 @@
+macro gdal(args...)
+    @assert length(args) > 0
+    @assert args[1].head == :(::)
+    fhead = (args[1].args[1], GDAL.libgdal)
+    returntype = args[1].args[2]
+    argtypes = Expr(:tuple, [a.args[2] for a in args[2:end]]...)
+    args = [a.args[1] for a in args[2:end]]
+    return quote ccall($fhead, $returntype, $argtypes, $(args...)) end
+end
+
 macro ogrerr(code, message)
     return quote
         if $code != GDAL.OGRERR_NONE
@@ -48,14 +58,17 @@ function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
 end
 
 "Fetch list of (non-empty) metadata domains. (Since: GDAL 1.11)"
-metadatadomainlist{T <: GDAL.GDALMajorObjectH}(obj::Ptr{T}) =
-    unsafe_loadstringlist(ccall((:GDALGetMetadataDomainList,GDAL.libgdal),
-                                Ptr{Cstring},(Ptr{GDAL.GDALMajorObjectH},),obj))
+metadatadomainlist(obj) =
+    unsafe_loadstringlist(@gdal(GDALGetMetadataDomainList::Ptr{Cstring},
+        obj.ptr::Ptr{GDAL.GDALMajorObjectH}
+    ))
 
 "Fetch metadata. Note that relatively few formats return any metadata."
-metadata{T <: GDAL.GDALMajorObjectH}(obj::Ptr{T}; domain::AbstractString="") =
-    unsafe_loadstringlist(ccall((:GDALGetMetadata,GDAL.libgdal),Ptr{Cstring},
-                            (Ptr{GDAL.GDALMajorObjectH},Cstring),obj,domain))
+metadata(obj; domain::AbstractString = "") =
+    unsafe_loadstringlist(@gdal(GDALGetMetadata::Ptr{Cstring},
+        obj.ptr::Ptr{GDAL.GDALMajorObjectH},
+        domain::Ptr{UInt8}
+    ))
 
 """
 Set a configuration option for GDAL/OGR use.
@@ -74,9 +87,8 @@ defined in the environment.
 If `setconfigoption()` is called several times with the same key, the value
 provided during the last call will be used.
 """
-setconfigoption(option::AbstractString, value::AbstractString) =
-    ccall((:CPLSetConfigOption,GDAL.libgdal),Void,(Cstring,Cstring),option,
-          value)
+setconfigoption(option::AbstractString, value) =
+    @gdal(CPLSetConfigOption::Void, option::Cstring, value::Ptr{UInt8})
 
 """
 This function can be used to clear a setting.
@@ -84,9 +96,7 @@ This function can be used to clear a setting.
 Note: it will not unset an existing environment variable; it will
 just unset a value previously set by `setconfigoption()`.
 """
-clearconfigoption(option::AbstractString) =
-    ccall((:CPLSetConfigOption,GDAL.libgdal),Void,(Cstring,Ptr{UInt8}),option,
-          C_NULL)
+clearconfigoption(option::AbstractString) = setconfigoption(option, C_NULL)
 
 """
 Get the value of a configuration option.
@@ -102,15 +112,11 @@ it in environment variables.
 ### Returns
 the value associated to the key, or the default value if not found.
 """
-function getconfigoption(option::AbstractString, default::AbstractString)
-    result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
-                   Cstring),option,default)
-    return (result == C_NULL) ? "" : unsafe_string(result)
-end
-
-function getconfigoption(option::AbstractString)
-    result = ccall((:CPLGetConfigOption,GDAL.libgdal),Ptr{UInt8},(Cstring,
-                   Ptr{UInt8}),option,C_NULL)
+function getconfigoption(option::AbstractString, default = C_NULL)
+    result = @gdal(CPLGetConfigOption::Ptr{UInt8},
+        option::Cstring,
+        default::Ptr{UInt8}
+    )
     return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
@@ -128,9 +134,11 @@ This function sets the configuration option that only applies in the current
 thread, as opposed to `setconfigoption()` which sets an option that applies on
 all threads.
 """
-setthreadconfigoption(option::AbstractString, value::AbstractString) =
-    ccall((:CPLSetThreadLocalConfigOption,GDAL.libgdal),Void,(Cstring,Cstring),
-          option,value)
+setthreadconfigoption(option::AbstractString, value) =
+    @gdal(CPLSetThreadLocalConfigOption::Void,
+        option::Cstring,
+        value::Ptr{UInt8}
+    )
 
 """
 This function can be used to clear a setting.
@@ -139,18 +147,13 @@ Note: it will not unset an existing environment variable; it will
 just unset a value previously set by `setthreadconfigoption()`.
 """
 clearthreadconfigoption(option::AbstractString) =
-    ccall((:CPLSetThreadLocalConfigOption,GDAL.libgdal),Void,(Cstring,
-        Ptr{UInt8}),option,C_NULL)
+    setthreadconfigoption(option, C_NULL)
 
 "Same as `getconfigoption()` but with settings from `setthreadconfigoption()`."
-function getthreadconfigoption(option::AbstractString, default::AbstractString)
-    result = ccall((:CPLGetThreadLocalConfigOption,GDAL.libgdal),Ptr{UInt8},
-                   (Cstring,Cstring),option,default)
-    return (result == C_NULL) ? "" : unsafe_string(result)
-end
-
-function getthreadconfigoption(option::AbstractString)
-    result = ccall((:CPLGetThreadLocalConfigOption,GDAL.libgdal),Ptr{UInt8},
-                   (Cstring,Ptr{UInt8}),option,C_NULL)
+function getthreadconfigoption(option::AbstractString, default = C_NULL)
+    result = @gdal(CPLGetThreadLocalConfigOption::Ptr{UInt8},
+        option::Cstring,
+        default::Ptr{UInt8}
+    )
     return (result == C_NULL) ? "" : unsafe_string(result)
 end

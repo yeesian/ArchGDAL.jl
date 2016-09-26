@@ -3,13 +3,13 @@
 Construct a new color table.
 """
 unsafe_createcolortable(palette::GDALPaletteInterp) =
-    GDAL.createcolortable(GDAL.GDALPaletteInterp(palette))
+    ColorTable(GDAL.createcolortable(GDAL.GDALPaletteInterp(palette)))
 
 "Destroys a color table."
-destroy(colortable::ColorTable) = GDAL.destroycolortable(colortable)
+destroy(ct::ColorTable) = (GDAL.destroycolortable(ct.ptr); ct.ptr = C_NULL)
 
 "Make a copy of a color table."
-unsafe_clone(colortable::ColorTable) = GDAL.clonecolortable(colortable)
+unsafe_clone(ct::ColorTable) = ColorTable(GDAL.clonecolortable(ct.ptr))
 
 """
 Fetch palette interpretation.
@@ -18,14 +18,14 @@ Fetch palette interpretation.
 palette interpretation enumeration value, usually `GPI_RGB`.
 """
 getpaletteinterp(ct::ColorTable) =
-    GDALPaletteInterp(GDAL.getpaletteinterpretation(ct))
+    GDALPaletteInterp(GDAL.getpaletteinterpretation(ct.ptr))
 
 "Get number of color entries in table."
-ncolorentry(colortable::ColorTable) = GDAL.getcolorentrycount(colortable)
+ncolorentry(ct::ColorTable) = GDAL.getcolorentrycount(ct.ptr)
 
 "Fetch a color entry from table."
-getcolorentry(colortable::ColorTable, i::Integer) =
-    unsafe_load(GDAL.getcolorentry(colortable, i))
+getcolorentry(ct::ColorTable, i::Integer) =
+    unsafe_load(GDAL.getcolorentry(ct.ptr, i))
 
 """
 Fetch a table entry in RGB format.
@@ -40,9 +40,9 @@ tables.
 ### Returns
 TRUE on success, or FALSE if the conversion isn't supported.
 """
-function getcolorentryasrgb(colortable::ColorTable, i::Integer)
-    colorentry = Ref{GDAL.GDALColorEntry}(GDAL.GDALColorEntry(0,0,0,0))
-    result = Bool(GDAL.getcolorentryasrgb(colortable, i, colorentry))
+function getcolorentryasrgb(ct::ColorTable, i::Integer)
+    colorentry = Ref{GDAL.GDALColorEntry}(GDAL.GDALColorEntry(0, 0, 0, 0))
+    result = Bool(GDAL.getcolorentryasrgb(ct.ptr, i, colorentry))
     result || warn("The conversion to RGB isn't supported.")
     colorentry[]
 end
@@ -60,8 +60,8 @@ The table is grown as needed to hold the supplied offset.
 * `i`     entry offset from `0` to `ncolorentry()-1`.
 * `entry` value to assign to table.
 """
-setcolorentry!(colortable::ColorTable, i::Integer, entry::GDAL.GDALColorEntry) =
-    GDAL.setcolorentry(colortable, i, Ref{GDAL.GDALColorEntry}(entry))
+setcolorentry!(ct::ColorTable, i::Integer, entry::GDAL.GDALColorEntry) =
+    (GDAL.setcolorentry(ct.ptr, i, Ref{GDAL.GDALColorEntry}(entry)); ct)
 
 """
 Create color ramp.
@@ -78,11 +78,15 @@ called several times to create multiples ramps in the same color table.
 ### Returns
 total number of entries, -1 to report error
 """
-createcolorramp!(colortable::ColorTable,
-                 startindex::Integer,
-                 startcolor::GDAL.GDALColorEntry,
-                 endindex::Integer,
-                 endcolor::GDAL.GDALColorEntry) =
-    GDAL.createcolorramp(colortable,
-                         startindex, Ref{GDAL.GDALColorEntry}(startcolor),
-                           endindex, Ref{GDAL.GDALColorEntry}(endcolor))
+function createcolorramp!(
+        ct::ColorTable,
+        startindex::Integer,
+        startcolor::GDAL.GDALColorEntry,
+        endindex::Integer,
+        endcolor::GDAL.GDALColorEntry
+    )
+    GDAL.createcolorramp(ct.ptr,
+        startindex, Ref{GDAL.GDALColorEntry}(startcolor),
+        endindex, Ref{GDAL.GDALColorEntry}(endcolor)
+    )
+end

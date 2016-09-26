@@ -9,7 +9,6 @@ facts("Test methods for dataset") do
                 @fact AG.noverview(AG.getband(copydataset,1)) --> 0
                 AG.buildoverviews!(copydataset, Cint[2,4,8])
                 @fact AG.noverview(AG.getband(copydataset,1)) --> 3
-                #AG.deletelayer!(copydataset, 0)
                 AG.copywholeraster(dataset, copydataset,
                                    progressfunc=GDAL.C.GDALTermProgress)
             end
@@ -22,3 +21,5 @@ facts("Test methods for dataset") do
     rm("tmp/utmcopy.tif")
     rm("tmp/utmcopy2.tif")
 end
+
+# untested: AG.deletelayer!(copydataset, 0)
