@@ -33,11 +33,11 @@ facts("Create a Point") do
         end
         AG.flattento2d!(point)
         @fact AG.getcoorddim(point) --> 2
-        @fact AG.nonlineargeomisenabledflag() --> true
-        AG.enablenonlineargeom(false)
-        @fact AG.nonlineargeomisenabledflag() --> false
-        AG.enablenonlineargeom(true)
-        @fact AG.nonlineargeomisenabledflag() --> true
+        @fact AG.getnonlineargeomflag() --> true
+        AG.setnonlineargeomflag!(false)
+        @fact AG.getnonlineargeomflag() --> false
+        AG.setnonlineargeomflag!(true)
+        @fact AG.getnonlineargeomflag() --> true
         AG.closerings!(point)
         @fact AG.toJSON(point) --> "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0 ] }"
     end
@@ -153,6 +153,7 @@ facts("Testing remaining methods for geometries") do
 end
 
 # Untested
+# toISOWKT(geom::Geometry)
 # unsafe_polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
 # setspatialref!(geom::Geometry, spatialref::SpatialRef)
 # getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)

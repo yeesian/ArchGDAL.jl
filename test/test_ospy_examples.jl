@@ -93,6 +93,7 @@ AG.read("ospy/data1/sites.shp") do input
         AG.createfield!(outlayer, AG.getfielddefn(inlayerdefn, 1))
         for infeature in inlayer
             id = AG.getfield(infeature, 0)
+            @fact AG.asint64(infeature, 0) --> id
             cover = AG.getfield(infeature, 1)
             if cover == "trees"
                 AG.createfeature(outlayer) do outfeature
@@ -182,8 +183,7 @@ facts("Homework 3") do
                 AG.buffer(AG.getgeom(nibleyFeature), 1500) do bufferGeom
                     AG.setspatialfilter!(siteslayer, bufferGeom)
                     for sitefeature in siteslayer
-                        id_index = AG.getfieldindex(sitefeature, "ID")
-                        println(AG.getfield(sitefeature, id_index))
+                        println(AG.getfield(sitefeature, "ID"))
     end end end end end
     
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3b.py

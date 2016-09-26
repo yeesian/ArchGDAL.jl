@@ -7,8 +7,8 @@ OGRStyleMgr factory.
 ### Returns
 an handle to the new style manager object.
 """
-unsafe_createstylemanager(styletable::StyleTable = StyleTable(C_NULL)) =
-    GDAL.sm_create(styletable)
+unsafe_createstylemanager(styletable = GDALStyleTable(C_NULL)) =
+    StyleManager(GDAL.sm_create(styletable))
 
 """
 Destroy Style Manager.
@@ -16,7 +16,8 @@ Destroy Style Manager.
 ### Parameters
 * `stylemanager`: handle to the style manager to destroy.
 """
-destroy(stylemanager::StyleManager) = GDAL.destroy(stylemanager)
+destroy(sm::StyleManager) = (GDAL.destroy(sm.ptr); sm.ptr = C_NULL)
+
 
 """
 Initialize style manager from the style string of a feature.
@@ -29,7 +30,7 @@ Initialize style manager from the style string of a feature.
 the style string read from the feature, or NULL in case of error.
 """
 initialize!(stylemanager::StyleManager, feature::Feature) =
-    GDAL.initfromfeature(stylemanager, feature)
+    GDAL.initfromfeature(stylemanager.ptr, feature.ptr)
 
 """
 Initialize style manager from the style string.
@@ -40,12 +41,11 @@ Initialize style manager from the style string.
 ### Returns
 TRUE on success, FALSE on errors.
 """
-initialize!(stylemanager::StyleManager, stylestring::AbstractString) =
-    Bool(GDAL.initstylestring(stylemanager, stylestring))
-
-initialize!(stylemanager::StyleManager) =
-    Bool(ccall((:OGR_SM_InitStyleString,GDAL.libgdal),Cint,(StyleManager,
-                Ptr{UInt8}),stylemanager,Ptr{UInt8}(C_NULL)))
+initialize!(stylemanager::StyleManager, stylestring = C_NULL) =
+    Bool(@gdal(OGR_SM_InitStyleString::Cint,
+        stylemanager.ptr::GDALStyleManager,
+        stylestring::Ptr{UInt8}
+    ))
 
 """
 Get the number of parts in a style.
@@ -59,12 +59,16 @@ Get the number of parts in a style.
 the number of parts (style tools) in the style.
 """
 npart(stylemanager::StyleManager) =
-    ccall((:OGR_SM_GetPartCount,GDAL.libgdal),Cint,(StyleManager,Ptr{UInt8}),
-          stylemanager,C_NULL)
+    @gdal(OGR_SM_GetPartCount::Cint,
+        stylemanager.ptr::GDALStyleManager,
+        C_NULL::Ptr{UInt8}
+    )
 
-npart(stylemanager::StyleManager,stylestring::AbstractString) =
-    ccall((:OGR_SM_GetPartCount,GDAL.libgdal),Cint,(StyleManager,Ptr{UInt8}),
-          stylemanager,stylestring)
+npart(stylemanager::StyleManager, stylestring::AbstractString) =
+    @gdal(OGR_SM_GetPartCount::Cint,
+        stylemanager.ptr::GDALStyleManager,
+        stylestring::Ptr{UInt8}
+    )
 
 """
 Fetch a part (style tool) from the current style.
@@ -78,12 +82,12 @@ Fetch a part (style tool) from the current style.
 ### Returns
 OGRStyleToolH of the requested part (style tools) or NULL on error.
 """
-getpart(stylemanager::StyleManager,id::Integer,stylestring::AbstractString) =
-    GDAL.getpart(stylemanager, id, stylestring)
-
-getpart(stylemanager::StyleManager,id::Integer) =
-    GDAL.checknull(ccall((:OGR_SM_GetPart,GDAL.libgdal),StyleTool,(StyleManager,
-                         Cint,Ptr{UInt8}),stylemanager,id,C_NULL))
+unsafe_getpart(stylemanager::StyleManager, id::Integer, stylestring = C_NULL) =
+    StyleTool(GDAL.checknull(@gdal(OGR_SM_GetPart::GDALStyleTool,
+        stylemanager.ptr::GDALStyleManager,
+        id::Cint,
+        stylestring::Ptr{UInt8}
+    )))
 
 """
 Add a part (style tool) to the current style.
@@ -95,8 +99,8 @@ Add a part (style tool) to the current style.
 ### Returns
 TRUE on success, FALSE on errors.
 """
-addpart!(stylemanager::StyleManager,styletool::StyleTool) =
-    Bool(GDAL.addpart(stylemanager, styletool))
+addpart!(stylemanager::StyleManager, styletool::StyleTool) =
+    Bool(GDAL.addpart(stylemanager.ptr, styletool.ptr))
 
 """
 Add a style to the current style table.
@@ -110,14 +114,24 @@ Add a style to the current style table.
 ### Returns
 TRUE on success, FALSE on errors.
 """
-addstyle!(stylemanager::StyleManager,
-          stylename::AbstractString,
-          stylestring::AbstractString) =
-    Bool(GDAL.addstyle(stylemanager, stylename, stylestring))
+function addstyle!(
+        stylemanager::StyleManager,
+        stylename::AbstractString,
+        stylestring::AbstractString
+    )
+    Bool(GDAL.addstyle(stylemanager.ptr, stylename, stylestring))
+end
 
-addstyle!(stylemanager::StyleManager, stylename::AbstractString) =
-    Bool(ccall((:OGR_SM_AddStyle,GDAL.libgdal),Cint,(StyleManager,Cstring,
-                Ptr{UInt8}),stylemanager,stylename,C_NULL))
+function addstyle!(
+        stylemanager::StyleManager,
+        stylename::AbstractString
+    )
+    Bool(@gdal(OGR_SM_AddStyle::Cint,
+        stylemanager.ptr::GDALStyleManager,
+        stylename::Cstring,
+        C_NULL::Ptr{UInt8}
+    ))
+end
 
 """
 OGRStyleTool factory.
@@ -130,8 +144,9 @@ OGRStyleTool factory.
 an handle to the new style tool object or NULL if the creation failed.
 """
 unsafe_createstyletool(classid::OGRSTClassId) =
-    GDAL.checknull(ccall((:OGR_ST_Create,GDAL.libgdal),StyleTool,
-                         (GDAL.OGRSTClassId,),classid))
+    StyleTool(GDAL.checknull(@gdal(OGR_ST_Create::GDALStyleTool,
+        classid::GDAL.OGRSTClassId
+    )))
 
 """
 Destroy Style Tool.
@@ -139,7 +154,8 @@ Destroy Style Tool.
 ### Parameters
 * `styletool`: handle to the style tool to destroy.
 """
-destroy(styletool::StyleTool) = GDAL.destroy(styletool)
+destroy(styletool::StyleTool) =
+    (GDAL.destroy(styletool.ptr); styletool.ptr = C_NULL)
 
 """
 Determine type of Style Tool.
@@ -151,7 +167,7 @@ Determine type of Style Tool.
 the style tool type, one of OGRSTCPen (1), OGRSTCBrush (2), OGRSTCSymbol (3) or
 OGRSTCLabel (4). Returns OGRSTCNone (0) if the OGRStyleToolH is invalid.
 """
-gettype(styletool::StyleTool) = OGRSTClassId(GDAL.gettype(styletool))
+gettype(styletool::StyleTool) = OGRSTClassId(GDAL.gettype(styletool.ptr))
 
 """
 Get Style Tool units.
@@ -162,7 +178,7 @@ Get Style Tool units.
 ### Returns
 the style tool units.
 """
-getunit(styletool::StyleTool) = OGRSTUnitId(GDAL.getunit(styletool))
+getunit(styletool::StyleTool) = OGRSTUnitId(GDAL.getunit(styletool.ptr))
 
 """
     OGR_ST_SetUnit(OGRStyleToolH styletool,
@@ -175,8 +191,11 @@ Set Style Tool units.
 * `scale`: ground to paper scale factor.
 """
 setunit!(styletool::StyleTool, newunit::OGRSTUnitId, scale::Real) =
-    ccall((:OGR_ST_SetUnit,GDAL.libgdal),Void,(StyleTool,GDAL.OGRSTUnitId,
-          Cdouble),styletool,newunit,scale)
+    @gdal(OGR_ST_SetUnit::Void,
+        styletool.ptr::GDALStyleTool,
+        newunit::GDAL.OGRSTUnitId,
+        scale::Cdouble
+    )
 
 """
 Get Style Tool parameter value as a string.
@@ -192,10 +211,10 @@ Get Style Tool parameter value as a string.
 ### Returns
 the parameter value as a string and sets `nullflag`.
 """
-asstring(styletool::StyleTool,id::Integer,nullflag::Ref{Cint}) =
-    GDAL.getparamstr(styletool, id, nullflag)
+asstring(styletool::StyleTool, id::Integer, nullflag::Ref{Cint}) =
+    GDAL.getparamstr(styletool.ptr, id, nullflag)
 
-asstring(styletool::StyleTool,id::Integer) =
+asstring(styletool::StyleTool, id::Integer) =
     asstring(styletool, id, Ref{Cint}(0))
 
 """
@@ -212,10 +231,10 @@ Get Style Tool parameter value as an integer.
 ### Returns
 the parameter value as an integer and sets `nullflag`.
 """
-asint(styletool::StyleTool,id::Integer,nullflag::Ref{Cint}) =
-    GDAL.getparamnum(styletool, id, nullflag)
+asint(styletool::StyleTool, id::Integer, nullflag::Ref{Cint}) =
+    GDAL.getparamnum(styletool.ptr, id, nullflag)
 
-asint(styletool::StyleTool,id::Integer) =
+asint(styletool::StyleTool, id::Integer) =
     asint(styletool, id, Ref{Cint}(0))
 
 """
@@ -232,10 +251,10 @@ Get Style Tool parameter value as a double.
 ### Returns
 the parameter value as a double and sets `nullflag`.
 """
-asdouble(styletool::StyleTool,id::Integer,nullflag::Ref{Cint}) =
-    GDAL.getparamdbl(styletool, id, nullflag)
+asdouble(styletool::StyleTool, id::Integer, nullflag::Ref{Cint}) =
+    GDAL.getparamdbl(styletool.ptr, id, nullflag)
 
-asdouble(styletool::StyleTool,id::Integer) =
+asdouble(styletool::StyleTool, id::Integer) =
     asdouble(styletool, id, Ref{Cint}(0))
 
 """
@@ -248,8 +267,8 @@ Set Style Tool parameter value from a string.
         or OGRSTLabelParam enumerations)
 * `value`: the new parameter value
 """
-setparam!(styletool::StyleTool,id::Integer,value::AbstractString) =
-    GDAL.setparamstr(styletool, id, value)
+setparam!(styletool::StyleTool, id::Integer, value::AbstractString) =
+    GDAL.setparamstr(styletool.ptr, id, value)
 
 """
 Set Style Tool parameter value from an integer.
@@ -261,8 +280,8 @@ Set Style Tool parameter value from an integer.
         or OGRSTLabelParam enumerations)
 * `value`: the new parameter value
 """
-setparam!(styletool::StyleTool,id::Integer,value::Integer) =
-    GDAL.setparamnum(styletool, id, value)
+setparam!(styletool::StyleTool, id::Integer, value::Integer) =
+    GDAL.setparamnum(styletool.ptr, id, value)
 
 """
 Set Style Tool parameter value from a double.
@@ -274,8 +293,8 @@ Set Style Tool parameter value from a double.
         or OGRSTLabelParam enumerations)
 * `value`: the new parameter value
 """
-setparam!(styletool::StyleTool,id::Integer,value::Float64) =
-    GDAL.setparamdbl(styletool, id, value)
+setparam!(styletool::StyleTool, id::Integer, value::Float64) =
+    GDAL.setparamdbl(styletool.ptr, id, value)
 
 """
 Get the style string for this Style Tool.
@@ -286,7 +305,7 @@ Get the style string for this Style Tool.
 ### Returns
 the style string for this style tool or "" if the styletool is invalid.
 """
-getstylestring(styletool::StyleTool) = GDAL.getstylestring(styletool)
+getstylestring(styletool::StyleTool) = GDAL.getstylestring(styletool.ptr)
 
 """
 Return the r,g,b,a components of a color encoded in #RRGGBB[AA] format.
@@ -298,11 +317,14 @@ Return the r,g,b,a components of a color encoded in #RRGGBB[AA] format.
 ### Returns
 (R,G,B,A) tuple of Cints.
 """
-function getrgba(styletool::StyleTool,color::AbstractString)
+function getrgba(styletool::StyleTool, color::AbstractString)
     red = Ref{Cint}(0); green = Ref{Cint}(0)
     blue = Ref{Cint}(0); alpha = Ref{Cint}(0)
-    result = GDAL.getrgbfromstring(styletool, color, red, green, blue, alpha)
-    Bool(result) || error("Error in getting RGBA from Styletool")
+    result = Bool(GDAL.getrgbfromstring(styletool.ptr, color, 
+        red, green,
+        blue, alpha
+    ))
+    result || error("Error in getting RGBA from Styletool")
     (red[], green[], blue[], alpha[])
 end
 
@@ -312,8 +334,7 @@ OGRStyleTable factory.
 ### Returns
 an handle to the new style table object.
 """
-unsafe_createstyletable() =
-    GDAL.checknull(ccall((:OGR_STBL_Create,GDAL.libgdal),StyleTable,()))
+unsafe_createstyletable() = StyleTable(GDAL.stbl_create())
 
 """
 Destroy Style Table.
@@ -321,7 +342,7 @@ Destroy Style Table.
 ### Parameters
 * `styletable`: handle to the style table to destroy.
 """
-destroy(styletable::StyleTable) = GDAL.destroy(styletable)
+destroy(st::StyleTable) = (GDAL.destroy(st.ptr); st.ptr = C_NULL)
 
 """
 Add a new style in the table.
@@ -334,9 +355,13 @@ Add a new style in the table.
 ### Returns
 TRUE on success, FALSE on error
 """
-addstyle!(styletable::StyleTable, stylename::AbstractString,
-          stylestring::AbstractString) =
-    Bool(GDAL.addstyle(styletable, stylename, stylestring))
+function addstyle!(
+        styletable::StyleTable,
+        stylename::AbstractString,
+        stylestring::AbstractString
+    )
+    Bool(GDAL.addstyle(styletable.ptr, stylename, stylestring))
+end
 
 """
 Save a style table to a file.
@@ -347,7 +372,7 @@ Save a style table to a file.
 TRUE on success, FALSE on error
 """
 savestyletable(styletable::StyleTable, filename::AbstractString) =
-    Bool(GDAL.savestyletable(styletable, filename))
+    Bool(GDAL.savestyletable(styletable.ptr, filename))
 
 """
 Load a style table from a file.
@@ -360,7 +385,7 @@ Load a style table from a file.
 TRUE on success, FALSE on error
 """
 loadstyletable!(styletable::StyleTable, filename::AbstractString) =
-    Bool(GDAL.loadstyletable(styletable, filename))
+    Bool(GDAL.loadstyletable(styletable.ptr, filename))
 
 """
 Get a style string by name.
@@ -372,7 +397,8 @@ Get a style string by name.
 ### Returns
 the style string matching the name or NULL if not found or error.
 """
-find(styletable::StyleTable, name::AbstractString) = GDAL.find(styletable, name)
+find(styletable::StyleTable, name::AbstractString) =
+    GDAL.find(styletable.ptr, name)
 
 """
 Reset the next style pointer to 0.
@@ -380,7 +406,8 @@ Reset the next style pointer to 0.
 ### Parameters
 * `styletable`: handle to the style table.
 """
-resetreading!(styletable::StyleTable) = GDAL.resetstylestringreading(styletable)
+resetreading!(styletable::StyleTable) =
+    GDAL.resetstylestringreading(styletable.ptr)
 
 """
 Get the next style string from the table.
@@ -391,7 +418,7 @@ Get the next style string from the table.
 ### Returns
 the next style string or NULL on error.
 """
-nextstyle(styletable::StyleTable) = GDAL.getnextstyle(styletable)
+nextstyle(styletable::StyleTable) = GDAL.getnextstyle(styletable.ptr)
 
 """
 Get the style name of the last style string fetched with OGR_STBL_GetNextStyle.
@@ -402,4 +429,4 @@ Get the style name of the last style string fetched with OGR_STBL_GetNextStyle.
 ### Returns
 the Name of the last style string or NULL on error.
 """
-laststyle(styletable::StyleTable) = GDAL.getlaststylename(styletable)
+laststyle(styletable::StyleTable) = GDAL.getlaststylename(styletable.ptr)

@@ -1,15 +1,18 @@
 "Construct empty table."
-unsafe_createRAT() = GDAL.createrasterattributetable()
+unsafe_createRAT() = RasterAttrTable(GDAL.createrasterattributetable())
 
 "Construct table from an existing colortable."
 unsafe_createRAT(ct::ColorTable) =
-    initializeRAT!(GDAL.createrasterattributetable(), ct)
+    initializeRAT!(unsafe_createRAT(), ct)
 
 "Destroys a RAT."
-destroy(rat::RasterAttributeTable) = GDAL.destroyrasterattributetable(rat)
+function destroy(rat::RasterAttrTable)
+    GDAL.destroyrasterattributetable(rat.ptr)
+    rat.ptr = C_NULL
+end
 
 "Fetch table column count."
-ncolumn(rat::RasterAttributeTable) = GDAL.ratgetcolumncount(rat)
+ncolumn(rat::RasterAttrTable) = GDAL.ratgetcolumncount(rat.ptr)
 
 """
 Fetch name of indicated column.
@@ -20,12 +23,12 @@ Fetch name of indicated column.
 ### Returns
 the column name or an empty string for invalid column numbers.
 """
-getcolumnname(rat::RasterAttributeTable, i::Integer) = 
-    GDAL.ratgetnameofcol(rat, i)
+getcolumnname(rat::RasterAttrTable, i::Integer) = 
+    GDAL.ratgetnameofcol(rat.ptr, i)
 
 "Fetch column usage value."
-getcolumnusage(rat::RasterAttributeTable, i::Integer) =
-    GDALRATFieldUsage(GDAL.ratgetusageofcol(rat, i))
+getcolumnusage(rat::RasterAttrTable, i::Integer) =
+    GDALRATFieldUsage(GDAL.ratgetusageofcol(rat.ptr, i))
 
 """
 Fetch column type.
@@ -36,8 +39,8 @@ Fetch column type.
 ### Returns
 column type or `GFT_Integer` if the column index is illegal.
 """
-getcolumntype(rat::RasterAttributeTable, i::Integer) =
-    GDALRATFieldType(GDAL.ratgettypeofcol(rat, i))
+getcolumntype(rat::RasterAttrTable, i::Integer) =
+    GDALRATFieldType(GDAL.ratgettypeofcol(rat.ptr, i))
 
 """
 Returns the index of the first column of the requested usage type, or -1 if no
@@ -46,12 +49,14 @@ match is found.
 ### Parameters
 * `usage`  usage type to search for.
 """
-getcolumnindex(rat::RasterAttributeTable, usage::GDALRATFieldUsage) =
-    ccall((:GDALRATGetColOfUsage,GDAL.libgdal),Cint,(RasterAttributeTable,
-          GDAL.GDALRATFieldUsage),rat,usage)
+getcolumnindex(rat::RasterAttrTable, usage::GDALRATFieldUsage) =
+    @gdal(GDALRATGetColOfUsage::Cint,
+        rat.ptr::GDALRasterAttrTable,
+        usage::GDAL.GDALRATFieldUsage
+    )
 
 "Fetch row count."
-nrow(rat::RasterAttributeTable) = GDAL.ratgetrowcount(rat)
+nrow(rat::RasterAttrTable) = GDAL.ratgetrowcount(rat.ptr)
 
 """
 Fetch field value as a string.
@@ -64,8 +69,8 @@ some precision may be lost.
 * `row`  row to fetch (zero based).
 * `col`  column to fetch (zero based).
 """
-asstring(rat::RasterAttributeTable, row::Integer, col::Integer) =
-    GDAL.ratgetvalueasstring(rat, row, col)
+asstring(rat::RasterAttrTable, row::Integer, col::Integer) =
+    GDAL.ratgetvalueasstring(rat.ptr, row, col)
     
 """
 Fetch field value as a integer.
@@ -77,8 +82,8 @@ Non-integer fields will be converted to int with the possibility of data loss.
 * `row`  row to fetch (zero based).
 * `col`  column to fetch (zero based).
 """
-asint(rat::RasterAttributeTable, row::Integer, col::Integer) =
-    GDAL.ratgetvalueasint(rat, row, col)
+asint(rat::RasterAttrTable, row::Integer, col::Integer) =
+    GDAL.ratgetvalueasint(rat.ptr, row, col)
 
 """
 Fetch field value as a double.
@@ -90,8 +95,8 @@ Non double fields will be converted to double with the possibility of data loss.
 * `row`  row to fetch (zero based).
 * `col`  column to fetch (zero based).
 """
-asdouble(rat::RasterAttributeTable, row::Integer, col::Integer) =
-    GDAL.ratgetvalueasdouble(rat, row, col)
+asdouble(rat::RasterAttrTable, row::Integer, col::Integer) =
+    GDAL.ratgetvalueasdouble(rat.ptr, row, col)
 
 """
 Set field value from string.
@@ -105,8 +110,15 @@ loss of precision.
 * `col`  column to fetch (zero based).
 * `val`  the value to assign.
 """
-setvalue!(rat::RasterAttributeTable, row::Integer, col::Integer, 
-          val::AbstractString) = GDAL.ratsetvalueasstring(rat, row, col, val)
+function setvalue!(
+        rat::RasterAttrTable,
+        row::Integer,
+        col::Integer,
+        val::AbstractString
+    )
+    GDAL.ratsetvalueasstring(rat.ptr, row, col, val)
+    rat
+end
 
 """
 Set field value from integer.
@@ -120,8 +132,15 @@ loss of precision.
 * `col`  column to fetch (zero based).
 * `val`  the value to assign.
 """
-setvalue!(rat::RasterAttributeTable, row::Integer, col::Integer, 
-          val::Integer) = GDAL.ratsetvalueasint(rat, row, col, val)
+function setvalue!(
+        rat::RasterAttrTable,
+        row::Integer,
+        col::Integer, 
+        val::Integer
+    )
+    GDAL.ratsetvalueasint(rat.ptr, row, col, val)
+    rat
+end
 
 """
 Set field value from double.
@@ -135,8 +154,15 @@ loss of precision.
 * `col`  column to fetch (zero based).
 * `val`  the value to assign.
 """
-setvalue!(rat::RasterAttributeTable, row::Integer, col::Integer, 
-          val::Float64) = GDAL.ratsetvalueasdouble(rat, row, col, val)
+function setvalue!(
+        rat::RasterAttrTable,
+        row::Integer,
+        col::Integer, 
+        val::Float64
+    )
+    GDAL.ratsetvalueasdouble(rat.ptr, row, col, val)
+    rat
+end
 
 """
 Determine whether changes made to this RAT are reflected directly in the dataset
@@ -145,8 +171,8 @@ If this returns FALSE then GDALRasterBand.SetDefaultRAT() should be called.
 Otherwise this is unnecessary since changes to this object are reflected in the 
 dataset.
 """
-changesarewrittentofile(rat::RasterAttributeTable) =
-    Bool(GDAL.ratchangesarewrittentofile(rat))
+changesarewrittentofile(rat::RasterAttrTable) =
+    Bool(GDAL.ratchangesarewrittentofile(rat.ptr))
 
 """
 Read or Write a block of doubles to/from the Attribute Table.
@@ -158,11 +184,22 @@ Read or Write a block of doubles to/from the Attribute Table.
 * `nrows`       Number of rows to read or write
 * `data`        Array of doubles to read/write. Should be at least `nrows` long.
 """
-function attributeio!(rat::RasterAttributeTable,access::GDALRWFlag,col::Integer,
-                      startrow::Integer,nrows::Integer,data::Vector{Float64})
-    result = ccall((:GDALRATValuesIOAsDouble,GDAL.libgdal),GDAL.CPLErr,
-                   (RasterAttributeTable,GDAL.GDALRWFlag,Cint,Cint,Cint,
-                    Ptr{Cdouble}),rat,access,col,startrow,nrows,data)
+function attributeio!(
+        rat::RasterAttrTable,
+        access::GDALRWFlag,
+        col::Integer,
+        startrow::Integer,
+        nrows::Integer,
+        data::Vector{Float64}
+    )
+    result = @gdal(GDALRATValuesIOAsDouble::GDAL.CPLErr,
+        rat.ptr::GDALRasterAttrTable,
+        access::GDAL.GDALRWFlag,
+        col::Cint,
+        startrow::Cint,
+        nrows::Cint,
+        data::Ptr{Cdouble}
+    )
     @cplerr result "Failed to $access at column $col starting at $startrow"
     data
 end
@@ -177,11 +214,22 @@ Read or Write a block of ints to/from the Attribute Table.
 * `nrows`       Number of rows to read or write
 * `data`        Array of ints to read/write. Should be at least `nrows` long.
 """
-function attributeio!(rat::RasterAttributeTable,access::GDALRWFlag,col::Integer,
-                      startrow::Integer,nrows::Integer,data::Vector{Cint})
-    result = ccall((:GDALRATValuesIOAsInteger,GDAL.libgdal),GDAL.CPLErr,
-                   (RasterAttributeTable,GDAL.GDALRWFlag,Cint,Cint,Cint,
-                    Ptr{Cint}),rat,access,col,startrow,nrows,data)
+function attributeio!(
+        rat::RasterAttrTable,
+        access::GDALRWFlag,
+        col::Integer,
+        startrow::Integer,
+        nrows::Integer,
+        data::Vector{Cint}
+    )
+    result = @gdal(GDALRATValuesIOAsInteger::GDAL.CPLErr,
+        rat.ptr::GDALRasterAttrTable,
+        access::GDAL.GDALRWFlag,
+        col::Cint,
+        startrow::Cint,
+        nrows::Cint,
+        data::Ptr{Cint}
+    )
     @cplerr result "Failed to $access at column $col starting at $startrow"
     data
 end
@@ -196,12 +244,22 @@ Read or Write a block of strings to/from the Attribute Table.
 * `nrows`       Number of rows to read or write
 * `data`        Array of strings to read/write. Should be at least `nrows` long.
 """
-function attributeio!{T <: AbstractString}(rat::RasterAttributeTable,
-                access::GDALRWFlag,col::Integer,startrow::Integer,
-                nrows::Integer,data::Vector{T})
-    result = ccall((:GDALRATValuesIOAsString,GDAL.libgdal),GDAL.CPLErr,
-                   (RasterAttributeTable,GDAL.GDALRWFlag,Cint,Cint,Cint,
-                    StringList),rat,access,col,startrow,nrows,data)
+function attributeio!{T <: AbstractString}(
+        rat::RasterAttrTable,
+        access::GDALRWFlag,
+        col::Integer,
+        startrow::Integer,
+        nrows::Integer,
+        data::Vector{T}
+    )
+    result = @gdal(GDALRATValuesIOAsString::GDAL.CPLErr,
+        rat.ptr::GDALRasterAttrTable,
+        access::GDAL.GDALRWFlag,
+        col::Cint,
+        startrow::Cint,
+        nrows::Cint,
+        data::StringList
+    )
     @cplerr result "Failed to $access at column $col starting at $startrow"
     data
 end
@@ -213,7 +271,8 @@ Resizes the table to include the indicated number of rows. Newly created rows
 will be initialized to their default values - \"\" for strings, and zero for 
 numeric fields.
 """
-setrowcount!(rat::RasterAttributeTable, n::Integer) = GDAL.ratsetrowcount(rat,n)
+setrowcount!(rat::RasterAttrTable, n::Integer) =
+    (GDAL.ratsetrowcount(rat.ptr, n); rat)
 
 """
 Create new column.
@@ -223,14 +282,21 @@ initialized to the default value (\"\", or zero). The new column is always
 created as the last column, can will be column (field) \"GetColumnCount()-1\" 
 after CreateColumn() has completed successfully.
 """
-function createcolumn!(rat::RasterAttributeTable, name::AbstractString, 
-            fieldtype::GDALRATFieldType, fieldusage::GDALRATFieldUsage)
-    result = ccall((:GDALRATCreateColumn,GDAL.libgdal),GDAL.CPLErr,
-                   (RasterAttributeTable,Cstring,GDAL.GDALRATFieldType,
-                    GDAL.GDALRATFieldUsage),rat,name,fieldtype,fieldusage)
+function createcolumn!(
+        rat::RasterAttrTable,
+        name::AbstractString, 
+        fieldtype::GDALRATFieldType,
+        fieldusage::GDALRATFieldUsage
+    )
+    result = @gdal(GDALRATCreateColumn::GDAL.CPLErr,
+        rat.ptr::GDALRasterAttrTable,
+        name::Cstring,
+        fieldtype::GDAL.GDALRATFieldType,
+        fieldusage::GDAL.GDALRATFieldUsage
+    )
     @cplerr result "Failed to create column $name"
+    rat
 end
-
 
 """
 Set linear binning information.
@@ -243,11 +309,14 @@ the table.
 * `row0min` the lower bound (pixel value) of the first category.
 * `binsize` the width of each category (in pixel value units).
 """
-function setlinearbinning!(rat::RasterAttributeTable, row0min::Real,
-                           binsize::Real)
-    result = ccall((:GDALRATSetLinearBinning,GDAL.libgdal),GDAL.CPLErr,
-                   (RasterAttributeTable,Cdouble,Cdouble),rat,row0min,binsize)
+function setlinearbinning!(rat::RasterAttrTable, row0min::Real, binsize::Real)
+    result = @gdal(GDALRATSetLinearBinning::GDAL.CPLErr,
+        rat.ptr::GDALRasterAttrTable,
+        row0min::Cdouble,
+        binsize::Cdouble
+    )
     @cplerr result "Fail to set linear binning: r0min=$row0min, width=$binsize"
+    rat
 end
 
 """
@@ -257,9 +326,9 @@ Get linear binning information.
 * `row0min` the lower bound (pixel value) of the first category.
 * `binsize` the width of each category (in pixel value units).
 """
-function getlinearbinning(rat::RasterAttributeTable)
+function getlinearbinning(rat::RasterAttrTable)
     row0min = Ref{Cdouble}(); binsize = Ref{Cdouble}()
-    result = GDAL.ratgetlinearbinning(rat, row0min, binsize)
+    result = GDAL.ratgetlinearbinning(rat.ptr, row0min, binsize)
     result == false || warn("There is no linear binning information.")
     (row0min[], binsize[])
 end
@@ -277,8 +346,8 @@ The raster attribute table must be empty before calling `initializeRAT!()`.
 The Value fields are set based on the implicit assumption with color tables that
 entry 0 applies to pixel value 0, 1 to 1, etc.
 """
-function initializeRAT!(rat::RasterAttributeTable, colortable::ColorTable)
-    result = GDAL.ratinitializefromcolortable(rat, colortable)
+function initializeRAT!(rat::RasterAttrTable, colortable::ColorTable)
+    result = GDAL.ratinitializefromcolortable(rat.ptr, colortable.ptr)
     @cplerr result "Failed to initialize RAT from color table"
     rat
 end
@@ -293,8 +362,8 @@ Translate to a color table.
 the generated color table or `NULL` on failure.
 """
 
-toColorTable(rat::RasterAttributeTable, n::Integer=-1) = 
-    GDAL.rattranslatetocolortable(rat, n)
+toColorTable(rat::RasterAttrTable, n::Integer=-1) = 
+    ColorTable(GDAL.rattranslatetocolortable(rat.ptr, n))
 
 # """
 #     GDALRATDumpReadable(GDALRasterAttributeTableH,
@@ -314,10 +383,10 @@ the responsibility of the caller to destroy. May fail (return `NULL`) if the
 attribute table is too large to clone:
     `(nrow() * ncolumn() > RAT_MAX_ELEM_FOR_CLONE)`
 """
-unsafe_clone(rat::RasterAttributeTable) = GDAL.ratclone(rat)
+unsafe_clone(rat::RasterAttrTable) = RasterAttrTable(GDAL.ratclone(rat.ptr))
 
 "Serialize Raster Attribute Table in Json format."
-serializeJSON(rat::RasterAttributeTable) = GDAL.ratserializejson(rat)
+serializeJSON(rat::RasterAttrTable) = GDAL.ratserializejson(rat.ptr)
 
 """
 Get row for pixel value.
@@ -331,5 +400,5 @@ which row in the table applies to the pixel value. The row index is returned.
 ### Returns
 The row index or -1 if no row is appropriate.
 """
-getrowindex(rat::RasterAttributeTable, pxvalue::Real) =
-    GDAL.ratgetrowofvalue(rat, pxvalue)
+getrowindex(rat::RasterAttrTable, pxvalue::Real) =
+    GDAL.ratgetrowofvalue(rat.ptr, pxvalue)
