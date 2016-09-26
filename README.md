@@ -107,9 +107,7 @@ julia> read("gdalworkshop/world.tif") do dataset
                (6) 16x8
 ```
 
-The examples demonstrate that it is easy to achieve a degree of user friendliness similar to the [fiona](https://github.com/Toblerity/Fiona) and [rasterio](https://github.com/mapbox/rasterio) python bindings, without suffering from the [gotchas in the SWIG bindings](https://trac.osgeo.org/gdal/wiki/PythonGotchas).
-
-Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction):
+The examples demonstrate that it is easy to achieve a degree of user friendliness similar to the [fiona](https://github.com/Toblerity/Fiona) and [rasterio](https://github.com/mapbox/rasterio) python bindings, without suffering from the [gotchas in the SWIG bindings](https://trac.osgeo.org/gdal/wiki/PythonGotchas). Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction):
 
 > Please understand this: Fiona is designed to excel in a certain range of tasks and is less optimal in others. Fiona trades memory and speed for simplicity and reliability. Where OGR’s Python bindings (for example) use C pointers, Fiona copies vector data from the data source to Python objects. These are simpler and safer to use, but more memory intensive. Fiona’s performance is relatively more slow if you only need access to a single record field – and of course if you just want to reproject or filter data files, nothing beats the ogr2ogr program – but Fiona’s performance is much better than OGR’s Python bindings if you want all fields and coordinates of a record. The copying is a constraint, but it simplifies programs. With Fiona, you don’t have to track references to C objects to avoid crashes, and you can work with vector data using familiar Python mapping accessors.
 
