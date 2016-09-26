@@ -36,16 +36,18 @@ facts("Test methods for rasterband") do
             @fact AG.getnodatavalue(rb) --> roughly(-1e10)
 
             AG.createcolortable(AG.GPI_RGB) do ct
-                # AG.setcolortable!(rb, ct)
-                # println(AG.getcolortable(rb))
-                # AG.clearcolortable!(rb)
+                AG.createcolorramp!(ct,
+                    128, GDAL.GDALColorEntry(0,0,0,0),
+                    255, GDAL.GDALColorEntry(0,0,255,0)
+                )
+                AG.setcolortable!(rb, ct)
+                println(AG.getcolortable(rb))
+                AG.clearcolortable!(rb)
                 
                 AG.createRAT(ct) do rat
                     AG.setdefaultRAT!(rb, rat)
                     println(AG.getdefaultRAT(rb))
                 end
-
-                # AG.setcolorinterp!(rb, AG.GCI_RedBand)
             end
 
             AG.createcopy(dataset, "tmp/utmsmall.tif") do dest
@@ -56,6 +58,11 @@ facts("Test methods for rasterband") do
                 AG.buildoverviews!(dest, Cint[2, 4, 8])
                 @fact AG.noverview(destband) --> 3
                 println(destband)
+
+                @fact AG.getcolorinterp(rb) --> AG.GCI_PaletteIndex
+                AG.setcolorinterp!(rb, AG.GCI_RedBand)
+                @fact AG.getcolorinterp(rb) --> AG.GCI_RedBand
+
                 println(AG.getsampleoverview(destband, 100))
                 println(AG.getsampleoverview(destband, 200))
                 println(AG.getsampleoverview(destband, 500))
@@ -68,6 +75,11 @@ facts("Test methods for rasterband") do
                 AG.fillraster!(destband, 3)
                 AG.setcategorynames!(destband, ["foo","bar"])
                 @fact AG.getcategorynames(destband) --> ["foo", "bar"]
+
+                AG.regenerateoverviews!(destband, AG.RasterBand[
+                    AG.getoverview(destband, 0),
+                    AG.getoverview(destband, 2)
+                ])
             end
 
             rm("tmp/utmsmall.tif")
