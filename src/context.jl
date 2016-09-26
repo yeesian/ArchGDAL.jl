@@ -71,7 +71,7 @@ for gdalfunc in (
         :createstyletool, :delaunaytriangulation, :difference, :forceto,
         :fromEPSG, :fromEPSGA, :fromESRI, :fromGML, :fromJSON, :fromPROJ4,
         :fromURL, :fromWKB, :fromWKT, :fromXML, :getcurvegeom, :getfeature,
-        :getlineargeom, :intersection, :newspatialref, :nextfeature,
+        :getlineargeom, :getpart, :intersection, :newspatialref, :nextfeature,
         :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
         :simplify, :simplifypreservetopology, :symdifference, :union, :update
     )

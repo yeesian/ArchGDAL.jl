@@ -41,13 +41,10 @@ Initialize style manager from the style string.
 ### Returns
 TRUE on success, FALSE on errors.
 """
-initialize!(stylemanager::StyleManager, stylestring::AbstractString) =
-    Bool(GDAL.initstylestring(stylemanager.ptr, stylestring))
-
-initialize!(stylemanager::StyleManager) =
+initialize!(stylemanager::StyleManager, stylestring = C_NULL) =
     Bool(@gdal(OGR_SM_InitStyleString::Cint,
         stylemanager.ptr::GDALStyleManager,
-        C_NULL::Ptr{UInt8}
+        stylestring::Ptr{UInt8}
     ))
 
 """
@@ -85,14 +82,11 @@ Fetch a part (style tool) from the current style.
 ### Returns
 OGRStyleToolH of the requested part (style tools) or NULL on error.
 """
-getpart(stylemanager::StyleManager, id::Integer, stylestring::AbstractString) =
-    StyleTool(GDAL.getpart(stylemanager.ptr, id, stylestring))
-
-getpart(stylemanager::StyleManager,id::Integer) =
+unsafe_getpart(stylemanager::StyleManager, id::Integer, stylestring = C_NULL) =
     StyleTool(GDAL.checknull(@gdal(OGR_SM_GetPart::GDALStyleTool,
         stylemanager.ptr::GDALStyleManager,
         id::Cint,
-        C_NULL::Ptr{UInt8}
+        stylestring::Ptr{UInt8}
     )))
 
 """
@@ -299,7 +293,7 @@ Set Style Tool parameter value from a double.
         or OGRSTLabelParam enumerations)
 * `value`: the new parameter value
 """
-setparam!(styletool::StyleTool,id::Integer,value::Float64) =
+setparam!(styletool::StyleTool, id::Integer, value::Float64) =
     GDAL.setparamdbl(styletool.ptr, id, value)
 
 """
