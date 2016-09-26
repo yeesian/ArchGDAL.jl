@@ -18,7 +18,7 @@ This package aims to be a complete solution for working with GDAL in Julia, simi
 - **modernity**: ArchGDAL strives to maintain the latest stable release versions of GDAL as long as systemic package breakage can be reasonably avoided. You can stay with older versions by [pinning them](http://docs.julialang.org/en/release-0.4/manual/packages/#checkout-pin-and-free)
 - **pragmatism**: The principles here are only useful guidelines. Ultimately, design decisions are made on a case-by-case basis through developer consensus. Evidence-based technical analysis and debate are what matter, not politics or popular opinion.
 - **user-centrality**: whereas other libraries attempt to be more user-friendly, ArchGDAL shall be user-centric. It is intended to fill the needs of those contributing to it, rather than trying to appeal to as many users as possible.
-- **versatility**: ArchGDAL will strive to remain small in its assumptions about the range of user-needs, and to make it easy for users to build their own extensions/conveniences.
+- **versatility**: ArchGDAL will strive to remain small in its assumptions about the range of user-needs, and to make it easy for users to build their own extensions/conveniences (e.g. [GeoDataFrames.jl](https://github.com/yeesian/GeoDataFrames.jl)).
 
 ## Installation
 This package is currently unregistered, so add it using `Pkg.clone`, then find or get the GDAL dependencies using `Pkg.build`:
