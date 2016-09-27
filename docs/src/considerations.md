@@ -45,7 +45,6 @@ unsafe_createlinearring           unsafe_fromJSON                    unsafe_unio
 unsafe_createlinestring           unsafe_fromPROJ4                   unsafe_update
 unsafe_createmultilinestring      unsafe_fromURL
 ```
-
 2. The second relies on safer alternatives (without the `unsafe_` prefix) using [`do`-blocks](http://docs.julialang.org/en/release-0.4/manual/functions/#do-block-syntax-for-function-arguments) as context managers.
 
 This differs from proposals that registers GDAL's `destroy` on the objects using [`finalizers`](http://docs.julialang.org/en/release-0.4/stdlib/base/#Base.finalizer). Based on [user-experiences with GDAL's python SWIG bindings](https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit), we do not have any immediate plans to support mixing both styles of memory management, so users expecting it should look for other packages (e.g. [GeoDataFrames](https://github.com/yeesian/GeoDataFrames.jl)).
