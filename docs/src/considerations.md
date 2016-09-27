@@ -1,10 +1,14 @@
 # Design Considerations
 
-## Non-copying by default
+## Data Serialization
 
-Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction), `ArchGDAL` does not automatically copy data from her data sources. This introduces concerns about memory ownership (whether objects should be managed by Julia's garbage collector, or by manually destroying the corresponding GDAL object). We address those concerns in the next section on `Memory Ownership`.
+As modern [builds](https://trac.osgeo.org/gdal/wiki/BuildHints) of GDAL (e.g. by [Homebrew](https://github.com/OSGeo/homebrew-osgeo4mac) and [Conda-Forge](https://github.com/conda-forge/gdal-feedstock)) comes pre-compiled with support for PROJ.4 and GEOS, one of the goals of `ArchGDAL.jl` is for it to enjoy the full spectrum of GIS functionality, while avoiding the price of data serialization in [duck-typing proposals](https://gist.github.com/sgillies/2217756).
+
+In the long term, this decouples (i) the development and maintenance of a high-level interface for GDAL from (ii) the development and maintenance of other projects relying on customized builds of GDAL. `ArchGDAL.jl` and [`GDAL.jl`](https://github.com/visr/GDAL.jl) are only concerned with (i), and will only be developed and tagged in accordance with [release changes](https://trac.osgeo.org/gdal/wiki/NewsAndStatus) in GDAL's C API.
 
 ## Memory Ownership
+
+Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction), `ArchGDAL` does not automatically copy data from her data sources. This introduces concerns about memory ownership (whether objects should be managed by Julia's garbage collector, or by manually destroying the corresponding GDAL object).
 
 Currently this package provides data types corresponding to GDAL's Data Model, e.g.
 ```julia
@@ -59,6 +63,7 @@ Here's a collection of references for developers who are interested:
 - https://sgillies.net/2013/12/17/teaching-python-gis-users-to-be-more-rational.html
 
 ## Code Defensiveness
+
 Although GDAL provides a unified data model for different data formats, there are still significant differences between their implementations such that each driver is effectively its own application. This has the following implications:
 
 - Not all configuration options works for all drivers.
@@ -72,9 +77,3 @@ Here's a collection of references for developers who are interested:
 - https://github.com/mapbox/rasterio/pull/665
 - https://github.com/mapbox/rasterio/issues/875
 - https://mapbox.github.io/rasterio/topics/configuration.html
-
-## Data Serialization
-
-As modern [builds](https://trac.osgeo.org/gdal/wiki/BuildHints) of GDAL (e.g. by [Homebrew](https://github.com/OSGeo/homebrew-osgeo4mac) and [Conda-Forge](https://github.com/conda-forge/gdal-feedstock)) comes pre-compiled with support for PROJ.4 and GEOS, `ArchGDAL.jl` enjoys the full spectrum of GIS functionality, while avoiding the price of data serialization in [duck-typing proposals](https://gist.github.com/sgillies/2217756).
-
-In the long term, this decouples (i) the development and maintenance of a high-level interface for GDAL from (ii) the development and maintenance of other projects relying on customized builds of GDAL. `ArchGDAL.jl` and `GDAL.jl` are concerned with (i), and will only be developed and tagged in accordance with [release changes](https://trac.osgeo.org/gdal/wiki/NewsAndStatus) in GDAL's C API.
