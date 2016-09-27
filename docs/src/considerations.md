@@ -22,7 +22,8 @@ and makes it the responsibility of the user to free the allocation of memory fro
 There are two approaches for doing so.
 
 1. The first uses the [`unsafe_` prefix](http://docs.julialang.org/en/release-0.4/manual/style-guide/#don-t-expose-unsafe-operations-at-the-interface-level) to indicate methods that returns objects that needs to be manually destroyed:
-    ```julia
+
+    ```
     julia> AG.unsafe_
     unsafe_boundary                   unsafe_createmultipoint            unsafe_fromWKB
     unsafe_buffer                     unsafe_createmultipolygon          unsafe_fromWKT
