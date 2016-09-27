@@ -26,7 +26,7 @@ function destroy(geom::Geometry)
     geom.ptr = C_NULL
 end
 ```
-and makes it the responsibility of the user to manage the allocation of memory from GDAL, by providing methods that set `obj.ptr` to `C_NULL` after destroying the GDAL object corresponding to `obj::Geometry`.
+and makes it the responsibility of the user to manage the allocation of memory from GDAL, by calling `destroy()` (which sets `obj.ptr` to `C_NULL` after destroying the GDAL object corresponding to `obj`).
 
 It uses the [`unsafe` prefix](http://docs.julialang.org/en/release-0.4/manual/style-guide/#don-t-expose-unsafe-operations-at-the-interface-level) to indicate methods that returns objects that needs to be manually destroyed:
 
