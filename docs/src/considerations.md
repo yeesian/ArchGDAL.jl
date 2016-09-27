@@ -22,29 +22,28 @@ and makes it the responsibility of the user to free the allocation of memory fro
 There are two approaches for doing so.
 
 1. The first uses the [`unsafe_` prefix](http://docs.julialang.org/en/release-0.4/manual/style-guide/#don-t-expose-unsafe-operations-at-the-interface-level) to indicate methods that returns objects that needs to be manually destroyed:
-
-```julia
-julia> AG.unsafe_
-unsafe_boundary                   unsafe_createmultipoint            unsafe_fromWKB
-unsafe_buffer                     unsafe_createmultipolygon          unsafe_fromWKT
-unsafe_centroid                   unsafe_createmultipolygon_noholes  unsafe_fromXML
-unsafe_clone                      unsafe_createpoint                 unsafe_getcurvegeom
-unsafe_convexhull                 unsafe_createpolygon               unsafe_getfeature
-unsafe_create                     unsafe_createstylemanager          unsafe_getlineargeom
-unsafe_createRAT                  unsafe_createstyletable            unsafe_intersection
-unsafe_createcolortable           unsafe_createstyletool             unsafe_loadstringlist
-unsafe_createcoordtrans           unsafe_delaunaytriangulation       unsafe_newspatialref
-unsafe_createcopy                 unsafe_difference                  unsafe_nextfeature
-unsafe_createfeature              unsafe_executesql                  unsafe_pointalongline
-unsafe_createfeaturedefn          unsafe_forceto                     unsafe_pointonsurface
-unsafe_createfielddefn            unsafe_fromEPSG                    unsafe_polygonfromedges
-unsafe_creategeom                 unsafe_fromEPSGA                   unsafe_polygonize
-unsafe_creategeomcollection       unsafe_fromESRI                    unsafe_read
-unsafe_creategeomfielddefn        unsafe_fromGML                     unsafe_symdifference
-unsafe_createlinearring           unsafe_fromJSON                    unsafe_union
-unsafe_createlinestring           unsafe_fromPROJ4                   unsafe_update
-unsafe_createmultilinestring      unsafe_fromURL
-```
+    ```julia
+    julia> AG.unsafe_
+    unsafe_boundary                   unsafe_createmultipoint            unsafe_fromWKB
+    unsafe_buffer                     unsafe_createmultipolygon          unsafe_fromWKT
+    unsafe_centroid                   unsafe_createmultipolygon_noholes  unsafe_fromXML
+    unsafe_clone                      unsafe_createpoint                 unsafe_getcurvegeom
+    unsafe_convexhull                 unsafe_createpolygon               unsafe_getfeature
+    unsafe_create                     unsafe_createstylemanager          unsafe_getlineargeom
+    unsafe_createRAT                  unsafe_createstyletable            unsafe_intersection
+    unsafe_createcolortable           unsafe_createstyletool             unsafe_loadstringlist
+    unsafe_createcoordtrans           unsafe_delaunaytriangulation       unsafe_newspatialref
+    unsafe_createcopy                 unsafe_difference                  unsafe_nextfeature
+    unsafe_createfeature              unsafe_executesql                  unsafe_pointalongline
+    unsafe_createfeaturedefn          unsafe_forceto                     unsafe_pointonsurface
+    unsafe_createfielddefn            unsafe_fromEPSG                    unsafe_polygonfromedges
+    unsafe_creategeom                 unsafe_fromEPSGA                   unsafe_polygonize
+    unsafe_creategeomcollection       unsafe_fromESRI                    unsafe_read
+    unsafe_creategeomfielddefn        unsafe_fromGML                     unsafe_symdifference
+    unsafe_createlinearring           unsafe_fromJSON                    unsafe_union
+    unsafe_createlinestring           unsafe_fromPROJ4                   unsafe_update
+    unsafe_createmultilinestring      unsafe_fromURL
+    ```
 2. The second relies on safer alternatives (without the `unsafe_` prefix) using [`do`-blocks](http://docs.julialang.org/en/release-0.4/manual/functions/#do-block-syntax-for-function-arguments) as context managers.
 
 This differs from proposals that registers GDAL's `destroy` on the objects using [`finalizers`](http://docs.julialang.org/en/release-0.4/stdlib/base/#Base.finalizer). Based on [user-experiences with GDAL's python SWIG bindings](https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit), we do not have any immediate plans to support mixing both styles of memory management, so users expecting it should look for other packages (e.g. [GeoDataFrames](https://github.com/yeesian/GeoDataFrames.jl)).
