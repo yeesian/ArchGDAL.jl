@@ -59,9 +59,9 @@ This differs from proposals that registers GDAL's `destroy` on the objects using
 ## Code Defensiveness
 Although GDAL provides a unified data model for different data formats, there are still significant differences between their implementations such that each driver is effectively its own application. This has the following implications:
 
-i. Not all configuration options works for all drivers.
-ii. Not all capabilities are available for all drivers.
-iii. Performance characteristics may vary significantly depending on the driver.
+- Not all configuration options works for all drivers.
+- Not all capabilities are available for all drivers.
+- Performance characteristics may vary significantly depending on the driver.
 
 `ArchGDAL.jl` does not maintain its own black-list or white-list of supported configuration/creation options for each driver, and provides mechanisms similar to those of mapbox/rasterio for setting GDAL's configuration options. Although [ongoing work is underway](https://github.com/yeesian/GDALUtils.jl/issues/1) to make this an easier experience for the user, it remains the responsibility of the user to check that a particular configuration exists and works for their choice of driver. 
 
