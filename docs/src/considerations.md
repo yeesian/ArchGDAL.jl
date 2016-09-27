@@ -63,7 +63,7 @@ Although GDAL provides a unified data model for different data formats, there ar
 - Not all capabilities are available for all drivers.
 - Performance characteristics may vary significantly depending on the driver.
 
-`ArchGDAL.jl` does not maintain its own black-list or white-list of supported configuration/creation options for each driver, and provides mechanisms similar to those of mapbox/rasterio for setting GDAL's configuration options. Although [ongoing work is underway](https://github.com/yeesian/GDALUtils.jl/issues/1) to make this an easier experience for the user, it remains the responsibility of the user to check that a particular configuration exists and works for their choice of driver. 
+`ArchGDAL.jl` provides mechanisms similar to those of mapbox/rasterio for setting GDAL's configuration options, and does not maintain its own list of *sanctioned* options for each driver. Although [ongoing work is underway](https://github.com/yeesian/GDALUtils.jl/issues/1) to make this an easier experience for the user, it remains the responsibility of the user to check that a particular configuration exists and works for their choice of driver.
 
 Here's a collection of references for developers who are interested:
 - https://trac.osgeo.org/gdal/wiki/ConfigOptions
