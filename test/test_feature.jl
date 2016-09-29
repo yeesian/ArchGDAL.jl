@@ -1,6 +1,5 @@
 using FactCheck
 import ArchGDAL; const AG = ArchGDAL
-import Dates
 
 AG.registerdrivers() do
     AG.read("data/point.geojson") do dataset
