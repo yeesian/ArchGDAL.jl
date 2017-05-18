@@ -28,7 +28,7 @@ of failure of that function).
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry
 type is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomdirectly!(feature::Feature, geom::Geometry)
+function setgeomdirectly!(feature::Feature, geom::AbstractGeometry)
     result = GDAL.setgeometrydirectly(feature.ptr, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
 end
@@ -48,13 +48,15 @@ passed geometry, but instead makes a copy of it.
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry
 type is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeom!(feature::Feature, geom::Geometry)
+function setgeom!(feature::Feature, geom::AbstractGeometry)
     result = GDAL.setgeometry(feature.ptr, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
 end
 
 "Fetch an handle to internal feature geometry. It should not be modified."
-getgeom(feature::Feature) = Geometry(GDAL.getgeometryref(feature.ptr))
+getgeom{G <: AbstractGeometry}(::Type{G}, feature::Feature) =
+    G(GDAL.getgeometryref(feature.ptr))
+getgeom(feature::Feature) = getgeom(Geometry, GDAL.getgeometryref(feature.ptr))
 
 """
 Fetch number of fields on this feature.
@@ -76,27 +78,6 @@ internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::Feature, i::Integer) =
     FieldDefn(GDAL.getfielddefnref(feature.ptr, i))
-
-# fetchfields(feature::Feature) =
-#     Dict(getname(borrowfieldefn(feature, i-1)) => fetchfield(feature, i-1)
-#          for i in 1:nfield(feature))
-
-# fetchfields{T <: Integer}(feature::Feature, indices::UnitRange{T}) =
-#     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
-#          for i in indices)
-
-# fetchfields{T <: Integer}(feature::Feature, indices::Vector{T}) =
-#     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
-#          for i in indices)
-
-# fetchfields(feature::Feature, names::Vector{String}) =
-#     Dict(name => fetchfield(feature, getfieldindex(feature, name))
-#          for name in names)
-
-# borrowgeomfields(feature::Feature) =
-#     Dict(getname(borrowgeomfieldefn(feature, i)) =>
-#           toWKT(borrowgeomfield(feature, i))
-#           for i in 1:ngeomfield(feature))
 
 """
 Fetch the field index given field name.
@@ -625,8 +606,10 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
+getgeomfield{G <: AbstractGeometry}(::Type{G}, feature::Feature, i::Integer) =
+    G(GDAL.getgeomfieldref(feature.ptr, i))
 getgeomfield(feature::Feature, i::Integer) =
-    Geometry(GDAL.getgeomfieldref(feature.ptr, i))
+    getgeomfield(Geometry, GDAL.getgeomfieldref(feature.ptr, i))
 
 """
 Set feature geometry of a specified geometry field.
@@ -645,7 +628,7 @@ OGRERR_NONE if successful, or OGRERR_FAILURE if the index is invalid, or
 OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type is illegal for the
 OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomfielddirectly!(feature::Feature, i::Integer, geom::Geometry)
+function setgeomfielddirectly!(feature::Feature, i::Integer, geom::AbstractGeometry)
     result = GDAL.setgeomfielddirectly(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry directly"
     feature
@@ -667,7 +650,7 @@ the passed geometry, but instead makes a copy of it.
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type
 is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomfield!(feature::Feature, i::Integer, geom::Geometry)
+function setgeomfield!(feature::Feature, i::Integer, geom::AbstractGeometry)
     result = GDAL.setgeomfield(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry"
     feature
