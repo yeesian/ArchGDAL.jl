@@ -56,7 +56,7 @@ end
 "Fetch an handle to internal feature geometry. It should not be modified."
 getgeom{G <: AbstractGeometry}(::Type{G}, feature::Feature) =
     G(GDAL.getgeometryref(feature.ptr))
-getgeom(feature::Feature) = getgeom(Geometry, GDAL.getgeometryref(feature.ptr))
+getgeom(feature::Feature) = getgeom(Geometry, feature)
 
 """
 Fetch number of fields on this feature.
@@ -608,8 +608,7 @@ an internal feature geometry. This object should not be modified.
 """
 getgeomfield{G <: AbstractGeometry}(::Type{G}, feature::Feature, i::Integer) =
     G(GDAL.getgeomfieldref(feature.ptr, i))
-getgeomfield(feature::Feature, i::Integer) =
-    getgeomfield(Geometry, GDAL.getgeomfieldref(feature.ptr, i))
+getgeomfield(feature::Feature, i::Integer) = getgeomfield(Geometry, feature, i)
 
 """
 Set feature geometry of a specified geometry field.
