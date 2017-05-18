@@ -66,8 +66,8 @@ AG.registerdrivers() do
         AG.read("data/point.geojson") do dataset
             @fact AG.nlayer(dataset) --> 1
             layer = AG.getlayer(dataset, 0)
-            @fact AG.getname(layer) --> "OGRGeoJSON"
-            layerbyname = AG.getlayer(dataset, "OGRGeoJSON")
+            @fact AG.getname(layer) --> "point"
+            layerbyname = AG.getlayer(dataset, "point")
             @fact layerbyname.ptr --> layer.ptr
             AG.resetreading!(layer)
 
