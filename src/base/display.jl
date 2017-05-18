@@ -197,7 +197,7 @@ function Base.show(io::IO, spref::SpatialRef)
     end
 end
 
-function Base.show(io::IO, geom::Geometry)
+function Base.show(io::IO, geom::AbstractGeometry)
     geom.ptr == C_NULL && (return print(io, "NULL Geometry"))
     print(io, "Geometry: ")
     geomwkt = toWKT(geom)
