@@ -474,12 +474,12 @@ facts("Create Geometry from GML") do
              </gml:Point>"""
 
     # Method 1
-    point = AG.unsafe_importGML(gml)
+    point = AG.unsafe_fromGML(gml)
         println((AG.getx(point, 0), AG.gety(point, 0)))
     AG.destroy(point)
 
     # Method 2
-    AG.importGML(gml) do point
+    AG.fromGML(gml) do point
         println((AG.getx(point, 0), AG.gety(point, 0)))
     end
 end
