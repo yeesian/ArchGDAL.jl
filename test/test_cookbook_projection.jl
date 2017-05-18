@@ -3,7 +3,7 @@ import ArchGDAL; const AG = ArchGDAL
 
 facts("Reproject a Geometry") do
     println("Method 1")
-    source = AG.unsafe_fromEPSG(2927); target = AG.unsafe_fromEPSG(4326)
+    source = AG.unsafe_importEPSG(2927); target = AG.unsafe_importEPSG(4326)
         transform = AG.unsafe_createcoordtrans(source, target)
             point = AG.unsafe_fromWKT("POINT (1120351.57 741921.42)")
                 println("Before: $(AG.toWKT(point))")
@@ -13,7 +13,7 @@ facts("Reproject a Geometry") do
     AG.destroy(target); AG.destroy(source)
 
     println("Method 2")
-    AG.fromEPSG(2927) do source; AG.fromEPSG(4326) do target
+    AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
         AG.createcoordtrans(source, target) do transform
             AG.fromWKT("POINT (1120351.57 741921.42)") do point
                 println("Before: $(AG.toWKT(point))")
@@ -43,7 +43,7 @@ facts("Get Projection") do
         end
     end
 
-    AG.fromEPSG(26912) do spatialref
+    AG.importEPSG(26912) do spatialref
         println("before (Proj4): $(AG.toProj4(spatialref))")
         println("before (WKT): $(AG.toWKT(spatialref))")
         AG.morphtoESRI!(spatialref)

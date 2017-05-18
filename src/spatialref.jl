@@ -32,13 +32,13 @@ These support files are normally searched for in /usr/local/share/gdal or in the
 directory identified by the GDAL_DATA configuration option. See CPLFindFile()
 for details.
 """
-function fromEPSG!(spref::SpatialRef, code::Integer)
+function importEPSG!(spref::SpatialRef, code::Integer)
     result = GDAL.importfromepsg(spref.ptr, code)
     @ogrerr result "Failed to initialize SRS based on EPSG $code"
     spref
 end
 
-unsafe_fromEPSG(code::Integer) = fromEPSG!(unsafe_newspatialref(), code)
+unsafe_importEPSG(code::Integer) = importEPSG!(unsafe_newspatialref(), code)
 
 """
 Initialize SRS based on EPSG GCS or PCS code.
@@ -50,13 +50,13 @@ are also a few projected coordinate systems that use northing/easting order
 contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
 """
-function fromEPSGA!(spref::SpatialRef, code::Integer)
+function importEPSGA!(spref::SpatialRef, code::Integer)
     result = GDAL.importfromepsga(spref.ptr, code)
     @ogrerr result "Failed to initializ SRS based on EPSGA $code"
     spref
 end
 
-unsafe_fromEPSGA(code::Integer) = fromEPSGA!(unsafe_newspatialref(), code)
+unsafe_importEPSGA(code::Integer) = importEPSGA!(unsafe_newspatialref(), code)
 
 """
 Import from WKT string.
@@ -66,7 +66,7 @@ contents of the passed WKT string. Only as much of the input string as needed to
 construct this SRS is consumed from the input string, and the input string
 pointer is then updated to point to the remaining (unused) input.
 """
-function fromWKT!(spref::SpatialRef, wktstr::AbstractString)
+function importWKT!(spref::SpatialRef, wktstr::AbstractString)
     result = @gdal(OSRImportFromWkt::GDAL.OGRErr,
         spref.ptr::GDALSpatialRef,
         [wktstr]::StringList
@@ -76,7 +76,7 @@ function fromWKT!(spref::SpatialRef, wktstr::AbstractString)
 end
 
 "Create SRS from WKT string."
-unsafe_fromWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
+unsafe_importWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
 
 """
 Import PROJ.4 coordinate string.
@@ -98,14 +98,14 @@ back to PROJ.4 format\".
 For example: `\"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
 +ellps=intl +units=m +nadgrids=nzgd2kgrid0005.gsb +wktext\"`
 """
-function fromPROJ4!(spref::SpatialRef, projstr::AbstractString)
+function importPROJ4!(spref::SpatialRef, projstr::AbstractString)
     result = GDAL.importfromproj4(spref.ptr, projstr)
     @ogrerr result "Failed to initialize SRS based on PROJ4 string: $projstr"
     spref
 end
 
-unsafe_fromPROJ4(projstr::AbstractString) =
-    fromPROJ4!(unsafe_newspatialref(), projstr)
+unsafe_importPROJ4(projstr::AbstractString) =
+    importPROJ4!(unsafe_newspatialref(), projstr)
 
 """
 Import coordinate system from ESRI .prj format(s).
@@ -127,7 +127,7 @@ At this time there is no equivalent `exportToESRI()` method. Writing old style
 and `exportToWkt()` methods can be used to generate output suitable to write to
 new style (Arc 8) .prj files.
 """
-function fromESRI!(spref::SpatialRef, esristr::AbstractString)
+function importESRI!(spref::SpatialRef, esristr::AbstractString)
     result = @gdal(OSRImportFromESRI::GDAL.OGRErr,
         spref.ptr::GDALSpatialRef,
         [esristr]::StringList
@@ -136,19 +136,19 @@ function fromESRI!(spref::SpatialRef, esristr::AbstractString)
     spref
 end
 
-unsafe_fromESRI(esristr::AbstractString) =
-    fromESRI!(unsafe_newspatialref(), esristr)
+unsafe_importESRI(esristr::AbstractString) =
+    importESRI!(unsafe_newspatialref(), esristr)
 
 "Import coordinate system from XML format (GML only currently)."
-function fromXML!(spref::SpatialRef, xmlstr::AbstractString)
+function importXML!(spref::SpatialRef, xmlstr::AbstractString)
     result = GDAL.importfromxml(spref.ptr, xmlstr)
     @ogrerr result "Failed to initialize SRS based on XML string: $xmlstr"
     spref
 end
 
 "Construct coordinate system from XML format (GML only currently)."
-unsafe_fromXML(xmlstr::AbstractString) =
-    fromXML!(unsafe_newspatialref(), xmlstr)
+unsafe_importXML(xmlstr::AbstractString) =
+    importXML!(unsafe_newspatialref(), xmlstr)
 
 """
 Set spatial reference from a URL.
@@ -156,7 +156,7 @@ Set spatial reference from a URL.
 This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
 """
-function fromURL!(spref::SpatialRef, url::AbstractString)
+function importURL!(spref::SpatialRef, url::AbstractString)
     result = GDAL.importfromurl(spref.ptr, url)
     @ogrerr result "Failed to initialize SRS from URL: $url"
     spref
@@ -168,7 +168,7 @@ Set spatial reference from a URL.
 This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
 """
-unsafe_fromURL(url::AbstractString) = fromURL!(unsafe_newspatialref(), url)
+unsafe_importURL(url::AbstractString) = importURL!(unsafe_newspatialref(), url)
 
 "Convert this SRS into WKT format."
 function toWKT(spref::SpatialRef)
