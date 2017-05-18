@@ -336,7 +336,7 @@ Create transformation object.
 NULL on failure or a ready to use transformation object.
 """
 unsafe_createcoordtrans(source::SpatialRef, target::SpatialRef) =
-    GDAL.octnewcoordinatetransformation(source.ptr, target.ptr)
+    CoordTransform(GDAL.octnewcoordinatetransformation(source.ptr, target.ptr))
 
 "OGRCoordinateTransformation destructor."
 function destroy(obj::CoordTransform)
