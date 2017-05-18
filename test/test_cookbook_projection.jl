@@ -30,7 +30,7 @@ facts("Get Projection") do
             println(AG.toWKT(spatialref))
             println(AG.toWKT(spatialref, false))
             println(AG.toWKT(spatialref, true))
-            println(AG.toProj4(spatialref))
+            println(AG.toPROJ4(spatialref))
             println(AG.toXML(spatialref))
             println(AG.toMICoordSys(spatialref))
             AG.nextfeature(layer) do feature
@@ -44,10 +44,10 @@ facts("Get Projection") do
     end
 
     AG.importEPSG(26912) do spatialref
-        println("before (Proj4): $(AG.toProj4(spatialref))")
+        println("before (Proj4): $(AG.toPROJ4(spatialref))")
         println("before (WKT): $(AG.toWKT(spatialref))")
         AG.morphtoESRI!(spatialref)
-        println("after (Proj4): $(AG.toProj4(spatialref))")
+        println("after (Proj4): $(AG.toPROJ4(spatialref))")
         println("after: $(AG.toWKT(spatialref))")
     end
 end
