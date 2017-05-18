@@ -227,7 +227,7 @@ facts("Simplify") do
     AG.fromWKT("POLYGON EMPTY") do g1
         @fact AG.isempty(g1) --> true
         AG.simplify(g1, 43.2) do g2
-            @fact AG.isempty(g2) --> false
+            @fact AG.isempty(g2) --> true
         end
     end
 
