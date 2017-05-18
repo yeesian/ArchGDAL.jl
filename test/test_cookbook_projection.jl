@@ -25,8 +25,8 @@ end
 facts("Get Projection") do
     AG.registerdrivers() do
         AG.read("ospy/data1/sites.shp") do dataset
-            layer = AG.borrow_getlayer(dataset, 0)
-            spatialref = AG.borrow_getspatialref(layer)
+            layer = AG.getlayer(dataset, 0)
+            spatialref = AG.getspatialref(layer)
             println(AG.toWKT(spatialref))
             println(AG.toWKT(spatialref, false))
             println(AG.toWKT(spatialref, true))
@@ -35,8 +35,8 @@ facts("Get Projection") do
             println(AG.toMICoordSys(spatialref))
             AG.nextfeature(layer) do feature
                 feature |>
-                    AG.borrow_getgeom |>
-                    AG.borrow_getspatialref |>
+                    AG.getgeom |>
+                    AG.getspatialref |>
                     AG.toWKT |>
                     println
             end
