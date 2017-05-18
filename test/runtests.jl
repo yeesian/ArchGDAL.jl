@@ -15,8 +15,7 @@ cd(dirname(@__FILE__)) do
     include("test_ospy_examples.jl")
     include("test_geos_operations.jl")
     include("test_cookbook_geometry.jl")
-    # left out until https://github.com/visr/GDAL.jl/issues/30 is resolved
-    # include("test_cookbook_projection.jl")
+    include("test_cookbook_projection.jl")
 end
 
 FactCheck.exitstatus()
