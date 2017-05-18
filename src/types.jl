@@ -19,23 +19,24 @@ typealias GDALStyleTool       Ptr{GDAL.OGRStyleToolH}
 
 typealias StringList          Ptr{Ptr{UInt8}}
 
-type ColorTable;      ptr::GDALColorTable         end
-type CoordTransform;  ptr::GDALCoordTransform     end
-type Dataset;         ptr::GDALDataset            end
-type Driver;          ptr::GDALDriver             end
-type Feature;         ptr::GDALFeature            end
-type FeatureDefn;     ptr::GDALFeatureDefn        end
-type FeatureLayer;    ptr::GDALFeatureLayer       end
-type Field;           ptr::GDALField              end
-type FieldDefn;       ptr::GDALFieldDefn          end
-type Geometry;        ptr::GDALGeometry           end
-type GeomFieldDefn;   ptr::GDALGeomFieldDefn      end
-type RasterAttrTable; ptr::GDALRasterAttrTable    end
-type RasterBand;      ptr::GDALRasterBand         end
-type SpatialRef;      ptr::GDALSpatialRef         end
-type StyleManager;    ptr::GDALStyleManager       end
-type StyleTable;      ptr::GDALStyleTable         end
-type StyleTool;       ptr::GDALStyleTool          end
+abstract AbstractGeometry # needs to have a `ptr::GDALGeometry` attribute
+type ColorTable;                    ptr::GDALColorTable         end
+type CoordTransform;                ptr::GDALCoordTransform     end
+type Dataset;                       ptr::GDALDataset            end
+type Driver;                        ptr::GDALDriver             end
+type Feature;                       ptr::GDALFeature            end
+type FeatureDefn;                   ptr::GDALFeatureDefn        end
+type FeatureLayer;                  ptr::GDALFeatureLayer       end
+type Field;                         ptr::GDALField              end
+type FieldDefn;                     ptr::GDALFieldDefn          end
+type Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
+type GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
+type RasterAttrTable;               ptr::GDALRasterAttrTable    end
+type RasterBand;                    ptr::GDALRasterBand         end
+type SpatialRef;                    ptr::GDALSpatialRef         end
+type StyleManager;                  ptr::GDALStyleManager       end
+type StyleTable;                    ptr::GDALStyleTable         end
+type StyleTool;                     ptr::GDALStyleTool          end
 
 @enum(CPLErr,
       CE_None       = (UInt32)(0),
@@ -419,7 +420,7 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
     OFTIntegerList     => Void,
     OFTReal            => Float64,
     OFTRealList        => Void,
-    OFTString          => Cstring,
+    OFTString          => String,
     OFTStringList      => Void,
     OFTWideString      => Void, # deprecated
     OFTWideStringList  => Void, # deprecated
