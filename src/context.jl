@@ -69,11 +69,12 @@ for gdalfunc in (
         :createmultipolygon, :createmultipolygon_noholes, :createpoint,
         :createpolygon, :createRAT, :createstylemanager, :createstyletable,
         :createstyletool, :delaunaytriangulation, :difference, :forceto,
-        :fromEPSG, :fromEPSGA, :fromESRI, :fromGML, :fromJSON, :fromPROJ4,
-        :fromURL, :fromWKB, :fromWKT, :fromXML, :getcurvegeom, :getfeature,
-        :getlineargeom, :getpart, :intersection, :newspatialref, :nextfeature,
-        :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
-        :simplify, :simplifypreservetopology, :symdifference, :union, :update
+        :fromGML, :fromJSON, :fromWKB, :fromWKT, :getcurvegeom, :getfeature,
+        :getlineargeom, :getpart, :intersection, :importEPSG, :importEPSGA,
+        :importESRI, :importPROJ4, :importWKT, :importXML, :importURL,
+        :newspatialref, :nextfeature, :pointalongline, :pointonsurface,
+        :polygonfromedges, :polygonize, :read, :simplify,
+        :simplifypreservetopology, :symdifference, :union, :update
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
