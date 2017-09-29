@@ -7,11 +7,11 @@ binary (WKB) representation.
 * `spatialref`: handle to the spatial reference to be assigned to the created
     geometry object. This may be `NULL` (default).
 """
-function unsafe_fromWKB{G <: AbstractGeometry}(
+function unsafe_fromWKB(
         ::Type{G},
         data,
         spatialref::SpatialRef = SpatialRef(C_NULL)
-    )
+    ) where G <: AbstractGeometry
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
@@ -36,11 +36,11 @@ Create a geometry object of the appropriate type from its well known text
 * `spatialref`: handle to the spatial reference to be assigned to the created
     geometry object. This may be `NULL` (default).
 """
-function unsafe_fromWKT{G <: AbstractGeometry}(
+function unsafe_fromWKT(
         ::Type{G},
         data::Vector{String},
         spatialref::SpatialRef = SpatialRef(C_NULL)
-    )
+    ) where G <: AbstractGeometry
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
@@ -65,10 +65,10 @@ function destroy(geom::AbstractGeometry)
 end
 
 "Returns a copy of the geometry with the original spatial reference system."
-function unsafe_clone{G <: AbstractGeometry}(::Type{G}, geom::AbstractGeometry)
+function unsafe_clone(::Type{G}, geom::AbstractGeometry) where G <: AbstractGeometry
     G(GDAL.clone(geom.ptr))
 end
-unsafe_clone{G <: AbstractGeometry}(geom::G) = unsafe_clone(G, geom)
+unsafe_clone(geom::G) where {G <: AbstractGeometry} = unsafe_clone(G, geom)
 
 """
 Create an empty geometry of desired type.
@@ -76,9 +76,9 @@ Create an empty geometry of desired type.
 This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
-function unsafe_creategeom{G <: AbstractGeometry}(::Type{G},
+function unsafe_creategeom(::Type{G},
         geomtype::OGRwkbGeometryType
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.checknull(@gdal(OGR_G_CreateGeometry::GDALGeometry,
         geomtype::GDAL.OGRwkbGeometryType
     )))
@@ -104,12 +104,12 @@ For that, OGRGeometry::getCurveGeometry() can be used.
 
 The passed in geometry is cloned and a new one returned.
 """
-function unsafe_forceto{G <: AbstractGeometry}(
+function unsafe_forceto(
         ::Type{G},
         geom::AbstractGeometry,
         targettype::OGRwkbGeometryType,
         options = StringList(C_NULL)
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.checknull(@gdal(OGR_G_ForceTo::GDALGeometry,
         unsafe_clone(geom).ptr::GDALGeometry,
         targettype::GDAL.OGRwkbGeometryType,
@@ -232,7 +232,7 @@ getgeomtype(geom::AbstractGeometry) =
 getgeomname(geom::AbstractGeometry) = GDAL.getgeometryname(geom.ptr)
 
 "Convert geometry to strictly 2D."
-function flattento2d!{G <: AbstractGeometry}(geom::G)
+function flattento2d!(geom::G) where G <: AbstractGeometry
     GDAL.flattento2d(geom.ptr)
     geom
 end
@@ -243,7 +243,7 @@ Force rings to be closed.
 If this geometry, or any contained geometries has polygon rings that are not
 closed, they will be closed by adding the starting point at the end.
 """
-closerings!{G <: AbstractGeometry}(geom::G) = (GDAL.closerings(geom.ptr); geom)
+closerings!(geom::G) where {G <: AbstractGeometry} = (GDAL.closerings(geom.ptr); geom)
 
 """
 Create geometry from GML.
@@ -255,7 +255,7 @@ geometries supported by this parser, but they are too numerous to list here.
 The following GML2 elements are parsed : Point, LineString, Polygon, MultiPoint,
 MultiLineString, MultiPolygon, MultiGeometry.
 """
-unsafe_fromGML{G <: AbstractGeometry}(::Type{G}, data) =
+unsafe_fromGML(::Type{G}, data) where {G <: AbstractGeometry} =
     G(GDAL.createfromgml(data))
 unsafe_fromGML(data) = unsafe_fromGML(Geometry, data)
 
@@ -285,12 +285,12 @@ toJSON(geom::AbstractGeometry, options) =
     ))
 
 "Create a geometry object from its GeoJSON representation"
-unsafe_fromJSON{G <: AbstractGeometry}(::Type{G}, data::String) =
+unsafe_fromJSON(::Type{G}, data::String) where {G <: AbstractGeometry} =
     G(GDAL.creategeometryfromjson(data))
 unsafe_fromJSON(data::String) = unsafe_fromJSON(Geometry, data)
 
 "Assign spatial reference to this object."
-setspatialref!{G <: AbstractGeometry}(geom::G, spatialref::SpatialRef) =
+setspatialref!(geom::G, spatialref::SpatialRef) where {G <: AbstractGeometry} =
     (GDAL.assignspatialreference(geom.ptr, spatialref.ptr); geom)
 
 """
@@ -308,16 +308,16 @@ Apply arbitrary coordinate transformation to geometry.
 * `geom`: handle on the geometry to apply the transform to.
 * `coordtransform`: handle on the transformation to apply.
 """
-function transform!{G <: AbstractGeometry}(geom::G,
+function transform!(geom::G,
         coordtransform::CoordTransform
-    )
+    ) where G <: AbstractGeometry
     result = GDAL.transform(geom.ptr, coordtransform.ptr)
     @ogrerr result "Failed to transform geometry"
     geom
 end
 
 "Transform geometry to new spatial reference system."
-function transform!{G <: AbstractGeometry}(geom::G, spatialref::SpatialRef)
+function transform!(geom::G, spatialref::SpatialRef) where G <: AbstractGeometry
     result = GDAL.transformto(geom.ptr, spatialref.ptr)
     @ogrerr result "Failed to transform geometry to the new SRS"
     geom
@@ -330,9 +330,9 @@ Compute a simplified geometry.
 * `geom`: the geometry.
 * `tol`: the distance tolerance for the simplification.
 """
-function unsafe_simplify{G <: AbstractGeometry}(::Type{G},
+function unsafe_simplify(::Type{G},
         geom::AbstractGeometry, tol::Real
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.simplify(geom.ptr, tol))
 end
 unsafe_simplify(geom::AbstractGeometry, args...) =
@@ -345,9 +345,9 @@ Simplify the geometry while preserving topology.
 * `geom`: the geometry.
 * `tol`: the distance tolerance for the simplification.
 """
-function unsafe_simplifypreservetopology{G <: AbstractGeometry}(::Type{G},
+function unsafe_simplifypreservetopology(::Type{G},
         geom::AbstractGeometry, tol::Real
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.simplifypreservetopology(geom.ptr, tol))
 end
 unsafe_simplifypreservetopology(geom::AbstractGeometry, args...) =
@@ -362,9 +362,9 @@ Return a Delaunay triangulation of the vertices of the geometry.
 * `onlyedges`: if TRUE, will return a MULTILINESTRING, otherwise it
     will return a GEOMETRYCOLLECTION containing triangular POLYGONs.
 """
-function unsafe_delaunaytriangulation{G <: AbstractGeometry}(::Type{G},
+function unsafe_delaunaytriangulation(::Type{G},
         geom::AbstractGeometry, tol::Real, onlyedges::Bool
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.delaunaytriangulation(geom.ptr, tol, onlyedges))
 end
 unsafe_delaunaytriangulation(geom::AbstractGeometry, args...) =
@@ -380,7 +380,7 @@ computation is performed in 2d only
 * `geom`: the geometry to segmentize
 * `maxlength`: the maximum distance between 2 points after segmentization
 """
-function segmentize!{G <: AbstractGeometry}(geom::G, maxlength::Real)
+function segmentize!(geom::G, maxlength::Real) where G <: AbstractGeometry
     GDAL.segmentize(geom.ptr, maxlength)
     geom
 end
@@ -437,7 +437,7 @@ Returns the boundary of the geometry.
 A new geometry object is created and returned containing the boundary of the
 geometry on which the method is invoked.
 """
-unsafe_boundary{G <: AbstractGeometry}(::Type{G}, geom::AbstractGeometry) =
+unsafe_boundary(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.boundary(geom.ptr))
 unsafe_boundary(geom::AbstractGeometry, args...) =
     unsafe_boundary(Geometry, geom, args...)
@@ -448,7 +448,7 @@ Returns the convex hull of the geometry.
 A new geometry object is created and returned containing the convex hull of the
 geometry on which the method is invoked.
 """
-unsafe_convexhull{G <: AbstractGeometry}(::Type{G}, geom::AbstractGeometry) =
+unsafe_convexhull(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.convexhull(geom.ptr))
 unsafe_convexhull(geom::AbstractGeometry, args...) =
     unsafe_convexhull(Geometry, geom, args...)
@@ -474,9 +474,9 @@ accuracy of the result.
 * `quadsegs`: the number of segments used to approximate a 90 degree
     (quadrant) of curvature.
 """
-function unsafe_buffer{G <: AbstractGeometry}(::Type{G},
+function unsafe_buffer(::Type{G},
         geom::AbstractGeometry, dist::Real, quadsegs::Integer = 30
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.buffer(geom.ptr, dist, quadsegs))
 end
 unsafe_buffer(geom::AbstractGeometry, args...) =
@@ -490,9 +490,9 @@ Generates a new geometry which is the region of intersection of the two
 geometries operated on. The OGR_G_Intersects() function can be used to test if
 two geometries intersect.
 """
-function unsafe_intersection{G <: AbstractGeometry}(::Type{G},
+function unsafe_intersection(::Type{G},
         g1::AbstractGeometry, g2::AbstractGeometry
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.intersection(g1.ptr, g2.ptr))
 end
 unsafe_intersection(g1::AbstractGeometry, g2::AbstractGeometry, args...) =
@@ -504,14 +504,14 @@ Returns a new geometry representing the union of the geometries.
 Generates a new geometry which is the region of union of the two geometries
 operated on.
 """
-function unsafe_union{G <: AbstractGeometry}(::Type{G},
+function unsafe_union(::Type{G},
         g1::AbstractGeometry, g2::AbstractGeometry
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.union(g1.ptr, g2.ptr))
 end
 
 "Compute the union of the geometry using cascading."
-unsafe_union{G <: AbstractGeometry}(::Type{G}, geom::AbstractGeometry) =
+unsafe_union(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.unioncascaded(geom.ptr))
 
 unsafe_union(geom::AbstractGeometry, args...) =
@@ -525,9 +525,9 @@ the current implementation based on GEOS can operate on other geometry types
 than the types that are supported by SQL/MM-Part 3 : surfaces (polygons) and
 multisurfaces (multipolygons).
 """
-function unsafe_pointonsurface{G <: AbstractGeometry}(::Type{G},
+function unsafe_pointonsurface(::Type{G},
         geom::AbstractGeometry
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.pointonsurface(geom.ptr))
 end
 
@@ -542,9 +542,9 @@ the other geometry removed.
 A new geometry representing the difference of the geometries, or NULL
 if the difference is empty.
 """
-function unsafe_difference{G <: AbstractGeometry}(::Type{G},
+function unsafe_difference(::Type{G},
         g1::AbstractGeometry, g2::AbstractGeometry
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.difference(g1.ptr, g2.ptr))
 end
 
@@ -555,9 +555,9 @@ unsafe_difference(geom::AbstractGeometry, args...) =
 Returns a new geometry representing the symmetric difference of the geometries
 or NULL if the difference is empty or an error occurs.
 """
-function unsafe_symdifference{G <: AbstractGeometry}(::Type{G},
+function unsafe_symdifference(::Type{G},
         g1::AbstractGeometry, g2::AbstractGeometry
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.symdifference(g1.ptr, g2.ptr))
 end
 
@@ -585,9 +585,9 @@ multipoint, linestring, geometrycollection such as multipolygons. OGC SF SQL 1.1
 defines the operation for surfaces (polygons). SQL/MM-Part 3 defines the
 operation for surfaces and multisurfaces (multipolygons).
 """
-function centroid!{G <: AbstractGeometry}(
+function centroid!(
         geom::AbstractGeometry, centroid::G
-    )
+    ) where G <: AbstractGeometry
     result = GDAL.centroid(geom.ptr, centroid.ptr)
     @ogrerr result "Failed to compute the geometry centroid"
     centroid
@@ -606,9 +606,9 @@ Fetch point at given distance along curve.
 ### Returns
 a point or NULL.
 """
-function unsafe_pointalongline{G <: AbstractGeometry}(::Type{G},
+function unsafe_pointalongline(::Type{G},
         geom::AbstractGeometry, distance::Real
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.value(geom.ptr, distance))
 end
 
@@ -621,7 +621,7 @@ Clear geometry information.
 This restores the geometry to its initial state after construction, and before
 assignment of actual geometry.
 """
-empty!{G <: AbstractGeometry}(geom::G) = (GDAL.empty(geom.ptr); geom)
+empty!(geom::G) where {G <: AbstractGeometry} = (GDAL.empty(geom.ptr); geom)
 
 "Returns TRUE if the geometry has no points, otherwise FALSE."
 isempty(geom::AbstractGeometry) = Bool(GDAL.isempty(geom.ptr))
@@ -647,7 +647,7 @@ impossible due to topological inconsistencies.
 a handle to a newly allocated geometry now owned by the caller, or NULL on
 failure.
 """
-unsafe_polygonize{G <: AbstractGeometry}(::Type{G}, geom::AbstractGeometry) =
+unsafe_polygonize(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.polygonize(geom.ptr))
 unsafe_polygonize(geom::AbstractGeometry, args...) =
     unsafe_polygonize(Geometry, geom, args...)
@@ -812,9 +812,9 @@ For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 * `geom`: the geometry container from which to get a geometry from.
 * `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
 """
-function getgeom{G <: AbstractGeometry}(::Type{G},
+function getgeom(::Type{G},
         geom::AbstractGeometry, i::Integer
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.getgeometryref(geom.ptr, i))
 end
 getgeom(geom::AbstractGeometry, args...) =
@@ -835,7 +835,7 @@ interior rings.
 * `geomcontainer`: existing geometry.
 * `subgeom`: geometry to add to the existing geometry.
 """
-function addgeom!{G <: AbstractGeometry}(geomcontainer::G, subgeom::AbstractGeometry)
+function addgeom!(geomcontainer::G, subgeom::AbstractGeometry) where G <: AbstractGeometry
     result = GDAL.addgeometry(geomcontainer.ptr, subgeom.ptr)
     @ogrerr result "Failed to add geometry. The geometry type could be illegal"
     geomcontainer
@@ -856,7 +856,7 @@ interior rings.
 * `geomcontainer`: existing geometry.
 * `subgeom`: geometry to add to the existing geometry.
 """
-function addgeomdirectly!{G <: AbstractGeometry}(geomcontainer::G, subgeom::AbstractGeometry)
+function addgeomdirectly!(geomcontainer::G, subgeom::AbstractGeometry) where G <: AbstractGeometry
     result = GDAL.addgeometrydirectly(geomcontainer.ptr, subgeom.ptr)
     @ogrerr result "Failed to add geometry. The geometry type could be illegal"
     geomcontainer
@@ -873,9 +873,9 @@ Remove a geometry from an exiting geometry container.
     The default is TRUE as the existing geometry is considered to own the
     geometries in it.
 """
-function removegeom!{G <: AbstractGeometry}(geom::G,
+function removegeom!(geom::G,
         i::Integer, todelete::Bool = true
-    )
+    ) where G <: AbstractGeometry
     result = GDAL.removegeometry(geom.ptr, i, todelete)
     @ogrerr result "Failed to remove geometry. The index could be out of range."
     geom
@@ -890,7 +890,7 @@ Remove all geometries from an exiting geometry container.
     The default is TRUE as the existing geometry is considered to own the
     geometries in it.
 """
-function removeallgeoms!{G <: AbstractGeometry}(geom::G, todelete::Bool = true)
+function removeallgeoms!(geom::G, todelete::Bool = true) where G <: AbstractGeometry
     result = GDAL.removegeometry(geom.ptr, -1, todelete)
     @ogrerr result "Failed to remove all geometries."
     geom
@@ -922,21 +922,21 @@ The ownership of the returned geometry belongs to the caller.
 * `options`: options as a null-terminated list of strings or NULL.
     See OGRGeometryFactory::curveToLineString() for valid options.
 """
-function unsafe_getlineargeom{G <: AbstractGeometry}(::Type{G},
+function unsafe_getlineargeom(::Type{G},
         geom::AbstractGeometry, stepsize::Real = 0
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.getlineargeometry(geom.ptr, stepsize, C_NULL))
 end
 
-function unsafe_getlineargeom{G <: AbstractGeometry}(::Type{G},
+function unsafe_getlineargeom(::Type{G},
         geom::AbstractGeometry, options::Vector
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.getlineargeometry(geom.ptr, 0, options))
 end
 
-function unsafe_getlineargeom{G <: AbstractGeometry}(::Type{G},
+function unsafe_getlineargeom(::Type{G},
         geom::AbstractGeometry, stepsize::Real, options::Vector
-    )
+    ) where G <: AbstractGeometry
     G(GDAL.getlineargeometry(geom.ptr, stepsize, options))
 end
 unsafe_getlineargeom(geom::AbstractGeometry, args...) =
@@ -955,7 +955,7 @@ The ownership of the returned geometry belongs to the caller.
 
 The reverse function is OGR_G_GetLinearGeometry().
 """
-unsafe_getcurvegeom{G <: AbstractGeometry}(::Type{G}, geom::AbstractGeometry) =
+unsafe_getcurvegeom(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.getcurvegeometry(geom.ptr, C_NULL))
 unsafe_getcurvegeom(geom::AbstractGeometry, args...) =
     unsafe_getcurvegeom(Geometry, geom, args...)
@@ -971,13 +971,13 @@ Build a ring from a bunch of arcs.
     points of the ring are the same.
 * `tol`: whether two arcs are considered close enough to be joined.
 """
-function unsafe_polygonfromedges{G <: AbstractGeometry}(
+function unsafe_polygonfromedges(
         ::Type{G},
         lines::AbstractGeometry,
         besteffort::Bool,
         autoclose::Bool,
         tol::Real
-    )
+    ) where G <: AbstractGeometry
     perr = Ref{GDAL.OGRErr}()
     result = GDAL.buildpolygonfromedges(lines, besteffort, autoclose, tol, perr)
     @ogrerr perr[] "Failed to build polygon from edges."
@@ -1036,13 +1036,13 @@ function unsafe_createpoint(x::Real, y::Real, z::Real)
     geom
 end
 
-function unsafe_createpoint{T <: Real, U <: Real}(xy::Tuple{T,U})
+function unsafe_createpoint(xy::Tuple{T,U}) where {T <: Real, U <: Real}
     geom = unsafe_creategeom(wkbPoint)
     addpoint!(geom, xy...)
     geom
 end
 
-function unsafe_createpoint{T <: Real, U <: Real, V <: Real}(xyz::Tuple{T,U,V})
+function unsafe_createpoint(xyz::Tuple{T,U,V}) where {T <: Real, U <: Real, V <: Real}
     geom = unsafe_creategeom(wkbPoint)
     addpoint!(geom, xyz...)
     geom
