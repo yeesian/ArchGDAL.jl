@@ -14,6 +14,8 @@
 julia> import ArchGDAL; const AG = ArchGDAL
 ArchGDAL
 
+julia> import Base.read
+
 julia> function read(f, filename)
            return AG.registerdrivers() do
                AG.read(filename) do dataset
