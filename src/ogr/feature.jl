@@ -54,7 +54,7 @@ function setgeom!(feature::Feature, geom::AbstractGeometry)
 end
 
 "Fetch an handle to internal feature geometry. It should not be modified."
-getgeom{G <: AbstractGeometry}(::Type{G}, feature::Feature) =
+getgeom(::Type{G}, feature::Feature) where {G <: AbstractGeometry} =
     G(GDAL.getgeometryref(feature.ptr))
 getgeom(feature::Feature) = getgeom(Geometry, feature)
 
@@ -481,11 +481,11 @@ field types may be unaffected.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
 * `papszValues`: the values to assign.
 """
-function setfield!{T <: AbstractString}(
+function setfield!(
         feature::Feature,
         i::Integer,
         value::Vector{T}
-    )
+    ) where T <: AbstractString
     @gdal(OGR_F_SetFieldStringList::Void,
         feature.ptr::GDALFeature,
         i::Cint,
@@ -606,7 +606,7 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
-getgeomfield{G <: AbstractGeometry}(::Type{G}, feature::Feature, i::Integer) =
+getgeomfield(::Type{G}, feature::Feature, i::Integer) where {G <: AbstractGeometry} =
     G(GDAL.getgeomfieldref(feature.ptr, i))
 getgeomfield(feature::Feature, i::Integer) = getgeomfield(Geometry, feature, i)
 

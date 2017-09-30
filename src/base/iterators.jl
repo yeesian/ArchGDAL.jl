@@ -16,7 +16,7 @@ function Base.done(layer::FeatureLayer, state::Vector{Feature})
     end
 end
 
-immutable BlockIterator
+struct BlockIterator
     rows::Cint
     cols::Cint
     ni::Cint
@@ -51,7 +51,7 @@ function Base.next(obj::BlockIterator, iter::Int)
 end
 Base.done(obj::BlockIterator, iter::Int) = (iter == obj.n)
 
-immutable WindowIterator
+struct WindowIterator
     blockiter::BlockIterator
 end
 function windows(raster::RasterBand)
@@ -65,7 +65,7 @@ function Base.next(obj::WindowIterator, iter::Int)
 end
 Base.done(obj::WindowIterator, iter::Int) = Base.done(obj.blockiter, iter)
 
-type BufferIterator{T <: Real}
+mutable struct BufferIterator{T <: Real}
     raster::RasterBand
     w::WindowIterator
     buffer::Array{T, 2}

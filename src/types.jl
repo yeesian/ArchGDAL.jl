@@ -1,42 +1,42 @@
-typealias GDALColorTable      Ptr{GDAL.GDALColorTableH}
-typealias GDALCoordTransform  Ptr{GDAL.OGRCoordinateTransformationH}
-typealias GDALDataset         Ptr{GDAL.GDALDatasetH}
-typealias GDALDriver          Ptr{GDAL.GDALDriverH}
-typealias GDALFeature         Ptr{GDAL.OGRFeatureH}
-typealias GDALFeatureDefn     Ptr{GDAL.OGRFeatureDefnH}
-typealias GDALFeatureLayer    Ptr{GDAL.OGRLayerH}
-typealias GDALField           Ptr{GDAL.OGRField}
-typealias GDALFieldDefn       Ptr{GDAL.OGRFieldDefnH}
-typealias GDALGeometry        Ptr{GDAL.OGRGeometryH}
-typealias GDALGeomFieldDefn   GDAL.OGRGeomFieldDefnH
-typealias GDALProgressFunc    Ptr{GDAL.GDALProgressFunc}
-typealias GDALRasterAttrTable Ptr{GDAL.GDALRasterAttributeTableH}
-typealias GDALRasterBand      Ptr{GDAL.GDALRasterBandH}
-typealias GDALSpatialRef      Ptr{GDAL.OGRSpatialReferenceH}
-typealias GDALStyleManager    Ptr{GDAL.OGRStyleMgrH}
-typealias GDALStyleTable      Ptr{GDAL.OGRStyleTableH}
-typealias GDALStyleTool       Ptr{GDAL.OGRStyleToolH}
+const GDALColorTable      =      Ptr{GDAL.GDALColorTableH}
+const GDALCoordTransform  =  Ptr{GDAL.OGRCoordinateTransformationH}
+const GDALDataset         =         Ptr{GDAL.GDALDatasetH}
+const GDALDriver          =          Ptr{GDAL.GDALDriverH}
+const GDALFeature         =         Ptr{GDAL.OGRFeatureH}
+const GDALFeatureDefn     =     Ptr{GDAL.OGRFeatureDefnH}
+const GDALFeatureLayer    =    Ptr{GDAL.OGRLayerH}
+const GDALField           =           Ptr{GDAL.OGRField}
+const GDALFieldDefn       =       Ptr{GDAL.OGRFieldDefnH}
+const GDALGeometry        =        Ptr{GDAL.OGRGeometryH}
+const GDALGeomFieldDefn   =   GDAL.OGRGeomFieldDefnH
+const GDALProgressFunc    =    Ptr{GDAL.GDALProgressFunc}
+const GDALRasterAttrTable = Ptr{GDAL.GDALRasterAttributeTableH}
+const GDALRasterBand      =      Ptr{GDAL.GDALRasterBandH}
+const GDALSpatialRef      =      Ptr{GDAL.OGRSpatialReferenceH}
+const GDALStyleManager    =    Ptr{GDAL.OGRStyleMgrH}
+const GDALStyleTable      =      Ptr{GDAL.OGRStyleTableH}
+const GDALStyleTool       =       Ptr{GDAL.OGRStyleToolH}
 
-typealias StringList          Ptr{Ptr{UInt8}}
+const StringList          =          Ptr{Ptr{UInt8}}
 
-abstract AbstractGeometry # needs to have a `ptr::GDALGeometry` attribute
-type ColorTable;                    ptr::GDALColorTable         end
-type CoordTransform;                ptr::GDALCoordTransform     end
-type Dataset;                       ptr::GDALDataset            end
-type Driver;                        ptr::GDALDriver             end
-type Feature;                       ptr::GDALFeature            end
-type FeatureDefn;                   ptr::GDALFeatureDefn        end
-type FeatureLayer;                  ptr::GDALFeatureLayer       end
-type Field;                         ptr::GDALField              end
-type FieldDefn;                     ptr::GDALFieldDefn          end
-type Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
-type GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
-type RasterAttrTable;               ptr::GDALRasterAttrTable    end
-type RasterBand;                    ptr::GDALRasterBand         end
-type SpatialRef;                    ptr::GDALSpatialRef         end
-type StyleManager;                  ptr::GDALStyleManager       end
-type StyleTable;                    ptr::GDALStyleTable         end
-type StyleTool;                     ptr::GDALStyleTool          end
+abstract type AbstractGeometry end # needs to have a `ptr::GDALGeometry` attribute
+mutable struct ColorTable;                    ptr::GDALColorTable         end
+mutable struct CoordTransform;                ptr::GDALCoordTransform     end
+mutable struct Dataset;                       ptr::GDALDataset            end
+mutable struct Driver;                        ptr::GDALDriver             end
+mutable struct Feature;                       ptr::GDALFeature            end
+mutable struct FeatureDefn;                   ptr::GDALFeatureDefn        end
+mutable struct FeatureLayer;                  ptr::GDALFeatureLayer       end
+mutable struct Field;                         ptr::GDALField              end
+mutable struct FieldDefn;                     ptr::GDALFieldDefn          end
+mutable struct Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
+mutable struct GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
+mutable struct RasterAttrTable;               ptr::GDALRasterAttrTable    end
+mutable struct RasterBand;                    ptr::GDALRasterBand         end
+mutable struct SpatialRef;                    ptr::GDALSpatialRef         end
+mutable struct StyleManager;                  ptr::GDALStyleManager       end
+mutable struct StyleTable;                    ptr::GDALStyleTable         end
+mutable struct StyleTool;                     ptr::GDALStyleTool          end
 
 @enum(CPLErr,
       CE_None       = (UInt32)(0),
