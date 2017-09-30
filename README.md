@@ -7,9 +7,13 @@
 
 
 ```julia
-  | | |_| | | | (_| |  |  Version 0.4.6 (2016-06-19 17:16 UTC)
- _/ |\__'_|_|_|\__'_|  |  Official http://julialang.org/ release
-|__/                   |  x86_64-apple-darwin13.4.0
+   _       _ _(_)_     |  A fresh approach to technical computing
+  (_)     | (_) (_)    |  Documentation: https://docs.julialang.org
+   _ _   _| |_  __ _   |  Type "?help" for help.
+  | | | | | | |/ _` |  |
+  | | |_| | | | (_| |  |  Version 0.6.0 (2017-08-03 08:04 UTC)
+ _/ |\__'_|_|_|\__'_|  |  Commit 80a9f1f11* (58 days old release-0.6)
+|__/                   |  x86_64-apple-darwin16.7.0
 
 julia> import ArchGDAL; const AG = ArchGDAL
 ArchGDAL

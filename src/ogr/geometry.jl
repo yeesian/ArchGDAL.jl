@@ -76,15 +76,11 @@ Create an empty geometry of desired type.
 This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
-function unsafe_creategeom(::Type{G},
-        geomtype::OGRwkbGeometryType
-    ) where G <: AbstractGeometry
-    G(GDAL.checknull(@gdal(OGR_G_CreateGeometry::GDALGeometry,
-        geomtype::GDAL.OGRwkbGeometryType
-    )))
+function unsafe_creategeom(::Type{G}, geomtype::OGRwkbGeometryType ) where G <: AbstractGeometry
+    G(GDAL.checknull(@gdal(OGR_G_CreateGeometry::GDALGeometry, geomtype::GDAL.OGRwkbGeometryType)))
 end
-unsafe_creategeom(geomtype::OGRwkbGeometryType) =
-    unsafe_creategeom(Geometry, geomtype)
+
+unsafe_creategeom(geomtype::OGRwkbGeometryType) = unsafe_creategeom(Geometry, geomtype)
 
 """
 Tries to force the provided geometry to the specified geometry type.
@@ -173,7 +169,7 @@ Convert a geometry well known binary format.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
 function toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=wkbNDR)
-    buffer = Array(Cuchar, wkbsize(geom))
+    buffer = Array{Cuchar}(wkbsize(geom))
     result = @gdal(OGR_G_ExportToWkb::GDAL.OGRErr,
         geom.ptr::GDALGeometry,
         order::GDAL.OGRwkbByteOrder,
@@ -191,7 +187,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
 function toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=wkbNDR)
-    buffer = Array(Cuchar, wkbsize(geom))
+    buffer = Array{Cuchar}(wkbsize(geom))
     result = @gdal(OGR_G_ExportToIsoWkb::GDAL.OGRErr,
         geom.ptr::GDALGeometry,
         order::GDAL.OGRwkbByteOrder,

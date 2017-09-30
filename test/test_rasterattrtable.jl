@@ -22,11 +22,11 @@ facts("Testing Raster Attribute Tables") do
         AG.setrowcount!(rat, 5)
         @fact AG.nrow(rat) --> 5
 
-        @fact AG.attributeio!(rat, AG.GF_Read, 0, 0, 5, Array(Cint,5)) -->
+        @fact AG.attributeio!(rat, AG.GF_Read, 0, 0, 5, Array{Cint}(5)) -->
             fill(0,5)
-        @fact AG.attributeio!(rat, AG.GF_Read, 0, 0, 5, Array(Float64,5)) -->
+        @fact AG.attributeio!(rat, AG.GF_Read, 0, 0, 5, Array{Float64}(5)) -->
             fill(0,5)
-        @fact AG.attributeio!(rat, AG.GF_Read, 1, 0, 5, Array(Float64,5)) -->
+        @fact AG.attributeio!(rat, AG.GF_Read, 1, 0, 5, Array{Float64}(5)) -->
             fill(0,5)
 
         @fact AG.asstring(rat, 2, 0) --> "0"

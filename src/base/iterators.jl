@@ -74,7 +74,7 @@ function bufferwindows(raster::RasterBand)
     BufferIterator(
         raster,
         windows(raster),
-        Array(getdatatype(raster), getblocksize(raster)...)
+        Array{getdatatype(raster)}(getblocksize(raster)...)
     )
 end
 Base.start(obj::BufferIterator) = Base.start(obj.w)

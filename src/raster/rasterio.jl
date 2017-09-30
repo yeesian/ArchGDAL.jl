@@ -193,7 +193,7 @@ function read!(
 end
 
 read(rb::RasterBand) =
-    rasterio!(rb, Array(getdatatype(rb), width(rb), height(rb)))
+    rasterio!(rb, Array{getdatatype(rb)}(width(rb), height(rb)))
 
 function read(
         rb::RasterBand,
@@ -202,10 +202,9 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    buffer = Array(getdatatype(rb), width(rb), height(rb))
+    buffer = Array{getdatatype(rb)}(width(rb), height(rb))
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
 end
-
 
 function read(
         rb::RasterBand,
@@ -213,7 +212,7 @@ function read(
         cols::UnitRange{U}
     ) where U <: Integer
     rasterio!(rb,
-        Array(getdatatype(rb), length(cols), length(rows)),
+        Array{getdatatype(rb)}(length(cols), length(rows)),
         rows, cols
     )
 end
@@ -299,14 +298,14 @@ end
 read(dataset::Dataset, i::Integer) = read(getband(dataset, i))
 
 function read(dataset::Dataset, indices::Vector{Cint})
-    buffer = Array(getdatatype(getband(dataset, indices[1])),
+    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
         width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices)
 end
 
 function read(dataset::Dataset)
-    buffer = Array(getdatatype(getband(dataset, 1)),
+    buffer = Array{getdatatype(getband(dataset, 1))}(
         width(dataset), height(dataset), nraster(dataset)
     )
     read!(dataset, buffer)
@@ -331,7 +330,7 @@ function read(
         xsize::Integer,
         ysize::Integer
     ) where T <: Integer
-    buffer = Array(getdatatype(getband(dataset, indices[1])),
+    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
         width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
@@ -352,7 +351,7 @@ function read(
         rows::UnitRange{U},
         cols::UnitRange{U}
     ) where U <: Integer
-    buffer = Array(getdatatype(getband(dataset, indices[1])),
+    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
         width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices, rows, cols)

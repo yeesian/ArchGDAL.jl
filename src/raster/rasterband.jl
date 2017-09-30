@@ -15,7 +15,7 @@ meaning that right and bottom edge blocks may be incomplete. See `ReadBlock()`
 for an example of code dealing with these issues.
 """
 function getblocksize(rb::RasterBand)
-    xy = Array(Cint, 2); x = pointer(xy); y = x + sizeof(Cint)
+    xy = Array{Cint}(2); x = pointer(xy); y = x + sizeof(Cint)
     GDAL.getblocksize(rb.ptr, x, y)
     xy
 end
