@@ -6,6 +6,10 @@ os:
 julia:
   - release
   - nightly
+matrix:
+  allow_failures:
+  - julia: nightly
+  fast_finish: true
 notifications:
   email: false
 # uncomment the following lines to override the default test script
