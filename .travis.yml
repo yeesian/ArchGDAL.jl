@@ -4,13 +4,17 @@ os:
   - linux
   - osx
 julia:
-  - release
+  - 0.6
   - nightly
+matrix:
+  allow_failures:
+  - julia: nightly
+  fast_finish: true
 notifications:
   email: false
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone("https://github.com/visr/GDAL.jl.git"); Pkg.build("GDAL"); Pkg.clone(pwd()); Pkg.build("ArchGDAL"); Pkg.test("ArchGDAL"; coverage=true)'
+ - julia --color=yes -e 'Pkg.clone("https://github.com/visr/GDAL.jl.git"); Pkg.build("GDAL"); Pkg.clone(pwd()); Pkg.build("ArchGDAL"); Pkg.test("ArchGDAL"; coverage=true)'
 after_success:
 - julia -e 'cd(Pkg.dir("ArchGDAL")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder()); Codecov.submit(process_folder())'

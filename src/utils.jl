@@ -3,14 +3,14 @@ macro gdal(args...)
     @assert args[1].head == :(::)
     fhead = (args[1].args[1], GDAL.libgdal)
     returntype = args[1].args[2]
-    argtypes = Expr(:tuple, [a.args[2] for a in args[2:end]]...)
-    args = [a.args[1] for a in args[2:end]]
+    argtypes = Expr(:tuple, [esc(a.args[2]) for a in args[2:end]]...)
+    args = [esc(a.args[1]) for a in args[2:end]]
     return quote ccall($fhead, $returntype, $argtypes, $(args...)) end
 end
 
 macro ogrerr(code, message)
     return quote
-        if $code != GDAL.OGRERR_NONE
+        if $(esc(code)) != GDAL.OGRERR_NONE
             error($message)
         end
     end
@@ -18,7 +18,7 @@ end
 
 macro cplerr(code, message)
     return quote
-        if $code != GDAL.CE_None
+        if $(esc(code)) != GDAL.CE_None
             error($message)
         end
     end
@@ -26,7 +26,7 @@ end
 
 macro cplwarn(code, message)
     return quote
-        if $code != GDAL.CE_None
+        if $(esc(code)) != GDAL.CE_None
             warn($message)
         end
     end
@@ -34,7 +34,7 @@ end
 
 macro cplprogress(progressfunc)
     return quote
-        cfunction($progressfunc,Cint,(Cdouble,Cstring,Ptr{Void}))
+        cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Void}))
     end
 end
 
