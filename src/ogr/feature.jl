@@ -54,7 +54,7 @@ function setgeom!(feature::Feature, geom::AbstractGeometry)
 end
 
 "Fetch an handle to internal feature geometry. It should not be modified."
-getgeom{G <: AbstractGeometry}(::Type{G}, feature::Feature) =
+getgeom(::Type{G}, feature::Feature) where {G <: AbstractGeometry} =
     G(GDAL.getgeometryref(feature.ptr))
 getgeom(feature::Feature) = getgeom(Geometry, feature)
 
@@ -177,8 +177,9 @@ pointer may be NULL or non-NULL.
 """
 function asintlist(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{Int32}
     ptr = GDAL.checknull(GDAL.getfieldasintegerlist(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -197,8 +198,9 @@ pointer may be NULL or non-NULL.
 """
 function asint64list(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{Int64}
     ptr = GDAL.checknull(GDAL.getfieldasinteger64list(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -218,7 +220,8 @@ pointer may be NULL or non-NULL.
 function asdoublelist(feature::Feature, i::Integer)
     n = Ref{Cint}()
     ptr = GDAL.checknull(GDAL.getfieldasdoublelist(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    a = Array{Float64}
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -252,8 +255,9 @@ Its lifetime may be very brief.
 """
 function asbinary(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{UInt8}
     ptr = GDAL.checknull(GDAL.getfieldasbinary(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -481,11 +485,11 @@ field types may be unaffected.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
 * `papszValues`: the values to assign.
 """
-function setfield!{T <: AbstractString}(
+function setfield!(
         feature::Feature,
         i::Integer,
         value::Vector{T}
-    )
+    ) where T <: AbstractString
     @gdal(OGR_F_SetFieldStringList::Void,
         feature.ptr::GDALFeature,
         i::Cint,
@@ -606,7 +610,7 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
-getgeomfield{G <: AbstractGeometry}(::Type{G}, feature::Feature, i::Integer) =
+getgeomfield(::Type{G}, feature::Feature, i::Integer) where {G <: AbstractGeometry} =
     G(GDAL.getgeomfieldref(feature.ptr, i))
 getgeomfield(feature::Feature, i::Integer) = getgeomfield(Geometry, feature, i)
 

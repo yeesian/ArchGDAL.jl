@@ -1,3 +1,6 @@
+using FactCheck
+FactCheck.setstyle(:compact)
+
 cd(dirname(@__FILE__)) do
     isdir("tmp") || mkpath("tmp")
     include("test_gdal_tutorials.jl")
@@ -15,7 +18,7 @@ cd(dirname(@__FILE__)) do
     include("test_ospy_examples.jl")
     include("test_geos_operations.jl")
     include("test_cookbook_geometry.jl")
-    # include("test_cookbook_projection.jl")
+    include("test_cookbook_projection.jl")
 end
 
 FactCheck.exitstatus()

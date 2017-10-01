@@ -527,7 +527,7 @@ function getgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
     transform
 end
 
-getgeotransform(dataset::Dataset) = getgeotransform!(dataset, Array(Cdouble, 6))
+getgeotransform(dataset::Dataset) = getgeotransform!(dataset, Array{Cdouble}(6))
 
 "Set the affine transformation coefficients."
 function setgeotransform!(dataset::Dataset, transform::Vector{Cdouble})

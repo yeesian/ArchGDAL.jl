@@ -75,6 +75,7 @@ AG.registerdrivers() do
         end
     end
 
+    println("Memory")
     AG.create("", "MEMORY") do output
         layer = AG.createlayer(output, "dummy", geom=AG.wkbPolygon)
         AG.createfielddefn("int64field", AG.OFTInteger64) do fielddefn
@@ -115,7 +116,7 @@ AG.registerdrivers() do
                 AG.setfrom!(newfeature, feature)
                 @fact AG.getfield(newfeature, 0) --> 1
                 @fact AG.getfield(newfeature, 1) --> roughly(1.0)
-                @fact AG.getfield(newfeature, 2) --> Cint[1, 2]
+                @fact AG.getfield(newfeature, 2) --> Int32[1, 2]
                 @fact AG.getfield(newfeature, 3) --> Int64[1, 2]
                 @fact AG.getfield(newfeature, 4) --> roughly([1.0, 2.0])
                 @fact AG.getfield(newfeature, 5) --> ["1", "2.0"]
@@ -129,7 +130,7 @@ AG.registerdrivers() do
                     AG.setfield!(lastfeature, 5, ["foo", "bar"])
                     @fact AG.getfield(lastfeature, 0) --> 45
                     @fact AG.getfield(lastfeature, 1) --> roughly(18.2)
-                    @fact AG.getfield(lastfeature, 2) --> Cint[1, 2]
+                    @fact AG.getfield(lastfeature, 2) --> Int32[1, 2]
                     @fact AG.getfield(lastfeature, 3) --> Int64[1, 2]
                     @fact AG.getfield(lastfeature, 4) --> roughly([1.0, 2.0])
                     @fact AG.getfield(lastfeature, 5) --> ["foo", "bar"]
