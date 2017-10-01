@@ -177,8 +177,9 @@ pointer may be NULL or non-NULL.
 """
 function asintlist(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{Int32}
     ptr = GDAL.checknull(GDAL.getfieldasintegerlist(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -197,8 +198,9 @@ pointer may be NULL or non-NULL.
 """
 function asint64list(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{Int64}
     ptr = GDAL.checknull(GDAL.getfieldasinteger64list(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -218,7 +220,8 @@ pointer may be NULL or non-NULL.
 function asdoublelist(feature::Feature, i::Integer)
     n = Ref{Cint}()
     ptr = GDAL.checknull(GDAL.getfieldasdoublelist(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    a = Array{Float64}
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -252,8 +255,9 @@ Its lifetime may be very brief.
 """
 function asbinary(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{UInt8}
     ptr = GDAL.checknull(GDAL.getfieldasbinary(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
