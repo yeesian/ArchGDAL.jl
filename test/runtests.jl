@@ -1,5 +1,5 @@
-using FactCheck
-FactCheck.setstyle(:compact)
+using Base.Test
+
 
 cd(dirname(@__FILE__)) do
     isdir("tmp") || mkpath("tmp")
@@ -20,5 +20,3 @@ cd(dirname(@__FILE__)) do
     include("test_cookbook_geometry.jl")
     include("test_cookbook_projection.jl")
 end
-
-FactCheck.exitstatus()

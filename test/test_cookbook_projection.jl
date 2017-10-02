@@ -1,7 +1,7 @@
-using FactCheck
+using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
-facts("Reproject a Geometry") do
+@testset "Reproject a Geometry" begin
     println("Method 1")
     source = AG.unsafe_importEPSG(2927); target = AG.unsafe_importEPSG(4326)
         transform = AG.unsafe_createcoordtrans(source, target)
@@ -22,7 +22,7 @@ facts("Reproject a Geometry") do
     end end end end
 end
 
-facts("Get Projection") do
+@testset "Get Projection" begin
     AG.registerdrivers() do
         AG.read("ospy/data1/sites.shp") do dataset
             layer = AG.getlayer(dataset, 0)

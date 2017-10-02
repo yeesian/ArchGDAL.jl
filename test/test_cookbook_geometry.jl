@@ -1,8 +1,8 @@
 # adapted from http://pcjericks.github.io/py-gdalogr-cookbook/geometry.html
-using FactCheck
+using Base.Test
 import GDAL, ArchGDAL; const AG = ArchGDAL
 
-facts("Create a Point") do
+@testset "Create a Point" begin
     # Method 1
     AG.createpoint(1198054.34, 648493.09) do point
         println(AG.toWKT(point))
@@ -30,7 +30,7 @@ facts("Create a Point") do
     AG.destroy(point)
 end
 
-facts("Create a LineString") do
+@testset "Create a LineString" begin
     # Method 1
     AG.createlinestring([(1116651.439379124,  637392.6969887456),
                          (1188804.0108498496, 652655.7409537067),
@@ -67,7 +67,7 @@ facts("Create a LineString") do
     AG.destroy(line)
 end
 
-facts("Create a Polygon") do
+@testset "Create a Polygon" begin
     # Method 1
     AG.createpolygon([(1179091.1646903288, 712782.8838459781),
                       (1161053.0218226474, 667456.2684348812),
@@ -133,7 +133,7 @@ facts("Create a Polygon") do
     AG.destroy(poly)
 end 
 
-facts("Create a Polygon with holes") do
+@testset "Create a Polygon with holes" begin
     # Method 1
     AG.createpolygon([# outring
                       [(1154115.274565847,  686419.4442701361),
@@ -215,7 +215,7 @@ facts("Create a Polygon with holes") do
     AG.destroy(poly)
 end
 
-facts("Create a MultiPoint") do
+@testset "Create a MultiPoint" begin
     # Method 1
     AG.createmultipoint([(1251243.7361610543, 598078.7958668759),
                          (1240605.8570339603, 601778.9277371694),
@@ -258,7 +258,7 @@ facts("Create a MultiPoint") do
     AG.destroy(multipoint)
 end
 
-facts("Create a MultiLineString") do
+@testset "Create a MultiLineString" begin
     # Method 1
     AG.createmultilinestring(Vector{Tuple{Float64,Float64}}[
                               [(1214242.4174581182, 617041.9717021306),
@@ -311,7 +311,7 @@ facts("Create a MultiLineString") do
     AG.destroy(multiline)
 end
 
-facts("Create a MultiPolygon") do
+@testset "Create a MultiPolygon" begin
     # Method 1
     AG.createmultipolygon_noholes(Vector{Tuple{Float64,Float64}}[
              [(1204067.0548148106, 634617.5980860253),
@@ -400,7 +400,7 @@ facts("Create a MultiPolygon") do
     AG.destroy(multipolygon)
 end
 
-facts("Create a GeometryCollection") do
+@testset "Create a GeometryCollection" begin
     # Method 2
     AG.creategeomcollection() do geomcol
         for g in [AG.unsafe_createpoint(-122.23, 47.09),
@@ -440,7 +440,7 @@ facts("Create a GeometryCollection") do
     AG.destroy(geomcol)
 end
 
-facts("Create Geometry from WKT") do
+@testset "Create Geometry from WKT" begin
     wkt = "POINT (1120351.5712494177 741921.4223245403)"
 
     # Method 1
@@ -454,7 +454,7 @@ facts("Create Geometry from WKT") do
     end
 end
 
-facts("Create Geometry from GeoJSON") do
+@testset "Create Geometry from GeoJSON" begin
     geojson = """{"type":"Point","coordinates":[108420.33,753808.59]}"""
 
     # Method 1
@@ -468,7 +468,7 @@ facts("Create Geometry from GeoJSON") do
     end
 end
 
-facts("Create Geometry from GML") do
+@testset "Create Geometry from GML" begin
     gml = """<gml:Point xmlns:gml="http://www.opengis.net/gml">
              <gml:coordinates>108420.33,753808.59</gml:coordinates>
              </gml:Point>"""
@@ -484,7 +484,7 @@ facts("Create Geometry from GML") do
     end
 end
 
-facts("Create Geometry from WKB") do
+@testset "Create Geometry from WKB" begin
     wkb = [0x01,0x01,0x00,0x00,0x00,0x7b,0x14,0xae,0x47,0x45,0x78,0xfa,0x40,
            0xe1,0x7a,0x14,0x2e,0x21,0x01,0x27,0x41]
 
@@ -499,21 +499,21 @@ facts("Create Geometry from WKB") do
     end
 end
 
-facts("Count Points in a Geometry") do
+@testset "Count Points in a Geometry" begin
     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do geom
         println("Geometry has $(AG.npoint(geom)) points")
     end
 end
 
-facts("Count Geometries in a Geometry") do
+@testset "Count Geometries in a Geometry" begin
     wkt = "MULTIPOINT (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do geom
         println("Geometry has $(AG.npoint(geom)) points")
     end
 end
 
-facts("Iterate over Geometries in a Geometry") do
+@testset "Iterate over Geometries in a Geometry" begin
     wkt = "MULTIPOINT (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do geom
         for i in 0:(AG.ngeom(geom)-1)
@@ -522,7 +522,7 @@ facts("Iterate over Geometries in a Geometry") do
     end
 end
 
-facts("Iterate over Points in a Geometry") do
+@testset "Iterate over Points in a Geometry" begin
     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do geom
         for i in 0:(AG.npoint(geom)-1)
@@ -531,7 +531,7 @@ facts("Iterate over Points in a Geometry") do
     end
 end
 
-facts("Buffer a Geometry") do
+@testset "Buffer a Geometry" begin
     wkt = "POINT (1198054.34 648493.09)"
     AG.fromWKT(wkt) do pt
         bufferdist = 500
@@ -542,7 +542,7 @@ facts("Buffer a Geometry") do
     end
 end
 
-# facts("Calculate Envelope of a Geometry") do
+# @testset "Calculate Envelope of a Geometry" begin
 #     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
 #     geom = ogr.CreateGeometryFromWkt(wkt)
 #     # Get Envelope returns a tuple (minX, maxX, minY, maxY)
@@ -550,21 +550,21 @@ end
 #     print "minX: %d, minY: %d, maxX: %d, maxY: %d" %(env[0],env[2],env[1],env[3])
 # end
 
-facts("Calculate the Area of a Geometry") do
+@testset "Calculate the Area of a Geometry" begin
     wkt = "POLYGON ((1162440.5712740074 672081.4332727483, 1162440.5712740074 647105.5431482664, 1195279.2416228633 647105.5431482664, 1195279.2416228633 672081.4332727483, 1162440.5712740074 672081.4332727483))"
     AG.fromWKT(wkt) do poly
         println("Area = $(AG.geomarea(poly))")
     end
 end
 
-facts("Calculate the Length of a Geometry") do
+@testset "Calculate the Length of a Geometry" begin
     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do line
         println("Length = $(AG.geomlength(line))")
     end
 end
 
-facts("Get the geometry type (as a string) from a Geometry") do
+@testset "Get the geometry type (as a string) from a Geometry" begin
     wkts = [
         "POINT (1198054.34 648493.09)",
         "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)",
@@ -577,7 +577,7 @@ facts("Get the geometry type (as a string) from a Geometry") do
     end
 end
 
-facts("Calculate intersection between two Geometries") do
+@testset "Calculate intersection between two Geometries" begin
     wkt1 = "POLYGON ((1208064.271243039 624154.6783778917, 1208064.271243039 601260.9785661874, 1231345.9998651114 601260.9785661874, 1231345.9998651114 624154.6783778917, 1208064.271243039 624154.6783778917))"
     wkt2 = "POLYGON ((1199915.6662253144 633079.3410163528, 1199915.6662253144 614453.958118695, 1219317.1067437078 614453.958118695, 1219317.1067437078 633079.3410163528, 1199915.6662253144 633079.3410163528)))"
 
@@ -590,7 +590,7 @@ facts("Calculate intersection between two Geometries") do
     end
 end
 
-facts("Calculate union between two Geometries") do
+@testset "Calculate union between two Geometries" begin
     wkt1 = "POLYGON ((1208064.271243039 624154.6783778917, 1208064.271243039 601260.9785661874, 1231345.9998651114 601260.9785661874, 1231345.9998651114 624154.6783778917, 1208064.271243039 624154.6783778917))"
     wkt2 = "POLYGON ((1199915.6662253144 633079.3410163528, 1199915.6662253144 614453.958118695, 1219317.1067437078 614453.958118695, 1219317.1067437078 633079.3410163528, 1199915.6662253144 633079.3410163528)))"
     AG.fromWKT(wkt1) do poly1
@@ -604,7 +604,7 @@ facts("Calculate union between two Geometries") do
     end
 end
 
-facts("Write Geometry to GeoJSON|GML|WKT|WKB") do
+@testset "Write Geometry to GeoJSON|GML|WKT|WKB" begin
     AG.createpolygon([(1179091.1646903288, 712782.8838459781),
                       (1161053.0218226474, 667456.2684348812),
                       (1214704.933941905,  641092.8288590391),
@@ -618,7 +618,7 @@ facts("Write Geometry to GeoJSON|GML|WKT|WKB") do
     end
 end
 
-facts("Force polygon to multipolygon") do
+@testset "Force polygon to multipolygon" begin
     wkt = "POLYGON ((1179091.164690328761935 712782.883845978067257,1161053.021822647424415 667456.268434881232679,1214704.933941904921085 641092.828859039116651,1228580.428455505985767 682719.312399842427112,1218405.065812198445201 721108.180554138729349,1179091.164690328761935 712782.883845978067257))"
     AG.fromWKT([wkt]) do poly
         println("Before: $(AG.toWKT(poly))")
