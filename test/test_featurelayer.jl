@@ -1,17 +1,17 @@
-using FactCheck
+using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
-facts("Testing FeatureLayer Methods") do
+@testset "Testing FeatureLayer Methods" begin
     AG.registerdrivers() do
         AG.read("data/point.geojson") do dataset
             AG.createcopy(dataset, "tmp/point.geojson") do tmpcopy
-                @fact AG.nlayer(tmpcopy) --> 1
+                @test AG.nlayer(tmpcopy) == 1
                 # AG.deletelayer!(tmpcopy, 0)
-                # @fact AG.nlayer(tmpcopy) --> 0
+                # @test AG.nlayer(tmpcopy) == 0
                 tmplayer = AG.getlayer(tmpcopy,0)
-                @fact AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) --> false
+                @test AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) == false
                 AG.setignoredfields!(tmplayer, ["OGR_GEOMETRY"])
-                @fact AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) --> true
+                @test AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) == true
                 AG.synctodisk!(tmplayer)
             end
             rm("tmp/point.geojson")
@@ -20,14 +20,14 @@ facts("Testing FeatureLayer Methods") do
             println(AG.getspatialref(layer))
             println("FID Column name: $(AG.getfidcolname(layer))")
             println("Geom Column name: $(AG.getgeomcolname(layer))")
-            @fact AG.nreference(layer) --> 0
+            @test AG.nreference(layer) == 0
             AG.reference(layer)
-            @fact AG.nreference(layer) --> 1
+            @test AG.nreference(layer) == 1
             AG.dereference(layer)
-            @fact AG.nreference(layer) --> 0
+            @test AG.nreference(layer) == 0
             for feature in layer
                 println(feature)
-                @fact AG.nreference(layer) --> 0
+                @test AG.nreference(layer) == 0
                 println("Features read: $(AG.getfeaturesread(layer))")
             end
             AG.getfeature(layer, 2) do feature
