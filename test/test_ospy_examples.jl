@@ -1,4 +1,4 @@
-using FactCheck
+using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
 """
@@ -74,7 +74,7 @@ end
 
 AG.registerdrivers() do
 
-facts("Homework 1") do
+@testset "Homework 1" begin
 AG.read("ospy/data1/sites.shp") do input
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
     for feature in AG.getlayer(input, 0)
@@ -93,7 +93,7 @@ AG.read("ospy/data1/sites.shp") do input
         AG.createfield!(outlayer, AG.getfielddefn(inlayerdefn, 1))
         for infeature in inlayer
             id = AG.getfield(infeature, 0)
-            @fact AG.asint64(infeature, 0) --> id
+            @test AG.asint64(infeature, 0) == id
             cover = AG.getfield(infeature, 1)
             if cover == "trees"
                 AG.createfeature(outlayer) do outfeature
@@ -116,7 +116,7 @@ AG.read("ospy/data1/sites.shp") do input
 end
 end
     
-facts("Homework 2") do
+@testset "Homework 2" begin
     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
     open("ospy/data2/ut_counties.txt", "r") do file
     AG.create("", "MEMORY") do output
@@ -172,7 +172,7 @@ facts("Homework 2") do
     end
 end
 
-facts("Homework 3") do
+@testset "Homework 3" begin
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
     AG.read("ospy/data3/sites.shp") do sitesDS
         AG.read("ospy/data3/cache_towns.shp") do townsDS
@@ -196,7 +196,7 @@ end
 
 AG.read("ospy/data4/aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
-    facts("Homework 4(a)") do
+    @testset "Homework 4" begin
         AG.read("ospy/data4/sites.shp") do shp
             shplayer = AG.getlayer(shp, 0)
             id = AG.getfieldindex(AG.getlayerdefn(shplayer), "ID")
@@ -223,7 +223,7 @@ AG.read("ospy/data4/aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4b.py
-    facts("Homework 4(b)") do
+    @testset "Homework 4" begin
         # version 1
         @time begin
             count = 0
@@ -269,7 +269,7 @@ AG.read("ospy/data4/aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5a.py
-    facts("Homework 5(a)") do
+    @testset "Homework 5" begin
         @time begin
             rows = AG.height(ds); cols = AG.width(ds); bands = AG.nraster(ds)
 
@@ -318,7 +318,7 @@ AG.read("ospy/data4/aster.img") do ds
 end end end end
 
 #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
-facts("Homework 5(b)") do
+@testset "Homework 5" begin
     AG.read("ospy/data5/doq1.img") do ds1
         AG.read("ospy/data5/doq2.img") do ds2
             # read in doq1 and get info about it
