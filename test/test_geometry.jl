@@ -8,8 +8,8 @@ import GDAL, ArchGDAL; const AG = ArchGDAL
         @test AG.getcoorddim(point) == 2
         AG.setcoorddim!(point, 3)
         @test AG.getcoorddim(point) == 3
-        # @test AG.isvalid(point) == true
-        # @test AG.issimple(point) == true
+        @test AG.isvalid(point) == true
+        @test AG.issimple(point) == true
         @test AG.isring(point) == false
         @test AG.getz(point, 0) == 0
 
