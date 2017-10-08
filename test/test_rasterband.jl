@@ -44,9 +44,9 @@ import ArchGDAL; const AG = ArchGDAL
                 @test AG.noverview(destband) == 3
                 println(destband)
 
-                @test AG.getcolorinterp(destband) == AG.GCI_GrayIndex
-                AG.setcolorinterp!(destband, AG.GCI_RedBand)
-                @test AG.getcolorinterp(destband) == AG.GCI_RedBand
+                @test AG.getcolorinterp(destband) == GDAL.GCI_GrayIndex
+                AG.setcolorinterp!(destband, GDAL.GCI_RedBand)
+                @test AG.getcolorinterp(destband) == GDAL.GCI_RedBand
 
                 println(AG.getsampleoverview(destband, 100))
                 println(AG.getsampleoverview(destband, 200))
@@ -66,7 +66,7 @@ import ArchGDAL; const AG = ArchGDAL
                     AG.getoverview(destband, 2)
                 ])
 
-                AG.createcolortable(AG.GPI_RGB) do ct
+                AG.createcolortable(GDAL.GPI_RGB) do ct
                     AG.createcolorramp!(ct,
                         128, GDAL.GDALColorEntry(0,0,0,0),
                         255, GDAL.GDALColorEntry(0,0,255,0)

@@ -74,9 +74,9 @@ AG.registerdrivers() do
             featuredefn = AG.getlayerdefn(layer)
             @test AG.nfield(featuredefn) == 2
             fielddefn = AG.getfielddefn(featuredefn, 0)
-            @test AG.gettype(fielddefn) == AG.OFTReal
+            @test AG.gettype(fielddefn) == GDAL.OFTReal
             fielddefn = AG.getfielddefn(featuredefn, 1)
-            @test AG.gettype(fielddefn) == AG.OFTString
+            @test AG.gettype(fielddefn) == GDAL.OFTString
 
             AG.nextfeature(layer) do feature
                 @test AG.asdouble(feature, 0) ≈ 2.0
@@ -88,7 +88,7 @@ AG.registerdrivers() do
 
                 geometry = AG.getgeom(feature)
                 @test AG.getgeomname(geometry) == "POINT"
-                @test AG.getgeomtype(geometry) == AG.wkbPoint
+                @test AG.getgeomtype(geometry) == GDAL.wkbPoint
                 @test AG.nfield(featuredefn) == 2
                 @test AG.getx(geometry, 0) ≈ 100.2785
                 @test AG.gety(geometry, 0) ≈ 0.0893
@@ -98,8 +98,8 @@ AG.registerdrivers() do
 
         pointshapefile = "tmp/point_out"
         AG.create("$pointshapefile.shp", "ESRI Shapefile") do dataset
-            layer = AG.createlayer(dataset, "point_out", geom=AG.wkbPoint)
-            AG.createfielddefn("Name", AG.OFTString) do fielddefn
+            layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
+            AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
                 AG.setwidth!(fielddefn, 32)
                 AG.createfield!(layer, fielddefn, true)
             end
