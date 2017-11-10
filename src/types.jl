@@ -1,23 +1,23 @@
-const GDALColorTable      =      Ptr{GDAL.GDALColorTableH}
-const GDALCoordTransform  =  Ptr{GDAL.OGRCoordinateTransformationH}
-const GDALDataset         =         Ptr{GDAL.GDALDatasetH}
-const GDALDriver          =          Ptr{GDAL.GDALDriverH}
-const GDALFeature         =         Ptr{GDAL.OGRFeatureH}
-const GDALFeatureDefn     =     Ptr{GDAL.OGRFeatureDefnH}
-const GDALFeatureLayer    =    Ptr{GDAL.OGRLayerH}
-const GDALField           =           Ptr{GDAL.OGRField}
-const GDALFieldDefn       =       Ptr{GDAL.OGRFieldDefnH}
-const GDALGeometry        =        Ptr{GDAL.OGRGeometryH}
-const GDALGeomFieldDefn   =   GDAL.OGRGeomFieldDefnH
-const GDALProgressFunc    =    Ptr{GDAL.GDALProgressFunc}
+const GDALColorTable      = Ptr{GDAL.GDALColorTableH}
+const GDALCoordTransform  = Ptr{GDAL.OGRCoordinateTransformationH}
+const GDALDataset         = Ptr{GDAL.GDALDatasetH}
+const GDALDriver          = Ptr{GDAL.GDALDriverH}
+const GDALFeature         = Ptr{GDAL.OGRFeatureH}
+const GDALFeatureDefn     = Ptr{GDAL.OGRFeatureDefnH}
+const GDALFeatureLayer    = Ptr{GDAL.OGRLayerH}
+const GDALField           = Ptr{GDAL.OGRField}
+const GDALFieldDefn       = Ptr{GDAL.OGRFieldDefnH}
+const GDALGeometry        = Ptr{GDAL.OGRGeometryH}
+const GDALGeomFieldDefn   = Ptr{GDAL.OGRGeomFieldDefnH}
+const GDALProgressFunc    = Ptr{GDAL.GDALProgressFunc}
 const GDALRasterAttrTable = Ptr{GDAL.GDALRasterAttributeTableH}
-const GDALRasterBand      =      Ptr{GDAL.GDALRasterBandH}
-const GDALSpatialRef      =      Ptr{GDAL.OGRSpatialReferenceH}
-const GDALStyleManager    =    Ptr{GDAL.OGRStyleMgrH}
-const GDALStyleTable      =      Ptr{GDAL.OGRStyleTableH}
-const GDALStyleTool       =       Ptr{GDAL.OGRStyleToolH}
+const GDALRasterBand      = Ptr{GDAL.GDALRasterBandH}
+const GDALSpatialRef      = Ptr{GDAL.OGRSpatialReferenceH}
+const GDALStyleManager    = Ptr{GDAL.OGRStyleMgrH}
+const GDALStyleTable      = Ptr{GDAL.OGRStyleTableH}
+const GDALStyleTool       = Ptr{GDAL.OGRStyleToolH}
 
-const StringList          =          Ptr{Ptr{UInt8}}
+const StringList          = Ptr{Ptr{UInt8}}
 
 abstract type AbstractGeometry end # needs to have a `ptr::GDALGeometry` attribute
 mutable struct ColorTable;                    ptr::GDALColorTable         end
