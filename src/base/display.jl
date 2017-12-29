@@ -122,7 +122,7 @@ function Base.show(io::IO, layer::FeatureLayer)
             continue
         end
         for f in layer
-            field = getfield(f, i-1)
+            field = string(getfield(f, i-1))
             length(field) > 25 && (field = "$(field[1:20])...")
             newdisplay = "$display, $field"
             if length(newdisplay) > 75

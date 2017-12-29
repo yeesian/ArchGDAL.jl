@@ -16,11 +16,11 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.addstyle!(sm, "name2") == false
         @test AG.npart(sm) == 1
 
-        AG.createstyletool(AG.OGRSTCBrush) do st
-            @test AG.gettype(st) == AG.OGRSTCBrush
-            @test AG.getunit(st) == AG.OGRSTUMM
-            AG.setunit!(st, AG.OGRSTUPixel, 2.0)
-            @test AG.getunit(st) == AG.OGRSTUPixel
+        AG.createstyletool(GDAL.OGRSTCBrush) do st
+            @test AG.gettype(st) == GDAL.OGRSTCBrush
+            @test AG.getunit(st) == GDAL.OGRSTUMM
+            AG.setunit!(st, GDAL.OGRSTUPixel, 2.0)
+            @test AG.getunit(st) == GDAL.OGRSTUPixel
 
             AG.setparam!(st, 0, 0)
                 @test AG.asint(st, 0) == 0

@@ -18,13 +18,13 @@ import GDAL, ArchGDAL; const AG = ArchGDAL
     end
 
     # Method 3
-    AG.creategeom(AG.wkbPoint) do point
+    AG.creategeom(GDAL.wkbPoint) do point
         AG.addpoint!(point, 1198054.34, 648493.09)
         println(AG.toWKT(point))
     end
 
     # Method 4
-    point = AG.unsafe_creategeom(AG.wkbPoint)
+    point = AG.unsafe_creategeom(GDAL.wkbPoint)
         AG.addpoint!(point, 1198054.34, 648493.09)
         println(AG.toWKT(point))
     AG.destroy(point)
@@ -49,7 +49,7 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbLineString) do line
+    AG.creategeom(GDAL.wkbLineString) do line
         AG.addpoint!(line, 1116651.439379124,  637392.6969887456)
         AG.addpoint!(line, 1188804.0108498496, 652655.7409537067)
         AG.addpoint!(line, 1226730.3625203592, 634155.0816022386)
@@ -58,7 +58,7 @@ end
     end
 
     # Method 4
-    line = AG.unsafe_creategeom(AG.wkbLineString)
+    line = AG.unsafe_creategeom(GDAL.wkbLineString)
         AG.addpoint!(line, 1116651.439379124,  637392.6969887456)
         AG.addpoint!(line, 1188804.0108498496, 652655.7409537067)
         AG.addpoint!(line, 1226730.3625203592, 634155.0816022386)
@@ -104,7 +104,7 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbLinearRing) do ring
+    AG.creategeom(GDAL.wkbLinearRing) do ring
         AG.addpoint!(ring, 1179091.1646903288, 712782.8838459781)
         AG.addpoint!(ring, 1161053.0218226474, 667456.2684348812)
         AG.addpoint!(ring, 1214704.933941905, 641092.8288590391)
@@ -112,14 +112,14 @@ end
         AG.addpoint!(ring, 1218405.0658121984, 721108.1805541387)
         AG.addpoint!(ring, 1179091.1646903288, 712782.8838459781)
 
-        AG.creategeom(AG.wkbPolygon) do poly
+        AG.creategeom(GDAL.wkbPolygon) do poly
             AG.addgeom!(poly, ring)
             println(AG.toWKT(poly))
         end
     end
 
     # Method 4
-    ring = AG.unsafe_creategeom(AG.wkbLinearRing)
+    ring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
         AG.addpoint!(ring, 1179091.1646903288, 712782.8838459781)
         AG.addpoint!(ring, 1161053.0218226474, 667456.2684348812)
         AG.addpoint!(ring, 1214704.933941905, 641092.8288590391)
@@ -127,7 +127,7 @@ end
         AG.addpoint!(ring, 1218405.0658121984, 721108.1805541387)
         AG.addpoint!(ring, 1179091.1646903288, 712782.8838459781)
 
-    poly = AG.unsafe_creategeom(AG.wkbPolygon)
+    poly = AG.unsafe_creategeom(GDAL.wkbPolygon)
         AG.addgeomdirectly!(poly, ring) # ownership of ring passed to poly
         println(AG.toWKT(poly))
     AG.destroy(poly)
@@ -153,14 +153,14 @@ end
 
     # Method 2
     AG.createpolygon() do poly
-        outring = AG.unsafe_creategeom(AG.wkbLinearRing)
+        outring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
 
-        innerring = AG.unsafe_creategeom(AG.wkbLinearRing)
+        innerring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
             AG.addpoint!(innerring, 1149490.1097279799, 648030.5761158396)
             AG.addpoint!(innerring, 1191579.1097525698, 648030.5761158396)
@@ -173,15 +173,15 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbPolygon) do poly
-        outring = AG.unsafe_creategeom(AG.wkbLinearRing)
+    AG.creategeom(GDAL.wkbPolygon) do poly
+        outring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
 
-        innerring = AG.unsafe_creategeom(AG.wkbLinearRing)
+        innerring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
             AG.addpoint!(innerring, 1149490.1097279799, 648030.5761158396)
             AG.addpoint!(innerring, 1191579.1097525698, 648030.5761158396)
@@ -194,15 +194,15 @@ end
     end
 
     # Method 4
-    poly = AG.unsafe_creategeom(AG.wkbPolygon)
-        outring = AG.unsafe_creategeom(AG.wkbLinearRing)
+    poly = AG.unsafe_creategeom(GDAL.wkbPolygon)
+        outring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
 
-        innerring = AG.unsafe_creategeom(AG.wkbLinearRing)
+        innerring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
             AG.addpoint!(innerring, 1149490.1097279799, 648030.5761158396)
             AG.addpoint!(innerring, 1191579.1097525698, 648030.5761158396)
@@ -236,7 +236,7 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbMultiPoint) do multipoint
+    AG.creategeom(GDAL.wkbMultiPoint) do multipoint
         point1 = AG.unsafe_createpoint(1251243.7361610543, 598078.7958668759)
         point2 = AG.unsafe_createpoint(1240605.8570339603, 601778.9277371694)
         point3 = AG.unsafe_createpoint(1250318.7031934808, 606404.0925750365)
@@ -247,7 +247,7 @@ end
     end
 
     # Method 4
-    multipoint = AG.unsafe_creategeom(AG.wkbMultiPoint)
+    multipoint = AG.unsafe_creategeom(GDAL.wkbMultiPoint)
         point1 = AG.unsafe_createpoint(1251243.7361610543, 598078.7958668759)
         point2 = AG.unsafe_createpoint(1240605.8570339603, 601778.9277371694)
         point3 = AG.unsafe_createpoint(1250318.7031934808, 606404.0925750365)
@@ -281,13 +281,13 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbMultiLineString) do multiline
-        line = AG.unsafe_creategeom(AG.wkbLineString)
+    AG.creategeom(GDAL.wkbMultiLineString) do multiline
+        line = AG.unsafe_creategeom(GDAL.wkbLineString)
         AG.addpoint!(line, 1214242.4174581182, 617041.9717021306)
         AG.addpoint!(line, 1234593.142744733, 629529.9167643716)
         AG.addgeomdirectly!(multiline, line)
 
-        line = AG.unsafe_creategeom(AG.wkbLineString)
+        line = AG.unsafe_creategeom(GDAL.wkbLineString)
         AG.addpoint!(line, 1184641.3624957693, 626754.8178616514)
         AG.addpoint!(line, 1219792.6152635587, 606866.6090588232)
         AG.addgeomdirectly!(multiline, line)
@@ -296,13 +296,13 @@ end
     end
 
     # Method 4
-    multiline = AG.unsafe_creategeom(AG.wkbMultiLineString)
-        line = AG.unsafe_creategeom(AG.wkbLineString)
+    multiline = AG.unsafe_creategeom(GDAL.wkbMultiLineString)
+        line = AG.unsafe_creategeom(GDAL.wkbLineString)
         AG.addpoint!(line, 1214242.4174581182, 617041.9717021306)
         AG.addpoint!(line, 1234593.142744733, 629529.9167643716)
         AG.addgeomdirectly!(multiline, line)
 
-        line = AG.unsafe_creategeom(AG.wkbLineString)
+        line = AG.unsafe_creategeom(GDAL.wkbLineString)
         AG.addpoint!(line, 1184641.3624957693, 626754.8178616514)
         AG.addpoint!(line, 1219792.6152635587, 606866.6090588232)
         AG.addgeomdirectly!(multiline, line)
@@ -350,9 +350,9 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbMultiPolygon) do multipolygon
-        poly = AG.unsafe_creategeom(AG.wkbPolygon)
-            ring = AG.unsafe_creategeom(AG.wkbLinearRing)
+    AG.creategeom(GDAL.wkbMultiPolygon) do multipolygon
+        poly = AG.unsafe_creategeom(GDAL.wkbPolygon)
+            ring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
                 AG.addpoint!(ring, 1204067.0548148106, 634617.5980860253)
                 AG.addpoint!(ring, 1204067.0548148106, 620742.1035724243)
                 AG.addpoint!(ring, 1215167.4504256917, 620742.1035724243)
@@ -361,8 +361,8 @@ end
             AG.addgeomdirectly!(poly, ring)
         AG.addgeomdirectly!(multipolygon,poly)
 
-        poly = AG.unsafe_creategeom(AG.wkbPolygon)
-            ring = AG.unsafe_creategeom(AG.wkbLinearRing)
+        poly = AG.unsafe_creategeom(GDAL.wkbPolygon)
+            ring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
                 AG.addpoint!(ring, 1179553.6811741155, 647105.5431482664)
                 AG.addpoint!(ring, 1179553.6811741155, 626292.3013778647)
                 AG.addpoint!(ring, 1194354.20865529,   626292.3013778647)
@@ -375,9 +375,9 @@ end
     end
 
     # Method 4
-    multipolygon = AG.unsafe_creategeom(AG.wkbMultiPolygon)
-        poly = AG.unsafe_creategeom(AG.wkbPolygon)
-            ring = AG.unsafe_creategeom(AG.wkbLinearRing)
+    multipolygon = AG.unsafe_creategeom(GDAL.wkbMultiPolygon)
+        poly = AG.unsafe_creategeom(GDAL.wkbPolygon)
+            ring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
                 AG.addpoint!(ring, 1204067.0548148106, 634617.5980860253)
                 AG.addpoint!(ring, 1204067.0548148106, 620742.1035724243)
                 AG.addpoint!(ring, 1215167.4504256917, 620742.1035724243)
@@ -386,8 +386,8 @@ end
             AG.addgeomdirectly!(poly, ring)
         AG.addgeomdirectly!(multipolygon,poly)
 
-        poly = AG.unsafe_creategeom(AG.wkbPolygon)
-            ring = AG.unsafe_creategeom(AG.wkbLinearRing)
+        poly = AG.unsafe_creategeom(GDAL.wkbPolygon)
+            ring = AG.unsafe_creategeom(GDAL.wkbLinearRing)
                 AG.addpoint!(ring, 1179553.6811741155, 647105.5431482664)
                 AG.addpoint!(ring, 1179553.6811741155, 626292.3013778647)
                 AG.addpoint!(ring, 1194354.20865529,   626292.3013778647)
@@ -412,12 +412,12 @@ end
     end
 
     # Method 3
-    AG.creategeom(AG.wkbGeometryCollection) do geomcol
-        point = AG.unsafe_creategeom(AG.wkbPoint)
+    AG.creategeom(GDAL.wkbGeometryCollection) do geomcol
+        point = AG.unsafe_creategeom(GDAL.wkbPoint)
             AG.addpoint!(point, -122.23, 47.09)
         AG.addgeomdirectly!(geomcol, point)
 
-        line = AG.unsafe_creategeom(AG.wkbLineString)
+        line = AG.unsafe_creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, -122.60, 47.14)
             AG.addpoint!(line, -122.48, 47.23)
         AG.addgeomdirectly!(geomcol, line)
@@ -426,12 +426,12 @@ end
     end
 
     # Method 4
-    geomcol =  AG.unsafe_creategeom(AG.wkbGeometryCollection)
-        point = AG.unsafe_creategeom(AG.wkbPoint)
+    geomcol =  AG.unsafe_creategeom(GDAL.wkbGeometryCollection)
+        point = AG.unsafe_creategeom(GDAL.wkbPoint)
             AG.addpoint!(point, -122.23, 47.09)
         AG.addgeomdirectly!(geomcol, point)
 
-        line = AG.unsafe_creategeom(AG.wkbLineString)
+        line = AG.unsafe_creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, -122.60, 47.14)
             AG.addpoint!(line, -122.48, 47.23)
         AG.addgeomdirectly!(geomcol, line)
@@ -622,8 +622,8 @@ end
     wkt = "POLYGON ((1179091.164690328761935 712782.883845978067257,1161053.021822647424415 667456.268434881232679,1214704.933941904921085 641092.828859039116651,1228580.428455505985767 682719.312399842427112,1218405.065812198445201 721108.180554138729349,1179091.164690328761935 712782.883845978067257))"
     AG.fromWKT([wkt]) do poly
         println("Before: $(AG.toWKT(poly))")
-        if AG.getgeomtype(poly) == AG.wkbPolygon
-            AG.forceto(poly, AG.wkbMultiPolygon) do mpoly
+        if AG.getgeomtype(poly) == GDAL.wkbPolygon
+            AG.forceto(poly, GDAL.wkbMultiPolygon) do mpoly
                 println("After: $mpoly")
             end
         end

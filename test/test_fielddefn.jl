@@ -2,34 +2,34 @@ using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Tests for field defn" begin
-    AG.createfielddefn("fieldname",AG.OFTInteger) do fd
+    AG.createfielddefn("fieldname",GDAL.OFTInteger) do fd
         println(fd)
         println("name: $(AG.getname(fd))")
         println("Setting name to \"newname\"")
         AG.setname!(fd, "newname")
         println(AG.getname(fd))
         println("type: $(AG.gettype(fd))")
-        println("Setting name to $(AG.OFTDate)")
-        AG.settype!(fd, AG.OFTDate)
+        println("Setting name to $(GDAL.OFTDate)")
+        AG.settype!(fd, GDAL.OFTDate)
         println(AG.gettype(fd))
-        AG.settype!(fd, AG.OFTInteger)
-        @test AG.getsubtype(fd) == AG.OFSTNone
-        AG.setsubtype!(fd, AG.OFSTInt16)
-        @test AG.getsubtype(fd) == AG.OFSTInt16
-        AG.setsubtype!(fd, AG.OFSTBoolean)
-        @test AG.getsubtype(fd) == AG.OFSTBoolean
-        AG.setsubtype!(fd, AG.OFSTNone)
-        @test AG.getjustify(fd) == AG.OJUndefined
-        AG.setjustify!(fd, AG.OJLeft)
-        @test AG.getjustify(fd) == AG.OJLeft
+        AG.settype!(fd, GDAL.OFTInteger)
+        @test AG.getsubtype(fd) == GDAL.OFSTNone
+        AG.setsubtype!(fd, GDAL.OFSTInt16)
+        @test AG.getsubtype(fd) == GDAL.OFSTInt16
+        AG.setsubtype!(fd, GDAL.OFSTBoolean)
+        @test AG.getsubtype(fd) == GDAL.OFSTBoolean
+        AG.setsubtype!(fd, GDAL.OFSTNone)
+        @test AG.getjustify(fd) == GDAL.OJUndefined
+        AG.setjustify!(fd, GDAL.OJLeft)
+        @test AG.getjustify(fd) == GDAL.OJLeft
         println("width: $(AG.getwidth(fd))")
         AG.setwidth!(fd, 10)
         println("after setting width to 10: new width=$(AG.getwidth(fd))")
         println("precision: $(AG.getprecision(fd))")
         AG.setprecision!(fd, 20)
         println("after setting to 20: new precision=$(AG.getprecision(fd))")
-        AG.setparams!(fd, "finalname", AG.OFTDate, nwidth=5, nprecision=2,
-                      justify=AG.OJRight)
+        AG.setparams!(fd, "finalname", GDAL.OFTDate, nwidth=5, nprecision=2,
+                      justify=GDAL.OJRight)
         println("type: $((AG.gettype(fd),AG.getname(fd),AG.getsubtype(fd),
                           AG.getjustify(fd),AG.getwidth(fd),AG.getprecision(fd)))")
         @test AG.isignored(fd) == false
@@ -52,14 +52,14 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Tests for Geom Field Defn" begin
-    AG.creategeomfielddefn("geomname", AG.wkbPolygon) do gfd
+    AG.creategeomfielddefn("geomname", GDAL.wkbPolygon) do gfd
         @test AG.getname(gfd) == "geomname"
         AG.setname!(gfd, "my name!")
         @test AG.getname(gfd) == "my name!"
 
-        @test AG.gettype(gfd) == AG.wkbPolygon
-        AG.settype!(gfd, AG.wkbPolyhedralSurface)
-        @test AG.gettype(gfd) == AG.wkbPolyhedralSurface
+        @test AG.gettype(gfd) == GDAL.wkbPolygon
+        AG.settype!(gfd, GDAL.wkbPolyhedralSurface)
+        @test AG.gettype(gfd) == GDAL.wkbPolyhedralSurface
 
         println(AG.getspatialref(gfd))
         # AG.setspatialref!(gfd, AG.unsafe_fromEPSG(4326))
@@ -93,7 +93,7 @@ end
         AG.dereference(fd)
         println(AG.nreference(fd))
         AG.dereference(fd)
-        AG.createfielddefn("fieldname",AG.OFTInteger) do fielddef
+        AG.createfielddefn("fieldname",GDAL.OFTInteger) do fielddef
             @test AG.nfield(fd) == 0
             AG.addfielddefn!(fd, fielddef)
             @test AG.nfield(fd) == 1
@@ -101,7 +101,7 @@ end
             @test AG.nfield(fd) == 2
             AG.addfielddefn!(fd, fielddef)
             @test AG.nfield(fd) == 3
-            AG.createfielddefn("newfield",AG.OFTInteger) do fielddef2
+            AG.createfielddefn("newfield",GDAL.OFTInteger) do fielddef2
                 AG.addfielddefn!(fd, fielddef2)
                 @test AG.nfield(fd) == 4
                 for i in 0:3
@@ -121,9 +121,9 @@ end
             end
         end
         @test AG.ngeomfield(fd) == 1
-        @test AG.getgeomtype(fd) == AG.wkbUnknown
-        AG.setgeomtype!(fd, AG.wkbPolygon)
-        @test AG.getgeomtype(fd) == AG.wkbPolygon
+        @test AG.getgeomtype(fd) == GDAL.wkbUnknown
+        AG.setgeomtype!(fd, GDAL.wkbPolygon)
+        @test AG.getgeomtype(fd) == GDAL.wkbPolygon
         @test AG.ngeomfield(fd) == 1
 
         @test AG.isgeomignored(fd) == false

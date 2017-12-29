@@ -15,10 +15,10 @@ import GDAL, ArchGDAL; const AG = ArchGDAL
 
         println(AG.getenvelope(point))
         println(AG.getenvelope3d(point))
-        @test AG.toISOWKB(point, AG.wkbNDR) == UInt8[0x01,0xe9,0x03,0x00,0x00,
+        @test AG.toISOWKB(point, GDAL.wkbNDR) == UInt8[0x01,0xe9,0x03,0x00,0x00,
         0x00,0x00,0x00,0x00,0x00,0x00,0x59,0x40,0x00,0x00,0x00,0x00,0x00,0x80,
         0x51,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
-        @test AG.toISOWKB(point, AG.wkbXDR) == UInt8[0x00,0x00,0x00,0x03,0xe9,
+        @test AG.toISOWKB(point, GDAL.wkbXDR) == UInt8[0x00,0x00,0x00,0x03,0xe9,
         0x40,0x59,0x00,0x00,0x00,0x00,0x00,0x00,0x40,0x51,0x80,0x00,0x00,0x00,
         0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
         @test AG.toKML(point, "relativeToGround") == "<Point><altitudeMode>relativeToGround</altitudeMode><coordinates>100,70,0</coordinates></Point>"
@@ -103,7 +103,7 @@ end
             AG.getcurvegeom(lgeom) do clgeom
                 @test AG.toWKT(clgeom) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
             end
-            AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+            AG.forceto(lgeom, GDAL.wkbMultiLineString) do mlsgeom
                 AG.polygonize(mlsgeom) do plgeom
                     @test AG.ngeom(plgeom) == 2
                 end

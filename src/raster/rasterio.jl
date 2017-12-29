@@ -57,7 +57,7 @@ function rasterio!(
         dataset::Dataset,
         buffer::Array{T, 3},
         bands::Vector{Cint},
-        access::GDALRWFlag  = GF_Read,
+        access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
         bandspace::Integer  = 0
@@ -73,7 +73,7 @@ function rasterio!(
         bands::Vector{Cint},
         rows::UnitRange{U},
         cols::UnitRange{U},
-        access::GDALRWFlag  = GF_Read,
+        access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
         bandspace::Integer  = 0
@@ -144,7 +144,7 @@ option can also be defined to override the default resampling to one of
 function rasterio!(
         rasterband::RasterBand,
         buffer::Array{T,2},
-        access::GDALRWFlag  = GF_Read,
+        access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0
     ) where T <: Real
@@ -158,7 +158,7 @@ function rasterio!(
         buffer::Array{T,2},
         rows::UnitRange{U},
         cols::UnitRange{U},
-        access::GDALRWFlag  = GF_Read,
+        access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0
     ) where {T <: Real, U <: Integer}
@@ -170,7 +170,7 @@ function rasterio!(
 end
 
 read!(rb::RasterBand, buffer::Array{T,2}) where {T <: Real} =
-    rasterio!(rb, buffer, GF_Read)
+    rasterio!(rb, buffer, GDAL.GF_Read)
 
 function read!(
         rb::RasterBand,
@@ -218,7 +218,7 @@ function read(
 end
 
 write!(rb::RasterBand, buffer::Array{T,2}) where {T <: Real} =
-    rasterio!(rb, buffer, GF_Write)
+    rasterio!(rb, buffer, GDAL.GF_Write)
 
 function write!(
         rb::RasterBand,
@@ -228,7 +228,7 @@ function write!(
         xsize::Integer,
         ysize::Integer
     ) where T <: Real
-    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GF_Write)
+    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GDAL.GF_Write)
 end
 
 function write!(
@@ -237,18 +237,18 @@ function write!(
         rows::UnitRange{U},
         cols::UnitRange{U}
     ) where {T <: Real, U <: Integer}
-    rasterio!(rb, buffer, rows, cols, GF_Write)
+    rasterio!(rb, buffer, rows, cols, GDAL.GF_Write)
 end
 
 read!(dataset::Dataset, buffer::Array{T,2}, i::Integer) where {T <: Real} =
     read!(getband(dataset, i), buffer)
 
 read!(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) where {T <: Real} =
-    rasterio!(dataset, buffer, indices, GF_Read)
+    rasterio!(dataset, buffer, indices, GDAL.GF_Read)
 
 function read!(dataset::Dataset, buffer::Array{T,3}) where T <: Real
     nband = nraster(dataset); @assert size(buffer, 3) == nband
-    rasterio!(dataset, buffer, collect(Cint, 1:nband), GF_Read)
+    rasterio!(dataset, buffer, collect(Cint, 1:nband), GDAL.GF_Read)
 end
 
 function read!(
@@ -361,7 +361,7 @@ write!(dataset::Dataset, buffer::Array{T,2}, i::Integer) where {T <: Real} =
     write!(getband(dataset, i), buffer)
 
 write!(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) where {T <: Real} =
-    rasterio!(dataset, buffer, indices, GF_Write)
+    rasterio!(dataset, buffer, indices, GDAL.GF_Write)
 
 function write!(
         dataset::Dataset,
@@ -385,7 +385,7 @@ function write!(
         ysize::Integer
     ) where T <: Real
     rasterio!(dataset, buffer, indices, xoffset, yoffset,
-        xsize, ysize, GF_Write
+        xsize, ysize, GDAL.GF_Write
     )
 end
 
@@ -406,7 +406,7 @@ function write!(
         rows::UnitRange{U},
         cols::UnitRange{U}
     ) where {T <: Real, U <: Integer}
-    rasterio!(dataset, buffer, indices, rows, cols, GF_Write)
+    rasterio!(dataset, buffer, indices, rows, cols, GDAL.GF_Write)
 end
 
 for (T,GT) in _GDALTYPE
@@ -418,7 +418,7 @@ for (T,GT) in _GDALTYPE
                            yoffset::Integer,
                            xsize::Integer,
                            ysize::Integer,
-                           access::GDALRWFlag   = GF_Read,
+                           access::GDALRWFlag   = GDAL.GF_Read,
                            pxspace::Integer     = 0,
                            linespace::Integer   = 0,
                            bandspace::Integer   = 0,
@@ -444,7 +444,7 @@ for (T,GT) in _GDALTYPE
                            yoffset::Integer,
                            xsize::Integer,
                            ysize::Integer,
-                           access::GDALRWFlag   = GF_Read,
+                           access::GDALRWFlag   = GDAL.GF_Read,
                            pxspace::Integer     = 0,
                            linespace::Integer   = 0,
                            extraargs = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL))

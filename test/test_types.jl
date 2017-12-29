@@ -4,16 +4,16 @@ import ArchGDAL; const AG = ArchGDAL
 @test 0x06 | AG.OF_ReadOnly == 0x06
 @test AG.OF_ReadOnly | AG.OF_GNM == GDAL.GDAL_OF_READONLY | GDAL.GDAL_OF_GNM
 
-for dt in (AG.GDT_Byte, AG.GDT_Float64, AG.GDT_Unknown, AG.GDT_Int16, 
-           AG.GDT_UInt16, AG.GDT_Float32, AG.GDT_Int32, AG.GDT_UInt32)
+for dt in (GDAL.GDT_Byte, GDAL.GDT_Float64, GDAL.GDT_Unknown, GDAL.GDT_Int16, 
+           GDAL.GDT_UInt16, GDAL.GDT_Float32, GDAL.GDT_Int32, GDAL.GDT_UInt32)
     print("size: $(AG.typesize(dt)), name: $(AG.typename(dt)), ")
     println("type: $(AG.gettype(AG.typename(dt)))")
 end
 
-@test AG.typeunion(AG.GDT_UInt16, AG.GDT_Byte) == AG.GDT_UInt16
-@test AG.iscomplex(AG.GDT_Float32) == false
+@test AG.typeunion(GDAL.GDT_UInt16, GDAL.GDT_Byte) == GDAL.GDT_UInt16
+@test AG.iscomplex(GDAL.GDT_Float32) == false
 
-for name in (AG.GARIO_COMPLETE,AG.GARIO_ERROR,AG.GARIO_PENDING,AG.GARIO_UPDATE)
+for name in (GDAL.GARIO_COMPLETE,GDAL.GARIO_ERROR,GDAL.GARIO_PENDING,GDAL.GARIO_UPDATE)
     println("$(AG.getname(name)) $(AG.asyncstatustype(AG.getname(name)))")
 end
 
@@ -23,16 +23,16 @@ for color in (:Alpha,:Green,:Palette,:YCbCr,:Black,:Hue,:Red,:Blue,:Gray,
     println("$color: $(AG.colorinterp(string(color)))")
 end
 
-for p in (AG.GPI_Gray, AG.GPI_RGB, AG.GPI_CMYK, AG.GPI_HLS)
+for p in (GDAL.GPI_Gray, GDAL.GPI_RGB, GDAL.GPI_CMYK, GDAL.GPI_HLS)
     println("$p: $(AG.getname(p))")
 end
 
-for ft in (AG.OFTDate,AG.OFTStringList,AG.OFTWideString,AG.OFTBinary,
-           AG.OFTString,AG.OFTIntegerList,AG.OFTRealList,AG.OFTInteger64,
-           AG.OFTInteger,AG.OFTReal,AG.OFTWideStringList,AG.OFTInteger64List,
-           AG.OFTDateTime,AG.OFTTime)
+for ft in (GDAL.OFTDate,GDAL.OFTStringList,GDAL.OFTWideString,GDAL.OFTBinary,
+           GDAL.OFTString,GDAL.OFTIntegerList,GDAL.OFTRealList,GDAL.OFTInteger64,
+           GDAL.OFTInteger,GDAL.OFTReal,GDAL.OFTWideStringList,GDAL.OFTInteger64List,
+           GDAL.OFTDateTime,GDAL.OFTTime)
     println("$ft: $(AG.getname(ft))")
-    for fst in (AG.OFSTNone, AG.OFSTBoolean, AG.OFSTInt16, AG.OFSTFloat32)
+    for fst in (GDAL.OFSTNone, GDAL.OFSTBoolean, GDAL.OFSTInt16, GDAL.OFSTFloat32)
         print("  $fst: $(AG.getname(fst)), ")
         println("compatible: $(AG.arecompatible(ft,fst))")
     end
