@@ -168,7 +168,7 @@ Convert a geometry well known binary format.
 * `geom`: handle on the geometry to convert to a well know binary data from.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
-function toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=wkbNDR)
+function toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
     buffer = Array{Cuchar}(wkbsize(geom))
     result = @gdal(OGR_G_ExportToWkb::GDAL.OGRErr,
         geom.ptr::GDALGeometry,
@@ -186,7 +186,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 * `geom`: handle on the geometry to convert to a well know binary data from.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
-function toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=wkbNDR)
+function toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
     buffer = Array{Cuchar}(wkbsize(geom))
     result = @gdal(OGR_G_ExportToIsoWkb::GDAL.OGRErr,
         geom.ptr::GDALGeometry,
@@ -1009,44 +1009,44 @@ setnonlineargeomflag!(flag::Bool) = GDAL.setnonlineargeometriesenabledflag(flag)
 "Get flag to enable/disable returning non-linear geometries in the C API."
 getnonlineargeomflag() = Bool(GDAL.getnonlineargeometriesenabledflag())
 
-for (geom, wkbgeom) in ((:geomcollection,   wkbGeometryCollection),
-                        (:linestring,       wkbLineString),
-                        (:linearring,       wkbLinearRing),
-                        (:multilinestring,  wkbMultiLineString),
-                        (:multipoint,       wkbMultiPoint),
-                        (:multipolygon,     wkbMultiPolygon),
-                        (:point,            wkbPoint),
-                        (:polygon,          wkbPolygon))
+for (geom, wkbgeom) in ((:geomcollection,   GDAL.wkbGeometryCollection),
+                        (:linestring,       GDAL.wkbLineString),
+                        (:linearring,       GDAL.wkbLinearRing),
+                        (:multilinestring,  GDAL.wkbMultiLineString),
+                        (:multipoint,       GDAL.wkbMultiPoint),
+                        (:multipolygon,     GDAL.wkbMultiPolygon),
+                        (:point,            GDAL.wkbPoint),
+                        (:polygon,          GDAL.wkbPolygon))
     @eval $(Symbol("unsafe_create$geom"))() = unsafe_creategeom($wkbgeom)
 end
 
 function unsafe_createpoint(x::Real, y::Real)
-    geom = unsafe_creategeom(wkbPoint)
+    geom = unsafe_creategeom(GDAL.wkbPoint)
     addpoint!(geom, x, y)
     geom
 end
 
 function unsafe_createpoint(x::Real, y::Real, z::Real)
-    geom = unsafe_creategeom(wkbPoint)
+    geom = unsafe_creategeom(GDAL.wkbPoint)
     addpoint!(geom, x, y, z)
     geom
 end
 
 function unsafe_createpoint(xy::Tuple{T,U}) where {T <: Real, U <: Real}
-    geom = unsafe_creategeom(wkbPoint)
+    geom = unsafe_creategeom(GDAL.wkbPoint)
     addpoint!(geom, xy...)
     geom
 end
 
 function unsafe_createpoint(xyz::Tuple{T,U,V}) where {T <: Real, U <: Real, V <: Real}
-    geom = unsafe_creategeom(wkbPoint)
+    geom = unsafe_creategeom(GDAL.wkbPoint)
     addpoint!(geom, xyz...)
     geom
 end
 
 # Tuples of Vectors
-for (geom, wkbgeom) in ((:linestring, wkbLineString),
-                        (:linearring, wkbLinearRing))
+for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
+                        (:linearring, GDAL.wkbLinearRing))
     eval(quote
         function $(Symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
                                                  ys::Vector{Cdouble})
@@ -1069,20 +1069,20 @@ for (geom, wkbgeom) in ((:linestring, wkbLineString),
 end
 
 function unsafe_createpolygon(xs::Vector{Cdouble}, ys::Vector{Cdouble})
-    geom = unsafe_creategeom(wkbPolygon)
+    geom = unsafe_creategeom(GDAL.wkbPolygon)
     addgeomdirectly!(geom, unsafe_createlinearring(xs, ys))
     geom
 end
 
 function unsafe_createpolygon(xs::Vector{Cdouble}, ys::Vector{Cdouble},
                               zs::Vector{Cdouble})
-    geom = unsafe_creategeom(wkbPolygon)
+    geom = unsafe_creategeom(GDAL.wkbPolygon)
     addgeomdirectly!(geom, unsafe_createlinearring(xs, ys, zs))
     geom
 end
 
 function unsafe_createmultipoint(xs::Vector{Cdouble}, ys::Vector{Cdouble})
-    geom = unsafe_creategeom(wkbMultiPoint)
+    geom = unsafe_creategeom(GDAL.wkbMultiPoint)
     for (x, y) in zip(xs, ys)
         addgeomdirectly!(geom, unsafe_createpoint(x, y))
     end
@@ -1091,7 +1091,7 @@ end
 
 function unsafe_createmultipoint(xs::Vector{Cdouble}, ys::Vector{Cdouble},
                                  zs::Vector{Cdouble})
-    geom = unsafe_creategeom(wkbMultiPoint)
+    geom = unsafe_creategeom(GDAL.wkbMultiPoint)
     for (x, y, z) in zip(xs, ys, zs)
         addgeomdirectly!(geom, unsafe_createpoint(x, y, z))
     end
@@ -1101,8 +1101,8 @@ end
 # Vectors of Tuples
 for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
                  Vector{Tuple{Cdouble,Cdouble,Cdouble}})
-    for (geom, wkbgeom) in ((:linestring, wkbLineString),
-                            (:linearring, wkbLinearRing))
+    for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
+                            (:linearring, GDAL.wkbLinearRing))
         @eval function $(Symbol("unsafe_create$geom"))(coords::$typeargs)
                   geom = unsafe_creategeom($wkbgeom)
                   for coord in coords
@@ -1114,13 +1114,13 @@ for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
 
     eval(quote
         function unsafe_createpolygon(coords::$typeargs)
-            geom = unsafe_creategeom(wkbPolygon)
+            geom = unsafe_creategeom(GDAL.wkbPolygon)
             addgeomdirectly!(geom, unsafe_createlinearring(coords))
             geom
         end
 
         function unsafe_createmultipoint(coords::$typeargs)
-            geom = unsafe_creategeom(wkbMultiPoint)
+            geom = unsafe_creategeom(GDAL.wkbMultiPoint)
             for point in coords
                 addgeomdirectly!(geom, unsafe_createpoint(point))
             end
@@ -1131,12 +1131,9 @@ end
 
 for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
                  Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}})
-    for (geom, wkbgeom, f) in ((:polygon,              wkbPolygon,
-                                :unsafe_createlinearring),
-                               (:multilinestring,      wkbMultiLineString,
-                                :unsafe_createlinestring),
-                               (:multipolygon_noholes, wkbMultiPolygon,
-                                :unsafe_createpolygon))
+    for (geom, wkbgeom, f) in ((:polygon, GDAL.wkbPolygon, :unsafe_createlinearring),
+                               (:multilinestring, GDAL.wkbMultiLineString, :unsafe_createlinestring),
+                               (:multipolygon_noholes, GDAL.wkbMultiPolygon, :unsafe_createpolygon))
         @eval function $(Symbol("unsafe_create$geom"))(coords::$typeargs)
                   geom = unsafe_creategeom($wkbgeom)
                   for coord in coords
@@ -1147,9 +1144,10 @@ for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
     end
 end
 
-function unsafe_createmultipolygon(coords::Vector{Vector{
-                                           Vector{Tuple{Cdouble,Cdouble}}}})
-    geom = unsafe_creategeom(wkbMultiPolygon)
+function unsafe_createmultipolygon(
+        coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}
+    )
+    geom = unsafe_creategeom(GDAL.wkbMultiPolygon)
     for coord in coords
         addgeomdirectly!(geom, unsafe_createpolygon(coord))
     end

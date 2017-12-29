@@ -87,7 +87,7 @@ AG.read("ospy/data1/sites.shp") do input
     # version 1
     AG.create("", "MEMORY") do output
         inlayer = AG.getlayer(input, 0)
-        outlayer = AG.createlayer(output, "hw1b", geom=AG.wkbPoint)
+        outlayer = AG.createlayer(output, "hw1b", geom=GDAL.wkbPoint)
         inlayerdefn = AG.getlayerdefn(inlayer)
         AG.createfield!(outlayer, AG.getfielddefn(inlayerdefn, 0))
         AG.createfield!(outlayer, AG.getfielddefn(inlayerdefn, 1))
@@ -120,9 +120,9 @@ end
     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
     open("ospy/data2/ut_counties.txt", "r") do file
     AG.create("", "MEMORY") do output
-        layer = AG.createlayer(output, "hw2a", geom=AG.wkbPolygon)
+        layer = AG.createlayer(output, "hw2a", geom=GDAL.wkbPolygon)
         println(layer)
-        AG.createfielddefn("name", AG.OFTString) do fielddefn
+        AG.createfielddefn("name", GDAL.OFTString) do fielddefn
             AG.setwidth!(fielddefn, 30)
             AG.createfield!(layer, fielddefn)
         end
