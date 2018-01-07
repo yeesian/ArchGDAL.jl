@@ -30,6 +30,15 @@ mutable struct FeatureLayer;                  ptr::GDALFeatureLayer       end
 mutable struct Field;                         ptr::GDALField              end
 mutable struct FieldDefn;                     ptr::GDALFieldDefn          end
 mutable struct Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
+mutable struct IGeometry <: AbstractGeometry
+    ptr::GDALGeometry
+
+    function IGeometry(ptr::GDALGeometry)
+        geom = new(GDAL.clone(ptr))
+        finalizer(geom, g -> (destroy(g.ptr); g.ptr = C_NULL))
+        geom
+    end
+end
 mutable struct GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
 mutable struct RasterAttrTable;               ptr::GDALRasterAttrTable    end
 mutable struct RasterBand;                    ptr::GDALRasterBand         end
