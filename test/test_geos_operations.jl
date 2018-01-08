@@ -7,24 +7,6 @@ function equivalent_to_wkt(geom::ArchGDAL.Geometry, wkt::String)
     end
 end
 
-function factcheck(f::Function, geom::String, expected::String)
-    result = f(fromWKT(geom))
-    equivalent_to_wkt(result, expected)
-end
-
-function factcheck(f::Function, geom::String, expected::Bool)
-    @test f(parseWKT(geom)) == expected
-end
-
-function factcheck(f::Function, g1::String, g2::String, expected::String)
-    result = f(parseWKT(g1),parseWKT(g2))
-    equivalent_to_wkt(result, expected)
-end
-
-function factcheck(f::Function, g1::String, g2::String, expected::Bool)
-    @test f(parseWKT(g1),parseWKT(g2)) == expected
-end
-
 @testset "Interpolation along a LineString" begin
     AG.createlinestring([(8.,1.),(9.,1.),(9.,2.),(8.,2.)]) do ls
         for (dist,dest) in [(1.0,(9,1)),    (2.0,(9,2)),
@@ -34,6 +16,7 @@ end
                 @test AG.toWKT(pt1) == AG.toWKT(pt2)
             end
             end
+            @test AG.toWKT(AG.pointalongline(ls, dist)) == AG.toWKT(AG.createpoint(dest))
         end
     end
 end
@@ -42,13 +25,6 @@ end
     AG.fromWKT("POLYGON EMPTY") do g1
     AG.fromWKT("POLYGON EMPTY") do g2
         @test AG.contains(g1, g2) == false
-        @test AG.contains(g1, g2) == false
-    end
-    end
-
-    AG.fromWKT("POLYGON((1 1,1 5,5 5,5 1,1 1))") do g1
-    AG.fromWKT("POINT(2 2)") do g2
-        @test AG.contains(g1, g2) == true
         @test AG.contains(g2, g1) == false
     end
     end
@@ -75,6 +51,7 @@ end
             @test AG.isempty(output) == false
             @test AG.toWKT(output) == AG.toWKT(expected)
         end
+        @test AG.toWKT(AG.convexhull(input)) == AG.toWKT(expected)
     end
     end
 end
@@ -86,12 +63,14 @@ end
             @test AG.isempty(g2) == true
             @test AG.toWKT(g2) == "MULTILINESTRING EMPTY"
         end
+        @test AG.toWKT(AG.delaunaytriangulation(g1,0,true)) == "MULTILINESTRING EMPTY"
     end
     AG.fromWKT("POINT(0 0)") do g1
         AG.delaunaytriangulation(g1,0,false) do g2
             @test AG.isempty(g2) == true
             @test AG.toWKT(g2) == "GEOMETRYCOLLECTION EMPTY"
         end
+        @test AG.toWKT(AG.delaunaytriangulation(g1,0,false)) == "GEOMETRYCOLLECTION EMPTY"
     end
     AG.fromWKT("MULTIPOINT(0 0, 5 0, 10 0)") do g1
         AG.delaunaytriangulation(g1,0,false) do g2
@@ -121,6 +100,7 @@ function test_method(f::Function, wkt1::AbstractString, wkt2::AbstractString)
         f(geom) do result
             @test AG.toWKT(result) == wkt2
         end
+        @test AG.toWKT(f(geom)) == wkt2
     end
 end
 
@@ -146,6 +126,7 @@ function test_method(f::Function, wkt1::AbstractString,
         f(geom1, geom2) do result
             @test AG.toWKT(result) == wkt3
         end
+        @test AG.toWKT(f(geom1, geom2)) == wkt3
     end
     end
 end
@@ -228,11 +209,13 @@ end
         AG.simplify(g1, 0.0) do g2
             @test AG.toWKT(g2) == "POLYGON EMPTY"
         end
+        @test AG.toWKT(AG.simplify(g1, 0.0)) == "POLYGON EMPTY"
     end
 
     AG.fromWKT("POLYGON((56.528666666700 25.2101666667, 56.529000000000 25.2105000000, 56.528833333300 25.2103333333, 56.528666666700 25.2101666667))") do g1
         AG.simplifypreservetopology(g1, 43.2) do g2
             @test AG.toWKT(g2) == "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
         end
+        @test AG.toWKT(AG.simplifypreservetopology(g1, 43.2)) == "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
     end
 end

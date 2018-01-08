@@ -28,6 +28,9 @@ import GDAL, ArchGDAL; const AG = ArchGDAL
         AG.addpoint!(point, 1198054.34, 648493.09)
         println(AG.toWKT(point))
     AG.destroy(point)
+
+    # Method 5
+    println(AG.toWKT(AG.createpoint(1198054.34, 648493.09)))
 end
 
 @testset "Create a LineString" begin
@@ -65,6 +68,14 @@ end
         AG.addpoint!(line, 1281307.30760719,   636467.6640211721)
         println(AG.toWKT(line))
     AG.destroy(line)
+
+    # Method 5
+    println(AG.toWKT(AG.createlinestring([
+        (1116651.439379124,  637392.6969887456),
+        (1188804.0108498496, 652655.7409537067),
+        (1226730.3625203592, 634155.0816022386),
+        (1281307.30760719,   636467.6640211721)
+    ])))
 end
 
 @testset "Create a Polygon" begin
@@ -131,6 +142,15 @@ end
         AG.addgeomdirectly!(poly, ring) # ownership of ring passed to poly
         println(AG.toWKT(poly))
     AG.destroy(poly)
+
+    println(AG.toWKT(AG.createpolygon([
+        (1179091.1646903288, 712782.8838459781),
+        (1161053.0218226474, 667456.2684348812),
+        (1214704.933941905,  641092.8288590391),
+        (1228580.428455506,  682719.3123998424),
+        (1218405.0658121984, 721108.1805541387),
+        (1179091.1646903288, 712782.8838459781)
+    ])))
 end 
 
 @testset "Create a Polygon with holes" begin
@@ -213,6 +233,22 @@ end
         AG.addgeomdirectly!(poly, innerring)
         println(AG.toWKT(poly))
     AG.destroy(poly)
+
+    # Method 5
+    println(AG.toWKT(AG.createpolygon([
+        # outerring
+        [(1154115.274565847,  686419.4442701361),
+         (1154115.274565847,  653118.2574374934),
+         (1165678.1866605144, 653118.2574374934),
+         (1165678.1866605144, 686419.4442701361),
+         (1154115.274565847,  686419.4442701361)],
+        # innerring(s)
+        [(1149490.1097279799, 691044.6091080031),
+         (1149490.1097279799, 648030.5761158396),
+         (1191579.1097525698, 648030.5761158396),
+         (1191579.1097525698, 691044.6091080031),
+         (1149490.1097279799, 691044.6091080031)]
+    ])))
 end
 
 @testset "Create a MultiPoint" begin
@@ -256,6 +292,13 @@ end
         AG.addgeomdirectly!(multipoint, point3)
         println(AG.toWKT(multipoint))
     AG.destroy(multipoint)
+
+    # Method 5
+    println(AG.toWKT(AG.createmultipoint([
+        (1251243.7361610543, 598078.7958668759),
+        (1240605.8570339603, 601778.9277371694),
+        (1250318.7031934808, 606404.0925750365)
+    ])))
 end
 
 @testset "Create a MultiLineString" begin
@@ -309,6 +352,14 @@ end
 
         println(AG.toWKT(multiline))
     AG.destroy(multiline)
+
+    # Method 5
+    println(AG.toWKT(AG.createmultilinestring(Vector{Tuple{Float64,Float64}}[
+        [(1214242.4174581182, 617041.9717021306),
+         (1234593.142744733,  629529.9167643716)],
+        [(1184641.3624957693, 626754.8178616514),
+         (1219792.6152635587, 606866.6090588232)]
+    ])))
 end
 
 @testset "Create a MultiPolygon" begin
@@ -398,6 +449,20 @@ end
 
         println(AG.toWKT(multipolygon))
     AG.destroy(multipolygon)
+
+    # Method 5
+    println(AG.toWKT(AG.createmultipolygon_noholes(Vector{Tuple{Float64,Float64}}[
+             [(1204067.0548148106, 634617.5980860253),
+              (1204067.0548148106, 620742.1035724243),
+              (1215167.4504256917, 620742.1035724243),
+              (1215167.4504256917, 634617.5980860253),
+              (1204067.0548148106, 634617.5980860253)],
+             [(1179553.6811741155, 647105.5431482664),
+              (1179553.6811741155, 626292.3013778647),
+              (1194354.20865529,   626292.3013778647),
+              (1194354.20865529,   647105.5431482664),
+              (1179553.6811741155, 647105.5431482664)]
+            ])))
 end
 
 @testset "Create a GeometryCollection" begin
@@ -452,6 +517,10 @@ end
     AG.fromWKT(wkt) do point
         println((AG.getx(point, 0), AG.gety(point, 0)))
     end
+
+    # Method 3
+    point = AG.fromWKT(wkt)
+    println((AG.getx(point, 0), AG.gety(point, 0)))
 end
 
 @testset "Create Geometry from GeoJSON" begin
@@ -466,6 +535,10 @@ end
     AG.fromJSON(geojson) do point
         println((AG.getx(point, 0), AG.gety(point, 0)))
     end
+
+    # Method 3
+    point = AG.fromJSON(geojson)
+    println((AG.getx(point, 0), AG.gety(point, 0)))
 end
 
 @testset "Create Geometry from GML" begin
@@ -482,6 +555,10 @@ end
     AG.fromGML(gml) do point
         println((AG.getx(point, 0), AG.gety(point, 0)))
     end
+
+    # Method 3
+    point = AG.fromGML(gml)
+    println((AG.getx(point, 0), AG.gety(point, 0)))
 end
 
 @testset "Create Geometry from WKB" begin
@@ -497,20 +574,34 @@ end
     AG.fromWKB(wkb) do point
         println((AG.getx(point, 0), AG.gety(point, 0)))
     end
+
+    # Method 3
+    point = AG.fromWKB(wkb)
+    println((AG.getx(point, 0), AG.gety(point, 0)))
 end
 
 @testset "Count Points in a Geometry" begin
     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
+
+    # Method 1
     AG.fromWKT(wkt) do geom
         println("Geometry has $(AG.npoint(geom)) points")
     end
+
+    # Method 2
+    println("Geometry has $(AG.npoint(AG.fromWKT(wkt))) points")
 end
 
 @testset "Count Geometries in a Geometry" begin
     wkt = "MULTIPOINT (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
+
+    # Method 1
     AG.fromWKT(wkt) do geom
         println("Geometry has $(AG.npoint(geom)) points")
     end
+
+    # Method 2
+    println("Geometry has $(AG.npoint(AG.fromWKT(wkt))) points")
 end
 
 @testset "Iterate over Geometries in a Geometry" begin
@@ -533,6 +624,8 @@ end
 
 @testset "Buffer a Geometry" begin
     wkt = "POINT (1198054.34 648493.09)"
+
+    # Method 1
     AG.fromWKT(wkt) do pt
         bufferdist = 500
         AG.buffer(pt, bufferdist) do poly
@@ -540,6 +633,9 @@ end
             println("$(AG.toWKT(poly))")
         end
     end
+
+    # Method 2
+    println("$(AG.toWKT(AG.buffer(AG.fromWKT(wkt), 500)))")
 end
 
 # @testset "Calculate Envelope of a Geometry" begin
@@ -581,6 +677,7 @@ end
     wkt1 = "POLYGON ((1208064.271243039 624154.6783778917, 1208064.271243039 601260.9785661874, 1231345.9998651114 601260.9785661874, 1231345.9998651114 624154.6783778917, 1208064.271243039 624154.6783778917))"
     wkt2 = "POLYGON ((1199915.6662253144 633079.3410163528, 1199915.6662253144 614453.958118695, 1219317.1067437078 614453.958118695, 1219317.1067437078 633079.3410163528, 1199915.6662253144 633079.3410163528)))"
 
+    # Method 1
     AG.fromWKT(wkt1) do poly1
     AG.fromWKT(wkt2) do poly2
         AG.intersection(poly1, poly2) do poly3
@@ -588,11 +685,16 @@ end
         end
     end
     end
+
+    # Method 2
+    println(AG.toWKT(AG.intersection(AG.fromWKT(wkt1), AG.fromWKT(wkt2))))
 end
 
 @testset "Calculate union between two Geometries" begin
     wkt1 = "POLYGON ((1208064.271243039 624154.6783778917, 1208064.271243039 601260.9785661874, 1231345.9998651114 601260.9785661874, 1231345.9998651114 624154.6783778917, 1208064.271243039 624154.6783778917))"
     wkt2 = "POLYGON ((1199915.6662253144 633079.3410163528, 1199915.6662253144 614453.958118695, 1219317.1067437078 614453.958118695, 1219317.1067437078 633079.3410163528, 1199915.6662253144 633079.3410163528)))"
+
+    # Method 1
     AG.fromWKT(wkt1) do poly1
     AG.fromWKT(wkt2) do poly2
         AG.union(poly1, poly2) do poly3
@@ -602,6 +704,9 @@ end
         end
     end
     end
+
+    # Method 2
+    println(AG.toWKT(AG.union(AG.fromWKT(wkt1), AG.fromWKT(wkt2))))
 end
 
 @testset "Write Geometry to GeoJSON|GML|WKT|WKB" begin
@@ -620,6 +725,8 @@ end
 
 @testset "Force polygon to multipolygon" begin
     wkt = "POLYGON ((1179091.164690328761935 712782.883845978067257,1161053.021822647424415 667456.268434881232679,1214704.933941904921085 641092.828859039116651,1228580.428455505985767 682719.312399842427112,1218405.065812198445201 721108.180554138729349,1179091.164690328761935 712782.883845978067257))"
+
+    # Method 1
     AG.fromWKT([wkt]) do poly
         println("Before: $(AG.toWKT(poly))")
         if AG.getgeomtype(poly) == GDAL.wkbPolygon
@@ -628,4 +735,7 @@ end
             end
         end
     end
+
+    # Method 2
+    println(AG.forceto(AG.fromWKT([wkt]), GDAL.wkbMultiPolygon))
 end
