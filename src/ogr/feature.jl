@@ -28,7 +28,7 @@ of failure of that function).
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry
 type is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomdirectly!(feature::Feature, geom::AbstractGeometry)
+function setgeomdirectly!(feature::Feature, geom::Geometry)
     result = GDAL.setgeometrydirectly(feature.ptr, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
 end
@@ -54,9 +54,10 @@ function setgeom!(feature::Feature, geom::AbstractGeometry)
 end
 
 "Fetch an handle to internal feature geometry. It should not be modified."
-getgeom(::Type{G}, feature::Feature) where {G <: AbstractGeometry} =
-    G(GDAL.getgeometryref(feature.ptr))
-getgeom(feature::Feature) = getgeom(Geometry, feature)
+unsafe_getgeom(feature::Feature) =
+    Geometry(GDAL.getgeometryref(feature.ptr))
+getgeom(feature::Feature) =
+    IGeometry(GDAL.clone(GDAL.getgeometryref(feature.ptr)))
 
 """
 Fetch number of fields on this feature.
@@ -610,9 +611,10 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
-getgeomfield(::Type{G}, feature::Feature, i::Integer) where {G <: AbstractGeometry} =
-    G(GDAL.getgeomfieldref(feature.ptr, i))
-getgeomfield(feature::Feature, i::Integer) = getgeomfield(Geometry, feature, i)
+unsafe_getgeomfield(feature::Feature, i::Integer) =
+    Geometry(GDAL.getgeomfieldref(feature.ptr, i))
+getgeomfield(feature::Feature, i::Integer) = 
+    IGeometry(GDAL.clone(GDAL.getgeomfieldref(feature.ptr, i)))
 
 """
 Set feature geometry of a specified geometry field.
@@ -631,7 +633,7 @@ OGRERR_NONE if successful, or OGRERR_FAILURE if the index is invalid, or
 OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type is illegal for the
 OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomfielddirectly!(feature::Feature, i::Integer, geom::AbstractGeometry)
+function setgeomfielddirectly!(feature::Feature, i::Integer, geom::Geometry)
     result = GDAL.setgeomfielddirectly(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry directly"
     feature
