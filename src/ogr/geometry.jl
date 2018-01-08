@@ -25,6 +25,8 @@ end
 
 unsafe_fromWKB(data, args...) = unsafe_fromWKB(Geometry, data, args...)
 
+fromWKB(data, args...) = unsafe_fromWKB(IGeometry, data, args...)
+
 """
 Create a geometry object of the appropriate type from its well known text
 (WKT) representation.
@@ -50,8 +52,14 @@ function unsafe_fromWKT(
     @ogrerr result "Failed to create geometry from WKT"
     G(geom[])
 end
+
 unsafe_fromWKT(data::Vector{String}, args...) = unsafe_fromWKT(Geometry, data, args...)
+
+fromWKT(data::Vector{String}, args...) = unsafe_fromWKT(IGeometry, data, args...)
+
 unsafe_fromWKT(data::String, args...) = unsafe_fromWKT([data], args...)
+
+fromWKT(data::String, args...) = fromWKT([data], args...)
 
 """
 Destroy geometry object.
@@ -68,7 +76,10 @@ end
 function unsafe_clone(::Type{G}, geom::AbstractGeometry) where G <: AbstractGeometry
     G(GDAL.clone(geom.ptr))
 end
+
 unsafe_clone(geom::G) where {G <: AbstractGeometry} = unsafe_clone(G, geom)
+
+clone(geom::AbstractGeometry) = unsafe_clone(IGeometry, geom)
 
 """
 Create an empty geometry of desired type.
@@ -81,6 +92,8 @@ function unsafe_creategeom(::Type{G}, geomtype::OGRwkbGeometryType ) where G <: 
 end
 
 unsafe_creategeom(geomtype::OGRwkbGeometryType) = unsafe_creategeom(Geometry, geomtype)
+
+creategeom(geomtype::OGRwkbGeometryType) = unsafe_creategeom(IGeometry, geomtype)
 
 """
 Tries to force the provided geometry to the specified geometry type.
@@ -114,7 +127,8 @@ function unsafe_forceto(
 end
 unsafe_forceto(geom::AbstractGeometry, args...) =
     unsafe_forceto(Geometry, geom, args...)
-
+forceto(geom::AbstractGeometry, args...) =
+    unsafe_forceto(IGeometry, geom, args...)
 
 """
 Get the dimension of the geometry. 0 for points, 1 for lines and 2 for surfaces.
@@ -253,7 +267,10 @@ MultiLineString, MultiPolygon, MultiGeometry.
 """
 unsafe_fromGML(::Type{G}, data) where {G <: AbstractGeometry} =
     G(GDAL.createfromgml(data))
+
 unsafe_fromGML(data) = unsafe_fromGML(Geometry, data)
+
+fromGML(data) = unsafe_fromGML(IGeometry, data)
 
 "Convert a geometry into GML format."
 toGML(geom::AbstractGeometry) = GDAL.exporttogml(geom.ptr)
@@ -283,7 +300,10 @@ toJSON(geom::AbstractGeometry, options) =
 "Create a geometry object from its GeoJSON representation"
 unsafe_fromJSON(::Type{G}, data::String) where {G <: AbstractGeometry} =
     G(GDAL.creategeometryfromjson(data))
+
 unsafe_fromJSON(data::String) = unsafe_fromJSON(Geometry, data)
+
+fromJSON(data::String) = unsafe_fromJSON(IGeometry, data)
 
 "Assign spatial reference to this object."
 setspatialref!(geom::G, spatialref::SpatialRef) where {G <: AbstractGeometry} =
@@ -331,8 +351,12 @@ function unsafe_simplify(::Type{G},
     ) where G <: AbstractGeometry
     G(GDAL.simplify(geom.ptr, tol))
 end
+
 unsafe_simplify(geom::AbstractGeometry, args...) =
     unsafe_simplify(Geometry, geom, args...)
+
+simplify(geom::AbstractGeometry, args...) =
+    unsafe_simplify(IGeometry, geom, args...)
 
 """
 Simplify the geometry while preserving topology.
@@ -346,8 +370,12 @@ function unsafe_simplifypreservetopology(::Type{G},
     ) where G <: AbstractGeometry
     G(GDAL.simplifypreservetopology(geom.ptr, tol))
 end
+
 unsafe_simplifypreservetopology(geom::AbstractGeometry, args...) =
     unsafe_simplifypreservetopology(Geometry, geom, args...)
+
+simplifypreservetopology(geom::AbstractGeometry, args...) =
+    unsafe_simplifypreservetopology(IGeometry, geom, args...)
 
 """
 Return a Delaunay triangulation of the vertices of the geometry.
@@ -363,8 +391,12 @@ function unsafe_delaunaytriangulation(::Type{G},
     ) where G <: AbstractGeometry
     G(GDAL.delaunaytriangulation(geom.ptr, tol, onlyedges))
 end
+
 unsafe_delaunaytriangulation(geom::AbstractGeometry, args...) =
     unsafe_delaunaytriangulation(Geometry, geom, args...)
+
+delaunaytriangulation(geom::AbstractGeometry, args...) =
+    unsafe_delaunaytriangulation(IGeometry, geom, args...)
 
 """
 Modify the geometry such it has no segment longer than the given distance.
@@ -435,8 +467,12 @@ geometry on which the method is invoked.
 """
 unsafe_boundary(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.boundary(geom.ptr))
+
 unsafe_boundary(geom::AbstractGeometry, args...) =
     unsafe_boundary(Geometry, geom, args...)
+
+boundary(geom::AbstractGeometry, args...) =
+    unsafe_boundary(IGeometry, geom, args...)
 
 """
 Returns the convex hull of the geometry.
@@ -446,8 +482,12 @@ geometry on which the method is invoked.
 """
 unsafe_convexhull(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.convexhull(geom.ptr))
+
 unsafe_convexhull(geom::AbstractGeometry, args...) =
     unsafe_convexhull(Geometry, geom, args...)
+
+convexhull(geom::AbstractGeometry, args...) =
+    unsafe_convexhull(IGeometry, geom, args...)
 
 """
 Compute buffer of geometry.
@@ -475,8 +515,12 @@ function unsafe_buffer(::Type{G},
     ) where G <: AbstractGeometry
     G(GDAL.buffer(geom.ptr, dist, quadsegs))
 end
+
 unsafe_buffer(geom::AbstractGeometry, args...) =
     unsafe_buffer(Geometry, geom, args...)
+
+buffer(geom::AbstractGeometry, args...) =
+    unsafe_buffer(IGeometry, geom, args...)
 
 """
 Returns a new geometry representing the intersection of the geometries, or NULL
@@ -491,8 +535,12 @@ function unsafe_intersection(::Type{G},
     ) where G <: AbstractGeometry
     G(GDAL.intersection(g1.ptr, g2.ptr))
 end
+
 unsafe_intersection(g1::AbstractGeometry, g2::AbstractGeometry, args...) =
     unsafe_intersection(Geometry, g1, g2, args...)
+
+intersection(g1::AbstractGeometry, g2::AbstractGeometry, args...) =
+    unsafe_intersection(IGeometry, g1, g2, args...)
 
 """
 Returns a new geometry representing the union of the geometries.
@@ -513,6 +561,9 @@ unsafe_union(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
 unsafe_union(geom::AbstractGeometry, args...) =
     unsafe_union(Geometry, geom, args...)
 
+union(geom::AbstractGeometry, args...) =
+    unsafe_union(IGeometry, geom, args...)
+
 """
 Returns a point guaranteed to lie on the surface.
 
@@ -529,6 +580,9 @@ end
 
 unsafe_pointonsurface(geom::AbstractGeometry, args...) =
     unsafe_pointonsurface(Geometry, geom, args...)
+
+pointonsurface(geom::AbstractGeometry, args...) =
+    unsafe_pointonsurface(IGeometry, geom, args...)
 
 """
 Generates a new geometry which is the region of this geometry with the region of
@@ -547,6 +601,9 @@ end
 unsafe_difference(geom::AbstractGeometry, args...) =
     unsafe_difference(Geometry, geom, args...)
 
+difference(geom::AbstractGeometry, args...) =
+    unsafe_difference(IGeometry, geom, args...)
+
 """
 Returns a new geometry representing the symmetric difference of the geometries
 or NULL if the difference is empty or an error occurs.
@@ -559,6 +616,9 @@ end
 
 unsafe_symdifference(geom::AbstractGeometry, args...) =
     unsafe_symdifference(Geometry, geom, args...)
+
+symdifference(geom::AbstractGeometry, args...) =
+    unsafe_symdifference(IGeometry, geom, args...)
 
 "Returns the distance between the geometries or -1 if an error occurs."
 distance(g1::AbstractGeometry, g2::AbstractGeometry) = GDAL.distance(g1.ptr, g2.ptr)
@@ -591,6 +651,8 @@ end
 
 unsafe_centroid(geom::AbstractGeometry) = centroid!(geom, unsafe_createpoint())
 
+centroid(geom::AbstractGeometry) = centroid!(geom, createpoint())
+
 """
 Fetch point at given distance along curve.
 
@@ -610,6 +672,9 @@ end
 
 unsafe_pointalongline(geom::AbstractGeometry, args...) =
     unsafe_pointalongline(Geometry, geom, args...)
+
+pointalongline(geom::AbstractGeometry, args...) =
+    unsafe_pointalongline(IGeometry, geom, args...)
 
 """
 Clear geometry information.
@@ -645,8 +710,12 @@ failure.
 """
 unsafe_polygonize(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.polygonize(geom.ptr))
+
 unsafe_polygonize(geom::AbstractGeometry, args...) =
     unsafe_polygonize(Geometry, geom, args...)
+
+polygonize(geom::AbstractGeometry, args...) =
+    unsafe_polygonize(IGeometry, geom, args...)
 
 "Fetch number of points from a geometry."
 npoint(geom::AbstractGeometry) = GDAL.getpointcount(geom.ptr)
@@ -808,13 +877,17 @@ For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 * `geom`: the geometry container from which to get a geometry from.
 * `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
 """
-function getgeom(::Type{G},
+function unsafe_getgeom(::Type{G},
         geom::AbstractGeometry, i::Integer
     ) where G <: AbstractGeometry
     G(GDAL.getgeometryref(geom.ptr, i))
 end
+
+unsafe_getgeom(geom::AbstractGeometry, args...) =
+    unsafe_getgeom(Geometry, geom, args...)
+
 getgeom(geom::AbstractGeometry, args...) =
-    getgeom(Geometry, geom, args...)
+    unsafe_getgeom(IGeometry, unsafe_clone(geom), args...)
 
 """
 Add a geometry to a geometry container.
@@ -869,9 +942,7 @@ Remove a geometry from an exiting geometry container.
     The default is TRUE as the existing geometry is considered to own the
     geometries in it.
 """
-function removegeom!(geom::G,
-        i::Integer, todelete::Bool = true
-    ) where G <: AbstractGeometry
+function removegeom!(geom::AbstractGeometry, i::Integer, todelete::Bool = true)
     result = GDAL.removegeometry(geom.ptr, i, todelete)
     @ogrerr result "Failed to remove geometry. The index could be out of range."
     geom
@@ -886,7 +957,7 @@ Remove all geometries from an exiting geometry container.
     The default is TRUE as the existing geometry is considered to own the
     geometries in it.
 """
-function removeallgeoms!(geom::G, todelete::Bool = true) where G <: AbstractGeometry
+function removeallgeoms!(geom::AbstractGeometry, todelete::Bool = true)
     result = GDAL.removegeometry(geom.ptr, -1, todelete)
     @ogrerr result "Failed to remove all geometries."
     geom
@@ -935,8 +1006,12 @@ function unsafe_getlineargeom(::Type{G},
     ) where G <: AbstractGeometry
     G(GDAL.getlineargeometry(geom.ptr, stepsize, options))
 end
+
 unsafe_getlineargeom(geom::AbstractGeometry, args...) =
     unsafe_getlineargeom(Geometry, geom, args...)
+
+getlineargeom(geom::AbstractGeometry, args...) =
+    unsafe_getlineargeom(IGeometry, geom, args...)
 
 """
 Return curve version of this geometry.
@@ -953,8 +1028,12 @@ The reverse function is OGR_G_GetLinearGeometry().
 """
 unsafe_getcurvegeom(::Type{G}, geom::AbstractGeometry) where {G <: AbstractGeometry} =
     G(GDAL.getcurvegeometry(geom.ptr, C_NULL))
+
 unsafe_getcurvegeom(geom::AbstractGeometry, args...) =
     unsafe_getcurvegeom(Geometry, geom, args...)
+
+getcurvegeom(geom::AbstractGeometry, args...) =
+    unsafe_getcurvegeom(IGeometry, geom, args...)
 
 """
 Build a ring from a bunch of arcs.
@@ -979,8 +1058,12 @@ function unsafe_polygonfromedges(
     @ogrerr perr[] "Failed to build polygon from edges."
     G(result)
 end
+
 unsafe_polygonfromedges(geom::AbstractGeometry, args...) =
     unsafe_polygonfromedges(Geometry, geom, args...)
+
+polygonfromedges(geom::AbstractGeometry, args...) =
+    unsafe_polygonfromedges(IGeometry, geom, args...)
 
 """
 Set flag to enable/disable returning non-linear geometries in the C API.
@@ -1017,115 +1100,196 @@ for (geom, wkbgeom) in ((:geomcollection,   GDAL.wkbGeometryCollection),
                         (:multipolygon,     GDAL.wkbMultiPolygon),
                         (:point,            GDAL.wkbPoint),
                         (:polygon,          GDAL.wkbPolygon))
-    @eval $(Symbol("unsafe_create$geom"))() = unsafe_creategeom($wkbgeom)
+    eval(quote
+        function $(Symbol("unsafe_create$geom"))(::Type{G}) where G <: AbstractGeometry
+            unsafe_creategeom(G, $wkbgeom)
+        end
+
+        $(Symbol("unsafe_create$geom"))() = $(Symbol("unsafe_create$geom"))(Geometry)
+
+        $(Symbol("create$geom"))() = $(Symbol("unsafe_create$geom"))(IGeometry)
+    end)
 end
 
-function unsafe_createpoint(x::Real, y::Real)
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+function unsafe_createpoint(::Type{G}, x::Real, y::Real) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbPoint)
     addpoint!(geom, x, y)
     geom
 end
 
-function unsafe_createpoint(x::Real, y::Real, z::Real)
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+unsafe_createpoint(x::Real, y::Real) = unsafe_createpoint(Geometry, x, y)
+
+createpoint(x::Real, y::Real) = unsafe_createpoint(IGeometry, x, y)
+
+function unsafe_createpoint(::Type{G}, x::Real, y::Real, z::Real) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbPoint)
     addpoint!(geom, x, y, z)
     geom
 end
 
-function unsafe_createpoint(xy::Tuple{T,U}) where {T <: Real, U <: Real}
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+unsafe_createpoint(x::Real, y::Real, z::Real) =
+    unsafe_createpoint(Geometry, x, y, z)
+
+createpoint(x::Real, y::Real, z::Real) =
+    unsafe_createpoint(IGeometry, x, y, z)
+
+function unsafe_createpoint(::Type{G}, xy::Tuple{T,U}) where {T <: Real, U <: Real, G <: AbstractGeometry}
+    geom = unsafe_creategeom(G, GDAL.wkbPoint)
     addpoint!(geom, xy...)
     geom
 end
 
-function unsafe_createpoint(xyz::Tuple{T,U,V}) where {T <: Real, U <: Real, V <: Real}
-    geom = unsafe_creategeom(GDAL.wkbPoint)
+unsafe_createpoint(xy::Tuple{T,U}) where {T <: Real, U <: Real} =
+    unsafe_createpoint(Geometry, xy)
+
+createpoint(xy::Tuple{T,U}) where {T <: Real, U <: Real} =
+    unsafe_createpoint(IGeometry, xy)
+
+function unsafe_createpoint(::Type{G}, xyz::Tuple{T,U,V}) where {T <: Real, U <: Real, V <: Real, G <: AbstractGeometry}
+    geom = unsafe_creategeom(G, GDAL.wkbPoint)
     addpoint!(geom, xyz...)
     geom
 end
+
+unsafe_createpoint(xyz::Tuple{T,U,V}) where {T <: Real, U <: Real, V <: Real} =
+    unsafe_createpoint(Geometry, xyz)
+
+createpoint(args...) = unsafe_createpoint(IGeometry, args...)
 
 # Tuples of Vectors
 for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
                         (:linearring, GDAL.wkbLinearRing))
     eval(quote
-        function $(Symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
-                                                 ys::Vector{Cdouble})
-            geom = unsafe_creategeom($wkbgeom)
+        function $(Symbol("unsafe_create$geom"))(
+                ::Type{G},
+                xs::Vector{Cdouble},
+                ys::Vector{Cdouble}
+            ) where G <: AbstractGeometry
+            geom = unsafe_creategeom(G, $wkbgeom)
             for (x,y) in zip(xs, ys)
                 addpoint!(geom, x, y)
             end
             geom
         end
 
-        function $(Symbol("unsafe_create$geom"))(xs::Vector{Cdouble},
-                             ys::Vector{Cdouble},zs::Vector{Cdouble})
-            geom = unsafe_creategeom($wkbgeom)
+        function $(Symbol("unsafe_create$geom"))(
+                ::Type{G},
+                xs::Vector{Cdouble},
+                ys::Vector{Cdouble},
+                zs::Vector{Cdouble}
+            ) where G <: AbstractGeometry
+            geom = unsafe_creategeom(G, $wkbgeom)
             for (x,y,z) in zip(xs, ys, zs)
                 addpoint!(geom, x, y, z)
             end
             geom
         end
+
+        $(Symbol("unsafe_create$geom"))(args...) = $(Symbol("unsafe_create$geom"))(Geometry, args...)
+
+        $(Symbol("create$geom"))(args...) = $(Symbol("unsafe_create$geom"))(IGeometry, args...)
     end)
 end
 
-function unsafe_createpolygon(xs::Vector{Cdouble}, ys::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbPolygon)
+function unsafe_createpolygon(
+        ::Type{G},
+        xs::Vector{Cdouble},
+        ys::Vector{Cdouble}
+    ) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbPolygon)
     addgeomdirectly!(geom, unsafe_createlinearring(xs, ys))
     geom
 end
 
-function unsafe_createpolygon(xs::Vector{Cdouble}, ys::Vector{Cdouble},
-                              zs::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbPolygon)
+function unsafe_createpolygon(
+        ::Type{G},
+        xs::Vector{Cdouble},
+        ys::Vector{Cdouble},
+        zs::Vector{Cdouble}
+    ) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbPolygon)
     addgeomdirectly!(geom, unsafe_createlinearring(xs, ys, zs))
     geom
 end
 
-function unsafe_createmultipoint(xs::Vector{Cdouble}, ys::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbMultiPoint)
+unsafe_createpolygon(args...) = unsafe_createpolygon(Geometry, args...)
+
+createpolygon(args...) = unsafe_createpolygon(IGeometry, args...)
+
+function unsafe_createmultipoint(
+        ::Type{G},
+        xs::Vector{Cdouble},
+        ys::Vector{Cdouble}
+    ) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbMultiPoint)
     for (x, y) in zip(xs, ys)
         addgeomdirectly!(geom, unsafe_createpoint(x, y))
     end
     geom
 end
 
-function unsafe_createmultipoint(xs::Vector{Cdouble}, ys::Vector{Cdouble},
-                                 zs::Vector{Cdouble})
-    geom = unsafe_creategeom(GDAL.wkbMultiPoint)
+function unsafe_createmultipoint(
+        ::Type{G},
+        xs::Vector{Cdouble},
+        ys::Vector{Cdouble},
+        zs::Vector{Cdouble}
+    ) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbMultiPoint)
     for (x, y, z) in zip(xs, ys, zs)
         addgeomdirectly!(geom, unsafe_createpoint(x, y, z))
     end
     geom
 end
 
+unsafe_createmultipoint(args...) = unsafe_createmultipoint(Geometry, args...)
+
+createmultipoint(args...) = unsafe_createmultipoint(IGeometry, args...)
+
 # Vectors of Tuples
 for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
                  Vector{Tuple{Cdouble,Cdouble,Cdouble}})
     for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
                             (:linearring, GDAL.wkbLinearRing))
-        @eval function $(Symbol("unsafe_create$geom"))(coords::$typeargs)
-                  geom = unsafe_creategeom($wkbgeom)
-                  for coord in coords
-                      addpoint!(geom, coord...)
-                  end
-                  geom
-              end
+        eval(quote
+            function $(Symbol("unsafe_create$geom"))(
+                    ::Type{G},
+                    coords::$typeargs
+                ) where G <: AbstractGeometry
+                geom = unsafe_creategeom(G, $wkbgeom)
+                for coord in coords; addpoint!(geom, coord...) end
+                geom
+            end
+
+            $(Symbol("unsafe_create$geom"))(coords::$typeargs) =
+                $(Symbol("unsafe_create$geom"))(Geometry, coords)
+
+            $(Symbol("create$geom"))(coords::$typeargs) =
+                $(Symbol("unsafe_create$geom"))(IGeometry, coords)
+        end)
     end
 
     eval(quote
-        function unsafe_createpolygon(coords::$typeargs)
-            geom = unsafe_creategeom(GDAL.wkbPolygon)
+        function unsafe_createpolygon(::Type{G}, coords::$typeargs) where G <: AbstractGeometry
+            geom = unsafe_creategeom(G, GDAL.wkbPolygon)
             addgeomdirectly!(geom, unsafe_createlinearring(coords))
             geom
         end
 
-        function unsafe_createmultipoint(coords::$typeargs)
-            geom = unsafe_creategeom(GDAL.wkbMultiPoint)
+        unsafe_createpolygon(coords::$typeargs) = unsafe_createpolygon(Geometry, coords)
+
+        createpolygon(coords::$typeargs) = unsafe_createpolygon(IGeometry, coords)
+
+        function unsafe_createmultipoint(::Type{G}, coords::$typeargs) where G <: AbstractGeometry
+            geom = unsafe_creategeom(G, GDAL.wkbMultiPoint)
             for point in coords
                 addgeomdirectly!(geom, unsafe_createpoint(point))
             end
             geom
         end
+
+        unsafe_createmultipoint(coords::$typeargs) = unsafe_createmultipoint(Geometry, coords)
+
+        createmultipoint(coords::$typeargs) = unsafe_createmultipoint(IGeometry, coords)
     end)
 end
 
@@ -1134,22 +1298,38 @@ for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
     for (geom, wkbgeom, f) in ((:polygon, GDAL.wkbPolygon, :unsafe_createlinearring),
                                (:multilinestring, GDAL.wkbMultiLineString, :unsafe_createlinestring),
                                (:multipolygon_noholes, GDAL.wkbMultiPolygon, :unsafe_createpolygon))
-        @eval function $(Symbol("unsafe_create$geom"))(coords::$typeargs)
-                  geom = unsafe_creategeom($wkbgeom)
-                  for coord in coords
-                      addgeomdirectly!(geom, $(f)(coord))
-                  end
-                  geom
-              end
+        eval(quote
+            function $(Symbol("unsafe_create$geom"))(
+                    ::Type{G},
+                    coords::$typeargs
+                ) where G <: AbstractGeometry
+                geom = unsafe_creategeom(G, $wkbgeom)
+                for coord in coords; addgeomdirectly!(geom, $(f)(coord)) end
+                geom
+            end
+
+            $(Symbol("unsafe_create$geom"))(coords::$typeargs) =
+                $(Symbol("unsafe_create$geom"))(Geometry, coords::$typeargs)
+
+            $(Symbol("create$geom"))(coords::$typeargs) =
+                $(Symbol("unsafe_create$geom"))(IGeometry, coords::$typeargs)
+        end)
     end
 end
 
 function unsafe_createmultipolygon(
+        ::Type{G},
         coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}
-    )
-    geom = unsafe_creategeom(GDAL.wkbMultiPolygon)
+    ) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbMultiPolygon)
     for coord in coords
         addgeomdirectly!(geom, unsafe_createpolygon(coord))
     end
     geom
 end
+
+unsafe_createmultipolygon(coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}) =
+    unsafe_createmultipolygon(Geometry, coords)
+
+createmultipolygon(coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}) =
+    unsafe_createmultipolygon(IGeometry, coords)
