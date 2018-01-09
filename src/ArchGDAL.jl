@@ -2,7 +2,7 @@ module ArchGDAL
 
     using Compat
     import Compat.String
-    import GDAL
+    import GDAL, GeoInterface
     import DataStreams: Data
 
     include("utils.jl")
@@ -25,5 +25,6 @@ module ArchGDAL
     include("base/iterators.jl")
     include("base/display.jl")
     include("datastreams.jl")
+    include("geointerface.jl")
 
 end # module
