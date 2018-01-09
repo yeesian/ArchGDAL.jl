@@ -1111,6 +1111,16 @@ for (geom, wkbgeom) in ((:geomcollection,   GDAL.wkbGeometryCollection),
     end)
 end
 
+function unsafe_createpoint(::Type{G}, coords::Vector{<:Real}) where G <: AbstractGeometry
+    geom = unsafe_creategeom(G, GDAL.wkbPoint)
+    addpoint!(geom, coords...)
+    geom
+end
+
+unsafe_createpoint(coords::Vector{<:Real}) = unsafe_createpoint(Geometry, coords)
+
+createpoint(coords::Vector{<:Real}) = unsafe_createpoint(IGeometry, coords)
+
 function unsafe_createpoint(::Type{G}, x::Real, y::Real) where G <: AbstractGeometry
     geom = unsafe_creategeom(G, GDAL.wkbPoint)
     addpoint!(geom, x, y)
@@ -1247,7 +1257,8 @@ createmultipoint(args...) = unsafe_createmultipoint(IGeometry, args...)
 
 # Vectors of Tuples
 for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
-                 Vector{Tuple{Cdouble,Cdouble,Cdouble}})
+                 Vector{Tuple{Cdouble,Cdouble,Cdouble}},
+                 Vector{Vector{Cdouble}})
     for (geom, wkbgeom) in ((:linestring, GDAL.wkbLineString),
                             (:linearring, GDAL.wkbLinearRing))
         eval(quote
@@ -1294,7 +1305,8 @@ for typeargs in (Vector{Tuple{Cdouble,Cdouble}},
 end
 
 for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
-                 Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}})
+                 Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}},
+                 Vector{Vector{Vector{Cdouble}}})
     for (geom, wkbgeom, f) in ((:polygon, GDAL.wkbPolygon, :unsafe_createlinearring),
                                (:multilinestring, GDAL.wkbMultiLineString, :unsafe_createlinestring),
                                (:multipolygon_noholes, GDAL.wkbMultiPolygon, :unsafe_createpolygon))
@@ -1317,19 +1329,23 @@ for typeargs in (Vector{Vector{Tuple{Cdouble,Cdouble}}},
     end
 end
 
-function unsafe_createmultipolygon(
-        ::Type{G},
-        coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}
-    ) where G <: AbstractGeometry
-    geom = unsafe_creategeom(G, GDAL.wkbMultiPolygon)
-    for coord in coords
-        addgeomdirectly!(geom, unsafe_createpolygon(coord))
-    end
-    geom
+for typeargs in (Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}},
+                 Vector{Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}}},
+                 Vector{Vector{Vector{Vector{Cdouble}}}})
+    eval(quote
+        function unsafe_createmultipolygon(
+                ::Type{G},
+                coords::$typeargs
+            ) where G <: AbstractGeometry
+            geom = unsafe_creategeom(G, GDAL.wkbMultiPolygon)
+            for coord in coords
+                addgeomdirectly!(geom, unsafe_createpolygon(coord))
+            end
+            geom
+        end
+
+        unsafe_createmultipolygon(coords::$typeargs) = unsafe_createmultipolygon(Geometry, coords)
+
+        createmultipolygon(coords::$typeargs) = unsafe_createmultipolygon(IGeometry, coords)
+    end)
 end
-
-unsafe_createmultipolygon(coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}) =
-    unsafe_createmultipolygon(Geometry, coords)
-
-createmultipolygon(coords::Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}}) =
-    unsafe_createmultipolygon(IGeometry, coords)
