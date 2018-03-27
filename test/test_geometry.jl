@@ -1,9 +1,11 @@
 using Base.Test
-import GDAL, ArchGDAL; const AG = ArchGDAL
+import GeoInterface, GDAL, ArchGDAL; const AG = ArchGDAL
 
 @testset "Create a Point" begin
     # Method 1
     AG.createpoint(100, 70) do point
+        @test GeoInterface.geotype(point) == :Point
+        @test isapprox.(GeoInterface.coordinates(point), [100,70], atol=1e-6)
         @test AG.getdim(point) == 0
         @test AG.getcoorddim(point) == 2
         AG.setcoorddim!(point, 3)
@@ -31,6 +33,11 @@ import GDAL, ArchGDAL; const AG = ArchGDAL
         AG.createpoint((100,70,0)) do point3
             @test AG.equals(point, point3) == true
         end
+        AG.createpoint([100,70,0]) do point4
+            @test AG.equals(point, point4) == true
+        end
+        point5 = AG.createpoint([100,70,0])
+        @test AG.equals(point, point5) == true
         AG.flattento2d!(point)
         @test AG.getcoorddim(point) == 2
         @test AG.getnonlineargeomflag() == true
@@ -80,6 +87,8 @@ end
 @testset "Testing construction of complex geometries" begin
     @test AG.toWKT(AG.createlinestring([1.,2.,3.], [4.,5.,6.])) == "LINESTRING (1 4,2 5,3 6)"
     AG.createlinestring([1.,2.,3.], [4.,5.,6.]) do geom
+        @test GeoInterface.geotype(geom) == :LineString
+        @test isapprox(GeoInterface.coordinates(geom), [[1,4],[2,5],[3,6]], atol=1e-6)
         @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
         AG.closerings!(geom)
         @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
@@ -96,6 +105,8 @@ end
     
     @test AG.toWKT(AG.createlinearring([1.,2.,3.], [4.,5.,6.])) == "LINEARRING (1 4,2 5,3 6)"
     AG.createlinearring([1.,2.,3.], [4.,5.,6.]) do geom
+        # @test GeoInterface.geotype(geom) == :LinearRing
+        @test isapprox(GeoInterface.coordinates(geom), [[1,4],[2,5],[3,6]], atol=1e-6)
         @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
         AG.setpointcount!(geom, 5)
         @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
@@ -110,6 +121,8 @@ end
 
     @test AG.toWKT(AG.createpolygon([1.,2.,3.], [4.,5.,6.])) == "POLYGON ((1 4,2 5,3 6))"
     AG.createpolygon([1.,2.,3.], [4.,5.,6.]) do geom
+        @test GeoInterface.geotype(geom) == :Polygon
+        @test isapprox(GeoInterface.coordinates(geom), [[[1,4],[2,5],[3,6]]], atol=1e-6)
         @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
     end
     AG.createpolygon([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
@@ -120,6 +133,8 @@ end
 
     @test AG.toWKT(AG.createmultipoint([1.,2.,3.], [4.,5.,6.])) == "MULTIPOINT (1 4,2 5,3 6)"
     AG.createmultipoint([1.,2.,3.], [4.,5.,6.]) do geom
+        @test GeoInterface.geotype(geom) == :MultiPoint
+        @test isapprox(GeoInterface.coordinates(geom), [[1,4],[2,5],[3,6]], atol=1e-6)
         @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
     end
     AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
@@ -141,6 +156,14 @@ end
                             Vector{Tuple{Cdouble,Cdouble}}[
                                 [(10,0),(10,4),(14,4),(14,0)],
                                 [(11,1),(11,3),(13,3),(13,1)]]]) do geom
+        @test GeoInterface.geotype(geom) == :MultiPolygon
+        @test isapprox(
+            GeoInterface.coordinates(geom), [
+                [[[0,0],[0,4],[4,4],[4,0]], [[1,1],[1,3],[3,3],[3,1]]],
+                [[[10,0],[10,4],[14,4],[14,0]], [[11,1],[11,3],[13,3],[13,1]]]
+            ],
+            atol=1e-6
+        )
         @test AG.toWKT(geom) == "MULTIPOLYGON (((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1)),((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
     end
 
