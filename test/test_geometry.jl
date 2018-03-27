@@ -5,7 +5,7 @@ import GeoInterface, GDAL, ArchGDAL; const AG = ArchGDAL
     # Method 1
     AG.createpoint(100, 70) do point
         @test GeoInterface.geotype(point) == :Point
-        @test isapprox.(GeoInterface.coordinates(point), [100,70], atol=1e-6)
+        @test isapprox(GeoInterface.coordinates(point), [100,70], atol=1e-6)
         @test AG.getdim(point) == 0
         @test AG.getcoorddim(point) == 2
         AG.setcoorddim!(point, 3)
