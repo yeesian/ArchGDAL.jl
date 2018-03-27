@@ -309,6 +309,7 @@ end
                               [(1184641.3624957693, 626754.8178616514),
                                (1219792.6152635587, 606866.6090588232)]
                              ]) do multiline
+        @test GeoInterface.geotype(multiline) == :MultiLineString
         println(AG.toWKT(multiline))
     end
 
