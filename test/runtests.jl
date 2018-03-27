@@ -54,11 +54,8 @@ remotefiles = [
 
 for f in remotefiles
     # create the directories if they don't exist
-    filepath = split(f,"/")
-    for i in 1:(length(filepath)-1)
-        currdir = joinpath(testdatadir, filepath[1:i]...)
-        isdir(currdir) || mkpath(currdir)
-    end
+    currdir = dirname(f)
+    isdir(currdir) || mkpath(currdir)
     # download the file
     currfile = joinpath(testdatadir, f)
     isfile(currfile) || download(REPO_URL*f*"?raw=true", currfile)
