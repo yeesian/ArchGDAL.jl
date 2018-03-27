@@ -19,7 +19,9 @@ const GDALStyleTool       = Ptr{GDAL.OGRStyleToolH}
 
 const StringList          = Ptr{Ptr{UInt8}}
 
-abstract type AbstractGeometry end # needs to have a `ptr::GDALGeometry` attribute
+abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
+    # needs to have a `ptr::GDALGeometry` attribute
+
 mutable struct ColorTable;                    ptr::GDALColorTable         end
 mutable struct CoordTransform;                ptr::GDALCoordTransform     end
 mutable struct Dataset;                       ptr::GDALDataset            end
