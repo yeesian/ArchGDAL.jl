@@ -655,13 +655,11 @@ end
 
     # Method 1
     AG.fromWKT(wkt) do geom
-        # TODO This should be 4!
-        @test AG.npoint(geom) == 0
+        @test AG.npoint(geom) == 4
     end
 
     # Method 2
-    # TODO This should be 4!
-    @test AG.npoint(AG.fromWKT(wkt)) == 0
+    @test AG.npoint(AG.fromWKT(wkt)) == 4
 end
 
 @testset "Iterate over Geometries in a Geometry" begin
@@ -691,7 +689,7 @@ end
     end
 
     # Method 2
-    @test AG.getgeomtype(AG.toWKT(AG.buffer(AG.fromWKT(wkt), 500))) == GDAL.wkbPolygon
+    @test AG.getgeomtype(AG.buffer(AG.fromWKT(wkt), 500)) == GDAL.wkbPolygon
 end
 
 # @testset "Calculate Envelope of a Geometry" begin
