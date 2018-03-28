@@ -1,14 +1,16 @@
 environment:
   matrix:
-  - JULIAVERSION: "julialang/bin/winnt/x86/0.4/julia-0.4-latest-win32.exe"
-  - JULIAVERSION: "julialang/bin/winnt/x64/0.4/julia-0.4-latest-win64.exe"
+  - JULIAVERSION: "julialang/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
+  - JULIAVERSION: "julialang/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
   - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
   - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
 
-branches:
-  only:
-    - master
-    - /release-.*/
+matrix:
+  allow_failures:
+    - JULIAVERSION: "julialang/bin/winnt/x86/0.6/julia-0.6-latest-win32.exe"
+    - JULIAVERSION: "julialang/bin/winnt/x64/0.6/julia-0.6-latest-win64.exe"
+    - JULIAVERSION: "julianightlies/bin/winnt/x86/julia-latest-win32.exe"
+    - JULIAVERSION: "julianightlies/bin/winnt/x64/julia-latest-win64.exe"
 
 notifications:
   - provider: Email
@@ -32,4 +34,4 @@ build_script:
       Pkg.clone(pwd(), \"ArchGDAL\"); Pkg.build(\"ArchGDAL\")"
 
 test_script:
-  - C:\projects\julia\bin\julia --check-bounds=yes -e "Pkg.test(\"ArchGDAL\")"
+  - C:\projects\julia\bin\julia -e "Pkg.test(\"ArchGDAL\")"

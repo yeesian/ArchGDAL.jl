@@ -18,7 +18,7 @@ function invgeotransform!(gt_in::Vector{Cdouble}, gt_out::Vector{Cdouble})
 end
 
 invgeotransform(gt_in::Vector{Cdouble}) =
-    invgeotransform!(gt_in, Array(Cdouble, 6))
+    invgeotransform!(gt_in, Array{Cdouble}(6))
 
 """
 Apply GeoTransform to x/y coordinate.
@@ -37,7 +37,7 @@ georeferenced `(geo_x,geo_y)` location.
 function applygeotransform(geotransform::Vector{Cdouble},
                            pixel::Cdouble,
                            line::Cdouble)
-    geo_xy = Array(Cdouble, 2)
+    geo_xy = Array{Cdouble}(2)
     geo_x = pointer(geo_xy)
     geo_y = geo_x + sizeof(Cdouble)
     GDAL.applygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
@@ -63,4 +63,4 @@ function composegeotransform!(gt1::Vector{Cdouble}, gt2::Vector{Cdouble},
 end
 
 composegeotransform(gt1::Vector{Cdouble}, gt2::Vector{Cdouble}) =
-    composegeotransform!(gt1, gt2, Array(Cdouble, 6))
+    composegeotransform!(gt1, gt2, Array{Cdouble}(6))

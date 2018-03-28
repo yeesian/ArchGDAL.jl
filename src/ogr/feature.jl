@@ -48,13 +48,16 @@ passed geometry, but instead makes a copy of it.
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry
 type is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeom!(feature::Feature, geom::Geometry)
+function setgeom!(feature::Feature, geom::AbstractGeometry)
     result = GDAL.setgeometry(feature.ptr, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
 end
 
 "Fetch an handle to internal feature geometry. It should not be modified."
-getgeom(feature::Feature) = Geometry(GDAL.getgeometryref(feature.ptr))
+unsafe_getgeom(feature::Feature) =
+    Geometry(GDAL.getgeometryref(feature.ptr))
+getgeom(feature::Feature) =
+    IGeometry(GDAL.clone(GDAL.getgeometryref(feature.ptr)))
 
 """
 Fetch number of fields on this feature.
@@ -76,27 +79,6 @@ internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::Feature, i::Integer) =
     FieldDefn(GDAL.getfielddefnref(feature.ptr, i))
-
-# fetchfields(feature::Feature) =
-#     Dict(getname(borrowfieldefn(feature, i-1)) => fetchfield(feature, i-1)
-#          for i in 1:nfield(feature))
-
-# fetchfields{T <: Integer}(feature::Feature, indices::UnitRange{T}) =
-#     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
-#          for i in indices)
-
-# fetchfields{T <: Integer}(feature::Feature, indices::Vector{T}) =
-#     Dict(getname(borrowfieldefn(feature, i)) => fetchfield(feature, i)
-#          for i in indices)
-
-# fetchfields(feature::Feature, names::Vector{String}) =
-#     Dict(name => fetchfield(feature, getfieldindex(feature, name))
-#          for name in names)
-
-# borrowgeomfields(feature::Feature) =
-#     Dict(getname(borrowgeomfieldefn(feature, i)) =>
-#           toWKT(borrowgeomfield(feature, i))
-#           for i in 1:ngeomfield(feature))
 
 """
 Fetch the field index given field name.
@@ -196,8 +178,9 @@ pointer may be NULL or non-NULL.
 """
 function asintlist(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{Int32}
     ptr = GDAL.checknull(GDAL.getfieldasintegerlist(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -216,8 +199,9 @@ pointer may be NULL or non-NULL.
 """
 function asint64list(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{Int64}
     ptr = GDAL.checknull(GDAL.getfieldasinteger64list(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -237,7 +221,8 @@ pointer may be NULL or non-NULL.
 function asdoublelist(feature::Feature, i::Integer)
     n = Ref{Cint}()
     ptr = GDAL.checknull(GDAL.getfieldasdoublelist(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    a = Array{Float64}
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -271,8 +256,9 @@ Its lifetime may be very brief.
 """
 function asbinary(feature::Feature, i::Integer)
     n = Ref{Cint}()
+    a = Array{UInt8}
     ptr = GDAL.checknull(GDAL.getfieldasbinary(feature.ptr, i, n))
-    pointer_to_array(ptr, n[], false)
+    unsafe_wrap(a, ptr, n.x)
 end
 
 """
@@ -500,11 +486,11 @@ field types may be unaffected.
 * `iField`: the field to set, from 0 to GetFieldCount()-1.
 * `papszValues`: the values to assign.
 """
-function setfield!{T <: AbstractString}(
+function setfield!(
         feature::Feature,
         i::Integer,
         value::Vector{T}
-    )
+    ) where T <: AbstractString
     @gdal(OGR_F_SetFieldStringList::Void,
         feature.ptr::GDALFeature,
         i::Cint,
@@ -625,8 +611,10 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
-getgeomfield(feature::Feature, i::Integer) =
+unsafe_getgeomfield(feature::Feature, i::Integer) =
     Geometry(GDAL.getgeomfieldref(feature.ptr, i))
+getgeomfield(feature::Feature, i::Integer) = 
+    IGeometry(GDAL.clone(GDAL.getgeomfieldref(feature.ptr, i)))
 
 """
 Set feature geometry of a specified geometry field.
@@ -667,7 +655,7 @@ the passed geometry, but instead makes a copy of it.
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type
 is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomfield!(feature::Feature, i::Integer, geom::Geometry)
+function setgeomfield!(feature::Feature, i::Integer, geom::AbstractGeometry)
     result = GDAL.setgeomfield(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry"
     feature

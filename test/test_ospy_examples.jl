@@ -1,4 +1,4 @@
-using FactCheck
+using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
 """
@@ -74,7 +74,7 @@ end
 
 AG.registerdrivers() do
 
-facts("Homework 1") do
+@testset "Homework 1" begin
 AG.read("ospy/data1/sites.shp") do input
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
     for feature in AG.getlayer(input, 0)
@@ -87,13 +87,13 @@ AG.read("ospy/data1/sites.shp") do input
     # version 1
     AG.create("", "MEMORY") do output
         inlayer = AG.getlayer(input, 0)
-        outlayer = AG.createlayer(output, "hw1b", geom=AG.wkbPoint)
+        outlayer = AG.createlayer(output, "hw1b", geom=GDAL.wkbPoint)
         inlayerdefn = AG.getlayerdefn(inlayer)
         AG.createfield!(outlayer, AG.getfielddefn(inlayerdefn, 0))
         AG.createfield!(outlayer, AG.getfielddefn(inlayerdefn, 1))
         for infeature in inlayer
             id = AG.getfield(infeature, 0)
-            @fact AG.asint64(infeature, 0) --> id
+            @test AG.asint64(infeature, 0) == id
             cover = AG.getfield(infeature, 1)
             if cover == "trees"
                 AG.createfeature(outlayer) do outfeature
@@ -116,13 +116,13 @@ AG.read("ospy/data1/sites.shp") do input
 end
 end
     
-facts("Homework 2") do
+@testset "Homework 2" begin
     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
     open("ospy/data2/ut_counties.txt", "r") do file
     AG.create("", "MEMORY") do output
-        layer = AG.createlayer(output, "hw2a", geom=AG.wkbPolygon)
+        layer = AG.createlayer(output, "hw2a", geom=GDAL.wkbPolygon)
         println(layer)
-        AG.createfielddefn("name", AG.OFTString) do fielddefn
+        AG.createfielddefn("name", GDAL.OFTString) do fielddefn
             AG.setwidth!(fielddefn, 30)
             AG.createfield!(layer, fielddefn)
         end
@@ -172,7 +172,7 @@ facts("Homework 2") do
     end
 end
 
-facts("Homework 3") do
+@testset "Homework 3" begin
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
     AG.read("ospy/data3/sites.shp") do sitesDS
         AG.read("ospy/data3/cache_towns.shp") do townsDS
@@ -196,7 +196,7 @@ end
 
 AG.read("ospy/data4/aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
-    facts("Homework 4(a)") do
+    @testset "Homework 4" begin
         AG.read("ospy/data4/sites.shp") do shp
             shplayer = AG.getlayer(shp, 0)
             id = AG.getfieldindex(AG.getlayerdefn(shplayer), "ID")
@@ -223,7 +223,7 @@ AG.read("ospy/data4/aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4b.py
-    facts("Homework 4(b)") do
+    @testset "Homework 4" begin
         # version 1
         @time begin
             count = 0
@@ -243,7 +243,7 @@ AG.read("ospy/data4/aster.img") do ds
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array(AG.getdatatype(band), AG.getblocksize(band)...)
+            buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)...)
             for (cols,rows) in AG.windows(band)
                 AG.rasterio!(band, buffer, rows, cols)
                 data = buffer[1:length(cols),1:length(rows)]
@@ -269,7 +269,7 @@ AG.read("ospy/data4/aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5a.py
-    facts("Homework 5(a)") do
+    @testset "Homework 5" begin
         @time begin
             rows = AG.height(ds); cols = AG.width(ds); bands = AG.nraster(ds)
 
@@ -277,9 +277,9 @@ AG.read("ospy/data4/aster.img") do ds
             inband2 = AG.getband(ds, 2); inband3 = AG.getband(ds, 3)
             (xbsize, ybsize) = AG.getblocksize(inband2)
 
-            buffer2 = Array(Float32, ybsize, xbsize)
-            buffer3 = Array(Float32, ybsize, xbsize)
-            ndvi    = Array(Float32, ybsize, xbsize)
+            buffer2 = Array{Float32}(ybsize, xbsize)
+            buffer3 = Array{Float32}(ybsize, xbsize)
+            ndvi    = Array{Float32}(ybsize, xbsize)
             AG.create("", "MEM",
                       width=cols, height=rows, nbands=1, dtype=Float32) do outDS
                 for ((i,j),(nrows,ncols)) in AG.blocks(inband2)
@@ -318,7 +318,7 @@ AG.read("ospy/data4/aster.img") do ds
 end end end end
 
 #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
-facts("Homework 5(b)") do
+@testset "Homework 5" begin
     AG.read("ospy/data5/doq1.img") do ds1
         AG.read("ospy/data5/doq2.img") do ds2
             # read in doq1 and get info about it
@@ -360,8 +360,8 @@ facts("Homework 5(b)") do
             yOffset2 = round(Int, (maxY2 - maxY) / pixelHeight1)
 
             dtype = AG.getdatatype(band1)
-            data1 = Array(dtype, rows, cols)
-            data2 = Array(dtype, rows, cols)
+            data1 = Array{dtype}(rows, cols)
+            data2 = Array{dtype}(rows, cols)
             # create the output image
             AG.create("", "MEM",width=cols, height=rows, nbands=1,
                       dtype=AG.getdatatype(band1)) do dsout

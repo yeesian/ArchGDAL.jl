@@ -244,14 +244,14 @@ Read or Write a block of strings to/from the Attribute Table.
 * `nrows`       Number of rows to read or write
 * `data`        Array of strings to read/write. Should be at least `nrows` long.
 """
-function attributeio!{T <: AbstractString}(
+function attributeio!(
         rat::RasterAttrTable,
         access::GDALRWFlag,
         col::Integer,
         startrow::Integer,
         nrows::Integer,
         data::Vector{T}
-    )
+    ) where T <: AbstractString
     result = @gdal(GDALRATValuesIOAsString::GDAL.CPLErr,
         rat.ptr::GDALRasterAttrTable,
         access::GDAL.GDALRWFlag,

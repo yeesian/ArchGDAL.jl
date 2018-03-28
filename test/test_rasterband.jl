@@ -1,7 +1,7 @@
-using FactCheck
+using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
-facts("Test methods for rasterband") do
+@testset "Test methods for rasterband" begin
     AG.registerdrivers() do
         AG.read("data/utmsmall.tif") do dataset
             println(dataset)
@@ -9,64 +9,64 @@ facts("Test methods for rasterband") do
             println(rb)
             println(AG.getdataset(rb))
 
-            @fact AG.getunittype(rb) --> ""
+            @test AG.getunittype(rb) == ""
             AG.setunittype!(rb,"ft")
-            @fact AG.getunittype(rb) --> "ft"
+            @test AG.getunittype(rb) == "ft"
             AG.setunittype!(rb,"")
-            @fact AG.getunittype(rb) --> ""
+            @test AG.getunittype(rb) == ""
 
-            @fact AG.getoffset(rb) --> 0
+            @test AG.getoffset(rb) == 0
             AG.setoffset!(rb, 10)
-            @fact AG.getoffset(rb) --> roughly(10)
+            @test AG.getoffset(rb) ≈ 10
             AG.setoffset!(rb, 0)
-            @fact AG.getoffset(rb) --> roughly(0)
+            @test AG.getoffset(rb) ≈ 0
 
-            @fact AG.getscale(rb) --> 1
+            @test AG.getscale(rb) == 1
             AG.setscale!(rb, 0.5)
-            @fact AG.getscale(rb) --> roughly(0.5)
+            @test AG.getscale(rb) ≈ 0.5
             AG.setscale!(rb, 2)
-            @fact AG.getscale(rb) --> roughly(2)
+            @test AG.getscale(rb) ≈ 2
             AG.setscale!(rb, 1)
-            @fact AG.getscale(rb) --> roughly(1)
+            @test AG.getscale(rb) ≈ 1
 
-            @fact AG.getnodatavalue(rb) --> roughly(-1e10)
+            @test AG.getnodatavalue(rb) ≈ -1e10
             AG.setnodatavalue!(rb, -100)
-            @fact AG.getnodatavalue(rb) --> roughly(-100)
+            @test AG.getnodatavalue(rb) ≈ -100
             AG.deletenodatavalue!(rb)
-            @fact AG.getnodatavalue(rb) --> roughly(-1e10)
+            @test AG.getnodatavalue(rb) ≈ -1e10
 
             AG.createcopy(dataset, "tmp/utmsmall.tif") do dest
                 destband = AG.getband(dest, 1)
                 AG.copywholeraster!(rb, destband)
                 println(destband)
-                @fact AG.noverview(destband) --> 0
+                @test AG.noverview(destband) == 0
                 AG.buildoverviews!(dest, Cint[2, 4, 8])
-                @fact AG.noverview(destband) --> 3
+                @test AG.noverview(destband) == 3
                 println(destband)
 
-                @fact AG.getcolorinterp(destband) --> AG.GCI_GrayIndex
-                AG.setcolorinterp!(destband, AG.GCI_RedBand)
-                @fact AG.getcolorinterp(destband) --> AG.GCI_RedBand
+                @test AG.getcolorinterp(destband) == GDAL.GCI_GrayIndex
+                AG.setcolorinterp!(destband, GDAL.GCI_RedBand)
+                @test AG.getcolorinterp(destband) == GDAL.GCI_RedBand
 
                 println(AG.getsampleoverview(destband, 100))
                 println(AG.getsampleoverview(destband, 200))
                 println(AG.getsampleoverview(destband, 500))
                 println(AG.getsampleoverview(destband, 1000))
                 println(AG.getmaskband(destband))
-                @fact AG.getmaskflags(destband) --> 1
+                @test AG.getmaskflags(destband) == 1
                 AG.createmaskband!(destband, 3)
                 println(AG.getmaskband(destband))
-                @fact AG.getmaskflags(destband) --> 3
+                @test AG.getmaskflags(destband) == 3
                 AG.fillraster!(destband, 3)
                 AG.setcategorynames!(destband, ["foo","bar"])
-                @fact AG.getcategorynames(destband) --> ["foo", "bar"]
+                @test AG.getcategorynames(destband) == ["foo", "bar"]
 
                 AG.regenerateoverviews!(destband, AG.RasterBand[
                     AG.getoverview(destband, 0),
                     AG.getoverview(destband, 2)
                 ])
 
-                AG.createcolortable(AG.GPI_RGB) do ct
+                AG.createcolortable(GDAL.GPI_RGB) do ct
                     AG.createcolorramp!(ct,
                         128, GDAL.GDALColorEntry(0,0,0,0),
                         255, GDAL.GDALColorEntry(0,0,255,0)

@@ -1,3 +1,4 @@
+using Base.Test
 import ArchGDAL; const AG = ArchGDAL
 
 function read(f, filename)
@@ -6,7 +7,7 @@ function read(f, filename)
             f(dataset)
 end end end
 
-facts("Testing Displays for different objects") do
+@testset "Testing Displays for different objects" begin
     read("data/point.geojson") do dataset
         print(dataset)
     end;
