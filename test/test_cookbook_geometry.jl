@@ -644,10 +644,12 @@ end
     # Method 1
     AG.fromWKT(wkt) do geom
         @test AG.npoint(geom) == 4
+        @test AG.ngeom(geom) == 0
     end
 
     # Method 2
     @test AG.npoint(AG.fromWKT(wkt)) == 4
+    @test AG.ngeom(AG.fromWKT(wkt)) == 0
 end
 
 @testset "Count Points in a MultiPoint" begin
@@ -655,11 +657,14 @@ end
 
     # Method 1
     AG.fromWKT(wkt) do geom
-        @test AG.npoint(geom) == 4
+        @test AG.npoint(geom) == 0
+        @test AG.ngeom(geom) == 4
     end
 
     # Method 2
-    @test AG.npoint(AG.fromWKT(wkt)) == 4
+    @test AG.npoint(AG.fromWKT(wkt)) == 0
+    @test AG.ngeom(AG.fromWKT(wkt)) == 4
+
 end
 
 @testset "Iterate over Geometries in a Geometry" begin
