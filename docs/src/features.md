@@ -33,6 +33,8 @@ You can also programmatically retrieve them using
 * `fielddefn = ArchGDAL.getfielddefn(featuredefn, i)`: the definition for field `i`
 * `geomfielddefn = ArchGDAL.getgeomfielddefn(featuredefn, i)`: the definition for geometry `i`
 
+### Field Definitions
+
 Each `fielddefn` defines an attribute of a feature, and supports the following:
 * `ArchGDAL.getname(fielddefn)`: the name of the field (`FID` or `pointname`)
 * `ArchGDAL.gettype(fielddefn)`: the type of the field (`OFTReal` or `OFTString`)
