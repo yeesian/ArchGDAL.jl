@@ -2,7 +2,7 @@
 
 Here is an example of how you can work with a SQLite Database in ArchGDAL.jl, and follows the tutorial in http://www.gaia-gis.it/gaia-sins/spatialite-tutorial-2.3.1.html.
 
-We begin by downloading a sample database:
+We will work with the following database:
 
 ```@example spatialite
 import ArchGDAL
@@ -11,7 +11,7 @@ const AG = ArchGDAL
 filepath = download("https://github.com/yeesian/ArchGDALDatasets/raw/e0b15dca5ad493c5ebe8111688c5d14b031b7305/spatialite/test-2.3.sqlite", "test.sqlite")
 ```
 
-and quickly examine it:
+Here's a quick summary of `test.sqlite`:
 
 ```@example spatialite
 AG.registerdrivers() do
@@ -21,7 +21,7 @@ AG.registerdrivers() do
 end
 ```
 
-We begin by defining the following boilerplate:
+We will display the results of running `query` on the dataset using the following function:
 
 ```@example spatialite
 function inspect(query, filename=filepath)
@@ -34,7 +34,6 @@ function inspect(query, filename=filepath)
     end
 end
 ```
-which runs `query` on the dataset and displays the results.
 
 ## Constructing SQL Queries
 

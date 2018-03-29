@@ -17,26 +17,23 @@ We defer the discussions on `ArchGDAL.registerdrivers()` and `ArchGDAL.read(file
     In this case, a handle to the dataset is obtained, and no further data was requested. It is only when we run `print(dataset)` that calls will be made through GDAL's C API to obtain information about `dataset` for display.
 
 ## Vector Datasets
+```@setup vector_example
+import ArchGDAL
+filepath = download("https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson", "point.geojson")
+```
 In this section, we work with the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset via
-```julia
+```@example vector_example
 ArchGDAL.registerdrivers() do
-    ArchGDAL.read("data/point.geojson") do dataset
+    ArchGDAL.read(filepath) do dataset
         print(dataset)
     end
 end
-```
-which might print
-```
-GDAL Dataset (Driver: GeoJSON/GeoJSON)
-File(s): data/point.geojson
-Number of feature layers: 1
-  Layer 0: OGRGeoJSON (wkbPoint), nfeatures = 4
 ```
 
 The display indicates
 * the **type** of the object (`GDAL Dataset`)
 * the **driver** used to open it (shortname/longname: `GeoJSON/GeoJSON`)
-* the **files** that it corresponds to (`data/point.geojson`)
+* the **files** that it corresponds to (`point.geojson`)
 * the **number of layers** in the dataset, and their brief summary.
 
 You can also programmatically retrieve them using
@@ -54,29 +51,23 @@ You can also programmatically retrieve them using
 For more on working with features and vector data, see the Section on `Feature Data`.
 
 ## Raster Datasets
+```@setup raster_example
+import ArchGDAL
+filepath = download("https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif?raw=true", "world.tif")
+```
 In this section, we work with the [`gdalworkshop/world.tif`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif) dataset:
-```julia
+```@example raster_example
 ArchGDAL.registerdrivers() do
-    ArchGDAL.read("gdalworkshop/world.tif") do dataset
+    ArchGDAL.read(filepath) do dataset
         print(dataset)
     end
 end
-```
-which might print
-```julia
-GDAL Dataset (Driver: GTiff/GeoTIFF)
-File(s): gdalworkshop/world.tif
-Dataset (width x height): 2048 x 1024 (pixels)
-Number of raster bands: 3
-  [GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
-  [GA_ReadOnly] Band 2 (Green): 2048 x 1024 (UInt8)
-  [GA_ReadOnly] Band 3 (Blue): 2048 x 1024 (UInt8)
 ```
 
 The display indicates
 * the **type** of the object (`GDAL Dataset`)
 * the **driver** used to open it (shortname/longname: `GTiff/GeoTIFF`)
-* the **files** that it corresponds to (`gdalworkshop/world.tif`)
+* the **files** that it corresponds to (`world.tif`)
 * the **number of raster bands** in the dataset, and their brief summary.
 
 You can also programmatically retrieve them using
@@ -126,7 +117,7 @@ We provide the following methods for working with files:
 
 For each one of them, we will call `ArchGDAL.destroy` at the end of the `do`-block which will dispatch to the corresponding GDAL method. For example,
 
-```
+```julia
 ArchGDAL.read(filename) do dataset
     # work with dataset
 end
