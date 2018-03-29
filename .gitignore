@@ -3,3 +3,6 @@
 *.jl.mem
 
 *.xml
+
+docs/build/
+docs/site/
