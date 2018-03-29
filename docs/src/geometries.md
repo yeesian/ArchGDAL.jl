@@ -3,7 +3,7 @@
 In this section, we consider some of the common kinds of geometries that arises in applications. These include `Point`, `LineString`, `Polygon`, `GeometryCollection`, `MultiPolygon`, `MultiPoint`, and `MultiLineString`. For brevity in the examples, we will use the prefix `const AG = ArchGDAL`.
 
 ## Geometry Creation
-To create geometries of different types:
+To create geometries of different types.
 
 ```julia
 point = AG.createpoint(1.0, 2.0)
@@ -16,7 +16,7 @@ multilinestring = AG.createmultilinestring([[(i,i+1) for i in j:j+3] for j in 1.
 multipolygon = AG.createmultipolygon([[[(0.,0.), (0.,j), (j,j)]] for j in 1.0:-0.1:0.9])
 ```
 
-Alternatively, they can be assembled from their components:
+Alternatively, they can be assembled from their components.
 ```julia
 point = AG.createpoint()
     AG.addpoint!(point, 1.0, 2.0)
@@ -56,6 +56,7 @@ They can also be constructed from other data formats such as:
 * JavaScript Object Notation (JSON): `AG.fromJSON("""{"type":"Point","coordinates":[1,2]}""")`
 
 ## Geometry Modification
+The following methods are commonly used for retrieving elements of a geometry.
 
 * `AG.getcoorddim(geom)`: dimension of the coordinates. Returns `0` for an empty point
 * `AG.getspatialref(geom)`
@@ -64,6 +65,8 @@ They can also be constructed from other data formats such as:
 * `AG.getz(geom, i)`
 * `AG.getpoint(geom, i)`
 * `AG.getgeom(geom, i)`
+
+The following methods are commonly used for modifying or adding to a geometry.
 * `AG.setcoorddim!(geom, dim)`
 * `AG.setspatialref!(geom, spatialref)`
 * `AG.setpointcount!(geom, n)`
@@ -77,7 +80,7 @@ They can also be constructed from other data formats such as:
 * `AG.removeallgeoms!(geom)`
 
 ## Unary Operations
-Here is an non-exhaustive list of unary operations available for geometries:
+The following is an non-exhaustive list of unary operations available for geometries.
 
 ### Attributes
 
@@ -93,6 +96,7 @@ Here is an non-exhaustive list of unary operations available for geometries:
 * `AG.geomarea(geom)`: the area of the geometry, or `0.0` for unsupported types
 
 ### Predicates
+The following predicates return a `Bool`.
 
 * `AG.isempty(geom)`
 * `AG.isvalid(geom)`
@@ -101,6 +105,7 @@ Here is an non-exhaustive list of unary operations available for geometries:
 * `AG.hascurvegeom(geom, nonlinear::Bool)`
 
 ### Immutable Operations
+The following methods do not modify `geom`.
 
 * `AG.clone(geom)`: a copy of the geometry with the original spatial reference system.
 * `AG.forceto(geom, targettype)`: force the provided geometry to the specified geometry type.
@@ -117,6 +122,7 @@ Here is an non-exhaustive list of unary operations available for geometries:
 * `AG.polygonize(geom)`: Polygonizes a set of sparse edges.
 
 ### Mutable Operations
+The following methods modifies the first argument `geom`.
 
 * `AG.setcoorddim!(geom, dim)`: sets the explicit coordinate dimension.
 * `AG.flattento2d!(geom)`: Convert geometry to strictly 2D.
@@ -138,8 +144,11 @@ Here is an non-exhaustive list of unary operations available for geometries:
 * `AG.toJSON(geom)`
 
 ## Binary Operations
+The following is an non-exhaustive list of binary operations available for geometries.
 
 ### Predicates
+The following predicates return a `Bool`.
+
 * `AG.intersects(g1, g2)`
 * `AG.equals(g1, g2)`
 * `AG.disjoint(g1, g2)`
@@ -150,6 +159,7 @@ Here is an non-exhaustive list of unary operations available for geometries:
 * `AG.overlaps(g1, g2)`
 
 ### Immutable Operations
+The following methods do not mutate the input geomteries `g1` and `g2`.
 
 * `AG.intersection(g1, g2)`
 * `AG.union(g1, g2)`
@@ -157,6 +167,7 @@ Here is an non-exhaustive list of unary operations available for geometries:
 * `AG.symdifference(g1, g2)`
 
 ### Mutable Operations
+The following methods modifies the first argument `g1`.
 
 * `AG.addgeom!(g1, g2)`
 * `AG.addgeomdirectly!(g1, g2)`

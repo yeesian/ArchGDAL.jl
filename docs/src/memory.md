@@ -4,16 +4,25 @@ Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction
 
 Currently this package provides data types corresponding to GDAL's Data Model, e.g.
 ```julia
-type Geometry
-    ptr::Ptr{GDAL.OGRLayerH}
-end
-
-function destroy(geom::Geometry)
-    GDAL.destroygeometry(geom.ptr)
-    geom.ptr = C_NULL
-end
+mutable struct ColorTable;                    ptr::GDALColorTable         end
+mutable struct CoordTransform;                ptr::GDALCoordTransform     end
+mutable struct Dataset;                       ptr::GDALDataset            end
+mutable struct Driver;                        ptr::GDALDriver             end
+mutable struct Feature;                       ptr::GDALFeature            end
+mutable struct FeatureDefn;                   ptr::GDALFeatureDefn        end
+mutable struct FeatureLayer;                  ptr::GDALFeatureLayer       end
+mutable struct Field;                         ptr::GDALField              end
+mutable struct FieldDefn;                     ptr::GDALFieldDefn          end
+mutable struct Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
+mutable struct GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
+mutable struct RasterAttrTable;               ptr::GDALRasterAttrTable    end
+mutable struct RasterBand;                    ptr::GDALRasterBand         end
+mutable struct SpatialRef;                    ptr::GDALSpatialRef         end
+mutable struct StyleManager;                  ptr::GDALStyleManager       end
+mutable struct StyleTable;                    ptr::GDALStyleTable         end
+mutable struct StyleTool;                     ptr::GDALStyleTool          end
 ```
-and makes it the responsibility of the user to free the allocation of memory from GDAL, by calling `destroy()` (which sets `obj.ptr` to `C_NULL` after destroying the GDAL object corresponding to `obj`).
+and makes it the responsibility of the user to free the allocation of memory from GDAL, by calling `ArchGDAL.destroy(obj)` (which sets `obj.ptr` to `C_NULL` after destroying the GDAL object corresponding to `obj`).
 
 There are two approaches for doing so.
 
