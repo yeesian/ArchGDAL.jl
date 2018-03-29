@@ -4,4 +4,5 @@
 
 *.xml
 
-docs/build/*
+docs/build/
+docs/site/
