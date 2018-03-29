@@ -6,62 +6,6 @@ As modern [builds](https://trac.osgeo.org/gdal/wiki/BuildHints) of GDAL (e.g. by
 
 In the long term, this decouples (i) the development and maintenance of a high-level interface for GDAL from (ii) the development and maintenance of other projects relying on customized builds of GDAL. `ArchGDAL.jl` and [`GDAL.jl`](https://github.com/visr/GDAL.jl) are only concerned with (i), and will only be developed and tagged in accordance with [release changes](https://trac.osgeo.org/gdal/wiki/NewsAndStatus) in GDAL's C API.
 
-## Memory Ownership
-
-Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction), `ArchGDAL` does not automatically copy data from her data sources. This introduces concerns about memory ownership (whether objects should be managed by Julia's garbage collector, or by manually destroying the corresponding GDAL object).
-
-Currently this package provides data types corresponding to GDAL's Data Model, e.g.
-```julia
-type Geometry
-    ptr::Ptr{GDAL.OGRLayerH}
-end
-
-function destroy(geom::Geometry)
-    GDAL.destroygeometry(geom.ptr)
-    geom.ptr = C_NULL
-end
-```
-and makes it the responsibility of the user to free the allocation of memory from GDAL, by calling `destroy()` (which sets `obj.ptr` to `C_NULL` after destroying the GDAL object corresponding to `obj`).
-
-There are two approaches for doing so.
-
-1. The first uses the [`unsafe_` prefix](http://docs.julialang.org/en/release-0.4/manual/style-guide/#don-t-expose-unsafe-operations-at-the-interface-level) to indicate methods that returns objects that needs to be manually destroyed:
-
-    ```
-    julia> AG.unsafe_
-    unsafe_boundary                   unsafe_createmultipoint            unsafe_fromWKB
-    unsafe_buffer                     unsafe_createmultipolygon          unsafe_fromWKT
-    unsafe_centroid                   unsafe_createmultipolygon_noholes  unsafe_fromXML
-    unsafe_clone                      unsafe_createpoint                 unsafe_getcurvegeom
-    unsafe_convexhull                 unsafe_createpolygon               unsafe_getfeature
-    unsafe_create                     unsafe_createstylemanager          unsafe_getlineargeom
-    unsafe_createRAT                  unsafe_createstyletable            unsafe_intersection
-    unsafe_createcolortable           unsafe_createstyletool             unsafe_loadstringlist
-    unsafe_createcoordtrans           unsafe_delaunaytriangulation       unsafe_newspatialref
-    unsafe_createcopy                 unsafe_difference                  unsafe_nextfeature
-    unsafe_createfeature              unsafe_executesql                  unsafe_pointalongline
-    unsafe_createfeaturedefn          unsafe_forceto                     unsafe_pointonsurface
-    unsafe_createfielddefn            unsafe_fromEPSG                    unsafe_polygonfromedges
-    unsafe_creategeom                 unsafe_fromEPSGA                   unsafe_polygonize
-    unsafe_creategeomcollection       unsafe_fromESRI                    unsafe_read
-    unsafe_creategeomfielddefn        unsafe_fromGML                     unsafe_symdifference
-    unsafe_createlinearring           unsafe_fromJSON                    unsafe_union
-    unsafe_createlinestring           unsafe_fromPROJ4                   unsafe_update
-    unsafe_createmultilinestring      unsafe_fromURL
-    ```
-2. The second relies on safer alternatives (without the `unsafe_` prefix) using [`do`-blocks](http://docs.julialang.org/en/release-0.4/manual/functions/#do-block-syntax-for-function-arguments) as context managers.
-
-This differs from proposals that registers GDAL's `destroy` on the objects using [`finalizers`](http://docs.julialang.org/en/release-0.4/stdlib/base/#Base.finalizer). Based on [user-experiences with GDAL's python SWIG bindings](https://trac.osgeo.org/gdal/wiki/PythonGotchas#CertainobjectscontainaDestroymethodbutyoushouldneveruseit), we do not have any immediate plans to support mixing both styles of memory management, so users expecting it should look for other packages (e.g. [GeoDataFrames](https://github.com/yeesian/GeoDataFrames.jl)).
-
-Here's a collection of references for developers who are interested:
-
-- http://docs.julialang.org/en/release-0.4/manual/calling-c-and-fortran-code/
-- https://github.com/JuliaLang/julia/issues/7721
-- https://github.com/JuliaLang/julia/issues/11207
-- https://trac.osgeo.org/gdal/wiki/PythonGotchas
-- https://lists.osgeo.org/pipermail/gdal-dev/2010-September/026027.html
-- https://sgillies.net/2013/12/17/teaching-python-gis-users-to-be-more-rational.html
-
 ## Code Defensiveness
 
 Although GDAL provides a unified data model for different data formats, there are still significant differences between their implementations such that each driver is effectively its own application. This has the following implications:
