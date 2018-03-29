@@ -75,6 +75,14 @@ end
 
 Objects of type `IGeometry` use the third type of memory management, where we register `ArchGDAL.destroy()` as a [`finalizer`](https://docs.julialang.org/en/release-0.6/stdlib/base/?highlight=finalizer#Base.finalizer). This is useful for users who are interested in working with geometries in a julia session, when they wish to read it from a geospatial database into a dataframe, and want it to persist within the julia session even after the connection to the database has been closed.
 
+As a result, the general API for geometries is
+
+* `unsafe_<method>(G, args...)` will return a geometry of type `G` (one of `Geometry` or `IGeometry`).
+* `unsafe_<method>(args...)` will return a geometry of type `Geometry` (which
+has to be destroyed by the user).
+* `<method>(::Function, args...)` allows for the `do`-block syntax which creates a `geometry::Geometry` which is operated on by the function, before being destroyed.
+* `<method>(args...)` returns a geometry of type `IGeometry`.
+
 !!! note
 
     So long as the user does not manually call `ArchGDAL.destroy()` on any object themselves, users are allowed to mix both the methods of memory management (i) using `do`-blocks for scoped geometries, and (ii) using finalizers for interactive geometries. However, there are plenty of pitfalls (e.g. in [PythonGotchas](https://trac.osgeo.org/gdal/wiki/PythonGotchas)) if users try to mix in their own custom style of calling `ArchGDAL.destroy()`.
