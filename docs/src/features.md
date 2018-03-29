@@ -7,6 +7,14 @@ import ArchGDAL
 filepath = download("https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson", "point.geojson")
 ```
 
+```@example feature
+ArchGDAL.registerdrivers() do
+    ArchGDAL.read(filepath) do dataset
+        print(dataset)
+    end
+end
+```
+
 ## Feature Layers
 
 ```@example feature

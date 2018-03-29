@@ -10,7 +10,7 @@ makedocs(
         "Feature Data" => "features.md",
         "Raster Data" => "rasters.md",
         "Geometric Operations" => "geometries.md",
-        "Geospatial Projections" => "projections.md",
+        "Spatial Projections" => "projections.md",
         "Memory Management" => "memory.md",
         "Working with Spatialite" => "spatialite.md"
         # "Naming Conventions" => "conventions.md", # table between GDAL, GDAL.jl, and ArchGDAL.jl
