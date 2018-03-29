@@ -28,7 +28,7 @@ and makes it the responsibility of the user to free the allocation of memory fro
 
 There are two approaches for doing so.
 
-1. The first uses the [`unsafe_` prefix](http://docs.julialang.org/en/release-0.4/manual/style-guide/#don-t-expose-unsafe-operations-at-the-interface-level) to indicate methods that returns objects that needs to be manually destroyed.
+1. The first uses the [`unsafe_` prefix](https://docs.julialang.org/en/v0.6.2/manual/style-guide/#Don't-expose-unsafe-operations-at-the-interface-level-1) to indicate methods that returns objects that needs to be manually destroyed.
 
 2. The second uses [`do`-blocks](https://docs.julialang.org/en/release-0.6/manual/functions/#do-block-syntax-for-function-arguments) as context managers.
 
