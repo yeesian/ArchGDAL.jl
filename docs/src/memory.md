@@ -47,9 +47,9 @@ end
 which uses `do`-blocks to scope the lifetime of the `dataset` object.
 
 ## Interactive versus Scoped Geometries
-There is a third option for managing memory, which is to register a finalizer with julia, which gets called by the garbage collector at some point after it is out-of-scope. This is in contrast to an approach where users manually control memory usage by destroying objects themselves. 
+There is a third option for managing memory, which is to register a finalizer with julia, which gets called by the garbage collector at some point after it is out-of-scope. This is in contrast to an approach where users manage memory by working with it within the scope of a `do`-block, or by manually destroying objects themselves. 
 
-Therefore, we introduce an AbstractGeometry type:
+Therefore, we introduce an `AbstractGeometry` type:
 
 ```julia
 abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
@@ -73,14 +73,14 @@ mutable struct IGeometry <: AbstractGeometry
 end
 ```
 
-Objects of type `IGeometry` use the third type of memory management, where we register `ArchGDAL.destroy()` as a finalizer. This is useful for users who are interested in working with geometries in a julia session, when they wish to read it from a geospatial database into a dataframe, and want it to persist within the julia session even after the connection to the database has been closed.
+Objects of type `IGeometry` use the third type of memory management, where we register `ArchGDAL.destroy()` as a [`finalizer`](https://docs.julialang.org/en/release-0.6/stdlib/base/?highlight=finalizer#Base.finalizer). This is useful for users who are interested in working with geometries in a julia session, when they wish to read it from a geospatial database into a dataframe, and want it to persist within the julia session even after the connection to the database has been closed.
 
 !!! note
 
     So long as the user does not manually call `ArchGDAL.destroy()` on any object themselves, users are allowed to mix both the methods of memory management (i) using `do`-blocks for scoped geometries, and (ii) using finalizers for interactive geometries. However, there are plenty of pitfalls (e.g. in [PythonGotchas](https://trac.osgeo.org/gdal/wiki/PythonGotchas)) if users try to mix in their own custom style of calling `ArchGDAL.destroy()`.
 
 ## References
-Here's a collection of references for developers who are interested:
+Here's a collection of references for developers who are interested.
 
 - http://docs.julialang.org/en/release-0.4/manual/calling-c-and-fortran-code/
 - https://github.com/JuliaLang/julia/issues/7721
@@ -88,3 +88,4 @@ Here's a collection of references for developers who are interested:
 - https://trac.osgeo.org/gdal/wiki/PythonGotchas
 - https://lists.osgeo.org/pipermail/gdal-dev/2010-September/026027.html
 - https://sgillies.net/2013/12/17/teaching-python-gis-users-to-be-more-rational.html
+- https://pcjericks.github.io/py-gdalogr-cookbook/gotchas.html#features-and-geometries-have-a-relationship-you-don-t-want-to-break
