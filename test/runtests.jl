@@ -83,5 +83,5 @@ end
 
 for f in remotefiles
     currfile = joinpath(testdatadir, f)
-    isfile(currfile) && run(`rm $currfile`)
+    isfile(currfile) && rm(currfile)
 end
