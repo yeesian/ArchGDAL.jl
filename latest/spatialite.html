@@ -5,8 +5,8 @@ const AG = ArchGDAL
 filepath = download(&quot;https://github.com/yeesian/ArchGDALDatasets/raw/e0b15dca5ad493c5ebe8111688c5d14b031b7305/spatialite/test-2.3.sqlite&quot;, &quot;test.sqlite&quot;)</code></pre><pre><code class="language-none">curl: /home/travis/.julia/v0.6/Conda/deps/usr/lib/libcurl.so.4: no version information available (required by curl)
   % Total    % Received % Xferd  Average Speed   Time    Time     Time  Current
                                  Dload  Upload   Total   Spent    Left  Speed
-  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   192  100   192    0     0    272      0 --:--:-- --:--:-- --:--:--   272
-100 6720k  100 6720k    0     0  7786k      0 --:--:-- --:--:-- --:--:-- 7786k
+  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0  0     0    0     0    0     0      0      0 --:--:-- --:--:-- --:--:--     0100   192  100   192    0     0    328      0 --:--:-- --:--:-- --:--:--   327
+100 6720k  100 6720k    0     0  8296k      0 --:--:-- --:--:-- --:--:-- 8296k
 &quot;test.sqlite&quot;</code></pre></div><p>Here&#39;s a quick summary of <code>test.sqlite</code>:</p><div><pre><code class="language-julia">AG.registerdrivers() do
     AG.read(filepath) do dataset
         print(dataset)
