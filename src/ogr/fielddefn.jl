@@ -225,10 +225,12 @@ function settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType)
 end
 
 "Fetch spatial reference system of this field. May return NULL"
-getspatialref(gfd::GeomFieldDefn) =
-    SpatialRef(@gdal(OGR_GFld_GetSpatialRef::GDALSpatialRef,
+unsafe_getspatialref(::Type{S}, gfd::GeomFieldDefn) where S <: AbstractSpatialRef =
+    S(@gdal(OGR_GFld_GetSpatialRef::GDALSpatialRef,
         gfd.ptr::GDALGeomFieldDefn
     ))
+unsafe_getspatialref(gfd::GeomFieldDefn) = unsafe_getspatialref(SpatialRef, gfd)
+getspatialref(gfd::GeomFieldDefn) = unsafe_getspatialref(ISpatialRef, gfd)
 
 """
 Set the spatial reference of this field.
@@ -236,8 +238,8 @@ Set the spatial reference of this field.
 This function drops the reference of the previously set SRS object and acquires
 a new reference on the passed object (if non-NULL).
 """
-setspatialref!(gfd::GeomFieldDefn, spatialref::SpatialRef) =
-    (GDAL.setspatialref(gfd.ptr, spatialref); gfd)
+setspatialref!(gfd::GeomFieldDefn, spatialref::AbstractSpatialRef) =
+    (GDAL.setspatialref(gfd.ptr, spatialref.ptr); gfd)
 
 """
 Return whether this geometry field can receive null values.

@@ -410,7 +410,7 @@ See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
 ### Returns
 a valid mask band.
 """
-getmaskband(band::RasterBand) = GDAL.getmaskband(band.ptr)
+getmaskband(band::RasterBand) = RasterBand(GDAL.getmaskband(band.ptr))
 
 """
 Return the status flags of the mask band associated with the band.
