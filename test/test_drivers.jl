@@ -43,15 +43,14 @@ end
 @testset "Test Driver Capabilities" begin
 AG.registerdrivers() do
     drivers = AG.listdrivers()
-    println(drivers)
-    println(AG.driveroptions("GTiff"))
-    println(AG.identifydriver("data/point.geojson"))
-    println(AG.identifydriver("data/utmsmall.tif"))
-    println(AG.identifydriver("data/A.tif"))
-    for options in Vector{String}[["COMPRESS=LZW","INTERLEAVE=PIXEL"],
-                                       ["COMPRESS=LZW"],["INTERLEAVE=PIXEL"]]
-        println("isvalid: $(AG.validate(AG.getdriver("GTiff"), options)) for $options")
-    end
+    @test drivers["GTiff"] == "GeoTIFF"
+    @test length(AG.driveroptions("GTiff")) > 100
+    @test sprint(print, AG.identifydriver("data/point.geojson")) == "Driver: GeoJSON/GeoJSON"
+    @test sprint(print, AG.identifydriver("data/utmsmall.tif")) == "Driver: GTiff/GeoTIFF"
+
+    @test AG.validate(AG.getdriver("GTiff"), ["COMPRESS=LZW", "INTERLEAVE=PIXEL"]) == true
+    @test AG.validate(AG.getdriver("GTiff"), ["COMPRESS=LZW"]) == true
+    @test AG.validate(AG.getdriver("GTiff"), ["INTERLEAVE=PIXEL"]) == true
     AG.read("data/point.geojson") do dataset
         @test AG.listcapability(dataset) == Dict(
             "CreateLayer"=>false,

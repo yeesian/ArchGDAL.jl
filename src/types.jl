@@ -22,6 +22,9 @@ const StringList          = Ptr{Ptr{UInt8}}
 abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
     # needs to have a `ptr::GDALGeometry` attribute
 
+abstract type AbstractSpatialRef end
+    # needs to have a `ptr::GDALSpatialRef` attribute
+
 mutable struct ColorTable;                    ptr::GDALColorTable         end
 mutable struct CoordTransform;                ptr::GDALCoordTransform     end
 mutable struct Dataset;                       ptr::GDALDataset            end
@@ -41,13 +44,22 @@ mutable struct IGeometry <: AbstractGeometry
         geom
     end
 end
-mutable struct GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
-mutable struct RasterAttrTable;               ptr::GDALRasterAttrTable    end
-mutable struct RasterBand;                    ptr::GDALRasterBand         end
-mutable struct SpatialRef;                    ptr::GDALSpatialRef         end
-mutable struct StyleManager;                  ptr::GDALStyleManager       end
-mutable struct StyleTable;                    ptr::GDALStyleTable         end
-mutable struct StyleTool;                     ptr::GDALStyleTool          end
+mutable struct GeomFieldDefn;                    ptr::GDALGeomFieldDefn   end
+mutable struct RasterAttrTable;                  ptr::GDALRasterAttrTable end
+mutable struct RasterBand;                       ptr::GDALRasterBand      end
+mutable struct SpatialRef <: AbstractSpatialRef; ptr::GDALSpatialRef      end
+mutable struct ISpatialRef <: AbstractSpatialRef
+    ptr::GDALSpatialRef
+
+    function ISpatialRef(ptr::GDALSpatialRef)
+        spref = new(GDAL.clone(ptr))
+        finalizer(spref, destroy)
+        spref
+    end
+end
+mutable struct StyleManager;                     ptr::GDALStyleManager    end
+mutable struct StyleTable;                       ptr::GDALStyleTable      end
+mutable struct StyleTool;                        ptr::GDALStyleTool       end
 
 CPLErr = GDAL.CPLErr
 CPLXMLNodeType = GDAL.CPLXMLNodeType

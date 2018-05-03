@@ -185,7 +185,7 @@ function Base.show(io::IO, feature::Feature)
     n > 10 && print(io, "...\n Number of Fields: $n")
 end
 
-function Base.show(io::IO, spref::SpatialRef)
+function Base.show(io::IO, spref::AbstractSpatialRef)
     spref.ptr == C_NULL && (return print(io, "NULL Spatial Reference System"))
     projstr = toPROJ4(spref)
     if length(projstr) > 45

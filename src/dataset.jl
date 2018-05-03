@@ -345,9 +345,9 @@ documentation.
 function createlayer(
         dataset::Dataset,
         name::AbstractString;
-        spatialref::SpatialRef      = SpatialRef(C_NULL),
-        geom::OGRwkbGeometryType    = wkbUnknown,
-        options                     = StringList(C_NULL)
+        spatialref::AbstractSpatialRef  = SpatialRef(C_NULL),
+        geom::OGRwkbGeometryType        = wkbUnknown,
+        options                         = StringList(C_NULL)
     )
     result = GDAL.checknull(@gdal(GDALDatasetCreateLayer::GDALFeatureLayer,
         dataset.ptr::GDALDataset,

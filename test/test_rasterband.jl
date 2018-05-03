@@ -4,10 +4,22 @@ import ArchGDAL; const AG = ArchGDAL
 @testset "Test methods for rasterband" begin
     AG.registerdrivers() do
         AG.read("data/utmsmall.tif") do dataset
-            println(dataset)
+            ds_result = """
+            GDAL Dataset (Driver: GTiff/GeoTIFF)
+            File(s): 
+              data/utmsmall.tif
+
+            Dataset (width x height): 100 x 100 (pixels)
+            Number of raster bands: 1
+              [GA_ReadOnly] Band 1 (Gray): 100 x 100 (UInt8)
+            """
+            @test sprint(print, dataset) == ds_result
             rb = AG.getband(dataset, 1)
-            println(rb)
-            println(AG.getdataset(rb))
+            sprint(print, rb) == """
+            [GA_ReadOnly] Band 1 (Gray): 100 x 100 (UInt8)
+            blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
+            overviews: """
+            @test sprint(print, AG.getdataset(rb)) == ds_result
 
             @test AG.getunittype(rb) == ""
             AG.setunittype!(rb,"ft")
@@ -38,24 +50,48 @@ import ArchGDAL; const AG = ArchGDAL
             AG.createcopy(dataset, "tmp/utmsmall.tif") do dest
                 destband = AG.getband(dest, 1)
                 AG.copywholeraster!(rb, destband)
-                println(destband)
+                @test sprint(print, destband) == """
+                [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
+                    blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
                 @test AG.noverview(destband) == 0
                 AG.buildoverviews!(dest, Cint[2, 4, 8])
                 @test AG.noverview(destband) == 3
-                println(destband)
-
+                @test sprint(print, destband) == """
+                [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
+                    blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: (0) 50x50 (1) 25x25 (2) 13x13 
+                               """
                 @test AG.getcolorinterp(destband) == GDAL.GCI_GrayIndex
                 AG.setcolorinterp!(destband, GDAL.GCI_RedBand)
                 @test AG.getcolorinterp(destband) == GDAL.GCI_RedBand
 
-                println(AG.getsampleoverview(destband, 100))
-                println(AG.getsampleoverview(destband, 200))
-                println(AG.getsampleoverview(destband, 500))
-                println(AG.getsampleoverview(destband, 1000))
-                println(AG.getmaskband(destband))
+                @test sprint(print, AG.getsampleoverview(destband, 100)) == """
+                [GA_Update] Band 1 (Gray): 13 x 13 (UInt8)
+                    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
+                @test sprint(print, AG.getsampleoverview(destband, 200)) == """
+                [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
+                    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
+                @test sprint(print, AG.getsampleoverview(destband, 500)) == """
+                [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
+                    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
+                @test sprint(print, AG.getsampleoverview(destband, 1000)) == """
+                [GA_Update] Band 1 (Gray): 50 x 50 (UInt8)
+                    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
+                @test sprint(print, AG.getmaskband(destband)) == """
+                [GA_ReadOnly] Band 0 (Undefined): 100 x 100 (UInt8)
+                    blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
                 @test AG.getmaskflags(destband) == 1
                 AG.createmaskband!(destband, 3)
-                println(AG.getmaskband(destband))
+                @test sprint(print, AG.getmaskband(destband)) == """
+                [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
+                    blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
                 @test AG.getmaskflags(destband) == 3
                 AG.fillraster!(destband, 3)
                 AG.setcategorynames!(destband, ["foo","bar"])
@@ -72,12 +108,12 @@ import ArchGDAL; const AG = ArchGDAL
                         255, GDAL.GDALColorEntry(0,0,255,0)
                     )
                     AG.setcolortable!(destband, ct)
-                    println(AG.getcolortable(destband))
+                    @test AG.getcolortable(destband) != C_NULL
                     AG.clearcolortable!(destband)
                     
                     AG.createRAT(ct) do rat
                         AG.setdefaultRAT!(destband, rat)
-                        println(AG.getdefaultRAT(destband))
+                        @test AG.getdefaultRAT(destband) != C_NULL
                     end
                 end
             end

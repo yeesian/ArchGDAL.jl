@@ -3,7 +3,7 @@ import ArchGDAL; const AG = ArchGDAL
 
 AG.registerdrivers() do
     AG.read("ospy/data4/aster.img") do ds
-        @time begin
+        @testset "version 1" begin
             band = AG.getband(ds, 1)
             count = 0
             total = 0
@@ -14,11 +14,11 @@ AG.registerdrivers() do
                 count += sum(data .> 0)
                 total += sum(data)
             end
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 2" begin
             band = AG.getband(ds, 1)
             count = 0
             total = 0
@@ -29,11 +29,11 @@ AG.registerdrivers() do
                 count += sum(data .> 0)
                 total += sum(data)
             end
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 3" begin
             band = AG.getband(ds, 1)
             count = 0
             total = 0
@@ -44,11 +44,11 @@ AG.registerdrivers() do
                 count += sum(data .> 0)
                 total += sum(data)
             end
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 4" begin
             band = AG.getband(ds, 1)
             count = 0
             total = 0
@@ -59,11 +59,11 @@ AG.registerdrivers() do
                 count += sum(data .> 0)
                 total += sum(data)
             end
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 5" begin
             band = AG.getband(ds, 1)
             count = 0
             total = 0
@@ -77,58 +77,58 @@ AG.registerdrivers() do
                 count += sum(data .> 0)
                 total += sum(data)
             end
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 6" begin
             band = AG.getband(ds, 1)
             buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 1)
             AG.rasterio!(ds, buffer, Cint[1])
             count = sum(buffer .> 0)
             total = sum(buffer)
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 7" begin
             band = AG.getband(ds, 1)
             buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
             AG.read!(band, buffer)
             count = sum(buffer .> 0)
             total = sum(buffer)
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 8" begin
             band = AG.getband(ds, 1)
             buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
             AG.read!(ds, buffer, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 9" begin
             band = AG.getband(ds, 1)
             buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 1)
             AG.read!(ds, buffer, Cint[1])
             count = sum(buffer .> 0)
             total = sum(buffer)
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
 
-        @time begin
+        @testset "version 10" begin
             band = AG.getband(ds, 1)
             buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 3)
             AG.read!(ds, buffer)
             count = sum(buffer[:,:,1] .> 0)
             total = sum(buffer[:,:,1])
-            println("Ignoring 0:  $(total / count)")
-            println("Including 0: $(total / (AG.height(ds) * AG.width(ds)))")
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
     end
 end

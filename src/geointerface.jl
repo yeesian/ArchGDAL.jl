@@ -40,7 +40,7 @@ function GeoInterface.coordinates(g::AbstractGeometry)
         ]
     elseif gtype in (GDAL.wkbLineString, GDAL.wkbLineString25D, GDAL.wkbLineStringM, GDAL.wkbLineStringZM) || gtype == GDAL.wkbLinearRing
         return Vector{Float64}[
-            collect(getpoint(g,i-1)[1:ndim]) for i in 1:npoint(g)
+            collect(getpoint(g,i-1)[1:ndim]) for i in 1:ngeom(g)
         ]
     elseif gtype in (
             GDAL.wkbMultiLineString, GDAL.wkbMultiLineString25D, GDAL.wkbMultiLineStringM, GDAL.wkbMultiLineStringZM,
