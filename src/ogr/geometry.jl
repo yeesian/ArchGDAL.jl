@@ -717,9 +717,6 @@ unsafe_polygonize(geom::AbstractGeometry, args...) =
 polygonize(geom::AbstractGeometry, args...) =
     unsafe_polygonize(IGeometry, geom, args...)
 
-"Fetch number of points from a geometry."
-npoint(geom::AbstractGeometry) = GDAL.getpointcount(geom.ptr)
-
 # """
 #     OGR_G_GetPoints(OGRGeometryH hGeom,
 #                     void * pabyX,
@@ -859,8 +856,19 @@ addpoint!(geom::AbstractGeometry, x::Real, y::Real) =
 # end
 
 
-"The number of elements in a geometry or number of geometries in container."
-ngeom(geom::AbstractGeometry) = GDAL.getgeometrycount(geom.ptr)
+"""
+The number of elements in a geometry or number of geometries in container.
+
+This corresponds to
+
+* `OGR_G_GetPointCount` for wkbPoint[25D] or wkbLineString[25D],
+* `OGR_G_GetGeometryCount` for geometries of type wkbPolygon[25D], wkbMultiPoint[25D], wkbMultiLineString[25D], wkbMultiPolygon[25D] or wkbGeometryCollection[25D], and
+* `0` for other geometry types.
+"""
+function ngeom(geom::AbstractGeometry)
+    n = GDAL.getpointcount(geom.ptr)
+    n == 0 ? GDAL.getgeometrycount(geom.ptr) : n
+end
 
 """
 Fetch geometry from a geometry container.
