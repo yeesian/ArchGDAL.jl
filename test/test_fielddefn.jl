@@ -3,15 +3,13 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "Tests for field defn" begin
     AG.createfielddefn("fieldname",GDAL.OFTInteger) do fd
-        println(fd)
-        println("name: $(AG.getname(fd))")
-        println("Setting name to \"newname\"")
+        @test sprint(print, fd) == "fieldname (OFTInteger)"
+        @test AG.getname(fd) == "fieldname"
         AG.setname!(fd, "newname")
-        println(AG.getname(fd))
-        println("type: $(AG.gettype(fd))")
-        println("Setting name to $(GDAL.OFTDate)")
+        @test AG.getname(fd) == "newname"
+        @test AG.gettype(fd) == GDAL.OFTInteger
         AG.settype!(fd, GDAL.OFTDate)
-        println(AG.gettype(fd))
+        @test AG.gettype(fd) == GDAL.OFTDate
         AG.settype!(fd, GDAL.OFTInteger)
         @test AG.getsubtype(fd) == GDAL.OFSTNone
         AG.setsubtype!(fd, GDAL.OFSTInt16)
@@ -22,16 +20,20 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.getjustify(fd) == GDAL.OJUndefined
         AG.setjustify!(fd, GDAL.OJLeft)
         @test AG.getjustify(fd) == GDAL.OJLeft
-        println("width: $(AG.getwidth(fd))")
+        @test AG.getwidth(fd) == 0
         AG.setwidth!(fd, 10)
-        println("after setting width to 10: new width=$(AG.getwidth(fd))")
-        println("precision: $(AG.getprecision(fd))")
+        @test AG.getwidth(fd) == 10
+        @test AG.getprecision(fd) == 0
         AG.setprecision!(fd, 20)
-        println("after setting to 20: new precision=$(AG.getprecision(fd))")
+        @test AG.getprecision(fd) == 20
         AG.setparams!(fd, "finalname", GDAL.OFTDate, nwidth=5, nprecision=2,
                       justify=GDAL.OJRight)
-        println("type: $((AG.gettype(fd),AG.getname(fd),AG.getsubtype(fd),
-                          AG.getjustify(fd),AG.getwidth(fd),AG.getprecision(fd)))")
+        @test AG.gettype(fd) == GDAL.OFTDate
+        @test AG.getname(fd) == "finalname"
+        @test AG.getsubtype(fd) == GDAL.OFSTNone
+        @test AG.getjustify(fd) == GDAL.OJRight
+        @test AG.getwidth(fd) == 5
+        @test AG.getprecision(fd) == 2
         @test AG.isignored(fd) == false
         AG.setignored!(fd, true)
         @test AG.isignored(fd) == true
@@ -61,9 +63,8 @@ end
         AG.settype!(gfd, GDAL.wkbPolyhedralSurface)
         @test AG.gettype(gfd) == GDAL.wkbPolyhedralSurface
 
-        println(AG.getspatialref(gfd))
-        # AG.setspatialref!(gfd, AG.unsafe_fromEPSG(4326))
-        # println(AG.getspatialref(gfd))
+        AG.setspatialref!(gfd, AG.importEPSG(4326))
+        @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
 
         @test AG.isignored(gfd) == false
         AG.setignored!(gfd, true)
@@ -81,18 +82,15 @@ end
 
 @testset "Tests for Feature Defn" begin
     AG.createfeaturedefn("new_feature") do fd
-        println(AG.nreference(fd))
+        AG.nreference(fd) == 0
         AG.reference(fd)
-        println(AG.nreference(fd))
+        AG.nreference(fd) == 1
         AG.reference(fd)
-        println(AG.nreference(fd))
-        AG.reference(fd)
-        println(AG.nreference(fd))
+        AG.nreference(fd) == 2
         AG.release(fd)
-        println(AG.nreference(fd))
+        AG.nreference(fd) == 1
         AG.dereference(fd)
-        println(AG.nreference(fd))
-        AG.dereference(fd)
+        AG.nreference(fd) == 0
         AG.createfielddefn("fieldname",GDAL.OFTInteger) do fielddef
             @test AG.nfield(fd) == 0
             AG.addfielddefn!(fd, fielddef)
@@ -104,21 +102,21 @@ end
             AG.createfielddefn("newfield",GDAL.OFTInteger) do fielddef2
                 AG.addfielddefn!(fd, fielddef2)
                 @test AG.nfield(fd) == 4
-                for i in 0:3
-                    println("$i : $(AG.getname(AG.getfielddefn(fd,i)))")
-                end
+                AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
+                AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+                AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
+                AG.getname(AG.getfielddefn(fd,3)) == "newfield"
             end
             AG.deletefielddefn!(fd, 0)
             @test AG.nfield(fd) == 3
-            for i in 0:2
-                println("$i : $(AG.getname(AG.getfielddefn(fd,i)))")
-            end
-            println("After reordering (in reverse):")
+            AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
+            AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+            AG.getname(AG.getfielddefn(fd,2)) == "newfield"
             AG.reorderfielddefns!(fd, Cint[2,1,0])
             @test AG.nfield(fd) == 3
-            for i in 0:2
-                println("$i : $(AG.getname(AG.getfielddefn(fd,i)))")
-            end
+            AG.getname(AG.getfielddefn(fd,0)) == "newfield"
+            AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+            AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
         end
         @test AG.ngeomfield(fd) == 1
         @test AG.getgeomtype(fd) == GDAL.wkbUnknown

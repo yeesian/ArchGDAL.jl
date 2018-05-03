@@ -80,8 +80,6 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.getrowindex(rat, 7.5) == 0
         @test AG.getrowindex(rat, 12) == 1
         @test AG.getrowindex(rat, 13) == 1
-
-        println(AG.serializeJSON(rat))
     end
 end
 
@@ -92,35 +90,35 @@ end
         AG.createcolorramp!(ct, 128, GDAL.GDALColorEntry(0,0,0,0),
                                 255, GDAL.GDALColorEntry(0,0,255,0))
         @test AG.ncolorentry(ct) == 256
-        println(AG.getcolorentry(ct, 0))  # GDAL.GDALColorEntry(0,0,0,0)
-        println(AG.getcolorentry(ct, 128)) # GDAL.GDALColorEntry(0,0,0,0)
-        println(AG.getcolorentry(ct, 200)) # GDAL.GDALColorEntry(0,0,144,0)
-        println(AG.getcolorentry(ct, 255)) # GDAL.GDALColorEntry(0,0,255,0)
+        @test sprint(print, AG.getcolorentry(ct, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+        @test sprint(print, AG.getcolorentry(ct, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+        @test sprint(print, AG.getcolorentry(ct, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
+        @test sprint(print, AG.getcolorentry(ct, 255)) == "GDAL.GDALColorEntry(0, 0, 255, 0)"
 
-        println(AG.getcolorentryasrgb(ct, 0))  # GDAL.GDALColorEntry(0,0,0,0)
-        println(AG.getcolorentryasrgb(ct, 128)) # GDAL.GDALColorEntry(0,0,0,0)
-        println(AG.getcolorentryasrgb(ct, 200)) # GDAL.GDALColorEntry(0,0,144,0)
-        println(AG.getcolorentryasrgb(ct, 255)) # GDAL.GDALColorEntry(0,0,255,0)
+        @test sprint(print, AG.getcolorentryasrgb(ct, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+        @test sprint(print, AG.getcolorentryasrgb(ct, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+        @test sprint(print, AG.getcolorentryasrgb(ct, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
+        @test sprint(print, AG.getcolorentryasrgb(ct, 255)) == "GDAL.GDALColorEntry(0, 0, 255, 0)"
         
         AG.setcolorentry!(ct, 255, GDAL.GDALColorEntry(0,0,100,0))
-        println(AG.getcolorentry(ct, 255)) # GDAL.GDALColorEntry(0,0,255,0)
+        @test sprint(print, AG.getcolorentry(ct, 255)) == "GDAL.GDALColorEntry(0, 0, 100, 0)"
 
         AG.clone(ct) do ctclone
             @test AG.getpaletteinterp(ctclone) == GDAL.GPI_RGB
             @test AG.ncolorentry(ctclone) == 256
-            println(AG.getcolorentry(ctclone, 0))
-            println(AG.getcolorentry(ctclone, 128))
-            println(AG.getcolorentry(ctclone, 200))
-            println(AG.getcolorentry(ctclone, 255))
+            @test sprint(print, AG.getcolorentry(ctclone, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+            @test sprint(print, AG.getcolorentry(ctclone, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+            @test sprint(print, AG.getcolorentry(ctclone, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
+            @test sprint(print, AG.getcolorentry(ctclone, 255)) == "GDAL.GDALColorEntry(0, 0, 100, 0)"
             
             AG.createRAT(ctclone) do rat
                 ct2 = AG.toColorTable(rat)
                 @test AG.getpaletteinterp(ct2) == GDAL.GPI_RGB
                 @test AG.ncolorentry(ct2) == 256
-                println(AG.getcolorentry(ct2, 0))
-                println(AG.getcolorentry(ct2, 128))
-                println(AG.getcolorentry(ct2, 200))
-                println(AG.getcolorentry(ct2, 255))
+                @test sprint(print, AG.getcolorentry(ct2, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+                @test sprint(print, AG.getcolorentry(ct2, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
+                @test sprint(print, AG.getcolorentry(ct2, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
+                @test sprint(print, AG.getcolorentry(ct2, 255)) == "GDAL.GDALColorEntry(0, 0, 100, 0)"
             end
         end
     end
