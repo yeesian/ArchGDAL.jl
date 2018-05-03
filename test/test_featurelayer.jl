@@ -17,105 +17,49 @@ import ArchGDAL; const AG = ArchGDAL
             rm("tmp/point.geojson")
 
             layer = AG.getlayer(dataset, 0)
-            println(AG.getspatialref(layer))
-            println("FID Column name: $(AG.getfidcolname(layer))")
-            println("Geom Column name: $(AG.getgeomcolname(layer))")
+            @test sprint(print, AG.getspatialref(layer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+            @test AG.getfidcolname(layer) == ""
+            @test AG.getgeomcolname(layer) == ""
             @test AG.nreference(layer) == 0
             AG.reference(layer)
             @test AG.nreference(layer) == 1
             AG.dereference(layer)
             @test AG.nreference(layer) == 0
-            for feature in layer
-                println(feature)
-                @test AG.nreference(layer) == 0
-                println("Features read: $(AG.getfeaturesread(layer))")
-            end
-            AG.getfeature(layer, 2) do feature
-                print(feature)
-            end
             AG.setspatialfilter!(layer,100,-1,100.1,1)
-            println("Filtering all points in $(AG.getspatialfilter(layer))")
+            @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1.0,100 -1))"
             AG.clone(AG.getspatialfilter(layer)) do poly
-                println(poly)
-                for feature in layer
-                    println(feature)
-                end
+                n = 0; for feature in layer; n += 1 end; @test n == 2
                 AG.clearspatialfilter!(layer)
-                println("Clearing Spatial Filter")
-                println("New $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
+                @test sprint(print, AG.getspatialfilter(layer)) == "NULL Geometry"
+                n = 0; for feature in layer; n += 1 end; @test n == 4
+                
+                @testset "Test with setting to index of geomfield" begin
+                    AG.setspatialfilter!(layer, 0, poly)
+                    n = 0; for feature in layer; n += 1 end; @test n == 2
+                    AG.clearspatialfilter!(layer, 0)
+                    n = 0; for feature in layer; n += 1 end; @test n == 4
+                    
+                    AG.setattributefilter!(layer, "FID = 2")
+                    n = 0; for feature in layer; n += 1 end; @test n == 1
+                    AG.setattributefilter!(layer, "FID = 3")
+                    n = 0; for feature in layer; n += 1 end; @test n == 2
+                    AG.clearattributefilter!(layer)
+                    n = 0; for feature in layer; n += 1 end; @test n == 4
+                    AG.setnextbyindex!(layer, 2)
+                    n = 0; for feature in layer; n += 1 end; @test n == 2
+                    @test AG.testcapability(layer,"OLCRandomWrite") == false
                 end
-                AG.setspatialfilter!(layer, poly)
-                println("Re-filter all points in $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
-                end
-                AG.clearspatialfilter!(layer)
-                println("Clearing Spatial Filter")
-                println("New $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
-                end
-                println("Test with setting to index of geomfield")
-                AG.setspatialfilter!(layer, 0, poly)
-                println("  Re-filter all points in $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
-                end
-                AG.clearspatialfilter!(layer, 0)
-                println("  Clearing Spatial Filter")
-                println("  New $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
-                end
-                AG.setspatialfilter!(layer, 0,100,-1,100.1,1)
-                println("Re-filter all points in $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
-                end
-                AG.clearspatialfilter!(layer)
-                println("Clearing Spatial Filter")
-                println("New $(AG.getspatialfilter(layer))")
-                for feature in layer
-                    println(feature)
-                end
-                query = "FID = 2"
-                println("Setting attribute filter: $query")
-                AG.setattributefilter!(layer, query)
-                for feature in layer
-                    println(feature)
-                end
-                query = "FID = 3"
-                println("Setting attribute filter: $query")
-                AG.setattributefilter!(layer, query)
-                for feature in layer
-                    println(feature)
-                end
-                AG.clearattributefilter!(layer)
-                println("After clearing attribute filter:")
-                for feature in layer
-                    println(feature)
-                end
-                println("Fast forward to index 2:")
-                AG.setnextbyindex!(layer, 2)
-                for feature in layer
-                    println(feature)
-                end
-                print("Test capability for random access writing: ")
-                println(AG.testcapability(layer,"OLCRandomWrite"))
             end
-            println("FID exact index: $(AG.findfieldindex(layer,"FID", true))")
-            println("FID index: $(AG.findfieldindex(layer,"FID", false))")
-            println("pointname exact index: $(AG.findfieldindex(layer,"pointname", true))")
-            println("pointname index: $(AG.findfieldindex(layer,"pointname", false))")
-            println("geom exact findfieldindex: $(AG.findfieldindex(layer,"geom", true))")
-            println("geom findfieldindex: $(AG.findfieldindex(layer,"geom", true))")
-            println("rubbish exact index: $(AG.findfieldindex(layer,"rubbish", true))")
-            println("rubbish index: $(AG.findfieldindex(layer,"rubbish", false))")
-
-            println(AG.getextent(layer, 0, true))
-            println(AG.getextent(layer, true))
+            @test AG.findfieldindex(layer,"FID", true) == 0
+            @test AG.findfieldindex(layer,"FID", false) == 0
+            @test AG.findfieldindex(layer,"pointname", true) == 1
+            @test AG.findfieldindex(layer,"pointname", false) == 1
+            @test AG.findfieldindex(layer,"geom", true) == -1
+            @test AG.findfieldindex(layer,"geom", true) == -1
+            @test AG.findfieldindex(layer,"rubbish", true) == -1
+            @test AG.findfieldindex(layer,"rubbish", false) == -1
+            @test sprint(print, AG.getextent(layer, 0, true)) == "GDAL.OGREnvelope(100.0, 100.2785, 0.0, 0.0893)"
+            @test sprint(print, AG.getextent(layer, true)) == "GDAL.OGREnvelope(100.0, 100.2785, 0.0, 0.0893)"
         end
     end
 end

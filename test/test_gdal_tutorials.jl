@@ -45,11 +45,14 @@ AG.registerdrivers() do
                     206.0f0,255.0f0,214.0f0,173.0f0,214.0f0,255.0f0,214.0f0,
                     247.0f0,255.0f0,230.0f0,206.0f0,197.0f0]
 
-            println(AG.metadatadomainlist(dataset))
-            println(AG.metadata(dataset))
-            for d in AG.metadatadomainlist(dataset)
-                println("domain $d: $(AG.metadata(dataset, domain=d))")
-            end
+            @test AG.metadatadomainlist(dataset) == ["IMAGE_STRUCTURE", "", "DERIVED_SUBDATASETS"]
+            @test AG.metadata(dataset) == ["AREA_OR_POINT=Area"]
+            @test AG.metadata(dataset, domain = "IMAGE_STRUCTURE") == ["INTERLEAVE=BAND"]
+            @test AG.metadata(dataset, domain = "") == ["AREA_OR_POINT=Area"]
+            @test AG.metadata(dataset, domain = "DERIVED_SUBDATASETS") == [
+                "DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:data/utmsmall.tif",
+                "DERIVED_SUBDATASET_1_DESC=log10 of amplitude of input bands from data/utmsmall.tif"
+            ]
         end
 
         # Techniques for Creating Files

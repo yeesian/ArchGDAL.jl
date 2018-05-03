@@ -643,13 +643,11 @@ end
 
     # Method 1
     AG.fromWKT(wkt) do geom
-        @test AG.npoint(geom) == 4
-        @test AG.ngeom(geom) == 0
+        @test AG.ngeom(geom) == 4
     end
 
     # Method 2
-    @test AG.npoint(AG.fromWKT(wkt)) == 4
-    @test AG.ngeom(AG.fromWKT(wkt)) == 0
+    @test AG.ngeom(AG.fromWKT(wkt)) == 4
 end
 
 @testset "Count Points in a MultiPoint" begin
@@ -657,12 +655,10 @@ end
 
     # Method 1
     AG.fromWKT(wkt) do geom
-        @test AG.npoint(geom) == 0
         @test AG.ngeom(geom) == 4
     end
 
     # Method 2
-    @test AG.npoint(AG.fromWKT(wkt)) == 0
     @test AG.ngeom(AG.fromWKT(wkt)) == 4
 
 end
@@ -697,13 +693,13 @@ end
     @test AG.getgeomtype(AG.buffer(AG.fromWKT(wkt), 500)) == GDAL.wkbPolygon
 end
 
-# @testset "Calculate Envelope of a Geometry" begin
-#     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
-#     geom = ogr.CreateGeometryFromWkt(wkt)
-#     # Get Envelope returns a tuple (minX, maxX, minY, maxY)
-#     env = geom.GetEnvelope()
-#     print "minX: %d, minY: %d, maxX: %d, maxY: %d" %(env[0],env[2],env[1],env[3])
-# end
+@testset "Calculate Envelope of a Geometry" begin
+    wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
+    AG.fromWKT(wkt) do line
+        env = AG.getenvelope(line)
+        @test (env.MaxX - env.MinX) * (env.MaxY - env.MinY) ≈ 2.2431808256625123e9
+    end
+end
 
 @testset "Calculate the Area of a Geometry" begin
     wkt = "POLYGON ((1162440.5712740074 672081.4332727483, 1162440.5712740074 647105.5431482664, 1195279.2416228633 647105.5431482664, 1195279.2416228633 672081.4332727483, 1162440.5712740074 672081.4332727483))"
@@ -789,11 +785,9 @@ end
 
     # Method 1
     AG.fromWKT([wkt]) do poly
-        println("Before: $(AG.toWKT(poly))")
-        if AG.getgeomtype(poly) == GDAL.wkbPolygon
-            AG.forceto(poly, GDAL.wkbMultiPolygon) do mpoly
-                @test AG.getgeomtype(mpoly) == GDAL.wkbMultiPolygon
-            end
+        @test AG.getgeomtype(poly) == GDAL.wkbPolygon
+        AG.forceto(poly, GDAL.wkbMultiPolygon) do mpoly
+            @test AG.getgeomtype(mpoly) == GDAL.wkbMultiPolygon
         end
     end
 
