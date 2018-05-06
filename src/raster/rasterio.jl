@@ -160,13 +160,12 @@ function rasterio!(
         cols::UnitRange{U},
         access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
-        linespace::Integer  = 0,
-        bandspace::Integer  = 0
+        linespace::Integer  = 0
     ) where {T <: Any, U <: Integer}
     xsize = length(cols); xsize < 0 && error("invalid window width")
     ysize = length(rows); ysize < 0 && error("invalid window height")
     rasterio!(rasterband, buffer, cols[1]-1, rows[1]-1, xsize, ysize, access,
-        pxspace, linespace, bandspace
+        pxspace, linespace
     )
 end
 
