@@ -3,3 +3,5 @@ DataStreams
 GeoInterface
 GDAL
 Compat
+ImageCore
+ColorTypes

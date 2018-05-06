@@ -61,27 +61,9 @@ function rasterio!(
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
         bandspace::Integer  = 0
-    ) where T <: Real
+    ) where T <: Any
     rasterio!(dataset, buffer, bands, 0, 0, width(dataset), height(dataset),
         access, pxspace, linespace, bandspace
-    )
-end
-
-function rasterio!(
-        dataset::Dataset,
-        buffer::Array{T, 3},
-        bands::Vector{Cint},
-        rows::UnitRange{U},
-        cols::UnitRange{U},
-        access::GDALRWFlag  = GDAL.GF_Read,
-        pxspace::Integer    = 0,
-        linespace::Integer  = 0,
-        bandspace::Integer  = 0
-    ) where {T <: Real, U <: Integer}
-    xsize = cols[end] - cols[1] + 1; xsize < 0 && error("invalid window width")
-    ysize = rows[end] - rows[1] + 1; ysize < 0 && error("invalid window height")
-    rasterio!(dataset, buffer, bands, cols[1], rows[1], xsize, ysize, access,
-        pxspace, linespace, bandspace
     )
 end
 
@@ -143,270 +125,49 @@ option can also be defined to override the default resampling to one of
 """
 function rasterio!(
         rasterband::RasterBand,
-        buffer::Array{T,2},
+        buffer::Matrix{T},
         access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0
-    ) where T <: Real
-    rasterio!(rasterband, buffer, 0, 0, width(rasterband), height(rasterband),
-        access, pxspace, linespace
+    ) where T <: Any
+    rasterio!(rasterband, buffer, 0, 0, width(rasterband),
+        height(rasterband), access, pxspace, linespace
+    )
+end
+
+function rasterio!(
+        dataset::Dataset,
+        buffer::Array{T, 3},
+        bands::Vector{Cint},
+        rows::UnitRange{U},
+        cols::UnitRange{U},
+        access::GDALRWFlag  = GDAL.GF_Read,
+        pxspace::Integer    = 0,
+        linespace::Integer  = 0,
+        bandspace::Integer  = 0
+    ) where {T <: Any, U <: Integer}
+    xsize = length(cols); xsize < 0 && error("invalid window width")
+    ysize = length(rows); ysize < 0 && error("invalid window height")
+    rasterio!(dataset, buffer, bands, cols[1]-1, rows[1]-1, xsize, ysize,
+        access, pxspace, linespace, bandspace
     )
 end
 
 function rasterio!(
         rasterband::RasterBand,
-        buffer::Array{T,2},
+        buffer::Matrix{T},
         rows::UnitRange{U},
         cols::UnitRange{U},
         access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
-        linespace::Integer  = 0
-    ) where {T <: Real, U <: Integer}
-    xsize = length(cols); xsize < 1 && error("invalid window width")
-    ysize = length(rows); ysize < 1 && error("invalid window height")
-    rasterio!(rasterband, buffer, cols[1]-1, rows[1]-1, xsize, ysize,
-        access, pxspace, linespace
+        linespace::Integer  = 0,
+        bandspace::Integer  = 0
+    ) where {T <: Any, U <: Integer}
+    xsize = length(cols); xsize < 0 && error("invalid window width")
+    ysize = length(rows); ysize < 0 && error("invalid window height")
+    rasterio!(rasterband, buffer, cols[1]-1, rows[1]-1, xsize, ysize, access,
+        pxspace, linespace, bandspace
     )
-end
-
-read!(rb::RasterBand, buffer::Array{T,2}) where {T <: Real} =
-    rasterio!(rb, buffer, GDAL.GF_Read)
-
-function read!(
-        rb::RasterBand,
-        buffer::Array{T,2},
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Real
-    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
-end
-
-function read!(
-        rb::RasterBand,
-        buffer::Array{T,2},
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where {T <: Real, U <: Integer}
-    rasterio!(rb, buffer, rows, cols)
-end
-
-read(rb::RasterBand) =
-    rasterio!(rb, Array{getdatatype(rb)}(width(rb), height(rb)))
-
-function read(
-        rb::RasterBand,
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    )
-    buffer = Array{getdatatype(rb)}(width(rb), height(rb))
-    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
-end
-
-function read(
-        rb::RasterBand,
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where U <: Integer
-    rasterio!(rb,
-        Array{getdatatype(rb)}(length(cols), length(rows)),
-        rows, cols
-    )
-end
-
-write!(rb::RasterBand, buffer::Array{T,2}) where {T <: Real} =
-    rasterio!(rb, buffer, GDAL.GF_Write)
-
-function write!(
-        rb::RasterBand,
-        buffer::Array{T, 2},
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Real
-    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GDAL.GF_Write)
-end
-
-function write!(
-        rb::RasterBand,
-        buffer::Array{T, 2},
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where {T <: Real, U <: Integer}
-    rasterio!(rb, buffer, rows, cols, GDAL.GF_Write)
-end
-
-read!(dataset::Dataset, buffer::Array{T,2}, i::Integer) where {T <: Real} =
-    read!(getband(dataset, i), buffer)
-
-read!(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) where {T <: Real} =
-    rasterio!(dataset, buffer, indices, GDAL.GF_Read)
-
-function read!(dataset::Dataset, buffer::Array{T,3}) where T <: Real
-    nband = nraster(dataset); @assert size(buffer, 3) == nband
-    rasterio!(dataset, buffer, collect(Cint, 1:nband), GDAL.GF_Read)
-end
-
-function read!(
-        dataset::Dataset,
-        buffer::Array{T, 2},
-        i::Integer,
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Real
-    read!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
-end
-
-function read!(
-        dataset::Dataset,
-        buffer::Array{T, 3},
-        indices::Vector{Cint},
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Real
-    rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)
-end
-
-function read!(
-        dataset::Dataset,
-        buffer::Array{T, 2},
-        i::Integer,
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where {T <: Real, U <: Integer}
-    read!(getband(dataset, i), buffer, rows, cols)
-end
-
-function read!(
-        dataset::Dataset,
-        buffer::Array{T, 3},
-        indices::Vector{Cint},
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where {T <: Real, U <: Integer}
-    rasterio!(dataset, buffer, indices, rows, cols)
-end
-
-read(dataset::Dataset, i::Integer) = read(getband(dataset, i))
-
-function read(dataset::Dataset, indices::Vector{Cint})
-    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
-        width(dataset), height(dataset), length(indices)
-    )
-    rasterio!(dataset, buffer, indices)
-end
-
-function read(dataset::Dataset)
-    buffer = Array{getdatatype(getband(dataset, 1))}(
-        width(dataset), height(dataset), nraster(dataset)
-    )
-    read!(dataset, buffer)
-end
-
-function read(
-        dataset::Dataset,
-        i::Integer,
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    )
-    read(getband(dataset, i), xoffset, yoffset, xsize, ysize)
-end
-
-function read(
-        dataset::Dataset,
-        indices::Vector{T},
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Integer
-    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
-        width(dataset), height(dataset), length(indices)
-    )
-    rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
-end
-
-function read(
-        dataset::Dataset,
-        i::Integer,
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where U <: Integer
-    read(getband(dataset, i), rows, cols)
-end
-
-function read(
-        dataset::Dataset,
-        indices::Vector{Cint},
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where U <: Integer
-    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
-        width(dataset), height(dataset), length(indices)
-    )
-    rasterio!(dataset, buffer, indices, rows, cols)
-end
-
-write!(dataset::Dataset, buffer::Array{T,2}, i::Integer) where {T <: Real} =
-    write!(getband(dataset, i), buffer)
-
-write!(dataset::Dataset, buffer::Array{T,3}, indices::Vector{Cint}) where {T <: Real} =
-    rasterio!(dataset, buffer, indices, GDAL.GF_Write)
-
-function write!(
-        dataset::Dataset,
-        buffer::Array{T, 2},
-        i::Integer,
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Real
-    write!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
-end
-
-function write!(
-        dataset::Dataset,
-        buffer::Array{T, 3},
-        indices::Vector{Cint},
-        xoffset::Integer,
-        yoffset::Integer,
-        xsize::Integer,
-        ysize::Integer
-    ) where T <: Real
-    rasterio!(dataset, buffer, indices, xoffset, yoffset,
-        xsize, ysize, GDAL.GF_Write
-    )
-end
-
-function write!(
-        dataset::Dataset,
-        buffer::Array{T, 2},
-        i::Integer,
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where {T <: Real, U <: Integer}
-    write!(getband(dataset, i), buffer, rows, cols)
-end
-
-function write!(
-        dataset::Dataset,
-        buffer::Array{T, 3},
-        indices::Vector{Cint},
-        rows::UnitRange{U},
-        cols::UnitRange{U}
-    ) where {T <: Real, U <: Integer}
-    rasterio!(dataset, buffer, indices, rows, cols, GDAL.GF_Write)
 end
 
 for (T,GT) in _GDALTYPE
@@ -461,6 +222,255 @@ for (T,GT) in _GDALTYPE
             buffer
         end
     end)
+end
+
+read!(rb::RasterBand, buffer::Array{T,2}) where {T <: Any} =
+    rasterio!(rb, buffer, GDAL.GF_Read)
+
+function read!(
+        rb::RasterBand,
+        buffer::Array{T,2},
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Any
+    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
+end
+
+function read!(
+        rb::RasterBand,
+        buffer::Array{T,2},
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where {T <: Any, U <: Integer}
+    rasterio!(rb, buffer, rows, cols)
+end
+
+read(rb::RasterBand) =
+    rasterio!(rb, Array{getdatatype(rb)}(width(rb), height(rb)))
+
+function read(
+        rb::RasterBand,
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    )
+    buffer = Array{getdatatype(rb)}(width(rb), height(rb))
+    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
+end
+
+function read(
+        rb::RasterBand,
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where U <: Integer
+    rasterio!(rb,
+        Array{getdatatype(rb)}(length(cols), length(rows)),
+        rows, cols
+    )
+end
+
+write!(rb::RasterBand, buffer::Array{T,2}) where {T <: Any} =
+    rasterio!(rb, buffer, GDAL.GF_Write)
+
+function write!(
+        rb::RasterBand,
+        buffer::Array{T, 2},
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Any
+    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GDAL.GF_Write)
+end
+
+function write!(
+        rb::RasterBand,
+        buffer::Array{T, 2},
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where {T <: Any, U <: Integer}
+    rasterio!(rb, buffer, rows, cols, GDAL.GF_Write)
+end
+
+read!(dataset::Dataset, buffer::Array{T,2}, i::Integer) where {T <: Any} =
+    read!(getband(dataset, i), buffer)
+
+function read!(
+        dataset::Dataset,
+        buffer::Array{T,3},
+        indices::Vector{Cint}
+    ) where {T <: Any}
+    rasterio!(dataset, buffer, indices, GDAL.GF_Read)
+end
+
+function read!(dataset::Dataset, buffer::Array{T,3}) where T <: Any
+    nband = nraster(dataset); @assert size(buffer, 3) == nband
+    rasterio!(dataset, buffer, Cint.(1:nband), GDAL.GF_Read)
+end
+
+function read!(
+        dataset::Dataset,
+        buffer::Array{T, 2},
+        i::Integer,
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Any
+    read!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
+end
+
+function read!(
+        dataset::Dataset,
+        buffer::Array{T, 3},
+        indices::Vector{Cint},
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Any
+    rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)
+end
+
+function read!(
+        dataset::Dataset,
+        buffer::Array{T, 2},
+        i::Integer,
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where {T <: Any, U <: Integer}
+    read!(getband(dataset, i), buffer, rows, cols)
+end
+
+function read!(
+        dataset::Dataset,
+        buffer::Array{T, 3},
+        indices::Vector{Cint},
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where {T <: Any, U <: Integer}
+    rasterio!(dataset, buffer, indices, rows, cols)
+end
+
+read(dataset::Dataset, i::Integer) = read(getband(dataset, i))
+
+function read(dataset::Dataset, indices::Vector{Cint})
+    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
+        width(dataset), height(dataset), length(indices)
+    )
+    rasterio!(dataset, buffer, indices)
+end
+
+function read(dataset::Dataset)
+    read!(dataset, Array{getdatatype(getband(dataset, 1))}(
+        width(dataset), height(dataset), nraster(dataset)
+    ))
+end
+
+function read(
+        dataset::Dataset,
+        i::Integer,
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    )
+    read(getband(dataset, i), xoffset, yoffset, xsize, ysize)
+end
+
+function read(
+        dataset::Dataset,
+        indices::Vector{T},
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Integer
+    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
+        width(dataset), height(dataset), length(indices)
+    )
+    rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
+end
+
+function read(
+        dataset::Dataset,
+        i::Integer,
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where U <: Integer
+    read(getband(dataset, i), rows, cols)
+end
+
+function read(
+        dataset::Dataset,
+        indices::Vector{Cint},
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where U <: Integer
+    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
+        width(dataset), height(dataset), length(indices)
+    )
+    rasterio!(dataset, buffer, indices, rows, cols)
+end
+
+write!(dataset::Dataset, buffer::Array{T,2}, i::Integer) where T <: Any =
+    write!(getband(dataset, i), buffer)
+
+function write!(
+        dataset::Dataset,
+        buffer::Array{T,3},
+        indices::Vector{Cint}
+    ) where {T <: Any}
+    rasterio!(dataset, buffer, indices, GDAL.GF_Write)
+end
+
+function write!(
+        dataset::Dataset,
+        buffer::Array{T, 2},
+        i::Integer,
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Any
+    write!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
+end
+
+function write!(
+        dataset::Dataset,
+        buffer::Array{T, 3},
+        indices::Vector{Cint},
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer
+    ) where T <: Any
+    rasterio!(dataset, buffer, indices, xoffset, yoffset,
+        xsize, ysize, GDAL.GF_Write
+    )
+end
+
+function write!(
+        dataset::Dataset,
+        buffer::Array{T, 2},
+        i::Integer,
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where {T <: Any, U <: Integer}
+    write!(getband(dataset, i), buffer, rows, cols)
+end
+
+function write!(
+        dataset::Dataset,
+        buffer::Array{T, 3},
+        indices::Vector{Cint},
+        rows::UnitRange{U},
+        cols::UnitRange{U}
+    ) where {T <: Any, U <: Integer}
+    rasterio!(dataset, buffer, indices, rows, cols, GDAL.GF_Write)
 end
 
 """

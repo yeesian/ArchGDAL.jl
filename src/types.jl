@@ -103,14 +103,17 @@ const _JLTYPE = Dict{GDAL.GDALDataType, DataType}(
     GDAL.GDT_Float64    => Float64)
 
 const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
-    Any         => GDAL.GDT_Unknown,
-    UInt8       => GDAL.GDT_Byte,
-    UInt16      => GDAL.GDT_UInt16,
-    Int16       => GDAL.GDT_Int16,
-    UInt32      => GDAL.GDT_UInt32,
-    Int32       => GDAL.GDT_Int32,
-    Float32     => GDAL.GDT_Float32,
-    Float64     => GDAL.GDT_Float64)
+    Any             => GDAL.GDT_Unknown,
+    UInt8           => GDAL.GDT_Byte,
+    ImageCore.N0f8  => GDAL.GDT_Byte,
+    UInt16          => GDAL.GDT_UInt16,
+    ImageCore.N0f16 => GDAL.GDT_UInt16,
+    UInt32          => GDAL.GDT_UInt32,
+    ImageCore.N0f32 => GDAL.GDT_UInt32,
+    Int16           => GDAL.GDT_Int16,
+    Int32           => GDAL.GDT_Int32,
+    Float32         => GDAL.GDT_Float32,
+    Float64         => GDAL.GDT_Float64)
 
 "return the corresponding `DataType` in julia"
 const _FIELDTYPE = Dict{OGRFieldType, DataType}(

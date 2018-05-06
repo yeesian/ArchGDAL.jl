@@ -7,6 +7,7 @@ module ArchGDAL
     import GDAL, GeoInterface
     import DataStreams: Data
     using Base.Dates
+    import ImageCore, ColorTypes
 
     include("utils.jl")
     include("types.jl")
