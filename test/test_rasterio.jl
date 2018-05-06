@@ -9,8 +9,8 @@ AG.registerdrivers() do
             total = 0
             buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)..., 1)
             for (cols,rows) in AG.windows(band)
-                AG.rasterio!(ds, buffer, Cint[1], rows-1, cols-1)
-                data = buffer[1:length(cols),1:length(rows)]
+                AG.rasterio!(ds, buffer, Cint[1], rows, cols)
+                data = buffer[1:length(cols),1:length(rows),1]
                 count += sum(data .> 0)
                 total += sum(data)
             end
@@ -24,8 +24,8 @@ AG.registerdrivers() do
             total = 0
             buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)..., 1)
             for (cols,rows) in AG.windows(band)
-                AG.read!(ds, buffer, Cint[1], rows-1, cols-1)
-                data = buffer[1:length(cols),1:length(rows)]
+                AG.read!(ds, buffer, Cint[1], rows, cols)
+                data = buffer[1:length(cols),1:length(rows),1]
                 count += sum(data .> 0)
                 total += sum(data)
             end
@@ -92,9 +92,7 @@ AG.registerdrivers() do
         end
 
         @testset "version 7" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
-            AG.read!(band, buffer)
+            buffer = AG.read(AG.getband(ds, 1))
             count = sum(buffer .> 0)
             total = sum(buffer)
             @test total / count ≈ 76.33891347095299
@@ -102,9 +100,7 @@ AG.registerdrivers() do
         end
 
         @testset "version 8" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
-            AG.read!(ds, buffer, 1)
+            buffer = AG.read(ds, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
             @test total / count ≈ 76.33891347095299
@@ -112,9 +108,7 @@ AG.registerdrivers() do
         end
 
         @testset "version 9" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 1)
-            AG.read!(ds, buffer, Cint[1])
+            buffer = AG.read(ds, Cint[1])
             count = sum(buffer .> 0)
             total = sum(buffer)
             @test total / count ≈ 76.33891347095299
@@ -122,9 +116,7 @@ AG.registerdrivers() do
         end
 
         @testset "version 10" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 3)
-            AG.read!(ds, buffer)
+            buffer = AG.read(ds)
             count = sum(buffer[:,:,1] .> 0)
             total = sum(buffer[:,:,1])
             @test total / count ≈ 76.33891347095299
