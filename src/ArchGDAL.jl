@@ -29,6 +29,7 @@ module ArchGDAL
     include("base/iterators.jl")
     include("base/display.jl")
     include("datastreams.jl")
+    include("images.jl")
     include("geointerface.jl")
 
 end # module

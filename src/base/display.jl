@@ -19,7 +19,7 @@ function Base.show(io::IO, dataset::Dataset)
         print(io, "\nDataset (width x height): ")
         println(io, "$(width(dataset)) x $(height(dataset)) (pixels)")
         println(io, "Number of raster bands: $nrasters")
-        for i in 1:min(nrasters, 3)
+        for i in 1:min(nrasters, 5)
             print(io, "  ")
             summarize(io, getband(dataset, i))
         end
