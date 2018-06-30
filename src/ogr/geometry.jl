@@ -216,21 +216,21 @@ wkbsize(geom::AbstractGeometry) = GDAL.wkbsize(geom.ptr)
 
 "Convert a geometry into well known text format."
 function toWKT(geom::AbstractGeometry)
-    wkt_ptr = Ref{Ptr{UInt8}}()
+    wkt_ptr = Ref(Cstring(C_NULL))
     result = GDAL.exporttowkt(geom.ptr, wkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to WKT"
     wkt = unsafe_string(wkt_ptr[])
-    GDAL.C.OGRFree(Ptr{UInt8}(wkt_ptr[]))
+    GDAL.C.VSIFree(pointer(wkt_ptr[]))
     wkt
 end
 
 "Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known text format."
 function toISOWKT(geom::AbstractGeometry)
-    isowkt_ptr = Ref{Ptr{UInt8}}()
+    isowkt_ptr = Ref(Cstring(C_NULL))
     result = GDAL.exporttoisowkt(geom.ptr, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
     wkt = unsafe_string(isowkt_ptr[])
-    GDAL.C.OGRFree(Ptr{UInt8}(isowkt_ptr[]))
+    GDAL.C.VSIFree(pointer(isowkt_ptr[]))
     wkt
 end
 
@@ -277,7 +277,7 @@ toGML(geom::AbstractGeometry) = GDAL.exporttogml(geom.ptr)
 
 "Convert a geometry into KML format."
 # * `altitudemode`: value to write in altitudeMode element, or NULL.
-toKML(geom::AbstractGeometry, altitudemode = Ptr{UInt8}(C_NULL)) =
+toKML(geom::AbstractGeometry, altitudemode = C_NULL) =
     GDAL.exporttokml(geom.ptr, altitudemode)
 
 "Convert a geometry into GeoJSON format."
