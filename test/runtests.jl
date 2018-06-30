@@ -81,8 +81,3 @@ cd(dirname(@__FILE__)) do
     include("test_cookbook_geometry.jl")
     include("test_cookbook_projection.jl")
 end
-
-for f in remotefiles
-    currfile = joinpath(testdatadir, f)
-    isfile(currfile) && rm(currfile)
-end
