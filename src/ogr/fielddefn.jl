@@ -201,7 +201,7 @@ unsafe_creategeomfielddefn(name::AbstractString, etype::OGRwkbGeometryType) =
 
 "Destroy a geometry field definition."
 function destroy(gfd::GeomFieldDefn)
-    @gdal(OGR_GFld_Destroy::Void, gfd.ptr::GDALGeomFieldDefn)
+    GDAL.destroy(gfd.ptr)
     gfd.ptr = C_NULL
 end
 
@@ -217,18 +217,13 @@ gettype(gfd::GeomFieldDefn) = OGRwkbGeometryType(GDAL.gettype(gfd.ptr))
 
 "Set the geometry type of this field."
 function settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType)
-    @gdal(OGR_GFld_SetType::Void,
-        gfd.ptr::GDALGeomFieldDefn,
-        etype::GDAL.OGRwkbGeometryType
-    )
+    GDAL.settype(gfd.ptr, etype)
     gfd
 end
 
 "Fetch spatial reference system of this field. May return NULL"
 unsafe_getspatialref(::Type{S}, gfd::GeomFieldDefn) where S <: AbstractSpatialRef =
-    S(@gdal(OGR_GFld_GetSpatialRef::GDALSpatialRef,
-        gfd.ptr::GDALGeomFieldDefn
-    ))
+    S(GDAL.getspatialref(gfd.ptr))
 unsafe_getspatialref(gfd::GeomFieldDefn) = unsafe_getspatialref(SpatialRef, gfd)
 getspatialref(gfd::GeomFieldDefn) = unsafe_getspatialref(ISpatialRef, gfd)
 
@@ -272,6 +267,6 @@ isignored(gfd::GeomFieldDefn) = Bool(GDAL.isignored(gfd.ptr))
 
 "Set whether this field should be omitted when fetching features."
 function setignored!(gfd::GeomFieldDefn, ignore::Bool)
-    @gdal(OGR_GFld_SetIgnored::Void, gfd.ptr::GDALGeomFieldDefn, ignore::Cint)
+    GDAL.setignored(gfd.ptr, ignore)
     gfd
 end

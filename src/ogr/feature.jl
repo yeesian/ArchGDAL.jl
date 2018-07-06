@@ -491,11 +491,7 @@ function setfield!(
         i::Integer,
         value::Vector{T}
     ) where T <: AbstractString
-    @gdal(OGR_F_SetFieldStringList::Void,
-        feature.ptr::GDALFeature,
-        i::Cint,
-        value::StringList
-    )
+    GDAL.setfieldstringlist(feature.ptr, i, value)
     feature
 end
 

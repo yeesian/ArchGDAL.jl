@@ -5,7 +5,7 @@ Base.length(layer::FeatureLayer) = nfeature(layer, true)
 
 function Base.done(layer::FeatureLayer, state::Vector{Feature})
     destroy(state[1])
-    ptr = @gdal(OGR_L_GetNextFeature::GDALFeature, layer.ptr::GDALFeatureLayer)
+    ptr = GDAL.getnextfeature(layer.ptr)
     state[1] = Feature(ptr)
     
     if ptr == C_NULL

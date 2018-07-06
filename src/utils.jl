@@ -58,17 +58,10 @@ function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
 end
 
 "Fetch list of (non-empty) metadata domains. (Since: GDAL 1.11)"
-metadatadomainlist(obj) =
-    unsafe_loadstringlist(@gdal(GDALGetMetadataDomainList::Ptr{Cstring},
-        obj.ptr::Ptr{GDAL.GDALMajorObjectH}
-    ))
+metadatadomainlist(obj) = GDAL.getmetadatadomainlist(obj.ptr)
 
 "Fetch metadata. Note that relatively few formats return any metadata."
-metadata(obj; domain::AbstractString = "") =
-    unsafe_loadstringlist(@gdal(GDALGetMetadata::Ptr{Cstring},
-        obj.ptr::Ptr{GDAL.GDALMajorObjectH},
-        domain::Ptr{UInt8}
-    ))
+metadata(obj; domain::AbstractString = "") = GDAL.getmetadata(obj.ptr, domain)
 
 """
 Set a configuration option for GDAL/OGR use.
@@ -88,7 +81,7 @@ If `setconfigoption()` is called several times with the same key, the value
 provided during the last call will be used.
 """
 setconfigoption(option::AbstractString, value) =
-    @gdal(CPLSetConfigOption::Void, option::Cstring, value::Ptr{UInt8})
+    GDAL.C.CPLSetConfigOption(option, value)
 
 """
 This function can be used to clear a setting.
@@ -113,10 +106,7 @@ it in environment variables.
 the value associated to the key, or the default value if not found.
 """
 function getconfigoption(option::AbstractString, default = C_NULL)
-    result = @gdal(CPLGetConfigOption::Ptr{UInt8},
-        option::Cstring,
-        default::Ptr{UInt8}
-    )
+    result = GDAL.C.CPLGetConfigOption(option, default)
     return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
@@ -135,10 +125,7 @@ thread, as opposed to `setconfigoption()` which sets an option that applies on
 all threads.
 """
 setthreadconfigoption(option::AbstractString, value) =
-    @gdal(CPLSetThreadLocalConfigOption::Void,
-        option::Cstring,
-        value::Ptr{UInt8}
-    )
+    GDAL.C.CPLSetThreadLocalConfigOption(option, value)
 
 """
 This function can be used to clear a setting.
@@ -151,9 +138,6 @@ clearthreadconfigoption(option::AbstractString) =
 
 "Same as `getconfigoption()` but with settings from `setthreadconfigoption()`."
 function getthreadconfigoption(option::AbstractString, default = C_NULL)
-    result = @gdal(CPLGetThreadLocalConfigOption::Ptr{UInt8},
-        option::Cstring,
-        default::Ptr{UInt8}
-    )
+    result = GDAL.C.CPLGetThreadLocalConfigOption(option, default)
     return (result == C_NULL) ? "" : unsafe_string(result)
 end

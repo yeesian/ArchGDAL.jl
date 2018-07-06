@@ -75,10 +75,7 @@ by the `GDAL_DMD_CREATIONOPTIONLIST` metadata item. In case of incompatibility
 a (non fatal) warning will be emited and `FALSE` will be returned.
 """
 validate(drv::Driver, options::Vector{T}) where {T <: AbstractString} = 
-    Bool(@gdal(GDALValidateCreationOptions::Cint,
-        drv.ptr::GDALDriver,
-        options::StringList
-    ))
+    Bool(GDAL.validatecreationoptions(drv.ptr, options))
 
 "Copy all the files associated with a dataset."
 function copyfiles(drv::Driver, new::AbstractString, old::AbstractString)

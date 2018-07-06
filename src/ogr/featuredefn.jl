@@ -135,10 +135,7 @@ type. The geometry type should generally not be changed after any OGRFeatures
 have been created against this definition.
 """
 function setgeomtype!(fd::FeatureDefn, etype::OGRwkbGeometryType)
-    @gdal(OGR_FD_SetGeomType::Void,
-        fd.ptr::GDALFeatureDefn,
-        etype::GDAL.OGRwkbGeometryType
-    )
+    GDAL.setgeomtype(fd.ptr, etype)
     fd
 end
 

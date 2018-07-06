@@ -50,10 +50,7 @@ match is found.
 * `usage`  usage type to search for.
 """
 getcolumnindex(rat::RasterAttrTable, usage::GDALRATFieldUsage) =
-    @gdal(GDALRATGetColOfUsage::Cint,
-        rat.ptr::GDALRasterAttrTable,
-        usage::GDAL.GDALRATFieldUsage
-    )
+    GDAL.ratgetcolofusage(rat.ptr, usage)
 
 "Fetch row count."
 nrow(rat::RasterAttrTable) = GDAL.ratgetrowcount(rat.ptr)
@@ -192,14 +189,8 @@ function attributeio!(
         nrows::Integer,
         data::Vector{Float64}
     )
-    result = @gdal(GDALRATValuesIOAsDouble::GDAL.CPLErr,
-        rat.ptr::GDALRasterAttrTable,
-        access::GDAL.GDALRWFlag,
-        col::Cint,
-        startrow::Cint,
-        nrows::Cint,
-        data::Ptr{Cdouble}
-    )
+    result = GDAL.ratvaluesioasdouble(rat.ptr, access, col, startrow, nrows,
+        data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
     data
 end
@@ -222,14 +213,8 @@ function attributeio!(
         nrows::Integer,
         data::Vector{Cint}
     )
-    result = @gdal(GDALRATValuesIOAsInteger::GDAL.CPLErr,
-        rat.ptr::GDALRasterAttrTable,
-        access::GDAL.GDALRWFlag,
-        col::Cint,
-        startrow::Cint,
-        nrows::Cint,
-        data::Ptr{Cint}
-    )
+    result = GDAL.ratvaluesioasinteger(rat.ptr, access, col, startrow, nrows,
+        data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
     data
 end
@@ -252,14 +237,8 @@ function attributeio!(
         nrows::Integer,
         data::Vector{T}
     ) where T <: AbstractString
-    result = @gdal(GDALRATValuesIOAsString::GDAL.CPLErr,
-        rat.ptr::GDALRasterAttrTable,
-        access::GDAL.GDALRWFlag,
-        col::Cint,
-        startrow::Cint,
-        nrows::Cint,
-        data::StringList
-    )
+    result = GDAL.ratvaluesioasstring(rat.ptr, access, col, startrow, nrows,
+        data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
     data
 end
@@ -288,12 +267,7 @@ function createcolumn!(
         fieldtype::GDALRATFieldType,
         fieldusage::GDALRATFieldUsage
     )
-    result = @gdal(GDALRATCreateColumn::GDAL.CPLErr,
-        rat.ptr::GDALRasterAttrTable,
-        name::Cstring,
-        fieldtype::GDAL.GDALRATFieldType,
-        fieldusage::GDAL.GDALRATFieldUsage
-    )
+    result = GDAL.ratcreatecolumn(rat.ptr, name, fieldtype, fieldusage)
     @cplerr result "Failed to create column $name"
     rat
 end
@@ -310,11 +284,7 @@ the table.
 * `binsize` the width of each category (in pixel value units).
 """
 function setlinearbinning!(rat::RasterAttrTable, row0min::Real, binsize::Real)
-    result = @gdal(GDALRATSetLinearBinning::GDAL.CPLErr,
-        rat.ptr::GDALRasterAttrTable,
-        row0min::Cdouble,
-        binsize::Cdouble
-    )
+    result = GDAL.ratsetlinearbinning(rat.ptr, row0min, binsize)
     @cplerr result "Fail to set linear binning: r0min=$row0min, width=$binsize"
     rat
 end

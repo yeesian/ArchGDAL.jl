@@ -225,10 +225,7 @@ available on the current layer use the `TestCapability()` method with a value of
 * `i`: the index indicating how many steps into the result set to seek.
 """
 function setnextbyindex!(layer::FeatureLayer, i::Integer)
-    result = @gdal(OGR_L_SetNextByIndex::GDAL.OGRErr,
-        layer.ptr::GDALFeatureLayer,
-        i::GDAL.GIntBig
-    )
+    result = GDAL.setnextbyindex(layer.ptr, i)
     @ogrerr result "Failed to move the cursor to index $i"
     layer
 end
@@ -255,10 +252,7 @@ interrupted by a OGR_L_GetFeature() call.
 The returned feature should be free with OGR_F_Destroy().
 """
 unsafe_getfeature(layer::FeatureLayer, i::Integer) =
-    Feature(GDAL.checknull(@gdal(OGR_L_GetFeature::GDALFeature,
-        layer.ptr::GDALFeatureLayer,
-        i::GDAL.GIntBig
-    )))
+    Feature(GDAL.getfeature(layer.ptr, i))
 
 """
 Rewrite an existing feature.
@@ -837,10 +831,7 @@ OGRERR_NONE if all field names have been resolved (even if the driver does not
 support this method)
 """
 function setignoredfields!(layer::FeatureLayer, fieldnames)
-    result = @gdal(OGR_L_SetIgnoredFields::GDAL.OGRErr,
-        layer.ptr::GDALFeatureLayer,
-        fieldnames::StringList
-    )
+    result = GDAL.setignoredfields(layer.ptr, fieldnames)
     @ogrerr result "Failed to set ignored fields $fieldnames."
     layer
 end

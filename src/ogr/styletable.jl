@@ -42,10 +42,7 @@ Initialize style manager from the style string.
 TRUE on success, FALSE on errors.
 """
 initialize!(stylemanager::StyleManager, stylestring = C_NULL) =
-    Bool(@gdal(OGR_SM_InitStyleString::Cint,
-        stylemanager.ptr::GDALStyleManager,
-        stylestring::Ptr{UInt8}
-    ))
+    Bool(GDAL.initstylestring(stylemanager.ptr, stylestring))
 
 """
 Get the number of parts in a style.
@@ -58,17 +55,10 @@ Get the number of parts in a style.
 ### Returns
 the number of parts (style tools) in the style.
 """
-npart(stylemanager::StyleManager) =
-    @gdal(OGR_SM_GetPartCount::Cint,
-        stylemanager.ptr::GDALStyleManager,
-        C_NULL::Ptr{UInt8}
-    )
+npart(stylemanager::StyleManager) = GDAL.getpartcount(stylemanager.ptr, C_NULL)
 
 npart(stylemanager::StyleManager, stylestring::AbstractString) =
-    @gdal(OGR_SM_GetPartCount::Cint,
-        stylemanager.ptr::GDALStyleManager,
-        stylestring::Ptr{UInt8}
-    )
+    GDAL.getpartcount(stylemanager.ptr, stylestring)
 
 """
 Fetch a part (style tool) from the current style.
@@ -83,11 +73,7 @@ Fetch a part (style tool) from the current style.
 OGRStyleToolH of the requested part (style tools) or NULL on error.
 """
 unsafe_getpart(stylemanager::StyleManager, id::Integer, stylestring = C_NULL) =
-    StyleTool(GDAL.checknull(@gdal(OGR_SM_GetPart::GDALStyleTool,
-        stylemanager.ptr::GDALStyleManager,
-        id::Cint,
-        stylestring::Ptr{UInt8}
-    )))
+    StyleTool(GDAL.getpart(stylemanager.ptr, id, stylestring))
 
 """
 Add a part (style tool) to the current style.
@@ -122,16 +108,8 @@ function addstyle!(
     Bool(GDAL.addstyle(stylemanager.ptr, stylename, stylestring))
 end
 
-function addstyle!(
-        stylemanager::StyleManager,
-        stylename::AbstractString
-    )
-    Bool(@gdal(OGR_SM_AddStyle::Cint,
-        stylemanager.ptr::GDALStyleManager,
-        stylename::Cstring,
-        C_NULL::Ptr{UInt8}
-    ))
-end
+addstyle!(stylemanager::StyleManager, stylename::AbstractString) =
+    Bool(GDAL.addstyle(stylemanager.ptr, stylename, C_NULL))
 
 """
 OGRStyleTool factory.
@@ -144,9 +122,7 @@ OGRStyleTool factory.
 an handle to the new style tool object or NULL if the creation failed.
 """
 unsafe_createstyletool(classid::OGRSTClassId) =
-    StyleTool(GDAL.checknull(@gdal(OGR_ST_Create::GDALStyleTool,
-        classid::GDAL.OGRSTClassId
-    )))
+    StyleTool(GDAL.st_create(classid))
 
 """
 Destroy Style Tool.
@@ -191,11 +167,7 @@ Set Style Tool units.
 * `scale`: ground to paper scale factor.
 """
 setunit!(styletool::StyleTool, newunit::OGRSTUnitId, scale::Real) =
-    @gdal(OGR_ST_SetUnit::Void,
-        styletool.ptr::GDALStyleTool,
-        newunit::GDAL.OGRSTUnitId,
-        scale::Cdouble
-    )
+    GDAL.setunit(styletool.ptr, newunit, scale)
 
 """
 Get Style Tool parameter value as a string.
