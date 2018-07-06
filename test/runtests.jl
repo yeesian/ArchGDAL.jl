@@ -1,4 +1,5 @@
 using Base.Test
+using Base.Dates
 
 const testdatadir = dirname(@__FILE__)
 
