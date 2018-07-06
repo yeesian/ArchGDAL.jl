@@ -147,8 +147,8 @@ function unsafe_create(
         dtype::DataType = Any,
         options = StringList(C_NULL)
     )
-    result = GDAL.checknull(GDAL.create(driver.ptr, filename, width, height,
-        nbands, _GDALTYPE[dtype], options))
+    result = GDAL.create(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
     Dataset(result)
 end
 
@@ -225,8 +225,8 @@ function unsafe_read(
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)
     )
-    result = GDAL.checknull(GDAL.openex(filename, Int(flags), alloweddrivers,
-        options, siblingfiles))
+    result = GDAL.openex(filename, Int(flags), alloweddrivers, options,
+        siblingfiles)
     Dataset(result)
 end
 

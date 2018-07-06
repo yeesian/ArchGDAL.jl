@@ -225,7 +225,7 @@ OGRFeatures that depend on it is likely to result in a crash.
 Starting with GDAL 2.1, returns NULL in case out of memory situation.
 """
 unsafe_createfeature(fd::FeatureDefn) =
-    Feature(GDAL.checknull(GDAL.f_create(fd.ptr)))
+    Feature(GDAL.f_create(fd.ptr))
 
 "Fetch feature definition."
 getfeaturedefn(feature::Feature) = FeatureDefn(GDAL.getdefnref(feature.ptr))
