@@ -46,8 +46,7 @@ Note that some `GDALRasterBands` are not considered to be a part of a dataset,
 such as overviews or other "freestanding" bands.
 """
 # GDAL wrapper checks null by default, but it is a valid result in this case
-getdataset(rb::RasterBand) =
-    Dataset(@gdal(GDALGetBandDataset::GDALDataset, rb.ptr::GDALRasterBand))
+getdataset(rb::RasterBand) = Dataset(GDAL.getbanddataset(rb.ptr))
 
 """
 Return a name for the units of this raster's values. For instance, it might be
@@ -138,10 +137,7 @@ end
 
 "Set the category names for this band."
 function setcategorynames!(rb::RasterBand, names)
-    result = @gdal(GDALSetRasterCategoryNames::GDAL.CPLErr,
-        rb.ptr::GDALRasterBand,
-        names::StringList
-    )
+    result = GDAL.setrastercategorynames(rb.ptr, names)
     @cplerr result "Failed to set category names"
 end
 
@@ -195,13 +191,8 @@ function copywholeraster!(
         progressdata            = C_NULL,
         progressfunc::Function  = GDAL.C.GDALDummyProgress
     )
-    result = @gdal(GDALRasterBandCopyWholeRaster::GDAL.CPLErr,
-        source.ptr::GDALRasterBand,
-        dest.ptr::GDALRasterBand,
-        options::StringList,
-        @cplprogress(progressfunc)::GDALProgressFunc,
-        progressdata::Ptr{Void}
-    )
+    result = GDAL.rasterbandcopywholeraster(source.ptr, dest.ptr, options,
+        @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to copy whole raster"
 end
 
@@ -221,14 +212,8 @@ number of desired samples to fetch the most reduced overview. The same band as
 was passed in will be returned if it has not overviews, or if none of the
 overviews have enough samples.
 """
-function getsampleoverview(rb::RasterBand, nsamples::Integer)
-    result = @gdal(GDALGetRasterSampleOverviewEx::GDALRasterBand,
-        rb.ptr::GDALRasterBand,
-        nsamples::GDAL.GUIntBig
-    )
-    GDAL.checknull(result)
-    RasterBand(result)
-end
+getsampleoverview(rb::RasterBand, nsamples::Integer) =
+    RasterBand(GDAL.getrastersampleoverviewex(rb.ptr, UInt64(nsamples)))
 
 "Color Interpretation value for band"
 getcolorinterp(rb::RasterBand) =
@@ -236,10 +221,7 @@ getcolorinterp(rb::RasterBand) =
 
 "Set color interpretation of a band."
 function setcolorinterp!(rb::RasterBand, color::GDALColorInterp)
-    result = @gdal(GDALSetRasterColorInterpretation::GDAL.CPLErr,
-        rb.ptr::GDALRasterBand,
-        color::GDAL.GDALColorInterp
-    )
+    result = GDAL.setrastercolorinterpretation(rb.ptr, color)
     @cplerr result "Failed to set color interpretation"
     color
 end
@@ -303,14 +285,9 @@ function regenerateoverviews!(
         progressfunc::Function      = GDAL.C.GDALDummyProgress,
         progressdata                = C_NULL
     )
-    result = @gdal(GDALRegenerateOverviews::GDAL.CPLErr,
-        rb.ptr::GDALRasterBand,
-        length(overviewbands)::Cint,
-        GDALRasterBand[band.ptr for band in overviewbands]::Ptr{GDALRasterBand},
-        resampling::Cstring,
-        @cplprogress(progressfunc)::GDALProgressFunc,
-        progressdata::Ptr{Void}
-    )
+    result = GDAL.regenerateoverviews(rb.ptr, length(overviewbands),
+        GDALRasterBand[band.ptr for band in overviewbands], resampling,
+        @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to regenerate overviews"
     result
 end
@@ -336,17 +313,11 @@ NULL terminated array of strings. Raster values without associated names will
 have an empty string in the returned list. The first entry in the list is for
 raster values of zero, and so on.
 """
-getcategorynames(band::RasterBand) =
-    unsafe_loadstringlist(@gdal(GDALGetRasterCategoryNames::Ptr{Cstring},
-        band.ptr::GDALRasterBand
-    ))
+getcategorynames(band::RasterBand) = GDAL.getrastercategorynames(band.ptr)
 
 "Set the category names for this band."
 function setcategorynames!(band::RasterBand, names::Vector{String})
-    result = @gdal(GDALSetRasterCategoryNames::GDAL.CPLErr,
-        band.ptr::GDALRasterBand,
-        names::StringList
-    )
+    result = GDAL.setrastercategorynames(band.ptr, names)
     @cplerr result "Failed to set category names for this band"
     result
 end

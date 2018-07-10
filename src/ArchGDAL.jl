@@ -1,9 +1,12 @@
+__precompile__()
+
 module ArchGDAL
 
     using Compat
     import Compat.String
     import GDAL, GeoInterface
     import DataStreams: Data
+    using Base.Dates
 
     include("utils.jl")
     include("types.jl")

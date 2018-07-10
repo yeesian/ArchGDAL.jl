@@ -178,9 +178,8 @@ pointer may be NULL or non-NULL.
 """
 function asintlist(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    a = Array{Int32}
-    ptr = GDAL.checknull(GDAL.getfieldasintegerlist(feature.ptr, i, n))
-    unsafe_wrap(a, ptr, n.x)
+    ptr = GDAL.getfieldasintegerlist(feature.ptr, i, n)
+    return (n.x == 0) ? Int32[] : unsafe_wrap(Array{Int32}, ptr, n.x)
 end
 
 """
@@ -199,9 +198,8 @@ pointer may be NULL or non-NULL.
 """
 function asint64list(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    a = Array{Int64}
-    ptr = GDAL.checknull(GDAL.getfieldasinteger64list(feature.ptr, i, n))
-    unsafe_wrap(a, ptr, n.x)
+    ptr = GDAL.getfieldasinteger64list(feature.ptr, i, n)
+    return (n.x == 0) ? Int64[] : unsafe_wrap(Array{Int64}, ptr, n.x)
 end
 
 """
@@ -220,9 +218,8 @@ pointer may be NULL or non-NULL.
 """
 function asdoublelist(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    ptr = GDAL.checknull(GDAL.getfieldasdoublelist(feature.ptr, i, n))
-    a = Array{Float64}
-    unsafe_wrap(a, ptr, n.x)
+    ptr = GDAL.getfieldasdoublelist(feature.ptr, i, n)
+    return (n.x == 0) ? Float64[] : unsafe_wrap(Array{Float64}, ptr, n.x)
 end
 
 """
@@ -237,9 +234,7 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
 asstringlist(feature::Feature, i::Integer) =
-    unsafe_loadstringlist(
-        GDAL.C.OGR_F_GetFieldAsStringList(Ptr{Void}(feature.ptr), Cint(i))
-    )
+    GDAL.getfieldasstringlist(feature.ptr, i)
 
 """
     OGR_F_GetFieldAsBinary(OGRFeatureH hFeat,
@@ -256,9 +251,8 @@ Its lifetime may be very brief.
 """
 function asbinary(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    a = Array{UInt8}
-    ptr = GDAL.checknull(GDAL.getfieldasbinary(feature.ptr, i, n))
-    unsafe_wrap(a, ptr, n.x)
+    ptr = GDAL.getfieldasbinary(feature.ptr, i, n)
+    return (n.x == 0) ? UInt8[] : unsafe_wrap(Array{UInt8}, ptr, n.x)
 end
 
 """
@@ -491,11 +485,7 @@ function setfield!(
         i::Integer,
         value::Vector{T}
     ) where T <: AbstractString
-    @gdal(OGR_F_SetFieldStringList::Void,
-        feature.ptr::GDALFeature,
-        i::Cint,
-        value::StringList
-    )
+    GDAL.setfieldstringlist(feature.ptr, i, value)
     feature
 end
 

@@ -24,13 +24,8 @@ function copywholeraster(
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
         progressdata::Any       = C_NULL
     )
-    result = @gdal(GDALDatasetCopyWholeRaster::GDAL.CPLErr,
-        source.ptr::GDALDataset,
-        dest.ptr::GDALDataset,
-        options::StringList,
-        @cplprogress(progressfunc)::GDALProgressFunc,
-        progressdata::Ptr{Void}
-    )
+    result = GDAL.datasetcopywholeraster(source.ptr, dest.ptr, options,
+        @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to copy whole raster"
 end
 
@@ -86,17 +81,9 @@ function unsafe_createcopy(
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
         progressdata            = C_NULL
     )
-    GDAL.checknull(dataset.ptr)
-    result = GDAL.checknull(@gdal(GDALCreateCopy::GDALDataset,
-        driver.ptr::GDALDriver,
-        filename::Cstring,
-        dataset.ptr::GDALDataset,
-        strict::Cint,
-        options::StringList,
-        @cplprogress(progressfunc)::GDALProgressFunc,
-        progressdata::Ptr{Void}
-    ))
-    Dataset(result)
+    
+    Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.checknull(dataset.ptr),
+        strict, options, @cplprogress(progressfunc), progressdata))
 end
 
 function unsafe_createcopy(
@@ -160,15 +147,8 @@ function unsafe_create(
         dtype::DataType = Any,
         options = StringList(C_NULL)
     )
-    result = GDAL.checknull(@gdal(GDALCreate::GDALDataset,
-        driver.ptr::GDALDriver,
-        filename::Cstring,
-        width::Cint,
-        height::Cint,
-        nbands::Cint,
-        _GDALTYPE[dtype]::GDAL.GDALDataType,
-        options::StringList
-    ))
+    result = GDAL.create(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
     Dataset(result)
 end
 
@@ -245,13 +225,8 @@ function unsafe_read(
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)
     )
-    result = GDAL.checknull(@gdal(GDALOpenEx::GDALDataset,
-        filename::Cstring,
-        flags::UInt32,
-        alloweddrivers::StringList,
-        options::StringList,
-        siblingfiles::StringList
-    ))
+    result = GDAL.openex(filename, Int(flags), alloweddrivers, options,
+        siblingfiles)
     Dataset(result)
 end
 
@@ -284,11 +259,7 @@ list is owned by the caller and should be deallocated with `CSLDestroy()`.
 The returned filenames will normally be relative or absolute paths depending on
 the path used to originally open the dataset. The strings will be UTF-8 encoded
 """
-function filelist(dataset::Dataset)
-    unsafe_loadstringlist(@gdal(GDALGetFileList::Ptr{Cstring},
-        dataset.ptr::GDALDataset
-    ))
-end
+filelist(dataset::Dataset) = GDAL.getfilelist(dataset.ptr)
 
 """
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
@@ -349,14 +320,8 @@ function createlayer(
         geom::OGRwkbGeometryType        = wkbUnknown,
         options                         = StringList(C_NULL)
     )
-    result = GDAL.checknull(@gdal(GDALDatasetCreateLayer::GDALFeatureLayer,
-        dataset.ptr::GDALDataset,
-        name::Cstring,
-        spatialref.ptr::GDALSpatialRef,
-        geom::GDAL.OGRwkbGeometryType,
-        options::StringList
-    ))
-    FeatureLayer(result)
+    FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
+        geom, options))
 end
 
 """
@@ -374,13 +339,7 @@ function copylayer(
         name::AbstractString;
         options = StringList(C_NULL)
     )
-    result = GDAL.checknull(@gdal(GDALDatasetCopyLayer::GDALFeatureLayer,
-        dataset.ptr::GDALDataset,
-        layer.ptr::GDALFeatureLayer,
-        name::Cstring,
-        options::StringList
-    ))
-    FeatureLayer(result)
+    FeatureLayer(GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options))
 end
 
 """
@@ -467,13 +426,8 @@ function unsafe_executesql(
         dialect::AbstractString = "",
         spatialfilter::Geometry = Geometry(C_NULL)
     )
-    result = @gdal(GDALDatasetExecuteSQL::GDALFeatureLayer,
-        dataset.ptr::GDALDataset,
-        query::Cstring,
-        spatialfilter.ptr::GDALGeometry,
-        dialect::Cstring
-    )
-    FeatureLayer(result)
+    FeatureLayer(GDAL.datasetexecutesql(dataset.ptr, query, spatialfilter.ptr,
+        dialect))
 end
 
 
@@ -579,16 +533,9 @@ function buildoverviews!(dataset::Dataset,
                          resampling::AbstractString = "NEAREST",
                          progressfunc::Function     = GDAL.C.GDALDummyProgress,
                          progressdata               = C_NULL)
-    result = @gdal(GDALBuildOverviews::GDAL.CPLErr,
-        dataset.ptr::GDALDataset,
-        resampling::Cstring,
-        length(overviewlist)::Cint,
-        overviewlist::Ptr{Cint},
-        length(bandlist)::Cint,
-        bandlist::Ptr{Cint},
-        @cplprogress(progressfunc)::GDALProgressFunc,
-        progressdata::Ptr{Void}
-    )
+    result = GDAL.buildoverviews(dataset.ptr, resampling, length(overviewlist),
+        overviewlist, length(bandlist), bandlist, @cplprogress(progressfunc),
+        progressdata)
     @cplerr result "Failed to build overviews"
     dataset
 end

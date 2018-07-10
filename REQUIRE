@@ -1,3 +1,5 @@
 julia 0.6
 DataStreams
 GeoInterface
+GDAL
+Compat

@@ -87,9 +87,8 @@ Create an empty geometry of desired type.
 This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
-function unsafe_creategeom(::Type{G}, geomtype::OGRwkbGeometryType ) where G <: AbstractGeometry
-    G(GDAL.checknull(@gdal(OGR_G_CreateGeometry::GDALGeometry, geomtype::GDAL.OGRwkbGeometryType)))
-end
+unsafe_creategeom(::Type{G}, geomtype::OGRwkbGeometryType ) where G <: AbstractGeometry =
+    G(GDAL.creategeometry(geomtype))
 
 unsafe_creategeom(geomtype::OGRwkbGeometryType) = unsafe_creategeom(Geometry, geomtype)
 
@@ -119,11 +118,7 @@ function unsafe_forceto(
         targettype::OGRwkbGeometryType,
         options = StringList(C_NULL)
     ) where G <: AbstractGeometry
-    G(GDAL.checknull(@gdal(OGR_G_ForceTo::GDALGeometry,
-        unsafe_clone(geom).ptr::GDALGeometry,
-        targettype::GDAL.OGRwkbGeometryType,
-        options::StringList
-    )))
+    G(GDAL.forceto(unsafe_clone(geom).ptr, targettype, options))
 end
 unsafe_forceto(geom::AbstractGeometry, args...) =
     unsafe_forceto(Geometry, geom, args...)
@@ -184,11 +179,7 @@ Convert a geometry well known binary format.
 """
 function toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
     buffer = Array{Cuchar}(wkbsize(geom))
-    result = @gdal(OGR_G_ExportToWkb::GDAL.OGRErr,
-        geom.ptr::GDALGeometry,
-        order::GDAL.OGRwkbByteOrder,
-        buffer::Ptr{Cuchar}
-    )
+    result = GDAL.exporttowkb(geom.ptr, order, buffer)
     @ogrerr result "Failed to export geometry to WKB"
     buffer
 end
@@ -202,11 +193,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 """
 function toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
     buffer = Array{Cuchar}(wkbsize(geom))
-    result = @gdal(OGR_G_ExportToIsoWkb::GDAL.OGRErr,
-        geom.ptr::GDALGeometry,
-        order::GDAL.OGRwkbByteOrder,
-        buffer::Ptr{Cuchar}
-    )
+    result = GDAL.exporttoisowkb(geom.ptr, order, buffer)
     @ogrerr result "Failed to export geometry to ISO WKB"
     buffer
 end
@@ -216,21 +203,21 @@ wkbsize(geom::AbstractGeometry) = GDAL.wkbsize(geom.ptr)
 
 "Convert a geometry into well known text format."
 function toWKT(geom::AbstractGeometry)
-    wkt_ptr = Ref{Ptr{UInt8}}()
+    wkt_ptr = Ref(Cstring(C_NULL))
     result = GDAL.exporttowkt(geom.ptr, wkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to WKT"
     wkt = unsafe_string(wkt_ptr[])
-    GDAL.C.OGRFree(Ptr{UInt8}(wkt_ptr[]))
+    GDAL.C.VSIFree(pointer(wkt_ptr[]))
     wkt
 end
 
 "Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known text format."
 function toISOWKT(geom::AbstractGeometry)
-    isowkt_ptr = Ref{Ptr{UInt8}}()
+    isowkt_ptr = Ref(Cstring(C_NULL))
     result = GDAL.exporttoisowkt(geom.ptr, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
     wkt = unsafe_string(isowkt_ptr[])
-    GDAL.C.OGRFree(Ptr{UInt8}(isowkt_ptr[]))
+    GDAL.C.VSIFree(pointer(isowkt_ptr[]))
     wkt
 end
 
@@ -277,7 +264,7 @@ toGML(geom::AbstractGeometry) = GDAL.exporttogml(geom.ptr)
 
 "Convert a geometry into KML format."
 # * `altitudemode`: value to write in altitudeMode element, or NULL.
-toKML(geom::AbstractGeometry, altitudemode = Ptr{UInt8}(C_NULL)) =
+toKML(geom::AbstractGeometry, altitudemode = C_NULL) =
     GDAL.exporttokml(geom.ptr, altitudemode)
 
 "Convert a geometry into GeoJSON format."
@@ -291,11 +278,7 @@ Convert a geometry into GeoJSON format.
 ### Returns
 A GeoJSON fragment or NULL in case of error.
 """
-toJSON(geom::AbstractGeometry, options) =
-    unsafe_string(@gdal(OGR_G_ExportToJsonEx::Cstring,
-        geom.ptr::GDALGeometry,
-        options::StringList
-    ))
+toJSON(geom::AbstractGeometry, options) = GDAL.exporttojsonex(geom.ptr, options)
 
 "Create a geometry object from its GeoJSON representation"
 unsafe_fromJSON(::Type{G}, data::String) where {G <: AbstractGeometry} =

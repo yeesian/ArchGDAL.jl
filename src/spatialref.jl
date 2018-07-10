@@ -83,10 +83,7 @@ construct this SRS is consumed from the input string, and the input string
 pointer is then updated to point to the remaining (unused) input.
 """
 function importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
-    result = @gdal(OSRImportFromWkt::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        [wktstr]::StringList
-    )
+    result = GDAL.importfromwkt(spref.ptr, [wktstr])
     @ogrerr result "Failed to initialize SRS based on WKT string: $wktstr"
     spref
 end
@@ -147,10 +144,7 @@ and `exportToWkt()` methods can be used to generate output suitable to write to
 new style (Arc 8) .prj files.
 """
 function importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
-    result = @gdal(OSRImportFromESRI::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        [esristr]::StringList
-    )
+    result = GDAL.importfromesri(spref.ptr, [esristr])
     @ogrerr result "Failed to initialize SRS based on ESRI string: $esristr"
     spref
 end
@@ -191,10 +185,7 @@ importURL(url::AbstractString) = importURL!(newspatialref(), url)
 "Convert this SRS into WKT format."
 function toWKT(spref::AbstractSpatialRef)
     wktptr = Ref{Ptr{UInt8}}()
-    result = @gdal(OSRExportToWkt::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        wktptr::StringList
-    )
+    result = GDAL.exporttowkt(spref.ptr, wktptr)
     @ogrerr result "Failed to convert this SRS into WKT format"
     unsafe_string(wktptr[])
 end
@@ -209,11 +200,7 @@ Convert this SRS into a nicely formatted WKT string for display to a person.
 """
 function toWKT(spref::AbstractSpatialRef, simplify::Bool)
     wktptr = Ref{Ptr{UInt8}}()
-    result = @gdal(OSRExportToPrettyWkt::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        wktptr::StringList,
-        simplify::Cint
-    )
+    result = GDAL.exporttoprettywkt(spref.ptr, wktptr, simplify)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
     unsafe_string(wktptr[])
 end
@@ -224,11 +211,8 @@ end
 Export coordinate system in PROJ.4 format.
 """
 function toPROJ4(spref::AbstractSpatialRef)
-    projptr = Ref{Ptr{UInt8}}()
-    result = @gdal(OSRExportToProj4::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        projptr::StringList
-    )
+    projptr = Ref{Cstring}()
+    result = GDAL.exporttoproj4(spref.ptr, projptr)
     @ogrerr result "Failed to export this SRS to PROJ.4 format"
     unsafe_string(projptr[])
 end
@@ -242,11 +226,7 @@ be returned along with OGRERR_NONE.
 """
 function toXML(spref::AbstractSpatialRef)
     xmlptr = Ref{Ptr{UInt8}}()
-    result = @gdal(OSRExportToXML::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        xmlptr::StringList,
-        C_NULL::Ptr{UInt8}
-    )
+    result = GDAL.exporttoxml(spref.ptr, xmlptr, C_NULL)
     @ogrerr result "Failed to convert this SRS into XML"
     unsafe_string(xmlptr[])
 end
@@ -254,10 +234,7 @@ end
 "Export coordinate system in Mapinfo style CoordSys format."
 function toMICoordSys(spref::AbstractSpatialRef)
     ptr = Ref{Ptr{UInt8}}()
-    result = @gdal(OSRExportToMICoordSys::GDAL.OGRErr,
-        spref.ptr::GDALSpatialRef,
-        ptr::StringList
-    )
+    result = GDAL.exporttomicoordsys(spref.ptr, ptr)
     @ogrerr result "Failed to convert this SRS into XML"
     unsafe_string(ptr[])
 end

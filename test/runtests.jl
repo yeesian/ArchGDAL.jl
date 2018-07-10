@@ -1,4 +1,5 @@
 using Base.Test
+using Base.Dates
 
 const testdatadir = dirname(@__FILE__)
 
@@ -61,28 +62,25 @@ for f in remotefiles
     isfile(currfile) || download(REPO_URL*f*"?raw=true", currfile)
 end
 
-cd(dirname(@__FILE__)) do
-    isdir("tmp") || mkpath("tmp")
-    include("test_datastreams.jl")
-    include("test_gdal_tutorials.jl")
-    include("test_geometry.jl")
-    include("test_types.jl")
-    include("test_drivers.jl")
-    include("test_feature.jl")
-    include("test_featurelayer.jl")
-    include("test_fielddefn.jl")
-    include("test_styletable.jl")
-    include("test_dataset.jl")
-    include("test_rasterband.jl")
-    include("test_rasterio.jl")
-    include("test_rasterattrtable.jl")
-    include("test_ospy_examples.jl")
-    include("test_geos_operations.jl")
-    include("test_cookbook_geometry.jl")
-    include("test_cookbook_projection.jl")
-end
-
-for f in remotefiles
-    currfile = joinpath(testdatadir, f)
-    isfile(currfile) && rm(currfile)
+@testset "ArchGDAL" begin
+    cd(dirname(@__FILE__)) do
+        isdir("tmp") || mkpath("tmp")
+        include("test_datastreams.jl")
+        include("test_gdal_tutorials.jl")
+        include("test_geometry.jl")
+        include("test_types.jl")
+        include("test_drivers.jl")
+        include("test_feature.jl")
+        include("test_featurelayer.jl")
+        include("test_fielddefn.jl")
+        include("test_styletable.jl")
+        include("test_dataset.jl")
+        include("test_rasterband.jl")
+        include("test_rasterio.jl")
+        include("test_rasterattrtable.jl")
+        include("test_ospy_examples.jl")
+        include("test_geos_operations.jl")
+        include("test_cookbook_geometry.jl")
+        # include("test_cookbook_projection.jl")
+    end
 end
