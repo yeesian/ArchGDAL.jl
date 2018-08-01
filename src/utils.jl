@@ -49,7 +49,7 @@ function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
     (pstringlist == C_NULL) && return stringlist
     i = 1
     item = unsafe_load(pstringlist, i)
-    while Ptr{UInt8}(item) != C_NULL
+    while item != C_NULL
         push!(stringlist, unsafe_string(item))
         i += 1
         item = unsafe_load(pstringlist, i)
