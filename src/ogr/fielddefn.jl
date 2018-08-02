@@ -158,8 +158,8 @@ setnullable!(fielddefn::FieldDefn, nullable::Bool) =
 
 "Get default field value"
 function getdefault(fielddefn::FieldDefn)
-    result = @gdal(OGR_Fld_GetDefault::Ptr{UInt8}, fielddefn.ptr::GDALFieldDefn)
-    return result == Ptr{UInt8}(C_NULL) ? "" : unsafe_string(result)
+    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
+    return result == C_NULL ? "" : unsafe_string(result)
 end
 
 """

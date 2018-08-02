@@ -17,7 +17,7 @@ const GDALStyleManager    = Ptr{GDAL.OGRStyleMgrH}
 const GDALStyleTable      = Ptr{GDAL.OGRStyleTableH}
 const GDALStyleTool       = Ptr{GDAL.OGRStyleToolH}
 
-const StringList          = Ptr{Ptr{UInt8}}
+const StringList          = Ptr{Cstring}
 
 abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
     # needs to have a `ptr::GDALGeometry` attribute

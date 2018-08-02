@@ -184,7 +184,7 @@ importURL(url::AbstractString) = importURL!(newspatialref(), url)
 
 "Convert this SRS into WKT format."
 function toWKT(spref::AbstractSpatialRef)
-    wktptr = Ref{Ptr{UInt8}}()
+    wktptr = Ref{Cstring}()
     result = GDAL.exporttowkt(spref.ptr, wktptr)
     @ogrerr result "Failed to convert this SRS into WKT format"
     unsafe_string(wktptr[])
@@ -199,7 +199,7 @@ Convert this SRS into a nicely formatted WKT string for display to a person.
                 stripped off.
 """
 function toWKT(spref::AbstractSpatialRef, simplify::Bool)
-    wktptr = Ref{Ptr{UInt8}}()
+    wktptr = Ref{Cstring}()
     result = GDAL.exporttoprettywkt(spref.ptr, wktptr, simplify)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
     unsafe_string(wktptr[])
@@ -225,7 +225,7 @@ possible. LOCAL_CS coordinate systems are not translatable. An empty string will
 be returned along with OGRERR_NONE.
 """
 function toXML(spref::AbstractSpatialRef)
-    xmlptr = Ref{Ptr{UInt8}}()
+    xmlptr = Ref{Cstring}()
     result = GDAL.exporttoxml(spref.ptr, xmlptr, C_NULL)
     @ogrerr result "Failed to convert this SRS into XML"
     unsafe_string(xmlptr[])
@@ -233,7 +233,7 @@ end
 
 "Export coordinate system in Mapinfo style CoordSys format."
 function toMICoordSys(spref::AbstractSpatialRef)
-    ptr = Ref{Ptr{UInt8}}()
+    ptr = Ref{Cstring}()
     result = GDAL.exporttomicoordsys(spref.ptr, ptr)
     @ogrerr result "Failed to convert this SRS into XML"
     unsafe_string(ptr[])
@@ -305,7 +305,7 @@ function setattrvalue!(spref::AbstractSpatialRef, path::AbstractString,
 end
 
 function setattr!(spref::AbstractSpatialRef, path::AbstractString)
-    result = GDAL.setattrvalue(spref.ptr, path, Ptr{UInt8}(C_NULL))
+    result = GDAL.setattrvalue(spref.ptr, path, C_NULL)
     @ogrerr result "Failed to set attribute $path"
 end
 

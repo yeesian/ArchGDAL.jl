@@ -301,7 +301,7 @@ end
 #                   nBXSize::Integer,
 #                   nBYSize::Integer,
 #                   eBDataType::GDALDataType,
-#                   papszOptions::Ptr{Ptr{UInt8}}) =
+#                   papszOptions::Ptr{Cstring}) =
 #     GDALRasterAdviseRead(hRB, nDSXOff, nDSYOff, nDSXSize, nDSYSize, nBXSize,
 #                          nBYSize, eBDataType, papszOptions)::CPLErr
 

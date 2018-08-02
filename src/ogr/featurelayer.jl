@@ -166,7 +166,7 @@ function setattributefilter!(layer::FeatureLayer, query::AbstractString)
 end
 
 function clearattributefilter!(layer::FeatureLayer)
-    result = GDAL.setattributefilter(layer.ptr, Ptr{UInt8}(C_NULL))
+    result = GDAL.setattributefilter(layer.ptr, C_NULL)
     @ogrerr result """OGRErr $result: Failed to clear attribute query."""
     layer
 end
