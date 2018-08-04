@@ -357,14 +357,14 @@ Transform points from source to destination space.
 ### Returns
 `true` on success, or `false` if some or all points fail to transform.
 """
-# The method TransformEx() allows extended success information to be captured
-# indicating which points failed to transform.
 function transform!(
-        obj::CoordTransform,
-        xvertices::Vector{Cdouble},
-        yvertices::Vector{Cdouble},
-        zvertices::Vector{Cdouble}
+    obj::CoordTransform,
+    xvertices::Vector{Cdouble},
+    yvertices::Vector{Cdouble},
+    zvertices::Vector{Cdouble}
     )
+    # The method TransformEx() allows extended success information to be captured
+    # indicating which points failed to transform.
     n = length(xvertices)
     @assert length(yvertices) == n
     @assert length(zvertices) == n
