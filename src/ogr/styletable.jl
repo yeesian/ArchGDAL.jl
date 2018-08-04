@@ -143,7 +143,7 @@ Determine type of Style Tool.
 the style tool type, one of OGRSTCPen (1), OGRSTCBrush (2), OGRSTCSymbol (3) or
 OGRSTCLabel (4). Returns OGRSTCNone (0) if the OGRStyleToolH is invalid.
 """
-gettype(styletool::StyleTool) = OGRSTClassId(GDAL.gettype(styletool.ptr))
+gettype(styletool::StyleTool) = GDAL.gettype(styletool.ptr)
 
 """
 Get Style Tool units.
@@ -154,7 +154,7 @@ Get Style Tool units.
 ### Returns
 the style tool units.
 """
-getunit(styletool::StyleTool) = OGRSTUnitId(GDAL.getunit(styletool.ptr))
+getunit(styletool::StyleTool) = GDAL.getunit(styletool.ptr)
 
 """
     OGR_ST_SetUnit(OGRStyleToolH styletool,

@@ -2,13 +2,13 @@ using Test
 import GeoInterface, GDAL, ArchGDAL; const AG = ArchGDAL
 
 @testset "Incomplete GeoInterface geometries" begin
-    @test_warn "unknown geometry type: wkbCircularString" GeoInterface.geotype(AG.creategeom(GDAL.wkbCircularString))
-    @test_warn "unknown geometry type: wkbCompoundCurve" GeoInterface.geotype(AG.creategeom(GDAL.wkbCompoundCurve))
-    @test_warn "unknown geometry type: wkbCurvePolygon" GeoInterface.geotype(AG.creategeom(GDAL.wkbCurvePolygon))
-    @test_warn "unknown geometry type: wkbMultiSurface" GeoInterface.geotype(AG.creategeom(GDAL.wkbMultiSurface))
-    @test_warn "unknown geometry type: wkbPolyhedralSurface" GeoInterface.geotype(AG.creategeom(GDAL.wkbPolyhedralSurface))
-    @test_warn "unknown geometry type: wkbTIN" GeoInterface.geotype(AG.creategeom(GDAL.wkbTIN))
-    @test_warn "unknown geometry type: wkbTriangle" GeoInterface.geotype(AG.creategeom(GDAL.wkbTriangle))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCircularString))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCompoundCurve))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCurvePolygon))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbMultiSurface))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbPolyhedralSurface))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbTIN))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbTriangle))
 end
 
 @testset "Create a Point" begin
