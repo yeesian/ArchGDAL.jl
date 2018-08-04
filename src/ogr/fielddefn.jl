@@ -4,7 +4,7 @@ Create a new field definition.
 By default, fields have no width, precision, are nullable and not ignored.
 """
 unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType) =
-    FieldDefn(GDAL.fld_create(name, GDAL.OGRFieldType(etype)))
+    FieldDefn(GDAL.fld_create(name, etype))
 
 "Destroy a field definition."
 destroy(fd::FieldDefn) = (GDAL.destroy(fd.ptr); fd.ptr = C_NULL)
@@ -17,11 +17,11 @@ setname!(fielddefn::FieldDefn, name::AbstractString) =
 getname(fielddefn::FieldDefn) = GDAL.getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
-gettype(fielddefn::FieldDefn) = OGRFieldType(GDAL.gettype(fielddefn.ptr))
+gettype(fielddefn::FieldDefn) = GDAL.gettype(fielddefn.ptr)
 
 "Set the type of this field."
 settype!(fielddefn::FieldDefn, etype::OGRFieldType) =
-    (GDAL.settype(fielddefn.ptr, GDAL.OGRFieldType(etype)); fielddefn)
+    (GDAL.settype(fielddefn.ptr, etype); fielddefn)
 
 """
 Fetch subtype of this field.
@@ -32,8 +32,7 @@ Fetch subtype of this field.
 ### Returns
 field subtype.
 """
-getsubtype(fielddefn::FieldDefn) =
-    OGRFieldSubType(GDAL.getsubtype(fielddefn.ptr))
+getsubtype(fielddefn::FieldDefn) = GDAL.getsubtype(fielddefn.ptr)
 
 """
 Set the subtype of this field.
@@ -46,7 +45,7 @@ OGRFeatureDefn.
 * `subtype`: the new field subtype.
 """
 setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType) =
-    (GDAL.setsubtype(fielddefn.ptr, GDAL.OGRFieldSubType(subtype)); fielddefn)
+    (GDAL.setsubtype(fielddefn.ptr, subtype); fielddefn)
 
 """
 Get the justification for this field.
@@ -62,7 +61,7 @@ Set the justification for this field.
 Note: no driver is know to use the concept of field justification.
 """
 setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification) =
-    (GDAL.setjustify(fielddefn.ptr, GDAL.OGRJustification(ejustify)); fielddefn)
+    (GDAL.setjustify(fielddefn.ptr, ejustify); fielddefn)
 
 """Get the formatting width for this field.
 
