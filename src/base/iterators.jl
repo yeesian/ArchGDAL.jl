@@ -1,20 +1,22 @@
-Base.start(layer::FeatureLayer) = [Feature(0)]
-Base.next(layer::FeatureLayer, state::Vector{Feature}) = (state[1], state)
+function Base.iterate(layer::FeatureLayer)
+    layer.ptr == C_NULL && return nothing
+    ptr = GDAL.getnextfeature(layer.ptr)
+    ptr == C_NULL && return nothing
+    (Feature(ptr), 1)
+end
+
+function Base.iterate(layer::FeatureLayer, state::Int)
+    ptr = GDAL.getnextfeature(layer.ptr)
+    if ptr == C_NULL
+        resetreading!(layer)
+        return nothing
+    end
+    (Feature(ptr), state+1)
+end
+
 Base.eltype(layer::FeatureLayer) = Feature
 Base.length(layer::FeatureLayer) = nfeature(layer, true)
 
-function Base.done(layer::FeatureLayer, state::Vector{Feature})
-    destroy(state[1])
-    ptr = GDAL.getnextfeature(layer.ptr)
-    state[1] = Feature(ptr)
-    
-    if ptr == C_NULL
-        resetreading!(layer)
-        return true
-    else
-        return false
-    end
-end
 
 struct BlockIterator
     rows::Cint
