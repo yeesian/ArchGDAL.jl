@@ -33,9 +33,7 @@ macro cplwarn(code, message)
 end
 
 macro cplprogress(progressfunc)
-    return quote
-        @cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Cvoid}))
-    end
+    @cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Cvoid}))
 end
 
 """

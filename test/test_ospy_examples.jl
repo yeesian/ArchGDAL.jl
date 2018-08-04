@@ -1,4 +1,5 @@
 using Test
+using Statistics
 import ArchGDAL; const AG = ArchGDAL
 
 """

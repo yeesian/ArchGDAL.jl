@@ -182,8 +182,7 @@ asyncstatustype(name::AbstractString) = GDAL.getasyncstatustypebyname(name)
 getname(obj::GDALColorInterp) = GDAL.getcolorinterpretationname(obj)
 
 "Get color interpretation corresponding to the given symbolic name."
-colorinterp(name::AbstractString) =
-    GDALColorInterp(GDAL.getcolorinterpretationbyname(name))
+colorinterp(name::AbstractString) = GDAL.getcolorinterpretationbyname(name)
 
 "Get name of palette interpretation."
 getname(obj::GDALPaletteInterp) = GDAL.getpaletteinterpretationname(obj)

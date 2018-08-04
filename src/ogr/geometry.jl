@@ -222,8 +222,7 @@ function toISOWKT(geom::AbstractGeometry)
 end
 
 "Fetch geometry type code"
-getgeomtype(geom::AbstractGeometry) =
-    OGRwkbGeometryType(GDAL.getgeometrytype(geom.ptr))
+getgeomtype(geom::AbstractGeometry) = GDAL.getgeometrytype(geom.ptr)
 
 "Fetch WKT name for geometry type."
 getgeomname(geom::AbstractGeometry) = GDAL.getgeometryname(geom.ptr)

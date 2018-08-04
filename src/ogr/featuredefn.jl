@@ -123,8 +123,7 @@ For layers with multiple geometry fields, this method only returns the geometry
 type of the first geometry column. For other columns, use
     `OGR_GFld_GetType(OGR_FD_GetGeomFieldDefn(OGR_L_GetLayerDefn(hLayer), i))`.
 """
-getgeomtype(fd::FeatureDefn) =
-    OGRwkbGeometryType(GDAL.getgeomtype(fd.ptr))
+getgeomtype(fd::FeatureDefn) = GDAL.getgeomtype(fd.ptr)
 
 """
 Assign the base geometry type for the passed layer (same as the fd).

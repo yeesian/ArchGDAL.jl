@@ -1,7 +1,5 @@
 module ArchGDAL
 
-    using Compat
-    import Compat.String
     import GDAL, GeoInterface
     import DataStreams: Data
     using Dates

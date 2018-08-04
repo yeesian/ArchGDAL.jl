@@ -1,7 +1,6 @@
 julia 0.7-rc2
 DataStreams
-GeoInterface
+GeoInterface 0.4
 GDAL
-Compat
 ImageCore
 ColorTypes

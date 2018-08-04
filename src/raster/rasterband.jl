@@ -30,7 +30,7 @@ width(rb::RasterBand) = GDAL.getrasterbandxsize(rb.ptr)
 height(rb::RasterBand) = GDAL.getrasterbandysize(rb.ptr)
 
 "Find out if we have update permission for this band."
-getaccess(rb::RasterBand) = GDALAccess(GDAL.getrasteraccess(rb.ptr))
+getaccess(rb::RasterBand) = GDAL.getrasteraccess(rb.ptr)
 
 """Fetch the band number (1+) within its dataset, or 0 if unknown.
 
@@ -216,8 +216,7 @@ getsampleoverview(rb::RasterBand, nsamples::Integer) =
     RasterBand(GDAL.getrastersampleoverviewex(rb.ptr, UInt64(nsamples)))
 
 "Color Interpretation value for band"
-getcolorinterp(rb::RasterBand) =
-    GDALColorInterp(GDAL.getrastercolorinterpretation(rb.ptr))
+getcolorinterp(rb::RasterBand) = GDAL.getrastercolorinterpretation(rb.ptr)
 
 "Set color interpretation of a band."
 function setcolorinterp!(rb::RasterBand, color::GDALColorInterp)

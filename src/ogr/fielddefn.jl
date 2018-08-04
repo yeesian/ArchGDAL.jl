@@ -52,8 +52,7 @@ Get the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-getjustify(fielddefn::FieldDefn) =
-    OGRJustification(GDAL.getjustify(fielddefn.ptr))
+getjustify(fielddefn::FieldDefn) = GDAL.getjustify(fielddefn.ptr)
 
 """
 Set the justification for this field.
@@ -116,10 +115,10 @@ function setparams!(
     )
     GDAL.set(fielddefn.ptr,
         name,
-        GDAL.OGRFieldType(etype),
+        etype,
         nwidth,
         nprecision,
-        GDAL.OGRJustification(justify)
+        justify
     )
     fielddefn
 end
@@ -196,7 +195,7 @@ isdefaultdriverspecific(fielddefn::FieldDefn) =
 
 "Create a new field geometry definition."
 unsafe_creategeomfielddefn(name::AbstractString, etype::OGRwkbGeometryType) =
-    GeomFieldDefn(GDAL.gfld_create(name, GDAL.OGRwkbGeometryType(etype)))
+    GeomFieldDefn(GDAL.gfld_create(name, etype))
 
 "Destroy a geometry field definition."
 function destroy(gfd::GeomFieldDefn)
@@ -212,7 +211,7 @@ setname!(gfd::GeomFieldDefn, name::AbstractString) =
 getname(gfd::GeomFieldDefn) = GDAL.getnameref(gfd.ptr)
 
 "Fetch geometry type of this field."
-gettype(gfd::GeomFieldDefn) = OGRwkbGeometryType(GDAL.gettype(gfd.ptr))
+gettype(gfd::GeomFieldDefn) = GDAL.gettype(gfd.ptr)
 
 "Set the geometry type of this field."
 function settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType)

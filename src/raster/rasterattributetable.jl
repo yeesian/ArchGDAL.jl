@@ -27,8 +27,7 @@ getcolumnname(rat::RasterAttrTable, i::Integer) =
     GDAL.ratgetnameofcol(rat.ptr, i)
 
 "Fetch column usage value."
-getcolumnusage(rat::RasterAttrTable, i::Integer) =
-    GDALRATFieldUsage(GDAL.ratgetusageofcol(rat.ptr, i))
+getcolumnusage(rat::RasterAttrTable, i::Integer) = GDAL.ratgetusageofcol(rat.ptr, i)
 
 """
 Fetch column type.
@@ -39,8 +38,7 @@ Fetch column type.
 ### Returns
 column type or `GFT_Integer` if the column index is illegal.
 """
-getcolumntype(rat::RasterAttrTable, i::Integer) =
-    GDALRATFieldType(GDAL.ratgettypeofcol(rat.ptr, i))
+getcolumntype(rat::RasterAttrTable, i::Integer) = GDAL.ratgettypeofcol(rat.ptr, i)
 
 """
 Returns the index of the first column of the requested usage type, or -1 if no
