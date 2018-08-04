@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Reproject a Geometry" begin

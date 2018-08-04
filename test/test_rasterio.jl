@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 import ArchGDAL; const AG = ArchGDAL
 
 AG.registerdrivers() do

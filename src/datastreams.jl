@@ -30,13 +30,13 @@ Data.streamtype(::Type{ArchGDAL.Source}, ::Type{Data.Field}) = true
 Data.accesspattern(source::ArchGDAL.Source) = Data.Sequential
 Data.reset!(source::ArchGDAL.Source) = resetreading!(source.featurelayer)
 
-function Data.streamfrom{T}(
+function Data.streamfrom(
         source::ArchGDAL.Source,
         ::Type{Data.Field},
         ::Type{T},
         row,
         col
-    )
+    ) where T
     val = if col <= source.ngeom
         T(getgeomfield(source.feature, col-1).ptr)
     else

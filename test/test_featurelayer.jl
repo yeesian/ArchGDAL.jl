@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Testing FeatureLayer Methods" begin

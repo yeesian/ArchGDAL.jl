@@ -1,5 +1,5 @@
 # adapted from http://pcjericks.github.io/py-gdalogr-cookbook/geometry.html
-using Base.Test
+using Test
 import GDAL, ArchGDAL; const AG = ArchGDAL
 
 @testset "Create a Point" begin

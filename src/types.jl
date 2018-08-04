@@ -118,19 +118,19 @@ const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
 "return the corresponding `DataType` in julia"
 const _FIELDTYPE = Dict{OGRFieldType, DataType}(
     GDAL.OFTInteger         => Int32,
-    GDAL.OFTIntegerList     => Void,
+    GDAL.OFTIntegerList     => Nothing,
     GDAL.OFTReal            => Float64,
-    GDAL.OFTRealList        => Void,
+    GDAL.OFTRealList        => Nothing,
     GDAL.OFTString          => String,
-    GDAL.OFTStringList      => Void,
-    GDAL.OFTWideString      => Void, # deprecated
-    GDAL.OFTWideStringList  => Void, # deprecated
-    GDAL.OFTBinary          => Void,
+    GDAL.OFTStringList      => Nothing,
+    GDAL.OFTWideString      => Nothing, # deprecated
+    GDAL.OFTWideStringList  => Nothing, # deprecated
+    GDAL.OFTBinary          => Nothing,
     GDAL.OFTDate            => Date,
-    GDAL.OFTTime            => Void,
+    GDAL.OFTTime            => Nothing,
     GDAL.OFTDateTime        => DateTime,
     GDAL.OFTInteger64       => Int64,
-    GDAL.OFTInteger64List   => Void)
+    GDAL.OFTInteger64List   => Nothing)
 
 @enum(GDALOpenFlag,
       OF_ReadOnly = GDAL.GDAL_OF_READONLY, # 0x00

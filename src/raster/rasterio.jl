@@ -188,7 +188,7 @@ for (T,GT) in _GDALTYPE
             nband = length(bands); @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                            (GDALDataset,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-                            Ptr{Void},Cint,Cint,GDAL.GDALDataType,Cint,
+                            Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,Cint,
                             Ptr{Cint},GDAL.GSpacing,GDAL.GSpacing,GDAL.GSpacing,
                             Ptr{GDAL.GDALRasterIOExtraArg}),dataset.ptr,access,
                             xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,
@@ -212,7 +212,7 @@ for (T,GT) in _GDALTYPE
             xbsize, ybsize = size(buffer)
             result = ccall((:GDALRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                            (GDALRasterBand,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-                            Ptr{Void},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
+                            Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
                             GDAL.GSpacing,Ptr{GDAL.GDALRasterIOExtraArg}),
                             rasterband.ptr,access,xoffset,yoffset,xsize,ysize,
                             pointer(buffer),xbsize,ybsize,$GT,pxspace,linespace,

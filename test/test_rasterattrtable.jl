@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Testing Raster Attribute Tables" begin
@@ -22,11 +22,11 @@ import ArchGDAL; const AG = ArchGDAL
         AG.setrowcount!(rat, 5)
         @test AG.nrow(rat) == 5
 
-        @test AG.attributeio!(rat, GDAL.GF_Read, 0, 0, 5, Array{Cint}(5)) ==
+        @test AG.attributeio!(rat, GDAL.GF_Read, 0, 0, 5, Array{Cint}(undef, 5)) ==
             fill(0,5)
-        @test AG.attributeio!(rat, GDAL.GF_Read, 0, 0, 5, Array{Float64}(5)) ==
+        @test AG.attributeio!(rat, GDAL.GF_Read, 0, 0, 5, Array{Float64}(undef, 5)) ==
             fill(0,5)
-        @test AG.attributeio!(rat, GDAL.GF_Read, 1, 0, 5, Array{Float64}(5)) ==
+        @test AG.attributeio!(rat, GDAL.GF_Read, 1, 0, 5, Array{Float64}(undef, 5)) ==
             fill(0,5)
 
         @test AG.asstring(rat, 2, 0) == "0"
