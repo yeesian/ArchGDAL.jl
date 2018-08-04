@@ -67,7 +67,7 @@ mutable struct IGeometry <: AbstractGeometry
 
     function IGeometry(ptr::GDALGeometry)
         geom = new(GDAL.clone(ptr))
-        finalizer(geom, destroy)
+        finalizer(destroy, geom)
         geom
     end
 end

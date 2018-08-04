@@ -17,7 +17,7 @@ function GeoInterface.geotype(g::AbstractGeometry)
     elseif gtype in (GDAL.wkbGeometryCollection, GDAL.wkbGeometryCollection25D, GDAL.wkbGeometryCollectionM, GDAL.wkbGeometryCollectionZM)
         return :GeometryCollection
     else
-        warn("unknown geometry type: $gtype")
+        @warn "unknown geometry type" gtype
         return :Unknown
     end
 end
