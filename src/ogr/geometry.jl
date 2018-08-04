@@ -178,7 +178,7 @@ Convert a geometry well known binary format.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
 function toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
-    buffer = Array{Cuchar}(wkbsize(geom))
+    buffer = Array{Cuchar}(undef, wkbsize(geom))
     result = GDAL.exporttowkb(geom.ptr, order, buffer)
     @ogrerr result "Failed to export geometry to WKB"
     buffer
@@ -192,7 +192,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
 function toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
-    buffer = Array{Cuchar}(wkbsize(geom))
+    buffer = Array{Cuchar}(undef, wkbsize(geom))
     result = GDAL.exporttoisowkb(geom.ptr, order, buffer)
     @ogrerr result "Failed to export geometry to ISO WKB"
     buffer

@@ -40,7 +40,7 @@ mutable struct IGeometry <: AbstractGeometry
 
     function IGeometry(ptr::GDALGeometry)
         geom = new(GDAL.clone(ptr))
-        finalizer(geom, destroy)
+        finalizer(destroy, geom)
         geom
     end
 end
@@ -53,7 +53,7 @@ mutable struct ISpatialRef <: AbstractSpatialRef
 
     function ISpatialRef(ptr::GDALSpatialRef)
         spref = new(GDAL.clone(ptr))
-        finalizer(spref, destroy)
+        finalizer(destroy, spref)
         spref
     end
 end
