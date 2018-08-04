@@ -43,7 +43,7 @@ TRUE on success, or FALSE if the conversion isn't supported.
 function getcolorentryasrgb(ct::ColorTable, i::Integer)
     colorentry = Ref{GDAL.GDALColorEntry}(GDAL.GDALColorEntry(0, 0, 0, 0))
     result = Bool(GDAL.getcolorentryasrgb(ct.ptr, i, colorentry))
-    result || warn("The conversion to RGB isn't supported.")
+    result || @warn("The conversion to RGB isn't supported.")
     colorentry[]
 end
 

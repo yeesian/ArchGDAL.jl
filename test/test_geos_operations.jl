@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 import ArchGDAL; const AG = ArchGDAL
 
 function equivalent_to_wkt(geom::ArchGDAL.Geometry, wkt::String)

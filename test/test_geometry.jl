@@ -1,4 +1,4 @@
-using Base.Test
+using Test
 import GeoInterface, GDAL, ArchGDAL; const AG = ArchGDAL
 
 @testset "Incomplete GeoInterface geometries" begin

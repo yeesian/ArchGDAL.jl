@@ -34,7 +34,7 @@ end
 
 macro cplprogress(progressfunc)
     return quote
-        cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Void}))
+        cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Cvoid}))
     end
 end
 

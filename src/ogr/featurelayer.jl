@@ -8,7 +8,7 @@ getgeomtype(layer::FeatureLayer) =
 
 "Returns the current spatial filter for this layer."
 getspatialfilter(layer::FeatureLayer) =
-    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Void}(layer.ptr)))
+    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr)))
 
 """
 Fetch the spatial reference system for this layer.

@@ -299,7 +299,7 @@ Get linear binning information.
 function getlinearbinning(rat::RasterAttrTable)
     row0min = Ref{Cdouble}(); binsize = Ref{Cdouble}()
     result = GDAL.ratgetlinearbinning(rat.ptr, row0min, binsize)
-    result == false || warn("There is no linear binning information.")
+    result == false || @warn("There is no linear binning information.")
     (row0min[], binsize[])
 end
 
