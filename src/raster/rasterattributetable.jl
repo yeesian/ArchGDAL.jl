@@ -331,7 +331,6 @@ Translate to a color table.
 ### Returns
 the generated color table or `NULL` on failure.
 """
-
 toColorTable(rat::RasterAttrTable, n::Integer=-1) = 
     ColorTable(GDAL.rattranslatetocolortable(rat.ptr, n))
 

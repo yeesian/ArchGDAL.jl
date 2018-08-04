@@ -312,7 +312,6 @@ documentation.
     there are no constraints on the types geometry to be written.
 * `options`: a StringList of name=value (driver-specific) options.
 """
-
 function createlayer(
         dataset::Dataset,
         name::AbstractString;

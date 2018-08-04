@@ -45,8 +45,8 @@ Fetch the handle to its dataset handle, or `NULL` if this cannot be determined.
 Note that some `GDALRasterBands` are not considered to be a part of a dataset,
 such as overviews or other "freestanding" bands.
 """
-# GDAL wrapper checks null by default, but it is a valid result in this case
 getdataset(rb::RasterBand) = Dataset(GDAL.getbanddataset(rb.ptr))
+# ↑ GDAL wrapper checks null by default, but it is a valid result in this case
 
 """
 Return a name for the units of this raster's values. For instance, it might be
@@ -118,10 +118,10 @@ not be displayed, nor contribute to analysis operations.
 ### Returns
 the nodata value for this band.
 """
-# ### Parameters
+getnodatavalue(rb::RasterBand) = GDAL.getrasternodatavalue(rb.ptr, C_NULL)
+# ↑ ### Parameters
 # * `pbSuccess`   pointer to a boolean to use to indicate if a value is actually
 # associated with this layer. May be `NULL` (default).
-getnodatavalue(rb::RasterBand) = GDAL.getrasternodatavalue(rb.ptr, C_NULL)
 
 "Set the no data value for this band."
 function setnodatavalue!(rb::RasterBand, value::Real)

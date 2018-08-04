@@ -263,9 +263,9 @@ fromGML(data) = unsafe_fromGML(IGeometry, data)
 toGML(geom::AbstractGeometry) = GDAL.exporttogml(geom.ptr)
 
 "Convert a geometry into KML format."
-# * `altitudemode`: value to write in altitudeMode element, or NULL.
 toKML(geom::AbstractGeometry, altitudemode = C_NULL) =
-    GDAL.exporttokml(geom.ptr, altitudemode)
+GDAL.exporttokml(geom.ptr, altitudemode)
+# ↑ * `altitudemode`: value to write in altitudeMode element, or NULL.
 
 "Convert a geometry into GeoJSON format."
 toJSON(geom::AbstractGeometry) = GDAL.exporttojson(geom.ptr)
