@@ -1,4 +1,5 @@
 using Test
+import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Test methods for rasterband" begin

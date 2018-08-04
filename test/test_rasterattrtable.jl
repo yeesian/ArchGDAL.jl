@@ -1,4 +1,5 @@
 using Test
+import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Testing Raster Attribute Tables" begin
