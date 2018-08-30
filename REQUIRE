@@ -1,4 +1,4 @@
-julia 0.7-rc2
+julia 0.7
 DataStreams
 GeoInterface 0.4
-GDAL
+GDAL 0.2
