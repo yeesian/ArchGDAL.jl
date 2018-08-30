@@ -724,8 +724,8 @@ polygonize(geom::AbstractGeometry, args...) =
 # """
 # function getpoints(hGeom::Ptr{OGRGeometryH},pabyX,nXStride::Integer,pabyY,
 # nYStride::Integer,pabyZ,nZStride::Integer)
-#     ccall((:OGR_G_GetPoints,libgdal),Cint,(Ptr{OGRGeometryH},Ptr{Void},Cint,
-# Ptr{Void},Cint,Ptr{Void},Cint),hGeom,pabyX,nXStride,pabyY,nYStride,pabyZ,
+#     ccall((:OGR_G_GetPoints,libgdal),Cint,(Ptr{OGRGeometryH},Ptr{Cvoid},Cint,
+# Ptr{Cvoid},Cint,Ptr{Cvoid},Cint),hGeom,pabyX,nXStride,pabyY,nYStride,pabyZ,
 # nZStride)
 # end
 
@@ -832,8 +832,8 @@ addpoint!(geom::AbstractGeometry, x::Real, y::Real) =
 # """
 # function setpoints(hGeom::Ptr{OGRGeometryH},nPointsIn::Integer,pabyX,
 # nXStride::Integer,pabyY,nYStride::Integer,pabyZ,nZStride::Integer)
-#     ccall((:OGR_G_SetPoints,libgdal),Void,(Ptr{OGRGeometryH},Cint,Ptr{Void},
-# Cint,Ptr{Void},Cint,Ptr{Void},Cint),hGeom,nPointsIn,pabyX,nXStride,pabyY,
+#     ccall((:OGR_G_SetPoints,libgdal),Void,(Ptr{OGRGeometryH},Cint,Ptr{Cvoid},
+# Cint,Ptr{Cvoid},Cint,Ptr{Cvoid},Cint),hGeom,nPointsIn,pabyX,nXStride,pabyY,
 # nYStride,pabyZ,nZStride)
 # end
 

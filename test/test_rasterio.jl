@@ -171,7 +171,7 @@ end
 #             nband = length(bands); @assert nband == zbsize
 #             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
 #                            (Dataset,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-#                             Ptr{Void},Cint,Cint,GDAL.GDALDataType,Cint,
+#                             Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,Cint,
 #                             Ptr{Cint},GDAL.GSpacing,GDAL.GSpacing,GDAL.GSpacing,
 #                             Ptr{GDAL.GDALRasterIOExtraArg}),dataset,access,
 #                             xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,
