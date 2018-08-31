@@ -10,7 +10,7 @@ AG.registerdrivers() do
             total = 0
             buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
             for (cols,rows) in AG.windows(band)
-                AG.rasterio!(ds, buffer, Cint[1], rows-1, cols-1)
+                AG.rasterio!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
                 data = buffer[1:length(cols),1:length(rows)]
                 count += sum(data .> 0)
                 total += sum(data)

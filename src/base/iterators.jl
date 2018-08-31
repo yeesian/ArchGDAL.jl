@@ -63,7 +63,7 @@ Base.start(obj::WindowIterator) = Base.start(obj.blockiter)
 function Base.next(obj::WindowIterator, iter::Int)
     handle = obj.blockiter
     (((i, j), (nrows, ncols)), iter) = Base.next(handle, iter)
-    (((1:ncols) + j * handle.xbsize, (1:nrows) + i * handle.ybsize), iter)
+    (((1:ncols) .+ j .* handle.xbsize, (1:nrows) .+ i .* handle.ybsize), iter)
 end
 Base.done(obj::WindowIterator, iter::Int) = Base.done(obj.blockiter, iter)
 
