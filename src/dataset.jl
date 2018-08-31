@@ -82,7 +82,7 @@ function unsafe_createcopy(
         progressdata            = C_NULL
     )
     
-    Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.checknull(dataset.ptr),
+    Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
         strict, options, @cplprogress(progressfunc), progressdata))
 end
 
