@@ -27,15 +27,13 @@ end
 macro cplwarn(code, message)
     return quote
         if $(esc(code)) != GDAL.CE_None
-            warn($message)
+            @warn $message
         end
     end
 end
 
 macro cplprogress(progressfunc)
-    return quote
-        cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Void}))
-    end
+    @cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Cvoid}))
 end
 
 """

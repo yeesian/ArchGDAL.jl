@@ -3,12 +3,11 @@
 getname(layer::FeatureLayer) = GDAL.getname(layer.ptr)
 
 "Return the layer geometry type."
-getgeomtype(layer::FeatureLayer) =
-    OGRwkbGeometryType(GDAL.getgeomtype(layer.ptr))
+getgeomtype(layer::FeatureLayer) = GDAL.getgeomtype(layer.ptr)
 
 "Returns the current spatial filter for this layer."
 getspatialfilter(layer::FeatureLayer) =
-    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Void}(layer.ptr)))
+    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr)))
 
 """
 Fetch the spatial reference system for this layer.

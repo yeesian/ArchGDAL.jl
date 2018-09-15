@@ -193,7 +193,7 @@ function read!(
 end
 
 read(rb::RasterBand) =
-    rasterio!(rb, Array{getdatatype(rb)}(width(rb), height(rb)))
+    rasterio!(rb, Array{getdatatype(rb)}(undef, width(rb), height(rb)))
 
 function read(
         rb::RasterBand,
@@ -202,7 +202,7 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    buffer = Array{getdatatype(rb)}(width(rb), height(rb))
+    buffer = Array{getdatatype(rb)}(undef, width(rb), height(rb))
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
 end
 
@@ -212,7 +212,7 @@ function read(
         cols::UnitRange{U}
     ) where U <: Integer
     rasterio!(rb,
-        Array{getdatatype(rb)}(length(cols), length(rows)),
+        Array{getdatatype(rb)}(undef, length(cols), length(rows)),
         rows, cols
     )
 end
@@ -299,16 +299,15 @@ read(dataset::Dataset, i::Integer) = read(getband(dataset, i))
 
 function read(dataset::Dataset, indices::Vector{Cint})
     buffer = Array{getdatatype(getband(dataset, indices[1]))}(
-        width(dataset), height(dataset), length(indices)
+        undef, width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices)
 end
 
 function read(dataset::Dataset)
-    buffer = Array{getdatatype(getband(dataset, 1))}(
-        width(dataset), height(dataset), nraster(dataset)
-    )
-    read!(dataset, buffer)
+    read!(dataset, Array{getdatatype(getband(dataset, 1))}(
+        undef, width(dataset), height(dataset), nraster(dataset)
+    ))
 end
 
 function read(
@@ -331,7 +330,7 @@ function read(
         ysize::Integer
     ) where T <: Integer
     buffer = Array{getdatatype(getband(dataset, indices[1]))}(
-        width(dataset), height(dataset), length(indices)
+        undef, width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
 end
@@ -352,7 +351,7 @@ function read(
         cols::UnitRange{U}
     ) where U <: Integer
     buffer = Array{getdatatype(getband(dataset, indices[1]))}(
-        width(dataset), height(dataset), length(indices)
+        undef, width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices, rows, cols)
 end
@@ -428,7 +427,7 @@ for (T,GT) in _GDALTYPE
             nband = length(bands); @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                            (GDALDataset,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-                            Ptr{Void},Cint,Cint,GDAL.GDALDataType,Cint,
+                            Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,Cint,
                             Ptr{Cint},GDAL.GSpacing,GDAL.GSpacing,GDAL.GSpacing,
                             Ptr{GDAL.GDALRasterIOExtraArg}),dataset.ptr,access,
                             xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,
@@ -452,7 +451,7 @@ for (T,GT) in _GDALTYPE
             xbsize, ybsize = size(buffer)
             result = ccall((:GDALRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                            (GDALRasterBand,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-                            Ptr{Void},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
+                            Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
                             GDAL.GSpacing,Ptr{GDAL.GDALRasterIOExtraArg}),
                             rasterband.ptr,access,xoffset,yoffset,xsize,ysize,
                             pointer(buffer),xbsize,ybsize,$GT,pxspace,linespace,

@@ -1,4 +1,5 @@
-using Base.Test
+using Test
+import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 AG.registerdrivers() do
@@ -7,9 +8,9 @@ AG.registerdrivers() do
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)..., 1)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
             for (cols,rows) in AG.windows(band)
-                AG.rasterio!(ds, buffer, Cint[1], rows-1, cols-1)
+                AG.rasterio!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
                 data = buffer[1:length(cols),1:length(rows)]
                 count += sum(data .> 0)
                 total += sum(data)
@@ -22,9 +23,9 @@ AG.registerdrivers() do
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)..., 1)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
             for (cols,rows) in AG.windows(band)
-                AG.read!(ds, buffer, Cint[1], rows-1, cols-1)
+                AG.read!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
                 data = buffer[1:length(cols),1:length(rows)]
                 count += sum(data .> 0)
                 total += sum(data)
@@ -37,7 +38,7 @@ AG.registerdrivers() do
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)...)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
             for (cols,rows) in AG.windows(band)
                 AG.read!(ds, buffer, 1, rows, cols)
                 data = buffer[1:length(cols),1:length(rows)]
@@ -52,7 +53,7 @@ AG.registerdrivers() do
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)...)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
             for (cols,rows) in AG.windows(band)
                 AG.read!(band, buffer, rows, cols)
                 data = buffer[1:length(cols),1:length(rows)]
@@ -68,7 +69,7 @@ AG.registerdrivers() do
             count = 0
             total = 0
             xbsize, ybsize = AG.getblocksize(band)
-            buffer = Array{AG.getdatatype(band)}(ybsize, xbsize)
+            buffer = Array{AG.getdatatype(band)}(undef, ybsize, xbsize)
             for ((i,j),(nrows,ncols)) in AG.blocks(band)
                 # AG.rasterio!(ds,buffer,Cint[1],i,j,nrows,ncols)
                 # AG.read!(band, buffer, j, i, ncols, nrows)
@@ -83,7 +84,7 @@ AG.registerdrivers() do
 
         @testset "version 6" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 1)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
             AG.rasterio!(ds, buffer, Cint[1])
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -93,7 +94,7 @@ AG.registerdrivers() do
 
         @testset "version 7" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
             AG.read!(band, buffer)
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -103,7 +104,7 @@ AG.registerdrivers() do
 
         @testset "version 8" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
             AG.read!(ds, buffer, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -113,7 +114,7 @@ AG.registerdrivers() do
 
         @testset "version 9" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 1)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
             AG.read!(ds, buffer, Cint[1])
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -123,7 +124,7 @@ AG.registerdrivers() do
 
         @testset "version 10" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 3)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 3)
             AG.read!(ds, buffer)
             count = sum(buffer[:,:,1] .> 0)
             total = sum(buffer[:,:,1])
@@ -170,7 +171,7 @@ end
 #             nband = length(bands); @assert nband == zbsize
 #             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
 #                            (Dataset,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-#                             Ptr{Void},Cint,Cint,GDAL.GDALDataType,Cint,
+#                             Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,Cint,
 #                             Ptr{Cint},GDAL.GSpacing,GDAL.GSpacing,GDAL.GSpacing,
 #                             Ptr{GDAL.GDALRasterIOExtraArg}),dataset,access,
 #                             xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,

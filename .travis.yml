@@ -4,18 +4,18 @@ os:
   - linux
   - osx
 julia:
-  - 0.6
+  - 1.0
   - nightly
-matrix:
-  allow_failures:
-  - julia: nightly
-  fast_finish: true
+# matrix:
+#   allow_failures:
+#   - julia: nightly
+#   fast_finish: true
 notifications:
   email: false
 # uncomment the following lines to override the default test script
 script:
  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'Pkg.clone(pwd()); Pkg.test("ArchGDAL"; coverage=true)'
+ - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ArchGDAL"; coverage=true)'
 after_success:
-- julia -e 'cd(Pkg.dir("ArchGDAL")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
-- LD_LIBRARY_PATH="/home/travis/.julia/v0.6/Conda/deps/usr/lib/" julia -e 'Pkg.add("Documenter"); cd(Pkg.dir("ArchGDAL")); include(joinpath("docs", "make.jl"))'
+- julia -e 'using Pkg; cd(Pkg.dir("ArchGDAL")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
+- LD_LIBRARY_PATH="/home/travis/.julia/v0.6/Conda/deps/usr/lib/" julia -e 'using Pkg; Pkg.add("Documenter"); cd(Pkg.dir("ArchGDAL")); include(joinpath("docs", "make.jl"))'

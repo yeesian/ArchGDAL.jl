@@ -1,4 +1,6 @@
-using Base.Test
+using Test
+using Statistics
+import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 """
@@ -276,7 +278,7 @@ AG.read("ospy/data4/aster.img") do ds
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(AG.getblocksize(band)...)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
             for (cols,rows) in AG.windows(band)
                 AG.rasterio!(band, buffer, rows, cols)
                 data = buffer[1:length(cols),1:length(rows)]
@@ -309,9 +311,9 @@ AG.read("ospy/data4/aster.img") do ds
             inband2 = AG.getband(ds, 2); inband3 = AG.getband(ds, 3)
             (xbsize, ybsize) = AG.getblocksize(inband2)
 
-            buffer2 = Array{Float32}(ybsize, xbsize)
-            buffer3 = Array{Float32}(ybsize, xbsize)
-            ndvi    = Array{Float32}(ybsize, xbsize)
+            buffer2 = Array{Float32}(undef, ybsize, xbsize)
+            buffer3 = Array{Float32}(undef, ybsize, xbsize)
+            ndvi    = Array{Float32}(undef, ybsize, xbsize)
             AG.create("", "MEM",
                       width=cols, height=rows, nbands=1, dtype=Float32) do outDS
                 for ((i,j),(nrows,ncols)) in AG.blocks(inband2)
@@ -402,8 +404,8 @@ end end end end
             yOffset2 = round(Int, (maxY2 - maxY) / pixelHeight1)
 
             dtype = AG.getdatatype(band1)
-            data1 = Array{dtype}(rows, cols)
-            data2 = Array{dtype}(rows, cols)
+            data1 = Array{dtype}(undef, rows, cols)
+            data2 = Array{dtype}(undef, rows, cols)
             # create the output image
             AG.create("", "MEM",width=cols, height=rows, nbands=1,
                       dtype=AG.getdatatype(band1)) do dsout

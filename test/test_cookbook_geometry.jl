@@ -1,5 +1,6 @@
 # adapted from http://pcjericks.github.io/py-gdalogr-cookbook/geometry.html
-using Base.Test
+using Test
+import GeoInterface
 import GDAL, ArchGDAL; const AG = ArchGDAL
 
 @testset "Create a Point" begin
@@ -704,14 +705,14 @@ end
 @testset "Calculate the Area of a Geometry" begin
     wkt = "POLYGON ((1162440.5712740074 672081.4332727483, 1162440.5712740074 647105.5431482664, 1195279.2416228633 647105.5431482664, 1195279.2416228633 672081.4332727483, 1162440.5712740074 672081.4332727483))"
     AG.fromWKT(wkt) do poly
-        @test AG.geomarea(poly) == 8.201750224671059e8
+        @test AG.geomarea(poly) ≈ 8.201750224671059e8
     end
 end
 
 @testset "Calculate the Length of a Geometry" begin
     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do line
-        @test AG.geomlength(line) == 76121.94397805972
+        @test AG.geomlength(line) ≈ 76121.94397805972
     end
 end
 

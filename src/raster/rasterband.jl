@@ -15,7 +15,7 @@ meaning that right and bottom edge blocks may be incomplete. See `ReadBlock()`
 for an example of code dealing with these issues.
 """
 function getblocksize(rb::RasterBand)
-    xy = Array{Cint}(2); x = pointer(xy); y = x + sizeof(Cint)
+    xy = Array{Cint}(undef, 2); x = pointer(xy); y = x + sizeof(Cint)
     GDAL.getblocksize(rb.ptr, x, y)
     xy
 end
@@ -30,7 +30,7 @@ width(rb::RasterBand) = GDAL.getrasterbandxsize(rb.ptr)
 height(rb::RasterBand) = GDAL.getrasterbandysize(rb.ptr)
 
 "Find out if we have update permission for this band."
-getaccess(rb::RasterBand) = GDALAccess(GDAL.getrasteraccess(rb.ptr))
+getaccess(rb::RasterBand) = GDAL.getrasteraccess(rb.ptr)
 
 """Fetch the band number (1+) within its dataset, or 0 if unknown.
 
@@ -45,8 +45,8 @@ Fetch the handle to its dataset handle, or `NULL` if this cannot be determined.
 Note that some `GDALRasterBands` are not considered to be a part of a dataset,
 such as overviews or other "freestanding" bands.
 """
-# GDAL wrapper checks null by default, but it is a valid result in this case
 getdataset(rb::RasterBand) = Dataset(GDAL.getbanddataset(rb.ptr))
+# ↑ GDAL wrapper checks null by default, but it is a valid result in this case
 
 """
 Return a name for the units of this raster's values. For instance, it might be
@@ -118,10 +118,10 @@ not be displayed, nor contribute to analysis operations.
 ### Returns
 the nodata value for this band.
 """
-# ### Parameters
+getnodatavalue(rb::RasterBand) = GDAL.getrasternodatavalue(rb.ptr, C_NULL)
+# ↑ ### Parameters
 # * `pbSuccess`   pointer to a boolean to use to indicate if a value is actually
 # associated with this layer. May be `NULL` (default).
-getnodatavalue(rb::RasterBand) = GDAL.getrasternodatavalue(rb.ptr, C_NULL)
 
 "Set the no data value for this band."
 function setnodatavalue!(rb::RasterBand, value::Real)
@@ -216,8 +216,7 @@ getsampleoverview(rb::RasterBand, nsamples::Integer) =
     RasterBand(GDAL.getrastersampleoverviewex(rb.ptr, UInt64(nsamples)))
 
 "Color Interpretation value for band"
-getcolorinterp(rb::RasterBand) =
-    GDALColorInterp(GDAL.getrastercolorinterpretation(rb.ptr))
+getcolorinterp(rb::RasterBand) = GDAL.getrastercolorinterpretation(rb.ptr)
 
 "Set color interpretation of a band."
 function setcolorinterp!(rb::RasterBand, color::GDALColorInterp)

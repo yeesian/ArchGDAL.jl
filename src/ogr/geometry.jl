@@ -178,7 +178,7 @@ Convert a geometry well known binary format.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
 function toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
-    buffer = Array{Cuchar}(wkbsize(geom))
+    buffer = Array{Cuchar}(undef, wkbsize(geom))
     result = GDAL.exporttowkb(geom.ptr, order, buffer)
     @ogrerr result "Failed to export geometry to WKB"
     buffer
@@ -192,7 +192,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 * `order`: One of wkbXDR or [wkbNDR] indicating MSB or LSB byte order resp.
 """
 function toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder=GDAL.wkbNDR)
-    buffer = Array{Cuchar}(wkbsize(geom))
+    buffer = Array{Cuchar}(undef, wkbsize(geom))
     result = GDAL.exporttoisowkb(geom.ptr, order, buffer)
     @ogrerr result "Failed to export geometry to ISO WKB"
     buffer
@@ -222,8 +222,7 @@ function toISOWKT(geom::AbstractGeometry)
 end
 
 "Fetch geometry type code"
-getgeomtype(geom::AbstractGeometry) =
-    OGRwkbGeometryType(GDAL.getgeometrytype(geom.ptr))
+getgeomtype(geom::AbstractGeometry) = GDAL.getgeometrytype(geom.ptr)
 
 "Fetch WKT name for geometry type."
 getgeomname(geom::AbstractGeometry) = GDAL.getgeometryname(geom.ptr)
@@ -263,9 +262,9 @@ fromGML(data) = unsafe_fromGML(IGeometry, data)
 toGML(geom::AbstractGeometry) = GDAL.exporttogml(geom.ptr)
 
 "Convert a geometry into KML format."
-# * `altitudemode`: value to write in altitudeMode element, or NULL.
 toKML(geom::AbstractGeometry, altitudemode = C_NULL) =
-    GDAL.exporttokml(geom.ptr, altitudemode)
+GDAL.exporttokml(geom.ptr, altitudemode)
+# ↑ * `altitudemode`: value to write in altitudeMode element, or NULL.
 
 "Convert a geometry into GeoJSON format."
 toJSON(geom::AbstractGeometry) = GDAL.exporttojson(geom.ptr)
@@ -725,8 +724,8 @@ polygonize(geom::AbstractGeometry, args...) =
 # """
 # function getpoints(hGeom::Ptr{OGRGeometryH},pabyX,nXStride::Integer,pabyY,
 # nYStride::Integer,pabyZ,nZStride::Integer)
-#     ccall((:OGR_G_GetPoints,libgdal),Cint,(Ptr{OGRGeometryH},Ptr{Void},Cint,
-# Ptr{Void},Cint,Ptr{Void},Cint),hGeom,pabyX,nXStride,pabyY,nYStride,pabyZ,
+#     ccall((:OGR_G_GetPoints,libgdal),Cint,(Ptr{OGRGeometryH},Ptr{Cvoid},Cint,
+# Ptr{Cvoid},Cint,Ptr{Cvoid},Cint),hGeom,pabyX,nXStride,pabyY,nYStride,pabyZ,
 # nZStride)
 # end
 
@@ -833,8 +832,8 @@ addpoint!(geom::AbstractGeometry, x::Real, y::Real) =
 # """
 # function setpoints(hGeom::Ptr{OGRGeometryH},nPointsIn::Integer,pabyX,
 # nXStride::Integer,pabyY,nYStride::Integer,pabyZ,nZStride::Integer)
-#     ccall((:OGR_G_SetPoints,libgdal),Void,(Ptr{OGRGeometryH},Cint,Ptr{Void},
-# Cint,Ptr{Void},Cint,Ptr{Void},Cint),hGeom,nPointsIn,pabyX,nXStride,pabyY,
+#     ccall((:OGR_G_SetPoints,libgdal),Void,(Ptr{OGRGeometryH},Cint,Ptr{Cvoid},
+# Cint,Ptr{Cvoid},Cint,Ptr{Cvoid},Cint),hGeom,nPointsIn,pabyX,nXStride,pabyY,
 # nYStride,pabyZ,nZStride)
 # end
 

@@ -17,7 +17,7 @@ function GeoInterface.geotype(g::AbstractGeometry)
     elseif gtype in (GDAL.wkbGeometryCollection, GDAL.wkbGeometryCollection25D, GDAL.wkbGeometryCollectionM, GDAL.wkbGeometryCollectionZM)
         return :GeometryCollection
     else
-        warn("unknown geometry type: $gtype")
+        @warn "unknown geometry type" gtype
         return :Unknown
     end
 end
@@ -32,7 +32,7 @@ function GeoInterface.coordinates(g::AbstractGeometry)
             return Float64[getx(g,0), gety(g,0), getz(g,0)]
         else
             @assert ndim == 0
-            warn("Empty Point")
+            @warn("Empty Point")
         end
     elseif gtype in (GDAL.wkbMultiPoint, GDAL.wkbMultiPoint25D, GDAL.wkbMultiPointM, GDAL.wkbMultiPointZM)
         return Vector{Float64}[

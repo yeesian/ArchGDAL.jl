@@ -343,7 +343,7 @@ const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
 
 function getfield(feature::Feature, i::Integer)
     if isfieldset(feature, i)
-        _fieldtype = GDAL.OGRFieldType(gettype(getfielddefn(feature, i)))
+        _fieldtype = gettype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, asnothing)
         return _fetchfield(feature, i)
     end

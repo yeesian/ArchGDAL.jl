@@ -1,4 +1,5 @@
-using Base.Test
+using Test
+import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Test methods for dataset" begin

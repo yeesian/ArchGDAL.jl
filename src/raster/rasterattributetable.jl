@@ -27,8 +27,7 @@ getcolumnname(rat::RasterAttrTable, i::Integer) =
     GDAL.ratgetnameofcol(rat.ptr, i)
 
 "Fetch column usage value."
-getcolumnusage(rat::RasterAttrTable, i::Integer) =
-    GDALRATFieldUsage(GDAL.ratgetusageofcol(rat.ptr, i))
+getcolumnusage(rat::RasterAttrTable, i::Integer) = GDAL.ratgetusageofcol(rat.ptr, i)
 
 """
 Fetch column type.
@@ -39,8 +38,7 @@ Fetch column type.
 ### Returns
 column type or `GFT_Integer` if the column index is illegal.
 """
-getcolumntype(rat::RasterAttrTable, i::Integer) =
-    GDALRATFieldType(GDAL.ratgettypeofcol(rat.ptr, i))
+getcolumntype(rat::RasterAttrTable, i::Integer) = GDAL.ratgettypeofcol(rat.ptr, i)
 
 """
 Returns the index of the first column of the requested usage type, or -1 if no
@@ -299,7 +297,7 @@ Get linear binning information.
 function getlinearbinning(rat::RasterAttrTable)
     row0min = Ref{Cdouble}(); binsize = Ref{Cdouble}()
     result = GDAL.ratgetlinearbinning(rat.ptr, row0min, binsize)
-    result == false || warn("There is no linear binning information.")
+    result == false || @warn("There is no linear binning information.")
     (row0min[], binsize[])
 end
 
@@ -331,7 +329,6 @@ Translate to a color table.
 ### Returns
 the generated color table or `NULL` on failure.
 """
-
 toColorTable(rat::RasterAttrTable, n::Integer=-1) = 
     ColorTable(GDAL.rattranslatetocolortable(rat.ptr, n))
 

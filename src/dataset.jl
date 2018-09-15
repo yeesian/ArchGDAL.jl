@@ -82,7 +82,7 @@ function unsafe_createcopy(
         progressdata            = C_NULL
     )
     
-    Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.checknull(dataset.ptr),
+    Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
         strict, options, @cplprogress(progressfunc), progressdata))
 end
 
@@ -312,7 +312,6 @@ documentation.
     there are no constraints on the types geometry to be written.
 * `options`: a StringList of name=value (driver-specific) options.
 """
-
 function createlayer(
         dataset::Dataset,
         name::AbstractString;
@@ -481,7 +480,7 @@ function getgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
     transform
 end
 
-getgeotransform(dataset::Dataset) = getgeotransform!(dataset, Array{Cdouble}(6))
+getgeotransform(dataset::Dataset) = getgeotransform!(dataset, Array{Cdouble}(undef, 6))
 
 "Set the affine transformation coefficients."
 function setgeotransform!(dataset::Dataset, transform::Vector{Cdouble})

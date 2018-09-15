@@ -3,7 +3,7 @@
 Construct a new color table.
 """
 unsafe_createcolortable(palette::GDALPaletteInterp) =
-    ColorTable(GDAL.createcolortable(GDAL.GDALPaletteInterp(palette)))
+    ColorTable(GDAL.createcolortable(palette))
 
 "Destroys a color table."
 destroy(ct::ColorTable) = (GDAL.destroycolortable(ct.ptr); ct.ptr = C_NULL)
@@ -17,8 +17,7 @@ Fetch palette interpretation.
 ### Returns
 palette interpretation enumeration value, usually `GPI_RGB`.
 """
-getpaletteinterp(ct::ColorTable) =
-    GDALPaletteInterp(GDAL.getpaletteinterpretation(ct.ptr))
+getpaletteinterp(ct::ColorTable) = GDAL.getpaletteinterpretation(ct.ptr)
 
 "Get number of color entries in table."
 ncolorentry(ct::ColorTable) = GDAL.getcolorentrycount(ct.ptr)
@@ -43,7 +42,7 @@ TRUE on success, or FALSE if the conversion isn't supported.
 function getcolorentryasrgb(ct::ColorTable, i::Integer)
     colorentry = Ref{GDAL.GDALColorEntry}(GDAL.GDALColorEntry(0, 0, 0, 0))
     result = Bool(GDAL.getcolorentryasrgb(ct.ptr, i, colorentry))
-    result || warn("The conversion to RGB isn't supported.")
+    result || @warn("The conversion to RGB isn't supported.")
     colorentry[]
 end
 

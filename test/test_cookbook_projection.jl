@@ -1,4 +1,5 @@
-using Base.Test
+using Test
+import GeoInterface
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Reproject a Geometry" begin
