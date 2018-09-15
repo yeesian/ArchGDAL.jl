@@ -25,7 +25,7 @@ AG.registerdrivers() do
             total = 0
             buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
             for (cols,rows) in AG.windows(band)
-                AG.read!(ds, buffer, Cint[1], rows-1, cols-1)
+                AG.read!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
                 data = buffer[1:length(cols),1:length(rows)]
                 count += sum(data .> 0)
                 total += sum(data)
@@ -94,7 +94,7 @@ AG.registerdrivers() do
 
         @testset "version 7" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
             AG.read!(band, buffer)
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -104,7 +104,7 @@ AG.registerdrivers() do
 
         @testset "version 8" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds))
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
             AG.read!(ds, buffer, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -114,7 +114,7 @@ AG.registerdrivers() do
 
         @testset "version 9" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 1)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
             AG.read!(ds, buffer, Cint[1])
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -124,7 +124,7 @@ AG.registerdrivers() do
 
         @testset "version 10" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(AG.width(ds), AG.height(ds), 3)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 3)
             AG.read!(ds, buffer)
             count = sum(buffer[:,:,1] .> 0)
             total = sum(buffer[:,:,1])
