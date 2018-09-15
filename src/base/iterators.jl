@@ -1,22 +1,16 @@
-function Base.iterate(layer::FeatureLayer)
+function Base.iterate(layer::FeatureLayer, state::Int=0)
     layer.ptr == C_NULL && return nothing
     ptr = GDAL.getnextfeature(layer.ptr)
-    ptr == C_NULL && return nothing
-    (Feature(ptr), 1)
-end
-
-function Base.iterate(layer::FeatureLayer, state::Int)
-    ptr = GDAL.getnextfeature(layer.ptr)
     if ptr == C_NULL
-        resetreading!(layer)
+        state > 0 && resetreading!(layer)
         return nothing
     end
     (Feature(ptr), state+1)
 end
 
 Base.eltype(layer::FeatureLayer) = Feature
-Base.length(layer::FeatureLayer) = nfeature(layer, true)
 
+Base.length(layer::FeatureLayer) = nfeature(layer, true)
 
 struct BlockIterator
     rows::Cint
@@ -27,6 +21,7 @@ struct BlockIterator
     xbsize::Cint
     ybsize::Cint
 end
+
 function blocks(raster::RasterBand)
     (xbsize, ybsize) = getblocksize(raster)
     rows = height(raster)
@@ -35,8 +30,9 @@ function blocks(raster::RasterBand)
     nj = ceil(Cint, cols / xbsize)
     BlockIterator(rows, cols, ni, nj, ni * nj, xbsize, ybsize)
 end
-Base.start(obj::BlockIterator) = 0
-function Base.next(obj::BlockIterator, iter::Int)
+
+function Base.iterate(obj::BlockIterator, iter::Int=0)
+    iter == obj.n && return nothing
     j = floor(Int, iter / obj.ni)
     i = iter % obj.ni
     nrows = if (i + 1) * obj.ybsize < obj.rows
@@ -49,29 +45,29 @@ function Base.next(obj::BlockIterator, iter::Int)
     else
         obj.cols - j * obj.xbsize
     end
-    (((i, j), (nrows, ncols)), iter + 1)
+    (((i, j), (nrows, ncols)), iter+1)
 end
-Base.done(obj::BlockIterator, iter::Int) = (iter == obj.n)
 
 struct WindowIterator
     blockiter::BlockIterator
 end
-function windows(raster::RasterBand)
-    WindowIterator(blocks(raster))
-end
-Base.start(obj::WindowIterator) = Base.start(obj.blockiter)
-function Base.next(obj::WindowIterator, iter::Int)
+
+windows(raster::RasterBand) = WindowIterator(blocks(raster))
+
+function Base.iterate(obj::WindowIterator, iter::Int=0)
     handle = obj.blockiter
-    (((i, j), (nrows, ncols)), iter) = Base.next(handle, iter)
-    (((1:ncols) .+ j .* handle.xbsize, (1:nrows) .+ i .* handle.ybsize), iter)
+    next = Base.iterate(handle, iter)
+    next == nothing && return nothing
+    (((i, j), (nrows, ncols)), iter) = next
+    (((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize), iter)
 end
-Base.done(obj::WindowIterator, iter::Int) = Base.done(obj.blockiter, iter)
 
 mutable struct BufferIterator{T <: Real}
     raster::RasterBand
     w::WindowIterator
     buffer::Array{T, 2}
 end
+
 function bufferwindows(raster::RasterBand)
     BufferIterator(
         raster,
@@ -79,10 +75,11 @@ function bufferwindows(raster::RasterBand)
         Array{getdatatype(raster)}(undef, getblocksize(raster)...)
     )
 end
-Base.start(obj::BufferIterator) = Base.start(obj.w)
-function Base.next(obj::BufferIterator, iter::Int)
-    ((cols, rows), iter) = Base.next(obj.w, iter)
+
+function Base.iterate(obj::BufferIterator, iter::Int=0)
+    next = Base.iterate(obj.w, iter)
+    next == nothing && return nothing
+    ((cols, rows), iter) = next
     rasterio!(obj.raster, obj.buffer, rows, cols)
     (obj.buffer[1:length(cols), 1:length(rows)], iter)
 end
-Base.done(obj::BufferIterator, iter::Int) = Base.done(obj.w, iter)
