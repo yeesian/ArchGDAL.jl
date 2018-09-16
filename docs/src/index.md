@@ -16,7 +16,7 @@ This package aims to be a complete solution for working with GDAL in Julia, simi
 - **versatility**: ArchGDAL will strive to remain small in its assumptions about the range of user-needs, and to make it easy for users to build their own extensions/conveniences.
 
 ## Installation
-This package is currently unregistered, so add it running:
+This package is currently unregistered, so add it by running:
 
 ```julia
 pkg> add https://github.com/yeesian/ArchGDAL.jl #master
