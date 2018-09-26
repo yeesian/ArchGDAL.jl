@@ -108,7 +108,7 @@ AG.read("ospy/data1/sites.shp") do input
         end end end
         @test sprint(print, output) == """
         GDAL Dataset (Driver: Memory/Memory)
-        File(s):
+        File(s): 
 
         Number of feature layers: 1
           Layer 0: hw1b (wkbPoint)
@@ -129,7 +129,7 @@ AG.read("ospy/data1/sites.shp") do input
         end
         @test sprint(print, output) == """
         GDAL Dataset (Driver: Memory/Memory)
-        File(s):
+        File(s): 
 
         Number of feature layers: 1
           Layer 0: hw1b (wkbPoint)
@@ -335,7 +335,7 @@ AG.read("ospy/data4/aster.img") do ds
                 end
                 @test sprint(print, outDS) == """
                 GDAL Dataset (Driver: MEM/In Memory Raster)
-                File(s):
+                File(s): 
 
                 Dataset (width x height): 5665 x 5033 (pixels)
                 Number of raster bands: 1
@@ -419,7 +419,7 @@ end end end end
 
                 @test sprint(print, dsout) == """
                 GDAL Dataset (Driver: MEM/In Memory Raster)
-                File(s):
+                File(s): 
 
                 Dataset (width x height): 4500 x 3000 (pixels)
                 Number of raster bands: 1
