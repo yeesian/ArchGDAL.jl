@@ -137,7 +137,7 @@ AG.read("ospy/data1/sites.shp") do input
     end
 end
 end
-    
+
 @testset "Homework 2" begin
     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
     open("ospy/data2/ut_counties.txt", "r") do file
@@ -168,7 +168,7 @@ end
                                            parse(Float64, xy[2]))
                     end
                     AG.addgeomdirectly!(poly, ring)
-                    AG.setgeom!(feature, poly)    
+                    AG.setgeom!(feature, poly)
         end end end
         @test sprint(print, layer) == """
         Layer: hw2a
@@ -218,7 +218,7 @@ end
 #                     AG.setspatialfilter!(siteslayer, bufferGeom)
 #                     @test [AG.getfield(f, "ID") for f in siteslayer] == [26]
 #     end end end end
-    
+
 #     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3b.py
 #     # commented out until https://github.com/visr/GDAL.jl/issues/30 is resolved
 #     # for inFN in readdir("./ospy/data3/")
@@ -266,7 +266,7 @@ AG.read("ospy/data4/aster.img") do ds
             total = 0
             data = AG.read(ds, 1)
             for (cols,rows) in AG.windows(AG.getband(ds, 1))
-                window = data[cols, rows]
+                window = data[rows, cols]
                 count = count + sum(window .> 0)
                 total = total + sum(window)
             end
@@ -368,7 +368,7 @@ end end end end
             # read in doq1 and get info about it
             band1 = AG.getband(ds1, 1)
             rows1 = AG.height(ds1); cols1 = AG.width(ds1)
-            
+
             # get the corner coordinates for doq1
             transform1 = AG.getgeotransform(ds1)
             minX1 = transform1[1]; maxY1 = transform1[4]
@@ -379,7 +379,7 @@ end end end end
             # read in doq2 and get info about it
             band2 = AG.getband(ds2, 1)
             rows2 = AG.height(ds2); cols2 = AG.width(ds2)
-            
+
             # get the corner coordinates for doq1
             transform2 = AG.getgeotransform(ds2)
             minX2 = transform1[1]; maxY2 = transform1[4]

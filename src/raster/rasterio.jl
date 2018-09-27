@@ -104,7 +104,7 @@ Some formats may efficiently implement decimation into a buffer by reading from
 lower resolution overview images.
 
 For highest performance full resolution data access, read and write on "block
-boundaries" returned by `GetBlockSize()`, or use the `ReadBlock()` and 
+boundaries" returned by `GetBlockSize()`, or use the `ReadBlock()` and
 `WriteBlock()` methods.
 
 ### Parameters
@@ -434,7 +434,7 @@ for (T,GT) in _GDALTYPE
                             ybsize,$GT,nband,pointer(bands),pxspace,linespace,
                             bandspace,extraargs)
             @cplerr result "Access in DatasetRasterIO failed."
-            buffer
+            PermutedDimsArray(buffer, (3,2,1))
         end
 
         function rasterio!(rasterband::RasterBand,
@@ -457,7 +457,7 @@ for (T,GT) in _GDALTYPE
                             pointer(buffer),xbsize,ybsize,$GT,pxspace,linespace,
                             extraargs)
             @cplerr result "Access in RasterIO failed."
-            buffer
+            PermutedDimsArray(buffer, (2,1))
         end
     end)
 end
@@ -465,17 +465,17 @@ end
 """
 Read a block of image data efficiently.
 
-This method accesses a "natural" block from the raster band without resampling, 
-or data type conversion. For a more generalized, but potentially less efficient 
+This method accesses a "natural" block from the raster band without resampling,
+or data type conversion. For a more generalized, but potentially less efficient
 access use RasterIO().
 
 ### Parameters
-* `xoffset` the horizontal block offset, with zero indicating the left most 
+* `xoffset` the horizontal block offset, with zero indicating the left most
             block, 1 the next block and so forth.
 * `yoffset` the vertical block offset, with zero indicating the top most block,
             1 the next block and so forth.
-* `buffer`  the buffer into which the data will be read. The buffer must be 
-            large enough to hold GetBlockXSize()*GetBlockYSize() words of type 
+* `buffer`  the buffer into which the data will be read. The buffer must be
+            large enough to hold GetBlockXSize()*GetBlockYSize() words of type
             GetRasterDataType().
 """
 function readblock!(rb::RasterBand, xoffset::Integer, yoffset::Integer, buffer)
@@ -488,15 +488,15 @@ end
 Write a block of image data efficiently.
 
 This method accesses a "natural" block from the raster band without resampling,
-or data type conversion. For a more generalized, but potentially less efficient 
+or data type conversion. For a more generalized, but potentially less efficient
 access use RasterIO().
 
 ### Parameters
-* `xoffset` the horizontal block offset, with zero indicating the left most 
+* `xoffset` the horizontal block offset, with zero indicating the left most
             block, 1 the next block and so forth.
 * `yoffset` the vertical block offset, with zero indicating the left most block,
             1 the next block and so forth.
-* `buffer`  the buffer from which the data will be written. The buffer must be 
+* `buffer`  the buffer from which the data will be written. The buffer must be
             large enough to hold GetBlockXSize()*GetBlockYSize() words of type
             GetRasterDataType().
 """

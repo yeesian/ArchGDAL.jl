@@ -64,6 +64,12 @@ The general operative method for reading in raster values from a `dataset` or `b
 * `ArchGDAL.read(dataset, i)`: reads the `i`-th raster band into an array.
 * `ArchGDAL.read(band)`: reads the raster band into an array.
 
+!!! note
+    Reading a dataset or band returns a `PermutedDimsArray`, a view on the original array, so it can
+    be used more easily in the Julia ecosystem. The permuted dimensions are `(band, row, col)`, reversed
+    from their GDAL origins. You can access the underlying array with `parent()`. Calling `collect()`
+    will return a permuted copy of the array.
+
 You can also specify the subset of rows and columns (provided as `UnitRange`s) to read:
 
 * `ArchGDAL.read(dataset, indices, rows, cols)`

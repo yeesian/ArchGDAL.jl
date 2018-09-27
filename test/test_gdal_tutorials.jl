@@ -30,7 +30,7 @@ AG.registerdrivers() do
             # Reading Raster Data
             @test AG.width(band) == 100
             data = map(Float32, AG.read(dataset, 1))
-            @test data[:,1] ≈ Float32[107.0f0,123.0f0,132.0f0,115.0f0,
+            @test data[1, :] ≈ Float32[107.0f0,123.0f0,132.0f0,115.0f0,
                     132.0f0,132.0f0,140.0f0,132.0f0,132.0f0,132.0f0,107.0f0,
                     132.0f0,107.0f0,132.0f0,132.0f0,107.0f0,123.0f0,115.0f0,
                     156.0f0,148.0f0,107.0f0,132.0f0,107.0f0,115.0f0,99.0f0,
