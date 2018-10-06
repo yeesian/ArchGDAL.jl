@@ -33,7 +33,7 @@ build_script:
 
 test_script:
   - echo "%JL_TEST_SCRIPT%"
-  - C:\julia\bin\julia -E "using Pkg; Pkg.add("""GDAL"""); using GDAL; GDAL.GDAL_DATA[]" -e "%JL_TEST_SCRIPT%"
+  - C:\julia\bin\julia -e "%JL_TEST_SCRIPT%"
 
 # # Uncomment to support code coverage upload. Should only be enabled for packages
 # # which would have coverage gaps without running on Windows
