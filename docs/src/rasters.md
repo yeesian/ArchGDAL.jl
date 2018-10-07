@@ -68,7 +68,7 @@ The general operative method for reading in raster values from a `dataset` or `b
 
     The array returned by `read` has `(rows, cols, bands)` dimensions. 
     
-    To convert to a format used by the Images.jl ecosystem, you can either create a view using `PermutedDimsArray(A, (3,2,1))` or create a permuted copy using `permutedims(A, (3,2,1)). The resulting arrays will have `(bands, cols, rows)` dimensions.
+    To convert to a format used by the Images.jl ecosystem, you can either create a view using `PermutedDimsArray(A, (3,2,1))` or create a permuted copy using `permutedims(A, (3,2,1))`. The resulting arrays will have `(bands, cols, rows)` dimensions.
 
 You can also specify the subset of rows and columns (provided as `UnitRange`s) to read:
 
