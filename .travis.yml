@@ -13,9 +13,10 @@ julia:
 notifications:
   email: false
 # uncomment the following lines to override the default test script
-script:
- - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
- - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.test("ArchGDAL"; coverage=true)'
+# script:
+#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
+#  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("ArchGDAL"); Pkg.test("ArchGDAL"; coverage=true)'
 after_success:
-- julia -e 'using Pkg; cd(Pkg.dir("ArchGDAL")); Pkg.add("Coverage"); using Coverage; Coveralls.submit(process_folder())'
-- LD_LIBRARY_PATH="/home/travis/.julia/v0.6/Conda/deps/usr/lib/" julia -e 'using Pkg; Pkg.add("Documenter"); cd(Pkg.dir("ArchGDAL")); include(joinpath("docs", "make.jl"))'
+- julia -e 'using Pkg; Pkg.add(["Documenter", "Coverage"])'
+- julia -e 'using ArchGDAL; cd(dirname(dirname(pathof(ArchGDAL)))); include(joinpath("docs", "make.jl"))'
+- julia -e 'using ArchGDAL, Coverage; cd(dirname(dirname(pathof(ArchGDAL)))); Coveralls.submit(process_folder())'
