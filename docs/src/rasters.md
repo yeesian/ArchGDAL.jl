@@ -64,6 +64,12 @@ The general operative method for reading in raster values from a `dataset` or `b
 * `ArchGDAL.read(dataset, i)`: reads the `i`-th raster band into an array.
 * `ArchGDAL.read(band)`: reads the raster band into an array.
 
+!!! note
+
+    The array returned by `read` has `(rows, cols, bands)` dimensions. 
+    
+    To convert to a format used by the Images.jl ecosystem, you can either create a view using `PermutedDimsArray(A, (3,2,1))` or create a permuted copy using `permutedims(A, (3,2,1)). The resulting arrays will have `(bands, cols, rows)` dimensions.
+
 You can also specify the subset of rows and columns (provided as `UnitRange`s) to read:
 
 * `ArchGDAL.read(dataset, indices, rows, cols)`
@@ -90,6 +96,10 @@ For writing values from a `buffer` to a raster `dataset` or `band`, the followin
 * `ArchGDAL.write!(dataset, buffer, indices)`
 * `ArchGDAL.write!(dataset, buffer, indices, rows, cols)`
 * `ArchGDAL.write!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)`
+
+!!! note
+
+    ArchGDAL expects the dimensions of the buffer to be `(rows, cols, bands)` or `(rows, cols)`.
 
 ## Windowed Reads and Writes
 
