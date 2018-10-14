@@ -55,6 +55,7 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Tests for Geom Field Defn" begin
+    GDAL.__init__()
     AG.creategeomfielddefn("geomname", GDAL.wkbPolygon) do gfd
         @test AG.getname(gfd) == "geomname"
         AG.setname!(gfd, "my name!")

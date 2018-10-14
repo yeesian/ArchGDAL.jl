@@ -4,6 +4,7 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "Reproject a Geometry" begin
     @testset "Method 1" begin
+        GDAL.__init__()
         source = AG.unsafe_importEPSG(2927); target = AG.unsafe_importEPSG(4326)
             transform = AG.unsafe_createcoordtrans(source, target)
                 point = AG.unsafe_fromWKT("POINT (1120351.57 741921.42)")
@@ -16,6 +17,7 @@ import ArchGDAL; const AG = ArchGDAL
     end
 
     @testset "Method 2" begin
+        GDAL.__init__()
         AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
             AG.createcoordtrans(source, target) do transform
                 AG.fromWKT("POINT (1120351.57 741921.42)") do point
@@ -41,7 +43,7 @@ end
             end
         end
     end
-
+    GDAL.__init__()
     AG.importEPSG(26912) do spatialref
         @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
         @test AG.toWKT(spatialref)[1:6] == "PROJCS"
