@@ -316,7 +316,7 @@ function createlayer(
         dataset::Dataset,
         name::AbstractString;
         spatialref::AbstractSpatialRef  = SpatialRef(C_NULL),
-        geom::OGRwkbGeometryType        = wkbUnknown,
+        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
         options                         = StringList(C_NULL)
     )
     FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
