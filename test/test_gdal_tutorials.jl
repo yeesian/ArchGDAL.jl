@@ -110,11 +110,13 @@ AG.registerdrivers() do
                 end
                 featuredefn = AG.getlayerdefn(layer)
                 @test AG.getname(featuredefn) == "point_out"
+                @test AG.nfeature(layer) == 0
                 AG.createfeature(featuredefn) do feature
                     AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
                     AG.setgeomdirectly!(feature, AG.unsafe_createpoint(100.123, 0.123))
                     AG.createfeature!(layer, feature)
                 end
+                @test AG.nfeature(layer) == 1
             end
 
             rm("$pointshapefile.dbf")
@@ -132,10 +134,12 @@ AG.registerdrivers() do
                 end
                 featuredefn = AG.getlayerdefn(layer)
                 @test AG.getname(featuredefn) == "point_out"
+                @test AG.nfeature(layer) == 0
                 AG.createfeature(layer) do feature
                     AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
                     AG.setgeomdirectly!(feature, AG.unsafe_createpoint(100.123, 0.123))
                 end
+                @test AG.nfeature(layer) == 1
             end
 
             rm("$pointshapefile.dbf")
