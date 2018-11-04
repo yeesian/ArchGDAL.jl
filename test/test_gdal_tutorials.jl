@@ -100,6 +100,7 @@ AG.registerdrivers() do
             end
         end
 
+        @testset "Approach 1" begin
         pointshapefile = "tmp/point_out"
         AG.create("$pointshapefile.shp", "ESRI Shapefile") do dataset
             layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
@@ -112,11 +113,13 @@ AG.registerdrivers() do
             AG.createfeature(featuredefn) do feature
                 AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
                 AG.setgeomdirectly!(feature, AG.unsafe_createpoint(100.123, 0.123))
+                AG.createfeature!(layer, feature)
             end
         end
 
         rm("$pointshapefile.dbf")
         rm("$pointshapefile.shp")
         rm("$pointshapefile.shx")
+        end
     end
 end
