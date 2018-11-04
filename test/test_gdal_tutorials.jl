@@ -101,25 +101,25 @@ AG.registerdrivers() do
         end
 
         @testset "Approach 1" begin
-        pointshapefile = "tmp/point_out"
-        AG.create("$pointshapefile.shp", "ESRI Shapefile") do dataset
-            layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
-            AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
-                AG.setwidth!(fielddefn, 32)
-                AG.createfield!(layer, fielddefn, true)
+            pointshapefile = "tmp/point_out"
+            AG.create("$pointshapefile.shp", "ESRI Shapefile") do dataset
+                layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
+                AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
+                    AG.setwidth!(fielddefn, 32)
+                    AG.createfield!(layer, fielddefn, true)
+                end
+                featuredefn = AG.getlayerdefn(layer)
+                @test AG.getname(featuredefn) == "point_out"
+                AG.createfeature(featuredefn) do feature
+                    AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
+                    AG.setgeomdirectly!(feature, AG.unsafe_createpoint(100.123, 0.123))
+                    AG.createfeature!(layer, feature)
+                end
             end
-            featuredefn = AG.getlayerdefn(layer)
-            @test AG.getname(featuredefn) == "point_out"
-            AG.createfeature(featuredefn) do feature
-                AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
-                AG.setgeomdirectly!(feature, AG.unsafe_createpoint(100.123, 0.123))
-                AG.createfeature!(layer, feature)
-            end
-        end
 
-        rm("$pointshapefile.dbf")
-        rm("$pointshapefile.shp")
-        rm("$pointshapefile.shx")
+            rm("$pointshapefile.dbf")
+            rm("$pointshapefile.shp")
+            rm("$pointshapefile.shx")
         end
     end
 end
