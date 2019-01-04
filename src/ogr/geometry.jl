@@ -10,7 +10,7 @@ binary (WKB) representation.
 function unsafe_fromWKB(
         ::Type{G},
         data,
-        spatialref::SpatialRef = SpatialRef(C_NULL)
+        spatialref::AbstractSpatialRef = SpatialRef(C_NULL)
     ) where G <: AbstractGeometry
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
@@ -41,7 +41,7 @@ Create a geometry object of the appropriate type from its well known text
 function unsafe_fromWKT(
         ::Type{G},
         data::Vector{String},
-        spatialref::SpatialRef = SpatialRef(C_NULL)
+        spatialref::AbstractSpatialRef = SpatialRef(C_NULL)
     ) where G <: AbstractGeometry
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
@@ -288,7 +288,7 @@ unsafe_fromJSON(data::String) = unsafe_fromJSON(Geometry, data)
 fromJSON(data::String) = unsafe_fromJSON(IGeometry, data)
 
 "Assign spatial reference to this object."
-setspatialref!(geom::G, spatialref::SpatialRef) where {G <: AbstractGeometry} =
+setspatialref!(geom::G, spatialref::AbstractSpatialRef) where {G <: AbstractGeometry} =
     (GDAL.assignspatialreference(geom.ptr, spatialref.ptr); geom)
 
 """
@@ -315,7 +315,7 @@ function transform!(geom::G,
 end
 
 "Transform geometry to new spatial reference system."
-function transform!(geom::G, spatialref::SpatialRef) where G <: AbstractGeometry
+function transform!(geom::G, spatialref::AbstractSpatialRef) where G <: AbstractGeometry
     result = GDAL.transformto(geom.ptr, spatialref.ptr)
     @ogrerr result "Failed to transform geometry to the new SRS"
     geom
