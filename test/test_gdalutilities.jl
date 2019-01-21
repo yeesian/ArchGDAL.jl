@@ -3,6 +3,15 @@ using Test
 
 AG.registerdrivers() do
     AG.read("data/utmsmall.tif") do ds_small
+        @testset "GDAL Error" begin
+            @test_throws GDAL.GDALError AG.gdalinfo(ds_small, ["-novalidoption"])
+            @test_throws GDAL.GDALError AG.unsafe_gdaltranslate(ds_small, ["-novalidoption"])
+            @test_throws GDAL.GDALError AG.unsafe_gdalbuildvrt([ds_small], ["-novalidoption"])
+            @test_throws GDAL.GDALError AG.unsafe_gdaldem(ds_small, "hillshade", ["-novalidoption"])
+            @test_throws GDAL.GDALError AG.unsafe_gdalnearblack(ds_small, ["-novalidoption"])
+            @test_throws GDAL.GDALError AG.unsafe_gdalwarp([ds_small], ["-novalidoption"])
+        end
+
         @testset "GDAL Info" begin
             infostr = AG.gdalinfo(ds_small, ["-checksum"])
             @test occursin("Checksum=50054", infostr)
