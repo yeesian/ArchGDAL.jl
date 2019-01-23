@@ -3,14 +3,12 @@
 The following code demonstrates the general workflow for reading in a dataset:
 
 ```julia
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filename) do dataset
-        # work with dataset
-    end
+ArchGDAL.read(filename) do dataset
+    # work with dataset
 end
 ```
 
-We defer the discussions on `ArchGDAL.registerdrivers()` and `ArchGDAL.read(filename)` to the sections on [Driver Management](@ref) and [Working with Files](@ref) respectively.
+We defer the discussion on `ArchGDAL.read(filename)` to the section on [Working with Files](@ref).
 
 !!! note
 
@@ -23,10 +21,8 @@ filepath = download("https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/
 ```
 In this section, we work with the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset via
 ```@example vector_example
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        print(dataset)
-    end
+ArchGDAL.read(filepath) do dataset
+    print(dataset)
 end
 ```
 
@@ -57,10 +53,8 @@ filepath = download("https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e58
 ```
 In this section, we work with the [`gdalworkshop/world.tif`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif) dataset:
 ```@example raster_example
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        print(dataset)
-    end
+ArchGDAL.read(filepath) do dataset
+    print(dataset)
 end
 ```
 
@@ -88,24 +82,6 @@ You can also programmatically retrieve them using
 * `ArchGDAL.getdatatype(band)`: the pixel type (i.e. `UInt8`)
 
 For more on working with raster data, see the Section on `Raster Data`.
-
-## Driver Management
-Before opening a GDAL supported datastore it is necessary to register drivers. Normally this is accomplished with the `GDAL.allregister()` function which registers all known drivers. However, the user will then need to remember to de-register the drivers using `GDAL.destroydrivermanager()` when they're done.
-
-In ArchGDAL, we provide a `registerdrivers()` block, such that
-
-```julia
-ArchGDAL.registerdrivers() do
-    # your code here
-end
-```
-is equivalent to
-
-```julia
-GDAL.allregister()
-# your code here
-GDAL.destroydrivermanager()
-```
 
 ## Working with Files
 We provide the following methods for working with files:

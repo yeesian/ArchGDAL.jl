@@ -14,10 +14,8 @@ filepath = download("https://github.com/yeesian/ArchGDALDatasets/raw/e0b15dca5ad
 Here's a quick summary of `test.sqlite`:
 
 ```@example spatialite
-AG.registerdrivers() do
-    AG.read(filepath) do dataset
-        print(dataset)
-    end
+AG.read(filepath) do dataset
+    print(dataset)
 end
 ```
 
@@ -25,11 +23,9 @@ We will display the results of running `query` on the dataset using the followin
 
 ```@example spatialite
 function inspect(query, filename=filepath)
-    AG.registerdrivers() do
-        AG.read(filename) do dataset
-            AG.executesql(dataset, query) do results
-                print(results)
-            end
+    AG.read(filename) do dataset
+        AG.executesql(dataset, query) do results
+            print(results)
         end
     end
 end
