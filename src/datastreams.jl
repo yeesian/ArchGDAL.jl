@@ -38,7 +38,8 @@ function Data.streamfrom(
         col
     ) where T
     val = if col <= source.ngeom
-        T(getgeomfield(source.feature, col-1).ptr)
+        @assert T <: IGeometry
+        T(GDAL.clone(GDAL.getgeomfieldref(source.feature.ptr, col-1)))
     else
         T(getfield(source.feature, col-source.ngeom-1))
     end
