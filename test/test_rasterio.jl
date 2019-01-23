@@ -2,135 +2,133 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
-AG.registerdrivers() do
-    AG.read("ospy/data4/aster.img") do ds
-        @testset "version 1" begin
-            band = AG.getband(ds, 1)
-            count = 0
-            total = 0
-            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
-            for (cols,rows) in AG.windows(band)
-                AG.rasterio!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
-                data = buffer[1:length(cols),1:length(rows)]
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+AG.read("ospy/data4/aster.img") do ds
+    @testset "version 1" begin
+        band = AG.getband(ds, 1)
+        count = 0
+        total = 0
+        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
+        for (cols,rows) in AG.windows(band)
+            AG.rasterio!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
+            data = buffer[1:length(cols),1:length(rows)]
+            count += sum(data .> 0)
+            total += sum(data)
         end
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 2" begin
-            band = AG.getband(ds, 1)
-            count = 0
-            total = 0
-            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
-            for (cols,rows) in AG.windows(band)
-                AG.read!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
-                data = buffer[1:length(cols),1:length(rows)]
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    @testset "version 2" begin
+        band = AG.getband(ds, 1)
+        count = 0
+        total = 0
+        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
+        for (cols,rows) in AG.windows(band)
+            AG.read!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
+            data = buffer[1:length(cols),1:length(rows)]
+            count += sum(data .> 0)
+            total += sum(data)
         end
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 3" begin
-            band = AG.getband(ds, 1)
-            count = 0
-            total = 0
-            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
-            for (cols,rows) in AG.windows(band)
-                AG.read!(ds, buffer, 1, rows, cols)
-                data = buffer[1:length(cols),1:length(rows)]
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    @testset "version 3" begin
+        band = AG.getband(ds, 1)
+        count = 0
+        total = 0
+        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
+        for (cols,rows) in AG.windows(band)
+            AG.read!(ds, buffer, 1, rows, cols)
+            data = buffer[1:length(cols),1:length(rows)]
+            count += sum(data .> 0)
+            total += sum(data)
         end
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 4" begin
-            band = AG.getband(ds, 1)
-            count = 0
-            total = 0
-            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
-            for (cols,rows) in AG.windows(band)
-                AG.read!(band, buffer, rows, cols)
-                data = buffer[1:length(cols),1:length(rows)]
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    @testset "version 4" begin
+        band = AG.getband(ds, 1)
+        count = 0
+        total = 0
+        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
+        for (cols,rows) in AG.windows(band)
+            AG.read!(band, buffer, rows, cols)
+            data = buffer[1:length(cols),1:length(rows)]
+            count += sum(data .> 0)
+            total += sum(data)
         end
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 5" begin
-            band = AG.getband(ds, 1)
-            count = 0
-            total = 0
-            xbsize, ybsize = AG.getblocksize(band)
-            buffer = Array{AG.getdatatype(band)}(undef, ybsize, xbsize)
-            for ((i,j),(nrows,ncols)) in AG.blocks(band)
-                # AG.rasterio!(ds,buffer,Cint[1],i,j,nrows,ncols)
-                # AG.read!(band, buffer, j, i, ncols, nrows)
-                AG.readblock!(band, j, i, buffer)
-                data = buffer[1:nrows, 1:ncols]
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    @testset "version 5" begin
+        band = AG.getband(ds, 1)
+        count = 0
+        total = 0
+        xbsize, ybsize = AG.getblocksize(band)
+        buffer = Array{AG.getdatatype(band)}(undef, ybsize, xbsize)
+        for ((i,j),(nrows,ncols)) in AG.blocks(band)
+            # AG.rasterio!(ds,buffer,Cint[1],i,j,nrows,ncols)
+            # AG.read!(band, buffer, j, i, ncols, nrows)
+            AG.readblock!(band, j, i, buffer)
+            data = buffer[1:nrows, 1:ncols]
+            count += sum(data .> 0)
+            total += sum(data)
         end
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 6" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
-            AG.rasterio!(ds, buffer, Cint[1])
-            count = sum(buffer .> 0)
-            total = sum(buffer)
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    @testset "version 6" begin
+        band = AG.getband(ds, 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+        AG.rasterio!(ds, buffer, Cint[1])
+        count = sum(buffer .> 0)
+        total = sum(buffer)
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 7" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
-            AG.read!(band, buffer)
-            count = sum(buffer .> 0)
-            total = sum(buffer)
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    @testset "version 7" begin
+        band = AG.getband(ds, 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
+        AG.read!(band, buffer)
+        count = sum(buffer .> 0)
+        total = sum(buffer)
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 8" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
-            AG.read!(ds, buffer, 1)
-            count = sum(buffer .> 0)
-            total = sum(buffer)
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    @testset "version 8" begin
+        band = AG.getband(ds, 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
+        AG.read!(ds, buffer, 1)
+        count = sum(buffer .> 0)
+        total = sum(buffer)
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 9" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
-            AG.read!(ds, buffer, Cint[1])
-            count = sum(buffer .> 0)
-            total = sum(buffer)
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    @testset "version 9" begin
+        band = AG.getband(ds, 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+        AG.read!(ds, buffer, Cint[1])
+        count = sum(buffer .> 0)
+        total = sum(buffer)
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    end
 
-        @testset "version 10" begin
-            band = AG.getband(ds, 1)
-            buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 3)
-            AG.read!(ds, buffer)
-            count = sum(buffer[:,:,1] .> 0)
-            total = sum(buffer[:,:,1])
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    @testset "version 10" begin
+        band = AG.getband(ds, 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 3)
+        AG.read!(ds, buffer)
+        count = sum(buffer[:,:,1] .> 0)
+        total = sum(buffer[:,:,1])
+        @test total / count ≈ 76.33891347095299
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
     end
 end
 
