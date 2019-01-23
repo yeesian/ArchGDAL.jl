@@ -1,4 +1,4 @@
-using ArchGDAL; AG = ArchGDAL
+using ArchGDAL, GDAL; AG = ArchGDAL
 using Test
 
 AG.registerdrivers() do
@@ -72,6 +72,16 @@ AG.registerdrivers() do
         #         @test AG.height(ds_warped) == 91
         #     end
         # end
+        @testset "GDAL Warp" begin
+            AG.gdalwarp([ds_small], ["-of","MEM"]) do ds_warped
+                @test AG.width(ds_small) == 100
+                @test AG.height(ds_small) == 100
+                @test AG.shortname(AG.getdriver(ds_small)) == "GTiff"
+                @test AG.width(ds_warped) == 100
+                @test AG.height(ds_warped) == 100
+                @test AG.shortname(AG.getdriver(ds_warped)) == "MEM"
+            end
+        end
     end
 
     AG.read("data/point.geojson") do ds_point
