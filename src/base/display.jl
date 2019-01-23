@@ -3,7 +3,7 @@ function Base.show(io::IO, drv::Driver)
     print(io, "Driver: $(shortname(drv))/$(longname(drv))")
 end
 
-function Base.show(io::IO, dataset::Dataset)
+function Base.show(io::IO, dataset::AbstractDataset)
     dataset.ptr == C_NULL && (return print(io, "NULL Dataset"))
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
     println(io, "File(s): ")
@@ -172,7 +172,7 @@ function Base.show(io::IO, feature::Feature)
     println(io, "Feature")
     n = ngeomfield(feature)
     for i in 1:min(n, 3)
-        displayname = getgeomname(getgeomfield(feature, i-1))
+        displayname = getgeomname(unsafe_getgeomfield(feature, i-1))
         println(io, "  (index $(i-1)) geom => $displayname")
     end
     n > 3 && println(io, "...\n Number of geometries: $n")
