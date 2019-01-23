@@ -21,7 +21,8 @@ function unsafe_clone(
     ) where S <: AbstractSpatialRef
     S(GDAL.clone(spref.ptr))
 end
-clone(spref::AbstractSpatialRef) = ISpatialRef(GDAL.clone(spref.ptr))
+unsafe_clone(spref::AbstractSpatialRef) = unsafe_clone(SpatialRef, spref)
+clone(spref::AbstractSpatialRef) = unsafe_clone(ISpatialRef, spref)
 
 """
 Initialize SRS based on EPSG GCS or PCS code.
