@@ -69,13 +69,11 @@ for gdalfunc in (
         :createmultipolygon, :createmultipolygon_noholes, :createpoint,
         :createpolygon, :createRAT, :createstylemanager, :createstyletable,
         :createstyletool, :delaunaytriangulation, :difference, :forceto,
-        :fromGML, :fromJSON, :fromWKB, :fromWKT, :gdalbuildvrt, :gdaldem,
-        :gdalgrid, :gdalnearblack, :gdalrasterize, :gdaltranslate,
-        :gdalvectortranslate, :gdalwarp, :getcurvegeom, :getfeature,
-        :getlineargeom, :getpart, :intersection, :importEPSG, :importEPSGA,
-        :importESRI, :importPROJ4, :importWKT, :importXML, :importURL,
-        :newspatialref, :nextfeature, :pointalongline, :pointonsurface,
-        :polygonfromedges, :polygonize, :read, :simplify,
+        :fromGML, :fromJSON, :fromWKB, :fromWKT, :getcurvegeom, :getfeature,
+        :getlineargeom, :getpart, :getspatialref, :intersection, :importEPSG,
+        :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
+        :importURL, :newspatialref, :nextfeature, :pointalongline,
+        :pointonsurface, :polygonfromedges, :polygonize, :read, :simplify,
         :simplifypreservetopology, :symdifference, :union, :update
     )
     eval(quote
