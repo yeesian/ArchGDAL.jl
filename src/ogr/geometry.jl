@@ -77,7 +77,7 @@ function unsafe_clone(::Type{G}, geom::AbstractGeometry) where G <: AbstractGeom
     G(GDAL.clone(geom.ptr))
 end
 
-unsafe_clone(geom::G) where {G <: AbstractGeometry} = unsafe_clone(G, geom)
+unsafe_clone(geom::AbstractGeometry) = unsafe_clone(Geometry, geom)
 
 clone(geom::AbstractGeometry) = unsafe_clone(IGeometry, geom)
 
@@ -867,17 +867,8 @@ For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 * `geom`: the geometry container from which to get a geometry from.
 * `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
 """
-function unsafe_getgeom(::Type{G},
-        geom::AbstractGeometry, i::Integer
-    ) where G <: AbstractGeometry
-    G(GDAL.getgeometryref(geom.ptr, i))
-end
-
-unsafe_getgeom(geom::AbstractGeometry, args...) =
-    unsafe_getgeom(Geometry, geom, args...)
-
-getgeom(geom::AbstractGeometry, args...) =
-    unsafe_getgeom(IGeometry, unsafe_clone(geom), args...)
+getgeom(geom::AbstractGeometry, i::Integer) =
+    Geometry(GDAL.getgeometryref(geom.ptr, i))
 
 """
 Add a geometry to a geometry container.
