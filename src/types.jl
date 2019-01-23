@@ -35,13 +35,7 @@ mutable struct IDataset <: AbstractDataset
     ptr::GDALDataset
 
     function IDataset(ptr::GDALDataset)
-        driver = if GDAL.datasetgetlayercount(ptr) > 0
-            GDAL.getdriverbyname("Memory") # for OGR DataSources
-        else
-            GDAL.getdriverbyname("MEM") # for GDAL Raster Datasets
-        end
-        dataset = new(GDAL.createcopy(driver, "", GDAL.failsafe(ptr), true,
-            StringList(C_NULL), @cplprogress(GDAL.C.GDALDummyProgress), C_NULL))
+        dataset = new(ptr)
         finalizer(destroy, dataset)
         return dataset
     end
@@ -57,7 +51,7 @@ mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
 
     function IGeometry(ptr::GDALGeometry)
-        geom = new(GDAL.clone(ptr))
+        geom = new(ptr)
         finalizer(destroy, geom)
         geom
     end
@@ -70,7 +64,7 @@ mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
 
     function ISpatialRef(ptr::GDALSpatialRef)
-        spref = new(GDAL.clone(ptr))
+        spref = new(ptr)
         finalizer(destroy, spref)
         spref
     end
