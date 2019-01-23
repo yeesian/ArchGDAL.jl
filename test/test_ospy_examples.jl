@@ -205,31 +205,30 @@ end
     end
 end
 
-# TODO: fix #47
-# @testset "Homework 3" begin
-#     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
-#     AG.read("ospy/data3/sites.shp") do sitesDS
-#         AG.read("ospy/data3/cache_towns.shp") do townsDS
-#             siteslayer = AG.getlayer(sitesDS, 0)
-#             townslayer = AG.getlayer(townsDS, 0)
-#             AG.setattributefilter!(townslayer, "NAME = 'Nibley'")
-#             AG.getfeature(townslayer, 0) do nibleyFeature
-#                 AG.buffer(AG.getgeom(nibleyFeature), 1500) do bufferGeom
-#                     AG.setspatialfilter!(siteslayer, bufferGeom)
-#                     @test [AG.getfield(f, "ID") for f in siteslayer] == [26]
-#     end end end end
+@testset "Homework 3" begin
+    #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
+    AG.read("ospy/data3/sites.shp") do sitesDS
+        AG.read("ospy/data3/cache_towns.shp") do townsDS
+            siteslayer = AG.getlayer(sitesDS, 0)
+            townslayer = AG.getlayer(townsDS, 0)
+            AG.setattributefilter!(townslayer, "NAME = 'Nibley'")
+            AG.getfeature(townslayer, 0) do nibleyFeature
+                AG.buffer(AG.getgeom(nibleyFeature), 1500) do bufferGeom
+                    AG.setspatialfilter!(siteslayer, bufferGeom)
+                    @test [AG.getfield(f, "ID") for f in siteslayer] == [26]
+    end end end end
     
-#     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3b.py
-#     # commented out until https://github.com/visr/GDAL.jl/issues/30 is resolved
-#     # for inFN in readdir("./ospy/data3/")
-#     #     if endswith(inFN, ".shp")
-#     #         reproject("./ospy/data3/$(inFN)", 26912, 4269)
-#     # end end
-# end
+    #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3b.py
+    # commented out until https://github.com/visr/GDAL.jl/issues/30 is resolved
+    # for inFN in readdir("./ospy/data3/")
+    #     if endswith(inFN, ".shp")
+    #         reproject("./ospy/data3/$(inFN)", 26912, 4269)
+    # end end
+end
 
 AG.read("ospy/data4/aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
-    @testset "Homework 4" begin
+    @testset "Homework 4a" begin
         AG.read("ospy/data4/sites.shp") do shp
             shplayer = AG.getlayer(shp, 0)
             id = AG.getfieldindex(AG.getlayerdefn(shplayer), "ID")
@@ -260,7 +259,7 @@ AG.read("ospy/data4/aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4b.py
-    @testset "Homework 4" begin
+    @testset "Homework 4b" begin
         @testset "version 1" begin
             count = 0
             total = 0
@@ -303,7 +302,7 @@ AG.read("ospy/data4/aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5a.py
-    @testset "Homework 5" begin
+    @testset "Homework 5a" begin
         @time begin
             rows = AG.height(ds); cols = AG.width(ds); bands = AG.nraster(ds)
 
@@ -362,7 +361,7 @@ AG.read("ospy/data4/aster.img") do ds
 end end end end
 
 #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
-@testset "Homework 5" begin
+@testset "Homework 5b" begin
     AG.read("ospy/data5/doq1.img") do ds1
         AG.read("ospy/data5/doq2.img") do ds2
             # read in doq1 and get info about it
