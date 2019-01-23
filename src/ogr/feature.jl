@@ -1,7 +1,7 @@
 """
 Duplicate feature.
 
-The newly created feature is owned by the caller, and will have it's own
+The newly created feature is owned by the caller, and will have its own
 reference to the OGRFeatureDefn.
 """
 unsafe_clone(feature::Feature) = Feature(GDAL.clone(feature.ptr))
