@@ -70,10 +70,10 @@ for gdalfunc in (
         :createpolygon, :createRAT, :createstylemanager, :createstyletable,
         :createstyletool, :delaunaytriangulation, :difference, :forceto,
         :fromGML, :fromJSON, :fromWKB, :fromWKT, :getcurvegeom, :getfeature,
-        :getlineargeom, :getpart, :intersection, :importEPSG, :importEPSGA,
-        :importESRI, :importPROJ4, :importWKT, :importXML, :importURL,
-        :newspatialref, :nextfeature, :pointalongline, :pointonsurface,
-        :polygonfromedges, :polygonize, :read, :simplify,
+        :getlineargeom, :getpart, :getspatialref, :intersection, :importEPSG,
+        :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
+        :importURL, :newspatialref, :nextfeature, :pointalongline,
+        :pointonsurface, :polygonfromedges, :polygonize, :read, :simplify,
         :simplifypreservetopology, :symdifference, :union, :update
     )
     eval(quote
