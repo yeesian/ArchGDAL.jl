@@ -15,8 +15,7 @@ Fetch the spatial reference system for this layer.
 The returned object is owned by the OGRLayer and should not be modified or
 freed by the application.
 """
-unsafe_getspatialref(layer::FeatureLayer) = SpatialRef(GDAL.getspatialref(layer.ptr))
-getspatialref(layer::FeatureLayer) = ISpatialRef(GDAL.getspatialref(layer.ptr))
+getspatialref(layer::FeatureLayer) = SpatialRef(GDAL.getspatialref(layer.ptr))
 
 """
 Set a new spatial filter for the layer, using the geom.
