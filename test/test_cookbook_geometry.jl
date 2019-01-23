@@ -785,7 +785,7 @@ end
     wkt = "POLYGON ((1179091.164690328761935 712782.883845978067257,1161053.021822647424415 667456.268434881232679,1214704.933941904921085 641092.828859039116651,1228580.428455505985767 682719.312399842427112,1218405.065812198445201 721108.180554138729349,1179091.164690328761935 712782.883845978067257))"
 
     # Method 1
-    AG.fromWKT([wkt]) do poly
+    AG.fromWKT(wkt) do poly
         @test AG.getgeomtype(poly) == GDAL.wkbPolygon
         AG.forceto(poly, GDAL.wkbMultiPolygon) do mpoly
             @test AG.getgeomtype(mpoly) == GDAL.wkbMultiPolygon
@@ -793,5 +793,5 @@ end
     end
 
     # Method 2
-    @test AG.getgeomtype(AG.forceto(AG.fromWKT([wkt]), GDAL.wkbMultiPolygon)) == GDAL.wkbMultiPolygon
+    @test AG.getgeomtype(AG.forceto(AG.fromWKT(wkt), GDAL.wkbMultiPolygon)) == GDAL.wkbMultiPolygon
 end
