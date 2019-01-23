@@ -8,21 +8,17 @@ filepath = download("https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/
 ```
 
 ```@example feature
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        print(dataset)
-    end
+ArchGDAL.read(filepath) do dataset
+    print(dataset)
 end
 ```
 
 ## Feature Layers
 
 ```@example feature
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        layer = ArchGDAL.getlayer(dataset, 0)
-        print(layer)
-    end
+ArchGDAL.read(filepath) do dataset
+    layer = ArchGDAL.getlayer(dataset, 0)
+    print(layer)
 end
 ```
 
@@ -53,12 +49,10 @@ Each `geomfielddefn` defines an attribute of a geometry, and supports the follow
 ## Individual Features
 We can examine an individual feature
 ```@example feature
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        layer = ArchGDAL.getlayer(dataset, 0)
-        ArchGDAL.getfeature(layer, 2) do feature
-            print(feature)
-        end
+ArchGDAL.read(filepath) do dataset
+    layer = ArchGDAL.getlayer(dataset, 0)
+    ArchGDAL.getfeature(layer, 2) do feature
+        print(feature)
     end
 end
 ```
