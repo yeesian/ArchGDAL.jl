@@ -55,7 +55,6 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Tests for Geom Field Defn" begin
-    GDAL.__init__()
     AG.creategeomfielddefn("geomname", GDAL.wkbPolygon) do gfd
         @test AG.getname(gfd) == "geomname"
         AG.setname!(gfd, "my name!")
@@ -84,15 +83,15 @@ end
 
 @testset "Tests for Feature Defn" begin
     AG.createfeaturedefn("new_feature") do fd
-        AG.nreference(fd) == 0
+        @test AG.nreference(fd) == 0
         AG.reference(fd)
-        AG.nreference(fd) == 1
+        @test AG.nreference(fd) == 1
         AG.reference(fd)
-        AG.nreference(fd) == 2
+        @test AG.nreference(fd) == 2
         AG.release(fd)
-        AG.nreference(fd) == 1
+        @test AG.nreference(fd) == 1
         AG.dereference(fd)
-        AG.nreference(fd) == 0
+        @test AG.nreference(fd) == 0
         AG.createfielddefn("fieldname",GDAL.OFTInteger) do fielddef
             @test AG.nfield(fd) == 0
             AG.addfielddefn!(fd, fielddef)
