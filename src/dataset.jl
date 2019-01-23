@@ -18,8 +18,8 @@ particular \"chunking\" the copy in substantial blocks and, if appropriate,
 performing the transfer in a pixel interleaved fashion.
 """
 function copywholeraster(
-        source::Dataset,
-        dest::Dataset,
+        source::AbstractDataset,
+        dest::AbstractDataset,
         options                 = StringList(C_NULL);
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
         progressdata::Any       = C_NULL
@@ -40,7 +40,7 @@ provided template dataset.
 ### Parameters
 * `dataset`       the dataset being duplicated.
 * `filename`      the name for the new dataset. UTF-8 encoded.
-* `strict`        `TRUE` if the copy must be strictly equivelent, or more
+* `strict`        `TRUE` if the copy must be strictly equivalent, or more
 normally `FALSE` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
 of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
@@ -73,7 +73,7 @@ In some situations, the new dataset can be created in another process through
 the GDAL API Proxy mechanism.
 """
 function unsafe_createcopy(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         filename::AbstractString,
         driver::Driver;
         strict::Bool            = false,
@@ -87,7 +87,7 @@ function unsafe_createcopy(
 end
 
 function unsafe_createcopy(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         filename::AbstractString,
         drivername::AbstractString;
         kwargs...
@@ -101,7 +101,7 @@ function unsafe_createcopy(
 end
 
 function unsafe_createcopy(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         filename::AbstractString;
         kwargs...
     )
@@ -234,19 +234,19 @@ unsafe_update(filename::AbstractString; flags = OF_Update, kwargs...) =
     unsafe_read(filename; flags = OF_Update | flags, kwargs...)
 
 "Fetch raster width in pixels."
-width(dataset::Dataset) = GDAL.getrasterxsize(dataset.ptr)
+width(dataset::AbstractDataset) = GDAL.getrasterxsize(dataset.ptr)
 
 "Fetch raster height in pixels."
-height(dataset::Dataset) = GDAL.getrasterysize(dataset.ptr)
+height(dataset::AbstractDataset) = GDAL.getrasterysize(dataset.ptr)
 
 "Fetch the number of raster bands on this dataset."
-nraster(dataset::Dataset) = GDAL.getrastercount(dataset.ptr)
+nraster(dataset::AbstractDataset) = GDAL.getrastercount(dataset.ptr)
 
 "Fetch the number of feature layers on this dataset."
-nlayer(dataset::Dataset) = GDAL.datasetgetlayercount(dataset.ptr)
+nlayer(dataset::AbstractDataset) = GDAL.datasetgetlayercount(dataset.ptr)
 
 "Fetch the driver that the dataset was created with"
-getdriver(dataset::Dataset) = Driver(GDAL.getdatasetdriver(dataset.ptr))
+getdriver(dataset::AbstractDataset) = Driver(GDAL.getdatasetdriver(dataset.ptr))
 
 """
 Fetch files forming dataset.
@@ -259,7 +259,7 @@ list is owned by the caller and should be deallocated with `CSLDestroy()`.
 The returned filenames will normally be relative or absolute paths depending on
 the path used to originally open the dataset. The strings will be UTF-8 encoded
 """
-filelist(dataset::Dataset) = GDAL.getfilelist(dataset.ptr)
+filelist(dataset::AbstractDataset) = GDAL.getfilelist(dataset.ptr)
 
 """
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
@@ -267,7 +267,7 @@ Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-getlayer(dataset::Dataset, i::Integer) =
+getlayer(dataset::AbstractDataset, i::Integer) =
     FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i))
 
 """
@@ -276,7 +276,7 @@ Fetch the feature layer corresponding to the given name.
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-getlayer(dataset::Dataset, name::AbstractString) =
+getlayer(dataset::AbstractDataset, name::AbstractString) =
     FeatureLayer(GDAL.datasetgetlayerbyname(dataset.ptr, name))
 
 """
@@ -286,7 +286,7 @@ Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
 `OGRERR_NONE` on success, or `OGRERR_UNSUPPORTED_OPERATION` if deleting layers
 is not supported for this dataset.
 """
-function deletelayer!(dataset::Dataset, i::Integer)
+function deletelayer!(dataset::AbstractDataset, i::Integer)
     result = GDAL.datasetdeletelayer(dataset.ptr, i)
     @ogrerr result "Failed to delete layer"
     dataset
@@ -313,7 +313,7 @@ documentation.
 * `options`: a StringList of name=value (driver-specific) options.
 """
 function createlayer(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         name::AbstractString;
         spatialref::AbstractSpatialRef  = SpatialRef(C_NULL),
         geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
@@ -333,7 +333,7 @@ Duplicate an existing layer.
 * `papszOptions`: a StringList of name=value (driver-specific) options.
 """
 function copylayer(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         layer::FeatureLayer,
         name::AbstractString;
         options = StringList(C_NULL)
@@ -364,12 +364,11 @@ the strings themselves to avoid misspelling.
 * `dataset`: the dataset handle.
 * `capability`: the capability to test.
 """
-testcapability(dataset::Dataset, capability::AbstractString) =
+testcapability(dataset::AbstractDataset, capability::AbstractString) =
     Bool(GDAL.datasettestcapability(dataset.ptr, capability))
 
-
 function listcapability(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         capabilities = (GDAL.ODsCCreateLayer,
                         GDAL.ODsCDeleteLayer,
                         GDAL.ODsCCreateGeomFieldAfterCreateLayer, 
@@ -381,15 +380,6 @@ function listcapability(
         c => testcapability(dataset, c) for c in capabilities
     ])
 end
-
-# TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
-# listcapability(dataset::Dataset) = Dict(
-#     c => testcapability(dataset,c) for c in
-#     (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
-#      GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
-#      GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
-# )
-
 
 """
 Execute an SQL statement against the data store.
@@ -420,7 +410,7 @@ an OGRLayer containing the results of the query.
 Deallocate with ReleaseResultSet().
 """
 function unsafe_executesql(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         query::AbstractString;
         dialect::AbstractString = "",
         spatialfilter::Geometry = Geometry(C_NULL)
@@ -441,11 +431,11 @@ before destroying the GDALDataset may cause errors.
 * `dataset`: the dataset handle.
 * `layer`: the result of a previous ExecuteSQL() call.
 """
-releaseresultset(dataset::Dataset, layer::FeatureLayer) =
+releaseresultset(dataset::AbstractDataset, layer::FeatureLayer) =
     (GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr); layer.ptr = C_NULL)
 
 "Fetch a band object for a dataset from its index"
-getband(dataset::Dataset, i::Integer) =
+getband(dataset::AbstractDataset, i::Integer) =
     RasterBand(GDAL.getrasterband(dataset.ptr, i))
 
 """
@@ -473,17 +463,17 @@ transformation to projection coordinates.
 ### Returns
 `CE_None` on success, or `CE_Failure` if no transform can be fetched.
 """
-function getgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
+function getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     @assert length(transform) == 6
     result = GDAL.getgeotransform(dataset.ptr, pointer(transform))
     @cplerr result "Failed to get geotransform"
     transform
 end
 
-getgeotransform(dataset::Dataset) = getgeotransform!(dataset, Array{Cdouble}(undef, 6))
+getgeotransform(dataset::AbstractDataset) = getgeotransform!(dataset, Array{Cdouble}(undef, 6))
 
 "Set the affine transformation coefficients."
-function setgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
+function setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     @assert length(transform) == 6
     result = GDAL.setgeotransform(dataset.ptr, pointer(transform))
     @cplerr result "Failed to transform raster dataset"
@@ -491,7 +481,7 @@ function setgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
 end
 
 "Get number of GCPs for this dataset. Zero if there are none."
-ngcp(dataset::Dataset) = GDAL.getgcpcount(dataset.ptr)
+ngcp(dataset::AbstractDataset) = GDAL.getgcpcount(dataset.ptr)
 
 """
 Fetch the projection definition string for this dataset in OpenGIS WKT format.
@@ -500,10 +490,10 @@ It should be suitable for use with the OGRSpatialReference class. When a
 projection definition is not available an empty (but not `NULL`) string is
 returned.
 """
-getproj(dataset::Dataset) = GDAL.getprojectionref(dataset.ptr)
+getproj(dataset::AbstractDataset) = GDAL.getprojectionref(dataset.ptr)
 
 "Set the projection reference string for this dataset."
-function setproj!(dataset::Dataset, projstring::AbstractString)
+function setproj!(dataset::AbstractDataset, projstring::AbstractString)
     result = GDAL.setprojection(dataset.ptr, projstring)
     @cplerr result "Could not set projection"
     dataset
@@ -526,7 +516,7 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `progressfunc` a function to call to report progress, or `NULL`.
 * `progressdata` application data to pass to the progress function.
 """
-function buildoverviews!(dataset::Dataset,
+function buildoverviews!(dataset::AbstractDataset,
                          overviewlist::Vector{Cint};
                          bandlist::Vector{Cint}     = Cint[],
                          resampling::AbstractString = "NEAREST",
@@ -539,4 +529,4 @@ function buildoverviews!(dataset::Dataset,
     dataset
 end
 
-destroy(dataset::Dataset) = (GDAL.close(dataset.ptr); dataset.ptr = C_NULL)
+destroy(dataset::AbstractDataset) = (GDAL.close(dataset.ptr); dataset.ptr = C_NULL)

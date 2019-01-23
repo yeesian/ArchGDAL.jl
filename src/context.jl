@@ -2,18 +2,17 @@ function registerdrivers(f::Function;
                          globalconfig::Vector=[],
                          threadconfig::Vector=[])
     # Save the current settings
-    globalsettings = Dict{String, String}()
-    for (k, v) in globalconfig
-        globalsettings[k] = getconfigoption(k)
-    end
-    localsettings = Dict{String, String}()
-    for (k, v) in threadconfig
-        localsettings[k] = getthreadconfigoption(k)
-    end
-    # TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
-    # globalsettings=Dict(k=>getconfigoption(k) for (k,v) in globalconfig)
-    # localsettings=Dict(k=>getthreadconfigoption(k) for (k,v) in threadconfig)
-    # Set the user settings
+    #
+    # CPLGetConfigOption() will return the value of the config option, be it
+    #     either defined through environment variable, CPLSetConfigOption() or
+    #     CPLSetThreadLocalConfigOption() (from the same thread).
+    # CPLGetThreadLocalConfigOption() will return the value of the config
+    #     option, but only if it has been set with
+    #     CPLSetThreadLocalConfigOption()
+    #
+    # (ref https://github.com/mapbox/rasterio/pull/997#issuecomment-287117289)
+    globalsettings = Dict(k => getconfigoption(k) for (k,v) in globalconfig)
+    localsettings = Dict(k => getthreadconfigoption(k) for (k,v) in threadconfig)
     for (k,v) in threadconfig; setthreadconfigoption(k, v) end
     for (k,v) in globalconfig; setconfigoption(k, v) end
 
@@ -39,7 +38,7 @@ function registerdrivers(f::Function;
     end
 end
 
-function executesql(f::Function, dataset::Dataset, args...)
+function executesql(f::Function, dataset::AbstractDataset, args...)
     result = unsafe_executesql(dataset, args...)
     try f(result) finally releaseresultset(dataset, result) end
 end

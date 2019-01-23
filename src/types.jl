@@ -25,9 +25,27 @@ abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
 abstract type AbstractSpatialRef end
     # needs to have a `ptr::GDALSpatialRef` attribute
 
+abstract type AbstractDataset end
+    # needs to have a `ptr::GDALDataset` attribute
+
 mutable struct ColorTable;                    ptr::GDALColorTable         end
 mutable struct CoordTransform;                ptr::GDALCoordTransform     end
-mutable struct Dataset;                       ptr::GDALDataset            end
+mutable struct Dataset <: AbstractDataset;    ptr::GDALDataset            end
+mutable struct IDataset <: AbstractDataset
+    ptr::GDALDataset
+
+    function IDataset(ptr::GDALDataset)
+        driver = if GDAL.datasetgetlayercount(ptr) > 0
+            GDAL.getdriverbyname("Memory") # for OGR DataSources
+        else
+            GDAL.getdriverbyname("MEM") # for GDAL Raster Datasets
+        end
+        dataset = new(GDAL.createcopy(driver, "", GDAL.failsafe(ptr), true,
+            StringList(C_NULL), @cplprogress(GDAL.C.GDALDummyProgress), C_NULL))
+        finalizer(destroy, dataset)
+        return dataset
+    end
+end
 mutable struct Driver;                        ptr::GDALDriver             end
 mutable struct Feature;                       ptr::GDALFeature            end
 mutable struct FeatureDefn;                   ptr::GDALFeatureDefn        end
