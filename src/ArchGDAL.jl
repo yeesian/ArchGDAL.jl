@@ -29,4 +29,8 @@ module ArchGDAL
     include("datastreams.jl")
     include("geointerface.jl")
 
+    function __init__()
+        GDAL.allregister()
+    end
+
 end # module
