@@ -601,10 +601,8 @@ Fetch pointer to the feature geometry.
 ### Returns
 an internal feature geometry. This object should not be modified.
 """
-unsafe_getgeomfield(feature::Feature, i::Integer) =
+getgeomfield(feature::Feature, i::Integer) =
     Geometry(GDAL.getgeomfieldref(feature.ptr, i))
-getgeomfield(feature::Feature, i::Integer) = 
-    IGeometry(GDAL.clone(GDAL.getgeomfieldref(feature.ptr, i)))
 
 """
 Set feature geometry of a specified geometry field.
