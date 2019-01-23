@@ -8,10 +8,8 @@ filepath = download("https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e58
 ```
 
 ```@example raster
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        print(dataset)
-    end
+ArchGDAL.read(filepath) do dataset
+    print(dataset)
 end
 ```
 A description of the display is available in [Raster Datasets](@ref).
@@ -19,11 +17,9 @@ A description of the display is available in [Raster Datasets](@ref).
 ## Raster Bands
 We can examine an individual raster band
 ```@example raster
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        band = ArchGDAL.getband(dataset, 1)
-        print(band)
-    end
+ArchGDAL.read(filepath) do dataset
+    band = ArchGDAL.getband(dataset, 1)
+    print(band)
 end
 ```
 You can programmatically retrieve the information in the header using
@@ -108,24 +104,20 @@ Following the description in [mapbox/rasterio's documentation](https://rasterio.
 For that purpose, we have a method called `ArchGDAL.windows(band)` which iterates over the windows of a raster band, returning the indices corresponding to the rasterblocks within that raster band for efficiency:
 
 ```@example raster
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        band = ArchGDAL.getband(dataset, 1)
-        for (cols,rows) in ArchGDAL.windows(band)
-            println((cols,rows))
-        end
+ArchGDAL.read(filepath) do dataset
+    band = ArchGDAL.getband(dataset, 1)
+    for (cols,rows) in ArchGDAL.windows(band)
+        println((cols,rows))
     end
 end
 ```
 
 Alternatively, we have another method called `ArchGDAL.blocks(band)` which iterates over the windows of a raster band, returning the `offset` and `size` corresponding to the rasterblocks within that raster band for efficiency:
 ```@example raster
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        band = ArchGDAL.getband(dataset, 1)
-        for (xyoffset,xysize) in ArchGDAL.blocks(band)
-            println((xyoffset,xysize))
-        end
+ArchGDAL.read(filepath) do dataset
+    band = ArchGDAL.getband(dataset, 1)
+    for (xyoffset,xysize) in ArchGDAL.blocks(band)
+        println((xyoffset,xysize))
     end
 end
 ```
