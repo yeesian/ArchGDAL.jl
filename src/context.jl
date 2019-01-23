@@ -1,6 +1,8 @@
-function registerdrivers(f::Function;
-                         globalconfig::Vector=[],
-                         threadconfig::Vector=[])
+function environment(
+        f::Function;
+        globalconfig::Vector=[],
+        threadconfig::Vector=[]
+    )
     # Save the current settings
     #
     # CPLGetConfigOption() will return the value of the config option, be it
@@ -17,9 +19,8 @@ function registerdrivers(f::Function;
     for (k,v) in globalconfig; setconfigoption(k, v) end
 
     try
-        GDAL.allregister(); f()
+        f()
     finally
-        GDAL.destroydrivermanager()
         # Restore previous settings
         for (k,v) in globalsettings
             if v == ""
