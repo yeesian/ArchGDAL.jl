@@ -194,55 +194,54 @@ end
     end
 end
 
-# TODO: fix #47
-# @testset "Testing remaining methods for geometries" begin
-#     AG.createmultipolygon(Vector{Vector{Tuple{Cdouble,Cdouble}}}[
-#                             Vector{Tuple{Cdouble,Cdouble}}[
-#                                 [(0,0),(0,4),(4,4),(4,0)],
-#                                 [(1,1),(1,3),(3,3),(3,1)]],
-#                             Vector{Tuple{Cdouble,Cdouble}}[
-#                                 [(10,0),(10,4),(14,4),(14,0)],
-#                                 [(11,1),(11,3),(13,3),(13,1)]]]) do geom1
-#     AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom2
-#         AG.closerings!(geom1)
-#         @test AG.disjoint(geom1, geom2) == false
-#         @test AG.touches(geom1, geom2) == true
-#         @test AG.crosses(geom1, geom2) == false
-#         @test AG.overlaps(geom1, geom2) == false
+@testset "Testing remaining methods for geometries" begin
+    AG.createmultipolygon(Vector{Vector{Tuple{Cdouble,Cdouble}}}[
+                            Vector{Tuple{Cdouble,Cdouble}}[
+                                [(0,0),(0,4),(4,4),(4,0)],
+                                [(1,1),(1,3),(3,3),(3,1)]],
+                            Vector{Tuple{Cdouble,Cdouble}}[
+                                [(10,0),(10,4),(14,4),(14,0)],
+                                [(11,1),(11,3),(13,3),(13,1)]]]) do geom1
+    AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom2
+        AG.closerings!(geom1)
+        @test AG.disjoint(geom1, geom2) == false
+        @test AG.touches(geom1, geom2) == true
+        @test AG.crosses(geom1, geom2) == false
+        @test AG.overlaps(geom1, geom2) == false
 
-#         @test AG.toWKT(AG.boundary(geom2)) == "GEOMETRYCOLLECTION EMPTY"
-#         AG.boundary(geom2) do result
-#             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
-#         end
+        @test AG.toWKT(AG.boundary(geom2)) == "GEOMETRYCOLLECTION EMPTY"
+        AG.boundary(geom2) do result
+            @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
+        end
 
-#         @test AG.toWKT(AG.union(geom1, geom2)) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#         AG.union(geom1, geom2) do result
-#             @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#             @test AG.hascurvegeom(result, true) == false
-#             @test AG.hascurvegeom(result, false) == false
-#         end
+        @test AG.toWKT(AG.union(geom1, geom2)) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        AG.union(geom1, geom2) do result
+            @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+            @test AG.hascurvegeom(result, true) == false
+            @test AG.hascurvegeom(result, false) == false
+        end
 
-#         @test AG.toWKT(AG.difference(geom1, geom2)) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#         AG.difference(geom1, geom2) do result
-#             @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#             AG.segmentize!(result, 20)
-#             @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#             AG.segmentize!(result, 2)
-#             @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0.0 1.33333333333333 8,0.0 2.66666666666667 8,0 4 8,1.33333333333333 4.0 8,2.66666666666667 4.0 8,4 4 8,4.0 2.66666666666667 8,4.0 1.33333333333333 8,4 0 8,2.66666666666667 0.0 8,1.33333333333333 0.0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10.0 1.33333333333333 8,10.0 2.66666666666667 8,10 4 8,11.3333333333333 4.0 8,12.6666666666667 4.0 8,14 4 8,14.0 2.66666666666667 8,14.0 1.33333333333333 8,14 0 8,12.6666666666667 0.0 8,11.3333333333333 0.0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#         end
+        @test AG.toWKT(AG.difference(geom1, geom2)) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        AG.difference(geom1, geom2) do result
+            @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+            AG.segmentize!(result, 20)
+            @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+            AG.segmentize!(result, 2)
+            @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0.0 1.33333333333333 8,0.0 2.66666666666667 8,0 4 8,1.33333333333333 4.0 8,2.66666666666667 4.0 8,4 4 8,4.0 2.66666666666667 8,4.0 1.33333333333333 8,4 0 8,2.66666666666667 0.0 8,1.33333333333333 0.0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10.0 1.33333333333333 8,10.0 2.66666666666667 8,10 4 8,11.3333333333333 4.0 8,12.6666666666667 4.0 8,14 4 8,14.0 2.66666666666667 8,14.0 1.33333333333333 8,14 0 8,12.6666666666667 0.0 8,11.3333333333333 0.0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        end
 
-#         @test AG.toWKT(AG.symdifference(geom1, geom2)) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#         AG.symdifference(geom1, geom2) do result
-#             @test GeoInterface.geotype(result) == :GeometryCollection
-#             @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#             AG.removegeom!(result, 1)
-#             @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
-#             AG.removeallgeoms!(result)
-#             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
-#         end
-#     end
-#     end
-# end
+        @test AG.toWKT(AG.symdifference(geom1, geom2)) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        AG.symdifference(geom1, geom2) do result
+            @test GeoInterface.geotype(result) == :GeometryCollection
+            @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+            AG.removegeom!(result, 1)
+            @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+            AG.removeallgeoms!(result)
+            @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
+        end
+    end
+    end
+end
 
 # Untested
 # toISOWKT(geom::Geometry)
