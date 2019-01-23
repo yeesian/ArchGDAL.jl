@@ -74,8 +74,6 @@ end
 #     end
 # end
 
-AG.registerdrivers() do
-
 @testset "Homework 1" begin
 AG.read("ospy/data1/sites.shp") do input
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
@@ -446,5 +444,3 @@ end end end end
                 #                   # bandlist (omit to include all bands)
                 #                    resampling="NEAREST") # resampling method
 end end end end
-
-end # of AG.registerdrivers()

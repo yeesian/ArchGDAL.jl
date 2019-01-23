@@ -19,10 +19,10 @@ import ArchGDAL; const AG = ArchGDAL
     @test AG.getthreadconfigoption("GDAL_CACHEMAX") == ""
     @test AG.getthreadconfigoption("CPL_LOG_ERRORS") == ""
 
-    AG.registerdrivers(globalconfig=[("GDAL_CACHEMAX","64"),
-                                     ("CPL_LOG_ERRORS","ON")],
-                       threadconfig=[("GDAL_CACHEMAX","32"),
-                                     ("CPL_LOG_ERRORS","OFF")]) do
+    AG.environment(globalconfig=[("GDAL_CACHEMAX","64"),
+                                 ("CPL_LOG_ERRORS","ON")],
+                   threadconfig=[("GDAL_CACHEMAX","32"),
+                                 ("CPL_LOG_ERRORS","OFF")]) do
         # it seems that thread settings overwrites global settings?
         @test AG.getconfigoption("GDAL_CACHEMAX") == "32"
         @test AG.getconfigoption("CPL_LOG_ERRORS") == "OFF"
@@ -30,8 +30,8 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.getthreadconfigoption("CPL_LOG_ERRORS") == "OFF"
     end
 
-    AG.registerdrivers(globalconfig=[("GDAL_CACHEMAX","64"),
-                                     ("CPL_LOG_ERRORS","ON")]) do
+    AG.environment(globalconfig=[("GDAL_CACHEMAX","64"),
+                                 ("CPL_LOG_ERRORS","ON")]) do
         # everything normal here
         @test AG.getconfigoption("GDAL_CACHEMAX") == "64"
         @test AG.getconfigoption("CPL_LOG_ERRORS") == "ON"
@@ -41,7 +41,6 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Test Driver Capabilities" begin
-AG.registerdrivers() do
     drivers = AG.listdrivers()
     @test drivers["GTiff"] == "GeoTIFF"
     @test length(AG.driveroptions("GTiff")) > 100
@@ -72,5 +71,4 @@ AG.registerdrivers() do
             "Transactions"=>false,       "AlterFieldDefn"=>false
         )
     end
-end
 end
