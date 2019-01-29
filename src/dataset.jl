@@ -81,7 +81,6 @@ function unsafe_createcopy(
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
         progressdata            = C_NULL
     )
-    
     Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
         strict, options, @cplprogress(progressfunc), progressdata))
 end
@@ -164,6 +163,19 @@ function unsafe_create(
     result = GDAL.create(driver.ptr, filename, width, height, nbands,
         _GDALTYPE[dtype], options)
     Dataset(result)
+end
+
+function create(;
+        width::Integer  = 0,
+        height::Integer = 0,
+        nbands::Integer = 0,
+        dtype::DataType = Any,
+        options = StringList(C_NULL)
+    )
+    drivername = nbands == 0 ? "Memory" : "MEM"
+    result = GDAL.create(GDAL.getdriverbyname(drivername), "", width, height,
+        nbands, _GDALTYPE[dtype], options)
+    IDataset(result)
 end
 
 function unsafe_create(
