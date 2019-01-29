@@ -62,7 +62,11 @@ mutable struct IGeometry <: AbstractGeometry
 end
 mutable struct GeomFieldDefn;                    ptr::GDALGeomFieldDefn   end
 mutable struct RasterAttrTable;                  ptr::GDALRasterAttrTable end
-mutable struct RasterBand;                       ptr::GDALRasterBand      end
+mutable struct RasterBand{D <: AbstractDataset}
+    ptr::GDALRasterBand
+    ownedby::D
+end
+RasterBand(ptr::GDALRasterBand) = RasterBand(ptr, Dataset(C_NULL))
 mutable struct SpatialRef <: AbstractSpatialRef; ptr::GDALSpatialRef      end
 mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
