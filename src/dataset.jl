@@ -113,6 +113,20 @@ function unsafe_createcopy(
     )
 end
 
+function createcopy(
+        dataset::AbstractDataset;
+        filename::AbstractString = "",
+        strict::Bool            = false,
+        options                 = StringList(C_NULL),
+        progressfunc::Function  = GDAL.C.GDALDummyProgress,
+        progressdata            = C_NULL
+    )
+    drivername = nlayer(dataset) > 0 ? "Memory" : "MEM"
+    IDataset(GDAL.createcopy(GDAL.getdriverbyname(drivername), filename,
+        GDAL.failsafe(dataset.ptr), strict, options, @cplprogress(progressfunc),
+        progressdata))
+end
+
 function write(args...; kwargs...)
     destroy(unsafe_createcopy(args...; kwargs...))
 end
@@ -228,6 +242,20 @@ function unsafe_read(
     result = GDAL.openex(filename, Int(flags), alloweddrivers, options,
         siblingfiles)
     Dataset(result)
+end
+
+function read(
+        filename::AbstractString;
+        strict::Bool    = false,
+        flags           = OF_ReadOnly,
+        alloweddrivers  = StringList(C_NULL),
+        options         = StringList(C_NULL),
+        siblingfiles    = StringList(C_NULL)
+    )
+    read(filename, flags=flags, alloweddrivers=alloweddrivers,
+        options=options, siblingfiles=siblingfiles) do dataset
+        createcopy(dataset, strict=strict)
+    end
 end
 
 unsafe_update(filename::AbstractString; flags = OF_Update, kwargs...) =
