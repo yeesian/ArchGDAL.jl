@@ -43,7 +43,11 @@ end
 mutable struct Driver;                        ptr::GDALDriver             end
 mutable struct Feature;                       ptr::GDALFeature            end
 mutable struct FeatureDefn;                   ptr::GDALFeatureDefn        end
-mutable struct FeatureLayer;                  ptr::GDALFeatureLayer       end
+mutable struct FeatureLayer{D <: AbstractDataset}
+    ptr::GDALFeatureLayer
+    ownedby::D
+end
+FeatureLayer(ptr::GDALFeatureLayer) = FeatureLayer(ptr, Dataset(C_NULL))
 mutable struct Field;                         ptr::GDALField              end
 mutable struct FieldDefn;                     ptr::GDALFieldDefn          end
 mutable struct Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
