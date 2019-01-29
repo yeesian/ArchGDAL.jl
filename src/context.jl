@@ -39,9 +39,18 @@ function environment(
     end
 end
 
-function executesql(f::Function, dataset::AbstractDataset, args...)
+function executesql(f::Function, dataset::Dataset, args...)
     result = unsafe_executesql(dataset, args...)
     try f(result) finally releaseresultset(dataset, result) end
+end
+
+function executesql(f::Function, dataset::IDataset, args...)
+    # we create a copy of the original dataset to avoid the situation where
+    # dataset gets finalized before releaseresultset() gets called.
+    createcopy(dataset) do ds
+        result = unsafe_executesql(ds, args...)
+        try f(result) finally releaseresultset(ds, result) end
+    end
 end
 
 function createfeature(f::Function, layer::FeatureLayer)
