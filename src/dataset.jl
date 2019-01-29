@@ -476,7 +476,7 @@ releaseresultset(dataset::AbstractDataset, layer::FeatureLayer) =
 
 "Fetch a band object for a dataset from its index"
 getband(dataset::AbstractDataset, i::Integer) =
-    RasterBand(GDAL.getrasterband(dataset.ptr, i))
+    RasterBand(GDAL.getrasterband(dataset.ptr, i), dataset)
 
 """
 Fetch the affine transformation coefficients.
