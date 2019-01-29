@@ -308,7 +308,7 @@ The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer) =
-    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i))
+    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i), dataset)
 
 """
 Fetch the feature layer corresponding to the given name.
@@ -317,7 +317,7 @@ The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, name::AbstractString) =
-    FeatureLayer(GDAL.datasetgetlayerbyname(dataset.ptr, name))
+    FeatureLayer(GDAL.datasetgetlayerbyname(dataset.ptr, name), dataset)
 
 """
 Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
@@ -360,7 +360,7 @@ function createlayer(
         options                         = StringList(C_NULL)
     )
     FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
-        geom, options))
+        geom, options), dataset)
 end
 
 """
@@ -456,7 +456,7 @@ function unsafe_executesql(
         spatialfilter::Geometry = Geometry(C_NULL)
     )
     FeatureLayer(GDAL.datasetexecutesql(dataset.ptr, query, spatialfilter.ptr,
-        dialect))
+        dialect), dataset)
 end
 
 
