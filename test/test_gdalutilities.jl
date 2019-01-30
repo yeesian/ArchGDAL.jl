@@ -15,6 +15,8 @@ AG.registerdrivers() do
         @testset "GDAL Info" begin
             infostr = AG.gdalinfo(ds_small, ["-checksum"])
             @test occursin("Checksum=50054", infostr)
+            info_default = AG.gdalinfo(ds_small)
+            @test occursin("Driver: GTiff/GeoTIFF", info_default)
         end
 
         AG.gdaltranslate(ds_small, # resample to a 5×5 ascii grid

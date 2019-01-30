@@ -17,7 +17,7 @@ Lists various information about a GDAL supported raster dataset.
 ### Returns
 String corresponding to the information about the raster dataset.
 """
-function gdalinfo(dataset::Dataset, options = [])
+function gdalinfo(dataset::Dataset, options = String[])
     options = GDAL.infooptionsnew(options, C_NULL)
     result = GDAL.info(dataset.ptr, options)
     GDAL.infooptionsfree(options)
@@ -37,7 +37,7 @@ The output dataset.
 """
 function unsafe_gdaltranslate(
         dataset::Dataset,
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.translateoptionsnew(options, C_NULL)
@@ -61,7 +61,7 @@ The output dataset.
 """
 function unsafe_gdalwarp(
         datasets::Vector{Dataset},
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.warpappoptionsnew(options, C_NULL)
@@ -86,7 +86,7 @@ The output dataset.
 """
 function unsafe_gdalvectortranslate(
         datasets::Vector{Dataset},
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.vectortranslateoptionsnew(options, C_NULL)
@@ -118,7 +118,7 @@ The output dataset.
 function unsafe_gdaldem(
         dataset::Dataset,
         processing::String,
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp",
         colorfile = C_NULL
     )
@@ -147,7 +147,7 @@ The output dataset.
 """
 function unsafe_gdalnearblack(
         dataset::Dataset,
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.nearblackoptionsnew(options, C_NULL)
@@ -172,7 +172,7 @@ The output dataset.
 """
 function unsafe_gdalgrid(
         dataset::Dataset,
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.gridoptionsnew(options, C_NULL)
@@ -196,7 +196,7 @@ The output dataset.
 """
 function unsafe_gdalrasterize(
         dataset::Dataset,
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.rasterizeoptionsnew(options, C_NULL)
@@ -221,7 +221,7 @@ The output dataset.
 """
 function unsafe_gdalbuildvrt(
         datasets::Vector{Dataset},
-        options = [];
+        options = String[];
         dest = "/vsimem/tmp"
     )
     options = GDAL.buildvrtoptionsnew(options, C_NULL)
