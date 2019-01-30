@@ -7,7 +7,7 @@ function _failsafe(usage_error::Ref{Cint})
 end
 
 """
-Lists various information about a GDAL supported raster dataset.
+List various information about a GDAL supported raster dataset.
 
 ### Parameters
 * **dataset**: The source dataset.
@@ -25,7 +25,7 @@ function gdalinfo(dataset::Dataset, options = String[])
 end
 
 """
-Converts raster data between different formats.
+Convert raster data between different formats.
 
 ### Parameters
 * **dataset**: The dataset to be translated.
@@ -74,7 +74,7 @@ function unsafe_gdalwarp(
 end
 
 """
-Converts vector data between file formats.
+Convert vector data between file formats.
 
 ### Parameters
 * **datasets**: The list of input datasets (only 1 supported currently).
@@ -99,7 +99,7 @@ function unsafe_gdalvectortranslate(
 end
 
 """
-Converts vector data between file formats.
+Tools to analyze and visualize DEMs.
 
 ### Parameters
 * **dataset**: The source dataset.
@@ -184,7 +184,7 @@ function unsafe_gdalgrid(
 end
 
 """
-Burns vector geometries into a raster.
+Burn vector geometries into a raster.
 
 ### Parameters
 * **dataset**: The source dataset.
