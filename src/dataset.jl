@@ -232,13 +232,13 @@ it from different threads, you must add all necessary code (mutexes, etc.) to
 avoid concurrent use of the object. (Some drivers, such as GeoTIFF, maintain
 internal state variables that are updated each time a new block is read,
 preventing concurrent use.)
-* # In order to reduce the need for searches through the operating system file
-# system machinery, it is possible to give an optional list of files with the
-# papszSiblingFiles parameter. This is the list of all files at the same level in
-# the file system as the target file, including the target file. The filenames
-# must not include any path components, are essentially just the output of
-# VSIReadDir() on the parent directory. If the target object does not have
-# filesystem semantics then the file list should be NULL.
+* In order to reduce the need for searches through the operating system file
+system machinery, it is possible to give an optional list of files with the
+papszSiblingFiles parameter. This is the list of all files at the same level in
+the file system as the target file, including the target file. The filenames
+must not include any path components, are essentially just the output of
+VSIReadDir() on the parent directory. If the target object does not have
+filesystem semantics then the file list should be NULL.
 
 In some situations (dealing with unverified data), the datasets can be opened
 in another process through the GDAL API Proxy mechanism.
@@ -517,7 +517,8 @@ function getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     transform
 end
 
-getgeotransform(dataset::AbstractDataset) = getgeotransform!(dataset, Array{Cdouble}(undef, 6))
+getgeotransform(dataset::AbstractDataset) =
+    getgeotransform!(dataset, Array{Cdouble}(undef, 6))
 
 "Set the affine transformation coefficients."
 function setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
@@ -576,4 +577,7 @@ function buildoverviews!(dataset::AbstractDataset,
     dataset
 end
 
-destroy(dataset::AbstractDataset) = (GDAL.close(dataset.ptr); dataset.ptr = C_NULL)
+function destroy(dataset::AbstractDataset)
+    GDAL.close(dataset.ptr)
+    dataset.ptr = C_NULL
+end
