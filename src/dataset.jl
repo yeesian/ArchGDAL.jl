@@ -75,7 +75,7 @@ the GDAL API Proxy mechanism.
 function unsafe_createcopy(
         dataset::AbstractDataset,
         filename::AbstractString,
-        driver::Driver;
+        driver::Driver = getdriver(dataset);
         strict::Bool            = false,
         options                 = StringList(C_NULL),
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
@@ -99,53 +99,31 @@ function unsafe_createcopy(
     )
 end
 
-function unsafe_createcopy(
-        dataset::AbstractDataset,
-        filename::AbstractString;
-        kwargs...
-    )
-    unsafe_createcopy(
-        dataset,
-        filename,
-        getdriver(dataset);
-        kwargs...
-    )
-end
-
-"""
-Create an in-memory copy of a dataset.
-
-This method will attempt to create a copy of a raster dataset with the
-indicated filename, and in this drivers format. Band number, size, type,
-projection, geotransform and so forth are all to be copied from the
-provided template dataset.
-
-### Parameters
-* `dataset`       the dataset being duplicated.
-
-### Keyword Arguments
-* `filename`      the name for the new dataset. UTF-8 encoded.
-* `strict`        `TRUE` if the copy must be strictly equivalent, or more
-normally `FALSE` if the copy may adapt as needed for the output format.
-* `options`       additional format dependent options controlling creation
-of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
-avoid prior destruction of existing dataset.
-
-### Returns
-An IDataset corresponding to the newly created dataset.
-"""
 function createcopy(
-        dataset::AbstractDataset;
-        filename::AbstractString = "",
+        dataset::AbstractDataset,
+        filename::AbstractString,
+        driver::Driver = getdriver(dataset);
         strict::Bool            = false,
         options                 = StringList(C_NULL),
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
         progressdata            = C_NULL
     )
-    drivername = nlayer(dataset) > 0 ? "Memory" : "MEM"
-    IDataset(GDAL.createcopy(GDAL.getdriverbyname(drivername), filename,
-        GDAL.failsafe(dataset.ptr), strict, options, @cplprogress(progressfunc),
-        progressdata))
+    IDataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
+        strict, options, @cplprogress(progressfunc), progressdata))
+end
+
+function createcopy(
+        dataset::AbstractDataset,
+        filename::AbstractString,
+        drivername::AbstractString;
+        kwargs...
+    )
+    createcopy(
+        dataset,
+        filename,
+        getdriver(drivername);
+        kwargs...
+    )
 end
 
 function write(args...; kwargs...)
@@ -175,7 +153,7 @@ creating a vector-only dataset for a compatible driver.
 """
 function unsafe_create(
         filename::AbstractString,
-        driver::Driver;
+        driver::Driver = identifydriver(filename);
         width::Integer  = 0,
         height::Integer = 0,
         nbands::Integer = 0,
@@ -185,26 +163,6 @@ function unsafe_create(
     result = GDAL.create(driver.ptr, filename, width, height, nbands,
         _GDALTYPE[dtype], options)
     Dataset(result)
-end
-
-"""
-Create an in-memory dataset.
-
-It corresponds to a vector-only dataset if no values for `width`, `height` and
-`nbands` are set during construction. Otherwise, it corresponds to a raster
-dataset.
-"""
-function create(;
-        width::Integer  = 0,
-        height::Integer = 0,
-        nbands::Integer = 0,
-        dtype::DataType = Any,
-        options = StringList(C_NULL)
-    )
-    drivername = (width == height == nbands == 0) ? "Memory" : "MEM"
-    result = GDAL.create(GDAL.getdriverbyname(drivername), "", width, height,
-        nbands, _GDALTYPE[dtype], options)
-    IDataset(result)
 end
 
 function unsafe_create(
@@ -218,6 +176,23 @@ function unsafe_create(
         kwargs...
     )
 end
+
+function create(
+        filename::AbstractString,
+        driver::Driver = identifydriver(filename);
+        width::Integer  = 0,
+        height::Integer = 0,
+        nbands::Integer = 0,
+        dtype::DataType = Any,
+        options = StringList(C_NULL)
+    )
+    result = GDAL.create(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
+    IDataset(result)
+end
+
+create(filename::AbstractString, drivername::AbstractString; kwargs...) =
+    create(filename, getdriver(drivername); kwargs...)
 
 """
 Open a raster file as a GDALDataset.
@@ -287,16 +262,14 @@ end
 
 function read(
         filename::AbstractString;
-        strict::Bool    = false,
         flags           = OF_ReadOnly,
         alloweddrivers  = StringList(C_NULL),
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)
     )
-    read(filename, flags=flags, alloweddrivers=alloweddrivers,
-        options=options, siblingfiles=siblingfiles) do dataset
-        createcopy(dataset, strict=strict)
-    end
+    result = GDAL.openex(filename, Int(flags), alloweddrivers, options,
+        siblingfiles)
+    IDataset(result)
 end
 
 unsafe_update(filename::AbstractString; flags = OF_Update, kwargs...) =
@@ -395,6 +368,12 @@ end
 """
 Duplicate an existing layer.
 
+This method creates a new layer, duplicate the field definitions of the source
+layer and then duplicate each features of the source layer. The papszOptions
+argument can be used to control driver specific creation options. These options
+are normally documented in the format specific documentation. The source layer
+may come from another dataset.
+
 ### Parameters
 * `dataset`: the dataset handle.
 * `layer`: source layer.
@@ -407,7 +386,8 @@ function copylayer(
         name::AbstractString;
         options = StringList(C_NULL)
     )
-    FeatureLayer(GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options))
+    FeatureLayer(GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options),
+        dataset)
 end
 
 """
@@ -445,9 +425,7 @@ function listcapability(
                         GDAL.ODsCTransactions,
                         GDAL.ODsCEmulatedTransactions)
     )
-    Dict{String, Bool}([
-        c => testcapability(dataset, c) for c in capabilities
-    ])
+    Dict{String, Bool}(c => testcapability(dataset, c) for c in capabilities)
 end
 
 """
