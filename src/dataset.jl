@@ -112,6 +112,28 @@ function unsafe_createcopy(
     )
 end
 
+"""
+Create an in-memory copy of a dataset.
+
+This method will attempt to create a copy of a raster dataset with the
+indicated filename, and in this drivers format. Band number, size, type,
+projection, geotransform and so forth are all to be copied from the
+provided template dataset.
+
+### Parameters
+* `dataset`       the dataset being duplicated.
+
+### Keyword Arguments
+* `filename`      the name for the new dataset. UTF-8 encoded.
+* `strict`        `TRUE` if the copy must be strictly equivalent, or more
+normally `FALSE` if the copy may adapt as needed for the output format.
+* `options`       additional format dependent options controlling creation
+of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+avoid prior destruction of existing dataset.
+
+### Returns
+An IDataset corresponding to the newly created dataset.
+"""
 function createcopy(
         dataset::AbstractDataset;
         filename::AbstractString = "",
@@ -165,6 +187,13 @@ function unsafe_create(
     Dataset(result)
 end
 
+"""
+Create an in-memory dataset.
+
+It corresponds to a vector-only dataset if no values for `width`, `height` and
+`nbands` are set during construction. Otherwise, it corresponds to a raster
+dataset.
+"""
 function create(;
         width::Integer  = 0,
         height::Integer = 0,
@@ -172,7 +201,7 @@ function create(;
         dtype::DataType = Any,
         options = StringList(C_NULL)
     )
-    drivername = nbands == 0 ? "Memory" : "MEM"
+    drivername = (width == height == nbands == 0) ? "Memory" : "MEM"
     result = GDAL.create(GDAL.getdriverbyname(drivername), "", width, height,
         nbands, _GDALTYPE[dtype], options)
     IDataset(result)
