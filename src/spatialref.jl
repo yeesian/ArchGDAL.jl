@@ -1,28 +1,16 @@
-"OSRNewSpatialReference(const char * pszWKT) -> OGRSpatialReferenceH"
-function unsafe_newspatialref(
-        ::Type{S},
-        wkt::AbstractString = ""
-    ) where S <: AbstractSpatialRef
-    S(GDAL.newspatialreference(wkt))
-end
-unsafe_newspatialref(wkt::AbstractString = "") =
-    unsafe_newspatialref(SpatialRef, wkt)
+"Construct a Spatial Reference System from its WKT."
 newspatialref(wkt::AbstractString = "") =
-    unsafe_newspatialref(ISpatialRef, wkt)
+    ISpatialRef(GDAL.newspatialreference(wkt))
+unsafe_newspatialref(wkt::AbstractString = "") =
+    SpatialRef(GDAL.newspatialreference(wkt))
 
 function destroy(spref::AbstractSpatialRef)
     GDAL.destroyspatialreference(spref.ptr)
     spref.ptr = C_NULL
 end
 
-function unsafe_clone(
-        ::Type{S},
-        spref::AbstractSpatialRef
-    ) where S <: AbstractSpatialRef
-    S(GDAL.clone(spref.ptr))
-end
-unsafe_clone(spref::AbstractSpatialRef) = unsafe_clone(SpatialRef, spref)
-clone(spref::AbstractSpatialRef) = unsafe_clone(ISpatialRef, spref)
+unsafe_clone(spref::AbstractSpatialRef) = SpatialRef(GDAL.clone(spref.ptr))
+clone(spref::AbstractSpatialRef) = ISpatialRef(GDAL.clone(spref.ptr))
 
 """
 Initialize SRS based on EPSG GCS or PCS code.
