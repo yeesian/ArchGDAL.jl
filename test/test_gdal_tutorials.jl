@@ -60,9 +60,11 @@ import ArchGDAL; const AG = ArchGDAL
     #@test GDAL.getmetadataitem(driver, "DCAP_CREATECOPY", "") == "YES"
 
     AG.read("data/utmsmall.tif") do ds_src
-        AG.write(ds_src, "tmp/utmsmall.tif")
+        AG.write(ds_src, "/vsimem/utmsmall.tif")
+        AG.read("/vsimem/utmsmall.tif") do ds_copy
+            @test AG.read(ds_src) == AG.read(ds_copy)
+        end
     end
-    rm("tmp/utmsmall.tif")
 end
 
 @testset "Vector Tutorial" begin
@@ -100,8 +102,7 @@ end
     end
 
     @testset "Approach 1" begin
-        pointshapefile = "tmp/point_out"
-        AG.create("$pointshapefile.shp", "ESRI Shapefile") do dataset
+        AG.create(AG.getdriver("MEMORY")) do dataset
             layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
             AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
                 AG.setwidth!(fielddefn, 32)
@@ -117,15 +118,10 @@ end
             end
             @test AG.nfeature(layer) == 1
         end
-
-        rm("$pointshapefile.dbf")
-        rm("$pointshapefile.shp")
-        rm("$pointshapefile.shx")
     end
 
     @testset "Approach 2" begin
-        pointshapefile = "tmp/point_out"
-        AG.create("$pointshapefile.shp", "ESRI Shapefile") do dataset
+        AG.create(AG.getdriver("MEMORY")) do dataset
             layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
             AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
                 AG.setwidth!(fielddefn, 32)
@@ -140,9 +136,5 @@ end
             end
             @test AG.nfeature(layer) == 1
         end
-
-        rm("$pointshapefile.dbf")
-        rm("$pointshapefile.shp")
-        rm("$pointshapefile.shx")
     end
 end
