@@ -88,7 +88,7 @@ AG.read("data/point.geojson") do dataset
 end
 
 @testset "In-Memory Driver" begin
-    AG.create("", "MEMORY") do output
+    AG.create(AG.getdriver("MEMORY")) do output
         layer = AG.createlayer(output, "dummy", geom=GDAL.wkbPolygon)
         AG.createfielddefn("int64field", GDAL.OFTInteger64) do fielddefn
             AG.createfield!(layer, fielddefn)

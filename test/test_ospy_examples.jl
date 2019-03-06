@@ -88,7 +88,7 @@ AG.read("ospy/data1/sites.shp") do input
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
     # version 1
-    AG.create("", "MEMORY") do output
+    AG.create(AG.getdriver("MEMORY")) do output
         inlayer = AG.getlayer(input, 0)
         outlayer = AG.createlayer(output, "hw1b", geom=GDAL.wkbPoint)
         inlayerdefn = AG.getlayerdefn(inlayer)
@@ -114,7 +114,7 @@ AG.read("ospy/data1/sites.shp") do input
     end
 
     # version 2
-    AG.create("", "MEMORY") do output
+    AG.create(AG.getdriver("MEMORY")) do output
         AG.executesql(input, """SELECT * FROM sites
                                 WHERE cover = 'trees' """) do results
             @test sprint(print, results) == """
@@ -139,7 +139,7 @@ end
 @testset "Homework 2" begin
     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
     open("ospy/data2/ut_counties.txt", "r") do file
-    AG.create("", "MEMORY") do output
+    AG.create(AG.getdriver("MEMORY")) do output
         layer = AG.createlayer(output, "hw2a", geom=GDAL.wkbPolygon)
         @test sprint(print, layer) == """
         Layer: hw2a
@@ -311,8 +311,13 @@ AG.read("ospy/data4/aster.img") do ds
             buffer2 = Array{Float32}(undef, ybsize, xbsize)
             buffer3 = Array{Float32}(undef, ybsize, xbsize)
             ndvi    = Array{Float32}(undef, ybsize, xbsize)
-            AG.create("", "MEM",
-                      width=cols, height=rows, nbands=1, dtype=Float32) do outDS
+            AG.create(
+                    AG.getdriver("MEM"),
+                    width   = cols,
+                    height  = rows,
+                    nbands  = 1,
+                    dtype   = Float32
+                ) do outDS
                 for ((i,j),(nrows,ncols)) in AG.blocks(inband2)
                     AG.rasterio!(inband2, buffer2, j, i, ncols, nrows)
                     AG.rasterio!(inband3, buffer3, j, i, ncols, nrows)
@@ -404,8 +409,13 @@ end end end end
             data1 = Array{dtype}(undef, rows, cols)
             data2 = Array{dtype}(undef, rows, cols)
             # create the output image
-            AG.create("", "MEM",width=cols, height=rows, nbands=1,
-                      dtype=AG.getdatatype(band1)) do dsout
+            AG.create(
+                    AG.getdriver("MEM"),
+                    width   = cols,
+                    height  = rows,
+                    nbands  = 1,
+                    dtype   = AG.getdatatype(band1)
+                ) do dsout
                 # read in doq1 and write it to the output
                 AG.rasterio!(band1, data1, 0, 0, cols1, rows1)
                 AG.write!(dsout, data1, 1, xOffset1, yOffset1, cols, rows)

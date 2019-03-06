@@ -47,7 +47,7 @@ import ArchGDAL; const AG = ArchGDAL
         AG.deletenodatavalue!(rb)
         @test AG.getnodatavalue(rb) ≈ -1e10
 
-        AG.createcopy(dataset, "tmp/utmsmall.tif") do dest
+        AG.createcopy(dataset) do dest
             destband = AG.getband(dest, 1)
             AG.copywholeraster!(rb, destband)
             @test sprint(print, destband) == """
@@ -117,9 +117,5 @@ import ArchGDAL; const AG = ArchGDAL
                 end
             end
         end
-
-        rm("tmp/utmsmall.tif")
-        rm("tmp/utmsmall.tif.aux.xml")
-        rm("tmp/utmsmall.tif.msk")
     end
 end

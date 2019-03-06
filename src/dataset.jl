@@ -19,8 +19,8 @@ performing the transfer in a pixel interleaved fashion.
 """
 function copywholeraster(
         source::AbstractDataset,
-        dest::AbstractDataset,
-        options                 = StringList(C_NULL);
+        dest::AbstractDataset;
+        options                 = StringList(C_NULL),
         progressfunc::Function  = GDAL.C.GDALDummyProgress,
         progressdata::Any       = C_NULL
     )
@@ -39,7 +39,10 @@ provided template dataset.
 
 ### Parameters
 * `dataset`       the dataset being duplicated.
-* `filename`      the name for the new dataset. UTF-8 encoded.
+
+### Keyword Arguments
+* `filename`      the filename for the new dataset. UTF-8 encoded.
+* `driver`        the driver to use for creating the new dataset
 * `strict`        `TRUE` if the copy must be strictly equivalent, or more
 normally `FALSE` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
@@ -73,65 +76,75 @@ In some situations, the new dataset can be created in another process through
 the GDAL API Proxy mechanism.
 """
 function unsafe_createcopy(
-        dataset::AbstractDataset,
-        filename::AbstractString,
-        driver::Driver = getdriver(dataset);
-        strict::Bool            = false,
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
+        dataset::AbstractDataset;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        driver::Driver              = getdriver(dataset),
+        strict::Bool                = false,
+        options                     = StringList(C_NULL),
+        progressfunc::Function      = GDAL.C.GDALDummyProgress,
+        progressdata                = C_NULL
     )
     Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
         strict, options, @cplprogress(progressfunc), progressdata))
 end
 
-function unsafe_createcopy(
-        dataset::AbstractDataset,
-        filename::AbstractString,
-        drivername::AbstractString;
-        kwargs...
-    )
-    unsafe_createcopy(
-        dataset,
-        filename,
-        getdriver(drivername);
-        kwargs...
-    )
-end
+"""
+Create a copy of a dataset.
 
+This method will attempt to create a copy of a raster dataset with the
+indicated filename, and in this drivers format. Band number, size, type,
+projection, geotransform and so forth are all to be copied from the
+provided template dataset.
+
+### Parameters
+* `dataset`       the dataset being duplicated.
+
+### Keyword Arguments
+* `filename`      the filename for the new dataset. UTF-8 encoded.
+* `driver`        the driver to use for creating the new dataset
+* `strict`        `TRUE` if the copy must be strictly equivalent, or more
+    normally `FALSE` if the copy may adapt as needed for the output format.
+* `options`       additional format dependent options controlling creation
+of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+avoid prior destruction of existing dataset.
+
+### Example
+```
+dataset = ArchGDAL.createcopy(originaldataset)
+# work with dataset from here
+```
+or
+```
+ArchGDAL.createcopy(originaldataset) do dataset
+    # work with dataset from here
+end
+```
+
+### Returns
+The newly created dataset.
+"""
 function createcopy(
-        dataset::AbstractDataset,
-        filename::AbstractString,
-        driver::Driver = getdriver(dataset);
-        strict::Bool            = false,
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
+        dataset::AbstractDataset;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        driver::Driver              = getdriver(dataset),
+        strict::Bool                = false,
+        options                     = StringList(C_NULL),
+        progressfunc::Function      = GDAL.C.GDALDummyProgress,
+        progressdata                = C_NULL
     )
     IDataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
         strict, options, @cplprogress(progressfunc), progressdata))
 end
 
-function createcopy(
-        dataset::AbstractDataset,
-        filename::AbstractString,
-        drivername::AbstractString;
-        kwargs...
-    )
-    createcopy(
-        dataset,
-        filename,
-        getdriver(drivername);
-        kwargs...
-    )
-end
-
-function write(args...; kwargs...)
-    destroy(unsafe_createcopy(args...; kwargs...))
+"""
+Writes the dataset to the designated filename.
+"""
+function write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
+    destroy(unsafe_createcopy(dataset, filename = filename; kwargs...))
 end
 
 """
-Create a new dataset with this driver.
+Create a new dataset.
 
 What argument values are legal for particular drivers is driver specific, and
 there is no way to query in advance to establish legal values.
@@ -152,13 +165,13 @@ In GDAL 2, the arguments nXSize, nYSize and nBands can be passed to 0 when
 creating a vector-only dataset for a compatible driver.
 """
 function unsafe_create(
-        filename::AbstractString,
-        driver::Driver = identifydriver(filename);
-        width::Integer  = 0,
-        height::Integer = 0,
-        nbands::Integer = 0,
-        dtype::DataType = Any,
-        options = StringList(C_NULL)
+        filename::AbstractString;
+        driver::Driver              = identifydriver(filename),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
     )
     result = GDAL.create(driver.ptr, filename, width, height, nbands,
         _GDALTYPE[dtype], options)
@@ -166,33 +179,74 @@ function unsafe_create(
 end
 
 function unsafe_create(
-        filename::AbstractString,
-        drivername::AbstractString;
-        kwargs...
+        driver::Driver;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
     )
-    unsafe_create(
-        filename,
-        getdriver(drivername);
-        kwargs...
-    )
+    result = GDAL.create(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
+    Dataset(result)
 end
 
+"""
+Create a new dataset.
+
+### Parameters
+* `filename`       the filename for the dataset being created.
+
+### Keyword Arguments
+* `driver`        the driver to use for creating the new dataset
+* `options`       additional format dependent options controlling creation
+of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+avoid prior destruction of existing dataset.
+* `width`, `height`, `nbands`, `dtype`: only for raster datasets.
+
+### Example
+```
+dataset = ArchGDAL.create(AG.getdriver("MEMORY"))
+# work with dataset from here
+```
+or
+```
+ArchGDAL.create(AG.getdriver("MEMORY")) do dataset
+    # work with dataset from here
+end
+```
+
+### Returns
+The newly created dataset.
+"""
 function create(
-        filename::AbstractString,
-        driver::Driver = identifydriver(filename);
-        width::Integer  = 0,
-        height::Integer = 0,
-        nbands::Integer = 0,
-        dtype::DataType = Any,
-        options = StringList(C_NULL)
+        filename::AbstractString;
+        driver::Driver              = identifydriver(filename),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
     )
     result = GDAL.create(driver.ptr, filename, width, height, nbands,
         _GDALTYPE[dtype], options)
     IDataset(result)
 end
 
-create(filename::AbstractString, drivername::AbstractString; kwargs...) =
-    create(filename, getdriver(drivername); kwargs...)
+function create(
+        driver::Driver;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
+    )
+    result = GDAL.create(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
+    IDataset(result)
+end
 
 """
 Open a raster file as a GDALDataset.
@@ -260,9 +314,42 @@ function unsafe_read(
     Dataset(result)
 end
 
+"""
+Open a raster file
+
+### Parameters
+* `filename`: the filename of the dataset to be read.
+
+### Keyword Arguments
+* `flags`: a combination of `OF_*` flags (listed below) that may be
+    combined through the logical `|` operator. It defaults to `OF_ReadOnly`.
+    - Driver kind: `OF_Raster` for raster drivers, `OF_Vector` for vector
+        drivers. If none of the value is specified, both are implied.
+    - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
+    - Shared mode: `OF_Shared`. If set, it allows the sharing of handles for a
+        dataset with other callers that have set `OF_Shared`.
+    - Verbose error: `OF_Verbose_Error`. If set, a failed attempt to open the
+        file will lead to an error message to be reported.
+* `options`: additional format dependent options.
+
+### Example
+```
+dataset = ArchGDAL.read("point.shp")
+# work with dataset from here
+```
+or
+```
+ArchGDAL.read("point.shp") do dataset
+    # work with dataset from here
+end
+```
+
+### Returns
+The corresponding dataset.
+"""
 function read(
         filename::AbstractString;
-        flags           = OF_ReadOnly,
+        flags           = OF_ReadOnly | OF_Verbose_Error,
         alloweddrivers  = StringList(C_NULL),
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)

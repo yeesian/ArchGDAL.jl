@@ -150,21 +150,21 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
     GDAL.OFTInteger64List   => Nothing)
 
 @enum(GDALOpenFlag,
-      OF_ReadOnly = GDAL.GDAL_OF_READONLY, # 0x00
-      OF_Update   = GDAL.GDAL_OF_UPDATE,   # 0x01
-#     OF_All      = GDAL.GDAL_OF_ALL,      # 0x00
-      OF_Raster   = GDAL.GDAL_OF_RASTER,   # 0x02
-      OF_Vector   = GDAL.GDAL_OF_VECTOR,   # 0x04
-      OF_GNM      = GDAL.GDAL_OF_GNM)      # 0x08
-                 # const GDAL_OF_KIND_MASK = 0x1e
-                 # const GDAL_OF_SHARED = 0x20
-                 # const GDAL_OF_VERBOSE_ERROR = 0x40
-                 # const GDAL_OF_INTERNAL = 0x80
-                 # const GDAL_OF_DEFAULT_BLOCK_ACCESS = 0
-                 # const GDAL_OF_ARRAY_BLOCK_ACCESS = 0x0100
-                 # const GDAL_OF_HASHSET_BLOCK_ACCESS = 0x0200
-                 # const GDAL_OF_RESERVED_1 = 0x0300
-                 # const GDAL_OF_BLOCK_ACCESS_MASK = 0x0300
+    OF_ReadOnly             = GDAL.GDAL_OF_READONLY,                # 0x00
+    OF_Update               = GDAL.GDAL_OF_UPDATE,                  # 0x01
+    # OF_All                  = GDAL.GDAL_OF_ALL,                     # 0x00
+    OF_Raster               = GDAL.GDAL_OF_RASTER,                  # 0x02
+    OF_Vector               = GDAL.GDAL_OF_VECTOR,                  # 0x04
+    OF_GNM                  = GDAL.GDAL_OF_GNM,                     # 0x08
+    OF_Kind_Mask            = GDAL.GDAL_OF_KIND_MASK,               # 0x1e
+    OF_Shared               = GDAL.GDAL_OF_SHARED,                  # 0x20
+    OF_Verbose_Error        = GDAL.GDAL_OF_VERBOSE_ERROR,           # 0x40
+    OF_Internal             = GDAL.GDAL_OF_INTERNAL,                # 0x80
+    # OF_DEFAULT_BLOCK_ACCESS = GDAL.GDAL_OF_DEFAULT_BLOCK_ACCESS,    # 0
+    OF_Array_Block_Access   = GDAL.GDAL_OF_ARRAY_BLOCK_ACCESS,      # 0x0100
+    OF_Hashset_Block_Access = GDAL.GDAL_OF_HASHSET_BLOCK_ACCESS,    # 0x0200
+    # OF_RESERVED_1           = GDAL.GDAL_OF_RESERVED_1,              # 0x0300
+    OF_Block_Access_Mask    = GDAL.GDAL_OF_BLOCK_ACCESS_MASK)       # 0x0300
 
 import Base.|
 

@@ -4,7 +4,7 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "Testing FeatureLayer Methods" begin
     AG.read("data/point.geojson") do dataset
-        AG.createcopy(dataset, "tmp/point.geojson") do tmpcopy
+        AG.createcopy(dataset) do tmpcopy
             @test AG.nlayer(tmpcopy) == 1
             # AG.deletelayer!(tmpcopy, 0)
             # @test AG.nlayer(tmpcopy) == 0
@@ -14,7 +14,6 @@ import ArchGDAL; const AG = ArchGDAL
             @test AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) == true
             AG.synctodisk!(tmplayer)
         end
-        rm("tmp/point.geojson")
 
         layer = AG.getlayer(dataset, 0)
         @test sprint(print, AG.getspatialref(layer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
