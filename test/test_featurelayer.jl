@@ -94,6 +94,7 @@ import ArchGDAL; const AG = ArchGDAL
         end
 
         layer = AG.getlayer(dataset, 0)
+        @test sprint(print, AG.getspatialref(layer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
         @test AG.fidcolumnname(layer) == ""
         @test AG.geomcolumnname(layer) == ""
         @test AG.nreference(layer) == 0

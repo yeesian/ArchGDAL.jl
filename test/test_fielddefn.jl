@@ -69,10 +69,10 @@ end
             @test sprint(print, spref) == "NULL Spatial Reference System"
         end
         AG.setspatialref!(gfd, AG.importEPSG(4326))
-        @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+        @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
         AG.getspatialref(gfd) do spref
             if !Sys.iswindows()
-                @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+                @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
                 # NOTE(yeesian): we get the following error on x86 in Appveyor
                 # Expression: sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
                 #   GDALError (CE_Failure, code 6):
