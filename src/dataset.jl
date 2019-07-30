@@ -565,8 +565,11 @@ before destroying the GDALDataset may cause errors.
 * `dataset`: the dataset handle.
 * `layer`: the result of a previous ExecuteSQL() call.
 """
-releaseresultset(dataset::AbstractDataset, layer::FeatureLayer) =
-    (GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr); layer.ptr = C_NULL)
+function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
+    GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr)
+    layer.ptr = GDALFeatureLayer(C_NULL)
+    layer.ownedby = Dataset(C_NULL)
+end
 
 "Fetch a band object for a dataset from its index"
 getband(dataset::AbstractDataset, i::Integer) =
