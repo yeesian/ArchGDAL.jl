@@ -28,9 +28,18 @@ abstract type AbstractSpatialRef end
 abstract type AbstractDataset end
     # needs to have a `ptr::GDALDataset` attribute
 
-mutable struct ColorTable;                    ptr::GDALColorTable         end
-mutable struct CoordTransform;                ptr::GDALCoordTransform     end
-mutable struct Dataset <: AbstractDataset;    ptr::GDALDataset            end
+mutable struct ColorTable
+    ptr::GDALColorTable
+end
+
+mutable struct CoordTransform
+    ptr::GDALCoordTransform
+end
+
+mutable struct Dataset <: AbstractDataset
+    ptr::GDALDataset
+end
+
 mutable struct IDataset <: AbstractDataset
     ptr::GDALDataset
 
@@ -40,17 +49,38 @@ mutable struct IDataset <: AbstractDataset
         return dataset
     end
 end
-mutable struct Driver;                        ptr::GDALDriver             end
-mutable struct Feature;                       ptr::GDALFeature            end
-mutable struct FeatureDefn;                   ptr::GDALFeatureDefn        end
+
+mutable struct Driver
+    ptr::GDALDriver
+end
+
+mutable struct Feature
+    ptr::GDALFeature
+end
+
+mutable struct FeatureDefn
+    ptr::GDALFeatureDefn
+end
+
 mutable struct FeatureLayer{D <: AbstractDataset}
     ptr::GDALFeatureLayer
     ownedby::D
 end
+
 FeatureLayer(ptr::GDALFeatureLayer) = FeatureLayer(ptr, Dataset(C_NULL))
-mutable struct Field;                         ptr::GDALField              end
-mutable struct FieldDefn;                     ptr::GDALFieldDefn          end
-mutable struct Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
+
+mutable struct Field
+    ptr::GDALField
+end
+
+mutable struct FieldDefn
+    ptr::GDALFieldDefn
+end
+
+mutable struct Geometry <: AbstractGeometry
+    ptr::GDALGeometry
+end
+
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
 
@@ -60,14 +90,26 @@ mutable struct IGeometry <: AbstractGeometry
         geom
     end
 end
-mutable struct GeomFieldDefn;                    ptr::GDALGeomFieldDefn   end
-mutable struct RasterAttrTable;                  ptr::GDALRasterAttrTable end
+
+mutable struct GeomFieldDefn
+    ptr::GDALGeomFieldDefn
+end
+
+mutable struct RasterAttrTable
+    ptr::GDALRasterAttrTable
+end
+
 mutable struct RasterBand{D <: AbstractDataset}
     ptr::GDALRasterBand
     ownedby::D
 end
+
 RasterBand(ptr::GDALRasterBand) = RasterBand(ptr, Dataset(C_NULL))
-mutable struct SpatialRef <: AbstractSpatialRef; ptr::GDALSpatialRef      end
+
+mutable struct SpatialRef <: AbstractSpatialRef
+    ptr::GDALSpatialRef
+end
+
 mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
 
@@ -77,9 +119,18 @@ mutable struct ISpatialRef <: AbstractSpatialRef
         spref
     end
 end
-mutable struct StyleManager;                     ptr::GDALStyleManager    end
-mutable struct StyleTable;                       ptr::GDALStyleTable      end
-mutable struct StyleTool;                        ptr::GDALStyleTool       end
+
+mutable struct StyleManager
+    ptr::GDALStyleManager
+end
+
+mutable struct StyleTable
+    ptr::GDALStyleTable
+end
+
+mutable struct StyleTool
+    ptr::GDALStyleTool
+end
 
 CPLErr = GDAL.CPLErr
 CPLXMLNodeType = GDAL.CPLXMLNodeType
