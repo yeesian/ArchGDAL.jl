@@ -108,7 +108,10 @@ import ArchGDAL; const AG = ArchGDAL
                     255, GDAL.GDALColorEntry(0,0,255,0)
                 )
                 AG.setcolortable!(destband, ct)
-                @test AG.getcolortable(destband) != C_NULL
+                @test AG.ncolorentry(ct) == 256
+                AG.getcolortable(destband) do ct2
+                    @test AG.ncolorentry(ct) == AG.ncolorentry(ct2)
+                end
                 AG.clearcolortable!(destband)
                 
                 AG.createRAT(ct) do rat

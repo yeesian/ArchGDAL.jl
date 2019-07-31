@@ -226,14 +226,19 @@ function setcolorinterp!(rb::RasterBand, color::GDALColorInterp)
 end
 
 """
-Fetch the color table associated with band.
+Returns a clone of the color table associated with the band.
 
-If there is no associated color table, the return result is `NULL`. The
-returned color table remains owned by the `GDALRasterBand`, and can't be
-depended on for long, nor should it ever be modified by the caller.
+(If there is no associated color table, the original result is `NULL`. The
+original color table remains owned by the `GDALRasterBand`, and can't be
+depended on for long, nor should it ever be modified by the caller.)
 """
-function getcolortable(rb::RasterBand)
-    ColorTable(GDALColorTable(GDAL.getrastercolortable(rb.ptr)))
+function unsafe_getcolortable(rb::RasterBand)
+    result = ColorTable(GDALColorTable(GDAL.getrastercolortable(rb.ptr)))
+    if result.ptr == C_NULL
+        return result
+    else
+        return unsafe_clone(result)
+    end
 end
 
 """
