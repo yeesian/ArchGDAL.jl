@@ -286,8 +286,11 @@ the value otherwise the zeroth child will be assigned the value.
 * `value`: (optional) to be assigned to node, such as "meter". This may be left
             out if you just want to force creation of the intermediate path.
 """
-function setattrvalue!(spref::AbstractSpatialRef, path::AbstractString,
-                       value::AbstractString)
+function setattrvalue!(
+        spref::AbstractSpatialRef,
+        path::AbstractString,
+        value::AbstractString
+    )
     result = GDAL.setattrvalue(spref.ptr, path, value)
     @ogrerr result "Failed to set attribute $path to value $value"
     value
@@ -326,8 +329,12 @@ Create transformation object.
 ### Returns
 NULL on failure or a ready to use transformation object.
 """
-unsafe_createcoordtrans(source::AbstractSpatialRef, target::AbstractSpatialRef) =
+function unsafe_createcoordtrans(
+        source::AbstractSpatialRef,
+        target::AbstractSpatialRef
+    )
     CoordTransform(GDAL.octnewcoordinatetransformation(source.ptr, target.ptr))
+end
 
 "OGRCoordinateTransformation destructor."
 function destroy(obj::CoordTransform)
@@ -347,10 +354,10 @@ Transform points from source to destination space.
 `true` on success, or `false` if some or all points fail to transform.
 """
 function transform!(
-    obj::CoordTransform,
-    xvertices::Vector{Cdouble},
-    yvertices::Vector{Cdouble},
-    zvertices::Vector{Cdouble}
+        obj::CoordTransform,
+        xvertices::Vector{Cdouble},
+        yvertices::Vector{Cdouble},
+        zvertices::Vector{Cdouble}
     )
     # The method TransformEx() allows extended success information to be captured
     # indicating which points failed to transform.
