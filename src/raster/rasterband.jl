@@ -233,7 +233,7 @@ returned color table remains owned by the `GDALRasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.
 """
 function getcolortable(rb::RasterBand)
-    ColorTable(GDALColorTable(GDAL.getrastercolortable(rb.ptr)), raster = rb)
+    ColorTable(GDALColorTable(GDAL.getrastercolortable(rb.ptr)))
 end
 
 """

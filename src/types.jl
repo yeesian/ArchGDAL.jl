@@ -34,12 +34,14 @@ end
 
 mutable struct Dataset <: AbstractDataset
     ptr::GDALDataset
+
+    Dataset(ptr::GDALDataset = GDALDataset(C_NULL)) = new(ptr)
 end
 
 mutable struct IDataset <: AbstractDataset
     ptr::GDALDataset
 
-    function IDataset(ptr::GDALDataset)
+    function IDataset(ptr::GDALDataset = GDALDataset(C_NULL))
         dataset = new(ptr)
         finalizer(destroy, dataset)
         return dataset
@@ -78,37 +80,24 @@ mutable struct StyleTool
     ptr::GDALStyleTool
 end
 
-mutable struct FeatureLayer{D <: AbstractDataset}
+mutable struct FeatureLayer
     ptr::GDALFeatureLayer
-    ownedby::D
-end
+    ownedby::AbstractDataset
 
-function FeatureLayer(ptr::GDALFeatureLayer)
-    FeatureLayer(ptr, Dataset(GDALDataset(C_NULL)))
+    function FeatureLayer(
+            ptr::GDALFeatureLayer = GDALFeatureLayer(C_NULL);
+            ownedby::AbstractDataset = Dataset()
+        )
+        new(ptr, ownedby)
+    end
 end
 
 mutable struct Feature
     ptr::GDALFeature
-    ownedbylayer::FeatureLayer
-end
-
-function Feature(
-        ptr::GDALFeature;
-        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
-    )
-    Feature(ptr, layer)
 end
 
 mutable struct FeatureDefn
     ptr::GDALFeatureDefn
-    ownedbylayer::FeatureLayer
-end
-
-function FeatureDefn(
-        ptr::GDALFeatureDefn;
-        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
-    )
-    FeatureDefn(ptr, layer)
 end
 
 mutable struct Geometry <: AbstractGeometry
@@ -118,43 +107,36 @@ end
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
 
-    function IGeometry(
-            ptr::GDALGeometry
-        )
+    function IGeometry(ptr::GDALGeometry)
         geom = new(ptr)
         finalizer(destroy, geom)
         geom
     end
 end
 
-mutable struct RasterBand{D <: AbstractDataset}
+mutable struct RasterBand
     ptr::GDALRasterBand
-    ownedby::D
-end
+    ownedby::AbstractDataset
 
-RasterBand(ptr::GDALRasterBand) = RasterBand(ptr, Dataset(GDALDataset(C_NULL)))
+    function RasterBand(
+            ptr::GDALRasterBand = GDALRasterBand(C_NULL);
+            ownedby::AbstractDataset = Dataset()
+        )
+        new(ptr, ownedby)
+    end
+end
 
 mutable struct SpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
-    ownedbylayer::FeatureLayer
-end
 
-function SpatialRef(
-        ptr::GDALSpatialRef;
-        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
-    )
-    SpatialRef(ptr, layer)
+    SpatialRef(ptr::GDALSpatialRef = GDALSpatialRef(C_NULL)) = new(ptr)
 end
 
 mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
-    ownedbylayer::FeatureLayer
 
-    function ISpatialRef(
-            ptr::GDALSpatialRef;
-            layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
-        )
-        spref = new(ptr, layer)
+    function ISpatialRef(ptr::GDALSpatialRef = GDALSpatialRef(C_NULL))
+        spref = new(ptr)
         finalizer(destroy, spref)
         spref
     end
@@ -162,14 +144,6 @@ end
 
 mutable struct ColorTable
     ptr::GDALColorTable
-    ownedbyraster::RasterBand
-end
-
-function ColorTable(
-        ptr::GDALColorTable;
-        raster::RasterBand = RasterBand(GDALRasterBand(C_NULL))
-    )
-    ColorTable(ptr, raster)
 end
 
 CPLErr = GDAL.CPLErr
