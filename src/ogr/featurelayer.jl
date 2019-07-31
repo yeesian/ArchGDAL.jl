@@ -17,15 +17,13 @@ function getspatialfilter(layer::FeatureLayer)
     end
 end
 
-"""
-Fetch the spatial reference system for this layer.
+"Returns a clone of the spatial reference system for this layer."
+unsafe_getspatialref(layer::FeatureLayer) =
+    SpatialRef(GDAL.clone(GDAL.getspatialref(layer.ptr)))
 
-The returned object is owned by the OGRLayer and should not be modified or
-freed by the application.
-"""
-function getspatialref(layer::FeatureLayer)
-    SpatialRef(GDALSpatialRef(GDAL.getspatialref(layer.ptr)))
-end
+"Returns a clone of the spatial reference system for this layer."
+getspatialref(layer::FeatureLayer) =
+    ISpatialRef(GDAL.clone(GDAL.getspatialref(layer.ptr)))
 
 """
 Set a new spatial filter for the layer, using the geom.
