@@ -397,7 +397,7 @@ The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer) =
-    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i), dataset)
+    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i), ownedby = dataset)
 
 """
 Fetch the feature layer corresponding to the given name.
@@ -405,8 +405,12 @@ Fetch the feature layer corresponding to the given name.
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-getlayer(dataset::AbstractDataset, name::AbstractString) =
-    FeatureLayer(GDAL.datasetgetlayerbyname(dataset.ptr, name), dataset)
+function getlayer(dataset::AbstractDataset, name::AbstractString)
+    FeatureLayer(
+        GDAL.datasetgetlayerbyname(dataset.ptr, name),
+        ownedby = dataset
+    )
+end
 
 """
 Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
@@ -449,7 +453,7 @@ function createlayer(
         options                         = StringList(C_NULL)
     )
     FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
-        geom, options), dataset)
+        geom, options), ownedby = dataset)
 end
 
 """
@@ -473,8 +477,10 @@ function copylayer(
         name::AbstractString;
         options = StringList(C_NULL)
     )
-    FeatureLayer(GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options),
-        dataset)
+    FeatureLayer(
+        GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options),
+        ownedby = dataset
+    )
 end
 
 """
@@ -549,10 +555,16 @@ function unsafe_executesql(
         dialect::AbstractString = "",
         spatialfilter::Geometry = Geometry(GDALGeometry(C_NULL))
     )
-    FeatureLayer(GDALFeatureLayer(GDAL.datasetexecutesql(dataset.ptr, query,
-        spatialfilter.ptr, dialect)), dataset)
+    FeatureLayer(
+        GDALFeatureLayer(GDAL.datasetexecutesql(
+            dataset.ptr,
+            query,
+            spatialfilter.ptr,
+            dialect
+        )),
+        ownedby = dataset
+    )
 end
-
 
 """
 Release results of ExecuteSQL().
@@ -568,12 +580,12 @@ before destroying the GDALDataset may cause errors.
 function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
     GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr)
     layer.ptr = GDALFeatureLayer(C_NULL)
-    layer.ownedby = Dataset(GDALDataset(C_NULL))
+    layer.ownedby = Dataset()
 end
 
 "Fetch a band object for a dataset from its index"
 getband(dataset::AbstractDataset, i::Integer) =
-    RasterBand(GDAL.getrasterband(dataset.ptr, i), dataset)
+    RasterBand(GDAL.getrasterband(dataset.ptr, i), ownedby = dataset)
 
 """
 Fetch the affine transformation coefficients.
@@ -654,12 +666,14 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `progressfunc` a function to call to report progress, or `NULL`.
 * `progressdata` application data to pass to the progress function.
 """
-function buildoverviews!(dataset::AbstractDataset,
-                         overviewlist::Vector{Cint};
-                         bandlist::Vector{Cint}     = Cint[],
-                         resampling::AbstractString = "NEAREST",
-                         progressfunc::Function     = GDAL.C.GDALDummyProgress,
-                         progressdata               = C_NULL)
+function buildoverviews!(
+        dataset::AbstractDataset,
+        overviewlist::Vector{Cint};
+        bandlist::Vector{Cint}     = Cint[],
+        resampling::AbstractString = "NEAREST",
+        progressfunc::Function     = GDAL.C.GDALDummyProgress,
+        progressdata               = C_NULL
+    )
     result = GDAL.buildoverviews(dataset.ptr, resampling, length(overviewlist),
         overviewlist, length(bandlist), bandlist, @cplprogress(progressfunc),
         progressdata)
