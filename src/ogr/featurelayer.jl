@@ -7,10 +7,14 @@ getgeomtype(layer::FeatureLayer) = GDAL.getgeomtype(layer.ptr)
 
 "Returns the current spatial filter for this layer."
 function getspatialfilter(layer::FeatureLayer)
-    Geometry(
-        GDALGeometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr))),
-        layer = layer
-    )
+    result = GDALGeometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr)))
+    if result == C_NULL
+        return IGeometry(result)
+    else
+        # NOTE(yeesian): we make a clone here so that the geometry does not
+        # depend on the FeatureLayer.
+        return IGeometry(GDALGeometry(GDAL.clone(result)))
+    end
 end
 
 """
