@@ -246,7 +246,6 @@ end
 # Untested
 # toISOWKT(geom::Geometry)
 # unsafe_polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
-# setspatialref!(geom::Geometry, spatialref::SpatialRef)
 # getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
 # transform!(geom::Geometry, coordtransform::CoordTransform)
 # transform!(geom::Geometry, spatialref::SpatialRef)
