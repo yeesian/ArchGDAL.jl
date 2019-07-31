@@ -130,17 +130,15 @@ end
 
 mutable struct Geometry <: AbstractGeometry
     ptr::GDALGeometry
+
+    Geometry(ptr::GDALGeometry = GDALGeometry(C_NULL)) = new(ptr)
 end
 
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
-    spatialref::ISpatialRef
 
-    function IGeometry(
-            ptr::GDALGeometry,
-            spatialref::ISpatialRef = ISpatialRef()
-        )
-        geom = new(ptr, spatialref)
+    function IGeometry(ptr::GDALGeometry = GDALGeometry(C_NULL))
+        geom = new(ptr)
         finalizer(destroy, geom)
         geom
     end
