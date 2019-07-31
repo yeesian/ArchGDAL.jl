@@ -429,7 +429,7 @@ end
 This function attempts to create a new layer on the dataset with the indicated
 name, coordinate system, geometry type.
 
-The papszOptions argument can be used to control driver specific creation
+The `options` argument can be used to control driver specific creation
 options. These options are normally documented in the format specific
 documentation.
 
@@ -437,10 +437,10 @@ documentation.
 * `dataset`: the dataset
 * `name`: the name for the new layer. This should ideally not match any
     existing layer on the datasource.
-
-### Optional Parameters
 * `spatialref`: the coordinate system to use for the new layer, or `NULL`
     (default) if no coordinate system is available.
+
+### Optional Parameters
 * `geom`: the geometry type for the layer. Use wkbUnknown (default) if
     there are no constraints on the types geometry to be written.
 * `options`: a StringList of name=value (driver-specific) options.
@@ -448,12 +448,26 @@ documentation.
 function createlayer(
         dataset::AbstractDataset,
         name::AbstractString;
-        spatialref::AbstractSpatialRef  = SpatialRef(GDALSpatialRef(C_NULL)),
         geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
         options                         = StringList(C_NULL)
     )
-    FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
-        geom, options), ownedby = dataset)
+    FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name,
+        GDALSpatialRef(C_NULL), geom, options), ownedby = dataset)
+end
+
+function createlayer(
+        f::Function,
+        dataset::AbstractDataset,
+        name::AbstractString,
+        spatialref::AbstractSpatialRef;
+        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
+        options                         = StringList(C_NULL)
+    )
+    # NOTE(yeesian): The driver might only increase the reference counter of
+    # the spatialref to take ownership, and not make a full copy. Therefore,
+    # we need to enclose it within a do-block to be safe.
+    f(FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name,
+        spref.ptr, geom, options), ownedby = dataset))
 end
 
 """
