@@ -12,7 +12,7 @@ unsafe_fromWKB(data, args...) = unsafe_fromWKB(Geometry, data, args...)
 function unsafe_fromWKB(
         ::Type{G},
         data,
-        spatialref::AbstractSpatialRef = SpatialRef(C_NULL)
+        spatialref::AbstractSpatialRef = SpatialRef(GDALSpatialRef(C_NULL))
     ) where G <: AbstractGeometry
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
@@ -43,7 +43,7 @@ unsafe_fromWKT(data::Vector{String}, args...) = unsafe_fromWKT(Geometry, data, a
 function unsafe_fromWKT(
         ::Type{G},
         data::Vector{String},
-        spatialref::AbstractSpatialRef = SpatialRef(C_NULL)
+        spatialref::AbstractSpatialRef = SpatialRef(GDALSpatialRef(C_NULL))
     ) where G <: AbstractGeometry
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,

@@ -444,7 +444,7 @@ documentation.
 function createlayer(
         dataset::AbstractDataset,
         name::AbstractString;
-        spatialref::AbstractSpatialRef  = SpatialRef(C_NULL),
+        spatialref::AbstractSpatialRef  = SpatialRef(GDALSpatialRef(C_NULL)),
         geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
         options                         = StringList(C_NULL)
     )
@@ -547,10 +547,10 @@ function unsafe_executesql(
         dataset::AbstractDataset,
         query::AbstractString;
         dialect::AbstractString = "",
-        spatialfilter::Geometry = Geometry(C_NULL)
+        spatialfilter::Geometry = Geometry(GDALGeometry(C_NULL))
     )
-    FeatureLayer(GDAL.datasetexecutesql(dataset.ptr, query, spatialfilter.ptr,
-        dialect), dataset)
+    FeatureLayer(GDALFeatureLayer(GDAL.datasetexecutesql(dataset.ptr, query,
+        spatialfilter.ptr, dialect)), dataset)
 end
 
 
@@ -568,7 +568,7 @@ before destroying the GDALDataset may cause errors.
 function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
     GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr)
     layer.ptr = GDALFeatureLayer(C_NULL)
-    layer.ownedby = Dataset(C_NULL)
+    layer.ownedby = Dataset(GDALDataset(C_NULL))
 end
 
 "Fetch a band object for a dataset from its index"
