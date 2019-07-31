@@ -160,12 +160,12 @@ end
             AG.createfeature(layer) do feature
                 AG.setfield!(feature, 0, name)
                 AG.createpolygon() do poly
-                    ring = AG.unsafe_createlinearring()
+                    ring = AG.createlinearring()
                     for xy in map(split, coordlist)
                         AG.addpoint!(ring, parse(Float64, xy[1]),
                                            parse(Float64, xy[2]))
                     end
-                    AG.addgeomdirectly!(poly, ring)
+                    AG.addgeom!(poly, ring)
                     AG.setgeom!(feature, poly)    
         end end end
         @test sprint(print, layer) == """
