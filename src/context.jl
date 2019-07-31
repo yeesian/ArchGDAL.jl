@@ -41,23 +41,38 @@ end
 
 function executesql(f::Function, dataset::Dataset, args...)
     result = unsafe_executesql(dataset, args...)
-    try f(result) finally releaseresultset(dataset, result) end
+    try
+        f(result)
+    finally
+        releaseresultset(dataset, result)
+    end
 end
 
 function createfeature(f::Function, layer::FeatureLayer)
     feature = unsafe_createfeature(layer)
-    try f(feature); createfeature!(layer, feature) finally destroy(feature) end
+    try
+        f(feature)
+        writefeature!(layer, feature)
+    finally
+        destroy(feature)
+    end
 end
 
 function createfeature(f::Function, featuredefn::FeatureDefn)
-    feature = unsafe_createfeature(featuredefn); reference(featuredefn)
+    feature = unsafe_createfeature(featuredefn)
+    reference(featuredefn)
     # the additional reference & dereference here is to deal with the case
     # where you start by (1) creating a featuredefn (0 references)
     # before (2) using it to create a feature here.
     # if we do not artificially increase the reference, then destroy(feature)
     # will release the featuredefn, when we're going to handle it ourselves
     # later. Therefore we dereference (rather than release) the featuredefn.
-    try f(feature) finally destroy(feature); dereference(featuredefn) end
+    try
+        f(feature)
+    finally
+        destroy(feature)
+        dereference(featuredefn)
+    end
 end
 
 for gdalfunc in (
