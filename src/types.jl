@@ -28,10 +28,6 @@ abstract type AbstractSpatialRef end
 abstract type AbstractDataset end
     # needs to have a `ptr::GDALDataset` attribute
 
-mutable struct ColorTable
-    ptr::GDALColorTable
-end
-
 mutable struct CoordTransform
     ptr::GDALCoordTransform
 end
@@ -50,6 +46,38 @@ mutable struct IDataset <: AbstractDataset
     end
 end
 
+mutable struct Driver
+    ptr::GDALDriver
+end
+
+mutable struct Field
+    ptr::GDALField
+end
+
+mutable struct FieldDefn
+    ptr::GDALFieldDefn
+end
+
+mutable struct GeomFieldDefn
+    ptr::GDALGeomFieldDefn
+end
+
+mutable struct RasterAttrTable
+    ptr::GDALRasterAttrTable
+end
+
+mutable struct StyleManager
+    ptr::GDALStyleManager
+end
+
+mutable struct StyleTable
+    ptr::GDALStyleTable
+end
+
+mutable struct StyleTool
+    ptr::GDALStyleTool
+end
+
 mutable struct FeatureLayer{D <: AbstractDataset}
     ptr::GDALFeatureLayer
     ownedby::D
@@ -57,10 +85,6 @@ end
 
 function FeatureLayer(ptr::GDALFeatureLayer)
     FeatureLayer(ptr, Dataset(GDALDataset(C_NULL)))
-end
-
-mutable struct Driver
-    ptr::GDALDriver
 end
 
 mutable struct Feature
@@ -87,14 +111,6 @@ function FeatureDefn(
     FeatureDefn(ptr, layer)
 end
 
-mutable struct Field
-    ptr::GDALField
-end
-
-mutable struct FieldDefn
-    ptr::GDALFieldDefn
-end
-
 mutable struct Geometry <: AbstractGeometry
     ptr::GDALGeometry
     ownedbylayer::FeatureLayer
@@ -119,14 +135,6 @@ mutable struct IGeometry <: AbstractGeometry
         finalizer(destroy, geom)
         geom
     end
-end
-
-mutable struct GeomFieldDefn
-    ptr::GDALGeomFieldDefn
-end
-
-mutable struct RasterAttrTable
-    ptr::GDALRasterAttrTable
 end
 
 mutable struct RasterBand{D <: AbstractDataset}
@@ -162,16 +170,16 @@ mutable struct ISpatialRef <: AbstractSpatialRef
     end
 end
 
-mutable struct StyleManager
-    ptr::GDALStyleManager
+mutable struct ColorTable
+    ptr::GDALColorTable
+    ownedbyraster::RasterBand
 end
 
-mutable struct StyleTable
-    ptr::GDALStyleTable
-end
-
-mutable struct StyleTool
-    ptr::GDALStyleTool
+function ColorTable(
+        ptr::GDALColorTable;
+        raster::RasterBand = RasterBand(GDALRasterBand(C_NULL))
+    )
+    ColorTable(ptr, raster)
 end
 
 CPLErr = GDAL.CPLErr

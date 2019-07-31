@@ -232,7 +232,9 @@ If there is no associated color table, the return result is `NULL`. The
 returned color table remains owned by the `GDALRasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.
 """
-getcolortable(rb::RasterBand) = ColorTable(GDAL.getrastercolortable(rb.ptr))
+function getcolortable(rb::RasterBand)
+    ColorTable(GDALColorTable(GDAL.getrastercolortable(rb.ptr)), raster = rb)
+end
 
 """
 Set the raster color table.
