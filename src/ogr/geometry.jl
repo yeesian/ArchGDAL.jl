@@ -702,11 +702,13 @@ Fetch a point in line string or a point geometry, at index i.
 ### Parameters
 * `i`: the vertex to fetch, from 0 to getNumPoints()-1, zero for a point.
 """
-getpoint!(geom::AbstractGeometry, i::Integer, x, y, z) =
-    (GDAL.getpoint(geom.ptr, i, x, y, z); (x[], y[], z[]))
-
 getpoint(geom::AbstractGeometry, i::Integer) =
     getpoint!(geom, i, Ref{Cdouble}(), Ref{Cdouble}(), Ref{Cdouble}())
+
+function getpoint!(geom::AbstractGeometry, i::Integer, x, y, z)
+    GDAL.getpoint(geom.ptr, i, x, y, z)
+    (x[], y[], z[])
+end
 
 """
 Set number of points in a geometry.
@@ -715,8 +717,10 @@ Set number of points in a geometry.
 * `geom`: the geometry.
 * `n`: the new number of points for geometry.
 """
-setpointcount!(geom::AbstractGeometry, n::Integer) =
-    (GDAL.setpointcount(geom.ptr, n); geom)
+function setpointcount!(geom::AbstractGeometry, n::Integer)
+    GDAL.setpointcount(geom.ptr, n)
+    geom
+end
 
 """
 Set the location of a vertex in a point or linestring geometry.
@@ -728,8 +732,16 @@ Set the location of a vertex in a point or linestring geometry.
 * `y`: input Y coordinate to assign.
 * `z`: input Z coordinate to assign (defaults to zero).
 """
-setpoint!(geom::AbstractGeometry, i::Integer, x::Real, y::Real, z::Real) =
-    (GDAL.setpoint(geom.ptr, i, x, y, z); geom)
+function setpoint!(
+        geom::AbstractGeometry,
+        i::Integer,
+        x::Real,
+        y::Real,
+        z::Real
+    )
+    GDAL.setpoint(geom.ptr, i, x, y, z)
+    geom
+end
 
 """
 Set the location of a vertex in a point or linestring geometry.
@@ -740,8 +752,10 @@ Set the location of a vertex in a point or linestring geometry.
 * `x`: input X coordinate to assign.
 * `y`: input Y coordinate to assign.
 """
-setpoint!(geom::AbstractGeometry, i::Integer, x::Real, y::Real) =
-    (GDAL.setpoint_2d(geom.ptr, i, x, y); geom)
+function setpoint!(geom::AbstractGeometry, i::Integer, x::Real, y::Real)
+    GDAL.setpoint_2d(geom.ptr, i, x, y)
+    geom
+end
 
 """
 Add a point to a geometry (line string or point).
@@ -752,8 +766,10 @@ Add a point to a geometry (line string or point).
 * `y`: y coordinate of point to add.
 * `z`: z coordinate of point to add.
 """
-addpoint!(geom::AbstractGeometry, x::Real, y::Real, z::Real) =
-    (GDAL.addpoint(geom.ptr, x, y, z); geom)
+function addpoint!(geom::AbstractGeometry, x::Real, y::Real, z::Real)
+    GDAL.addpoint(geom.ptr, x, y, z)
+    geom
+end
 
 """
 Add a point to a geometry (line string or point).
@@ -763,8 +779,10 @@ Add a point to a geometry (line string or point).
 * `x`: x coordinate of point to add.
 * `y`: y coordinate of point to add.
 """
-addpoint!(geom::AbstractGeometry, x::Real, y::Real) =
-    (GDAL.addpoint_2d(geom.ptr, x, y); geom)
+function addpoint!(geom::AbstractGeometry, x::Real, y::Real)
+    GDAL.addpoint_2d(geom.ptr, x, y)
+    geom
+end
 
 # """
 #     OGR_G_SetPoints(OGRGeometryH hGeom,
@@ -869,9 +887,9 @@ interior rings.
 * `subgeom`: geometry to add to the existing geometry.
 """
 function addgeomdirectly!(
-        geomcontainer::G,
+        geomcontainer::AbstractGeometry,
         subgeom::AbstractGeometry
-    ) where G <: AbstractGeometry
+    )
     result = GDAL.addgeometrydirectly(geomcontainer.ptr, subgeom.ptr)
     @ogrerr result "Failed to add geometry. The geometry type could be illegal"
     geomcontainer
