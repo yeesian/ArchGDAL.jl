@@ -113,25 +113,15 @@ end
 
 mutable struct Geometry <: AbstractGeometry
     ptr::GDALGeometry
-    ownedbylayer::FeatureLayer
-end
-
-function Geometry(
-        ptr::GDALGeometry;
-        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
-    )
-    Geometry(ptr, layer)
 end
 
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
-    ownedbylayer::FeatureLayer
 
     function IGeometry(
-            ptr::GDALGeometry;
-            layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+            ptr::GDALGeometry
         )
-        geom = new(ptr, layer)
+        geom = new(ptr)
         finalizer(destroy, geom)
         geom
     end
