@@ -55,11 +55,15 @@ In the future this may be generalized.
 Note that only the last spatial filter set is applied, even if several
 successive calls are done with different iGeomField values.
 """
-setspatialfilter!(layer::FeatureLayer, geom::Geometry) =
-    (GDAL.setspatialfilter(layer.ptr, geom.ptr); layer)
+function setspatialfilter!(layer::FeatureLayer, geom::Geometry)
+    GDAL.setspatialfilter(layer.ptr, geom.ptr)
+    layer
+end
 
-clearspatialfilter!(layer::FeatureLayer) =
-    (GDAL.setspatialfilter(layer.ptr, GDALGeometry(C_NULL)); layer)
+function clearspatialfilter!(layer::FeatureLayer)
+    GDAL.setspatialfilter(layer.ptr, GDALGeometry(C_NULL))
+    layer
+end
 
 """
 Set a new rectangular spatial filter for the layer.
@@ -113,11 +117,15 @@ generalized.
     indicating that the current spatial filter should be cleared, but
     no new one instituted.
 """
-setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry) =
-    (GDAL.setspatialfilterex(layer.ptr, i, geom.ptr); layer)
+function setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry)
+    GDAL.setspatialfilterex(layer.ptr, i, geom.ptr)
+    layer
+end
 
-clearspatialfilter!(layer::FeatureLayer, i::Integer) =
-    (GDAL.setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL)); layer)
+function clearspatialfilter!(layer::FeatureLayer, i::Integer)
+    GDAL.setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL))
+    layer
+end
 
 """
 Set a new rectangular spatial filter.
