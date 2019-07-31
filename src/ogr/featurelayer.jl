@@ -24,7 +24,7 @@ The returned object is owned by the OGRLayer and should not be modified or
 freed by the application.
 """
 function getspatialref(layer::FeatureLayer)
-    SpatialRef(GDALSpatialRef(GDAL.getspatialref(layer.ptr)), layer = layer)
+    SpatialRef(GDALSpatialRef(GDAL.getspatialref(layer.ptr)))
 end
 
 """
@@ -175,7 +175,7 @@ end
 
 function clearattributefilter!(layer::FeatureLayer)
     result = GDAL.setattributefilter(layer.ptr, C_NULL)
-    @ogrerr result """OGRErr $result: Failed to clear attribute query."""
+    @ogrerr result "OGRErr $result: Failed to clear attribute query."
     layer
 end
 
@@ -210,7 +210,7 @@ reading may or may not be valid after that operation and a call to
 `ResetReading()` might be needed.
 """
 unsafe_nextfeature(layer::FeatureLayer) =
-    Feature(GDALFeature(GDAL.getnextfeature(layer.ptr)), layer = layer)
+    Feature(GDALFeature(GDAL.getnextfeature(layer.ptr)))
 
 """
 Move read cursor to the `i`-th feature in the current resultset.
@@ -260,7 +260,7 @@ interrupted by a OGR_L_GetFeature() call.
 The returned feature should be free with OGR_F_Destroy().
 """
 unsafe_getfeature(layer::FeatureLayer, i::Integer) =
-    Feature(GDALFeature(GDAL.getfeature(layer.ptr, i)), layer = layer)
+    Feature(GDALFeature(GDAL.getfeature(layer.ptr, i)))
 
 """
 Rewrite an existing feature.
@@ -278,7 +278,6 @@ OGRERR_NONE if the operation works, otherwise an appropriate error code
 function setfeature!(layer::FeatureLayer, feature::Feature)
     result = GDAL.setfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to set feature."
-    feature.ownedbylayer = layer
     layer
 end
 
@@ -294,7 +293,6 @@ will have been updated with the new feature id.
 function writefeature!(layer::FeatureLayer, feature::Feature)
     result = GDAL.createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
-    feature.ownedbylayer = layer
     layer
 end
 
