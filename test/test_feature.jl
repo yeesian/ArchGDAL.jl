@@ -56,7 +56,6 @@ AG.read("data/point.geojson") do dataset
         AG.setstylestring!(f, "NewName")
         @test AG.getstylestring(f) == "NewName"
 
-        AG.setstyletabledirectly!(f, AG.unsafe_createstyletable())
         AG.createstyletable() do st
             AG.setstyletable!(f, st)
         end
