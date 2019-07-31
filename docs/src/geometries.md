@@ -68,7 +68,6 @@ The following methods are commonly used for retrieving elements of a geometry.
 
 The following methods are commonly used for modifying or adding to a geometry.
 * `AG.setcoorddim!(geom, dim)`
-* `AG.setspatialref!(geom, spatialref)`
 * `AG.setpointcount!(geom, n)`
 * `AG.setpoint!(geom, i, x, y)`
 * `AG.setpoint!(geom, i, x, y, z)`
@@ -126,7 +125,6 @@ The following methods modifies the first argument `geom`.
 * `AG.setcoorddim!(geom, dim)`: sets the explicit coordinate dimension.
 * `AG.flattento2d!(geom)`: Convert geometry to strictly 2D.
 * `AG.closerings!(geom)`: Force rings to be closed by adding the start point to the end.
-* `AG.setspatialref!(geom, spatialref)`: Assign spatial reference to this object.
 * `AG.transform!(geom, coordtransform)`: Apply coordinate transformation to geometry.
 * `AG.transform!(geom, spatialref)`: Transform geometry to new spatial reference system.
 * `AG.segmentize!(geom, maxlength)`: Modify the geometry such it has no segment longer than the given distance.
