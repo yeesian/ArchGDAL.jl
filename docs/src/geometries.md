@@ -126,7 +126,6 @@ The following methods modifies the first argument `geom`.
 * `AG.flattento2d!(geom)`: Convert geometry to strictly 2D.
 * `AG.closerings!(geom)`: Force rings to be closed by adding the start point to the end.
 * `AG.transform!(geom, coordtransform)`: Apply coordinate transformation to geometry.
-* `AG.transform!(geom, spatialref)`: Transform geometry to new spatial reference system.
 * `AG.segmentize!(geom, maxlength)`: Modify the geometry such it has no segment longer than the given distance.
 * `AG.empty!(geom)`: Clear geometry information.
 

@@ -248,4 +248,3 @@ end
 # unsafe_polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
 # getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
 # transform!(geom::Geometry, coordtransform::CoordTransform)
-# transform!(geom::Geometry, spatialref::SpatialRef)

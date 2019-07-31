@@ -4,14 +4,12 @@ binary (WKB) representation.
 
 ### Parameters
 * `data`: pointer to the input BLOB data.
-* `spatialref`: handle to the spatial reference to be assigned to the created
-    geometry object. This may be `NULL` (default).
 """
-function fromWKB(data, spatialref::SpatialRef)
+function fromWKB(data)
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
-        spatialref.ptr::GDALSpatialRef,
+        C_NULL::GDALSpatialRef,
         geom::Ptr{GDALGeometry},
         sizeof(data)::Cint
     )
@@ -19,26 +17,11 @@ function fromWKB(data, spatialref::SpatialRef)
     IGeometry(geom[])
 end
 
-function fromWKB(data, spatialref::ISpatialRef = ISpatialRef())
+function unsafe_fromWKB(data)
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
-        spatialref.ptr::GDALSpatialRef,
-        geom::Ptr{GDALGeometry},
-        sizeof(data)::Cint
-    )
-    @ogrerr result "Failed to create geometry from WKB"
-    IGeometry(geom[], spatialref)
-end
-
-function unsafe_fromWKB(
-        data,
-        spatialref::AbstractSpatialRef = SpatialRef(GDALSpatialRef(C_NULL))
-    )
-    geom = Ref{GDALGeometry}()
-    result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
-        data::Ptr{Cuchar},
-        spatialref.ptr::GDALSpatialRef,
+        C_NULL::GDALSpatialRef,
         geom::Ptr{GDALGeometry},
         sizeof(data)::Cint
     )
@@ -54,39 +37,23 @@ Create a geometry object of the appropriate type from its well known text
 * `data`: input zero terminated string containing WKT representation of the
     geometry to be created. The pointer is updated to point just beyond that
     last character consumed.
-* `spatialref`: handle to the spatial reference to be assigned to the created
-    geometry object. This may be `NULL` (default).
 """
-function fromWKT(data::Vector{String}, spatialref::SpatialRef)
+function fromWKT(data::Vector{String})
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
-        spatialref.ptr::GDALSpatialRef,
+        C_NULL::GDALSpatialRef,
         geom::Ptr{GDALGeometry}
     )
     @ogrerr result "Failed to create geometry from WKT"
     IGeometry(geom[])
 end
 
-function fromWKT(data::Vector{String}, spatialref::ISpatialRef = ISpatialRef())
+function unsafe_fromWKT(data::Vector{String})
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
-        spatialref.ptr::GDALSpatialRef,
-        geom::Ptr{GDALGeometry}
-    )
-    @ogrerr result "Failed to create geometry from WKT"
-    IGeometry(geom[], spatialref)
-end
-
-function unsafe_fromWKT(
-        data::Vector{String},
-        spatialref::AbstractSpatialRef = SpatialRef(GDALSpatialRef(C_NULL))
-    )
-    geom = Ref{GDALGeometry}()
-    result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
-        data::StringList,
-        spatialref.ptr::GDALSpatialRef,
+        C_NULL::GDALSpatialRef,
         geom::Ptr{GDALGeometry}
     )
     @ogrerr result "Failed to create geometry from WKT"
@@ -355,18 +322,34 @@ function transform!(geom::AbstractGeometry, coordtransform::CoordTransform)
     geom
 end
 
-"""
-Transform geometry to new spatial reference system.
+# """
+# Transform geometry to new spatial reference system.
 
-### Parameters
-* `geom`: handle on the geometry to apply the transformation.
-* `spatialref`: Target spatial reference system.
-"""
-function transform!(geom::AbstractGeometry, spatialref::AbstractSpatialRef)
-    result = GDAL.transformto(geom.ptr, spatialref.ptr)
-    @ogrerr result "Failed to transform geometry to the new SRS"
-    geom
-end
+# This function will transform the coordinates of a geometry from their
+# current spatial reference system to a new target spatial reference
+# system. Normally this means reprojecting the vectors, but it could
+# include datum shifts, and changes of units.
+
+# This function will only work if the geometry already has an assigned
+# spatial reference system, and if it is transformable to the target
+# coordinate system.
+
+# Because this function requires internal creation and initialization of
+# an OGRCoordinateTransformation object it is significantly more
+# expensive to use this function to transform many geometries than it is
+# to create the OGRCoordinateTransformation in advance, and call
+# transform() with that transformation. This function exists primarily
+# for convenience when only transforming a single geometry.
+
+# ### Parameters
+# * `geom`: handle on the geometry to apply the transformation.
+# * `spatialref`: Target spatial reference system.
+# """
+# function transform!(geom::AbstractGeometry, spatialref::AbstractSpatialRef)
+#     result = GDAL.transformto(geom.ptr, spatialref.ptr)
+#     @ogrerr result "Failed to transform geometry to the new SRS"
+#     geom
+# end
 
 """
 Compute a simplified geometry.
