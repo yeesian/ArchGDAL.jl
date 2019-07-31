@@ -617,28 +617,28 @@ an internal feature geometry. This object should not be modified.
 getgeomfield(feature::Feature, i::Integer) =
     Geometry(GDAL.getgeomfieldref(feature.ptr, i))
 
-"""
-Set feature geometry of a specified geometry field.
+# """
+# Set feature geometry of a specified geometry field.
 
-This function updates the features geometry, and operate exactly as
-SetGeomField(), except that this function assumes ownership of the passed
-geometry (even in case of failure of that function).
+# This function updates the features geometry, and operate exactly as
+# SetGeomField(), except that this function assumes ownership of the passed
+# geometry (even in case of failure of that function).
 
-### Parameters
-* `feature`: the feature on which to apply the geometry.
-* `i`: geometry field to set.
-* `geom`: the new geometry to apply to feature.
+# ### Parameters
+# * `feature`: the feature on which to apply the geometry.
+# * `i`: geometry field to set.
+# * `geom`: the new geometry to apply to feature.
 
-### Returns
-OGRERR_NONE if successful, or OGRERR_FAILURE if the index is invalid, or
-OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type is illegal for the
-OGRFeatureDefn (checking not yet implemented).
-"""
-function setgeomfielddirectly!(feature::Feature, i::Integer, geom::Geometry)
-    result = GDAL.setgeomfielddirectly(feature.ptr, i, geom.ptr)
-    @ogrerr result "OGRErr $result: Failed to set feature geometry directly"
-    feature
-end
+# ### Returns
+# OGRERR_NONE if successful, or OGRERR_FAILURE if the index is invalid, or
+# OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type is illegal for the
+# OGRFeatureDefn (checking not yet implemented).
+# """
+# function setgeomfielddirectly!(feature::Feature, i::Integer, geom::Geometry)
+#     result = GDAL.setgeomfielddirectly(feature.ptr, i, geom.ptr)
+#     @ogrerr result "OGRErr $result: Failed to set feature geometry directly"
+#     feature
+# end
 
 """
 Set feature geometry of a specified geometry field.
