@@ -50,24 +50,42 @@ mutable struct IDataset <: AbstractDataset
     end
 end
 
+mutable struct FeatureLayer{D <: AbstractDataset}
+    ptr::GDALFeatureLayer
+    ownedby::D
+end
+
+function FeatureLayer(ptr::GDALFeatureLayer)
+    FeatureLayer(ptr, Dataset(GDALDataset(C_NULL)))
+end
+
 mutable struct Driver
     ptr::GDALDriver
 end
 
 mutable struct Feature
     ptr::GDALFeature
+    ownedbylayer::FeatureLayer
+end
+
+function Feature(
+        ptr::GDALFeature;
+        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+    )
+    Feature(ptr, layer)
 end
 
 mutable struct FeatureDefn
     ptr::GDALFeatureDefn
+    ownedbylayer::FeatureLayer
 end
 
-mutable struct FeatureLayer{D <: AbstractDataset}
-    ptr::GDALFeatureLayer
-    ownedby::D
+function FeatureDefn(
+        ptr::GDALFeatureDefn;
+        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+    )
+    FeatureDefn(ptr, layer)
 end
-
-FeatureLayer(ptr::GDALFeatureLayer) = FeatureLayer(ptr, Dataset(C_NULL))
 
 mutable struct Field
     ptr::GDALField
@@ -79,13 +97,25 @@ end
 
 mutable struct Geometry <: AbstractGeometry
     ptr::GDALGeometry
+    ownedbylayer::FeatureLayer
+end
+
+function Geometry(
+        ptr::GDALGeometry;
+        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+    )
+    Geometry(ptr, layer)
 end
 
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
+    ownedbylayer::FeatureLayer
 
-    function IGeometry(ptr::GDALGeometry)
-        geom = new(ptr)
+    function IGeometry(
+            ptr::GDALGeometry;
+            layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+        )
+        geom = new(ptr, layer)
         finalizer(destroy, geom)
         geom
     end
@@ -104,17 +134,29 @@ mutable struct RasterBand{D <: AbstractDataset}
     ownedby::D
 end
 
-RasterBand(ptr::GDALRasterBand) = RasterBand(ptr, Dataset(C_NULL))
+RasterBand(ptr::GDALRasterBand) = RasterBand(ptr, Dataset(GDALDataset(C_NULL)))
 
 mutable struct SpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
+    ownedbylayer::FeatureLayer
+end
+
+function SpatialRef(
+        ptr::GDALSpatialRef;
+        layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+    )
+    SpatialRef(ptr, layer)
 end
 
 mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
+    ownedbylayer::FeatureLayer
 
-    function ISpatialRef(ptr::GDALSpatialRef)
-        spref = new(ptr)
+    function ISpatialRef(
+            ptr::GDALSpatialRef;
+            layer::FeatureLayer = FeatureLayer(GDALFeatureLayer(C_NULL))
+        )
+        spref = new(ptr, layer)
         finalizer(destroy, spref)
         spref
     end
