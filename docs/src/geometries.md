@@ -75,7 +75,6 @@ The following methods are commonly used for modifying or adding to a geometry.
 * `AG.addpoint!(geom, x, y)`
 * `AG.addpoint!(geom, x, y, z)`
 * `AG.addgeom!(geom1, geom2)`
-* `AG.addgeomdirectly!(geom1, geom2)`
 * `AG.removegeom!(geom, i)`
 * `AG.removeallgeoms!(geom)`
 
@@ -167,8 +166,7 @@ The following methods do not mutate the input geomteries `g1` and `g2`.
 * `AG.symdifference(g1, g2)`
 
 ### Mutable Operations
-The following methods modifies the first argument `g1`.
+The following method modifies the first argument `g1`.
 
 * `AG.addgeom!(g1, g2)`
-* `AG.addgeomdirectly!(g1, g2)`
 
