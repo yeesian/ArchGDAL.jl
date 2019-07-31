@@ -17,32 +17,6 @@ inappropriate.
 """
 destroy(feature::Feature) = (GDAL.destroy(feature.ptr); feature.ptr = C_NULL)
 
-# NOTE(yeesian): `setgeomdirectly!` is disabled to prevent the following gotcha
-# ```
-# 1) geom = ...
-# 2) createfeature(...) do f
-#        setgeomdirectly!(feature, geom)
-#    end
-# 3) # now geom is invalidated and will throw an error if you use it.
-# ```
-#
-# """
-# Set feature geometry.
-# 
-# This method updates the features geometry, and operate exactly as SetGeometry(),
-# except that this method assumes ownership of the passed geometry (even in case
-# of failure of that function).
-# 
-# ### Returns
-# OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry
-# type is illegal for the OGRFeatureDefn (checking not yet implemented).
-# """
-# function setgeomdirectly!(feature::Feature, geom::Geometry)
-#     result = GDAL.setgeometrydirectly(feature.ptr, geom.ptr)
-#     @ogrerr result "OGRErr $result: Failed to set feature geometry."
-#     geom.ownedby = feature
-# end
-#
 """
 Set feature geometry.
 
@@ -63,12 +37,7 @@ function setgeom!(feature::Feature, geom::AbstractGeometry)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
 end
 
-"Fetch a handle to internal feature geometry. It should not be modified."
-function unsafe_getgeom(feature::Feature)
-    Geometry(GDAL.getgeometryref(feature.ptr))
-end
-
-"Returns the geometry corresponding to the feature."
+"Returns a clone of the geometry corresponding to the feature."
 getgeom(feature::Feature) =
     IGeometry(GDAL.clone(GDAL.getgeometryref(feature.ptr)))
 
@@ -608,37 +577,14 @@ getgeomfieldindex(feature::Feature, name::AbstractString="") =
 Fetch pointer to the feature geometry.
 
 ### Parameters
-* `feature`: handle to the feature to get geometry from.
+* `feature`: the feature to get geometry from.
 * `i`: geometry field to get.
 
 ### Returns
-an internal feature geometry. This object should not be modified.
+a clone of the feature geometry.
 """
 getgeomfield(feature::Feature, i::Integer) =
-    Geometry(GDAL.getgeomfieldref(feature.ptr, i))
-
-# """
-# Set feature geometry of a specified geometry field.
-
-# This function updates the features geometry, and operate exactly as
-# SetGeomField(), except that this function assumes ownership of the passed
-# geometry (even in case of failure of that function).
-
-# ### Parameters
-# * `feature`: the feature on which to apply the geometry.
-# * `i`: geometry field to set.
-# * `geom`: the new geometry to apply to feature.
-
-# ### Returns
-# OGRERR_NONE if successful, or OGRERR_FAILURE if the index is invalid, or
-# OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type is illegal for the
-# OGRFeatureDefn (checking not yet implemented).
-# """
-# function setgeomfielddirectly!(feature::Feature, i::Integer, geom::Geometry)
-#     result = GDAL.setgeomfielddirectly(feature.ptr, i, geom.ptr)
-#     @ogrerr result "OGRErr $result: Failed to set feature geometry directly"
-#     feature
-# end
+    IGeometry(GDAL.clone(GDAL.getgeomfieldref(feature.ptr, i)))
 
 """
 Set feature geometry of a specified geometry field.
@@ -747,24 +693,8 @@ it doesn't assume ownership of the passed string, but makes a copy of it.
 setstylestring!(feature::Feature, style::AbstractString) =
     (GDAL.setstylestring(feature.ptr, style); feature)
 
-"""
-Set feature style string.
-
-This method operate exactly as `setstylestring!()` except that it
-assumes ownership of the passed string.
-"""
-setstylestringdirectly!(feature::Feature, style::AbstractString) =
-    (GDAL.setstylestringdirectly(feature.ptr, style); feature)
-
 "OGR_F_GetStyleTable(OGRFeatureH hFeat) -> OGRStyleTableH"
 getstyletable(feature::Feature) = StyleTable(GDAL.getstyletable(feature.ptr))
-
-"""
-    OGR_F_SetStyleTableDirectly(OGRFeatureH hFeat,
-                                OGRStyleTableH hStyleTable) -> void
-"""
-setstyletabledirectly!(feature::Feature, styletable::StyleTable) =
-    (GDAL.setstyletabledirectly(feature.ptr, styletable.ptr); feature)
 
 """
     OGR_F_SetStyleTable(OGRFeatureH hFeat,
