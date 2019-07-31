@@ -100,20 +100,6 @@ mutable struct FeatureDefn
     ptr::GDALFeatureDefn
 end
 
-mutable struct Geometry <: AbstractGeometry
-    ptr::GDALGeometry
-end
-
-mutable struct IGeometry <: AbstractGeometry
-    ptr::GDALGeometry
-
-    function IGeometry(ptr::GDALGeometry)
-        geom = new(ptr)
-        finalizer(destroy, geom)
-        geom
-    end
-end
-
 mutable struct RasterBand
     ptr::GDALRasterBand
     ownedby::AbstractDataset
@@ -139,6 +125,24 @@ mutable struct ISpatialRef <: AbstractSpatialRef
         spref = new(ptr)
         finalizer(destroy, spref)
         spref
+    end
+end
+
+mutable struct Geometry <: AbstractGeometry
+    ptr::GDALGeometry
+end
+
+mutable struct IGeometry <: AbstractGeometry
+    ptr::GDALGeometry
+    spatialref::ISpatialRef
+
+    function IGeometry(
+            ptr::GDALGeometry,
+            spatialref::ISpatialRef = ISpatialRef()
+        )
+        geom = new(ptr, spatialref)
+        finalizer(destroy, geom)
+        geom
     end
 end
 
