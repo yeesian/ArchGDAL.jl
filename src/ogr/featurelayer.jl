@@ -6,8 +6,12 @@ getname(layer::FeatureLayer) = GDAL.getname(layer.ptr)
 getgeomtype(layer::FeatureLayer) = GDAL.getgeomtype(layer.ptr)
 
 "Returns the current spatial filter for this layer."
-getspatialfilter(layer::FeatureLayer) =
-    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr)))
+function getspatialfilter(layer::FeatureLayer)
+    Geometry(
+        GDALGeometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr))),
+        layer = layer
+    )
+end
 
 """
 Fetch the spatial reference system for this layer.
@@ -15,7 +19,9 @@ Fetch the spatial reference system for this layer.
 The returned object is owned by the OGRLayer and should not be modified or
 freed by the application.
 """
-getspatialref(layer::FeatureLayer) = SpatialRef(GDAL.getspatialref(layer.ptr))
+function getspatialref(layer::FeatureLayer)
+    SpatialRef(GDALSpatialRef(GDAL.getspatialref(layer.ptr)), layer = layer)
+end
 
 """
 Set a new spatial filter for the layer, using the geom.
@@ -200,7 +206,7 @@ reading may or may not be valid after that operation and a call to
 `ResetReading()` might be needed.
 """
 unsafe_nextfeature(layer::FeatureLayer) =
-    Feature(GDAL.getnextfeature(layer.ptr))
+    Feature(GDALFeature(GDAL.getnextfeature(layer.ptr)), layer = layer)
 
 """
 Move read cursor to the `i`-th feature in the current resultset.
@@ -250,7 +256,7 @@ interrupted by a OGR_L_GetFeature() call.
 The returned feature should be free with OGR_F_Destroy().
 """
 unsafe_getfeature(layer::FeatureLayer, i::Integer) =
-    Feature(GDAL.getfeature(layer.ptr, i))
+    Feature(GDALFeature(GDAL.getfeature(layer.ptr, i)), layer = layer)
 
 """
 Rewrite an existing feature.
@@ -268,11 +274,12 @@ OGRERR_NONE if the operation works, otherwise an appropriate error code
 function setfeature!(layer::FeatureLayer, feature::Feature)
     result = GDAL.setfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to set feature."
+    feature.ownedbylayer = layer
     layer
 end
 
 """
-Create and write a new feature within a layer.
+Write a new feature within a layer.
 
 The passed feature is written to the layer as a new feature, rather than
 overwriting an existing one. If the feature has a feature id other than
@@ -280,12 +287,19 @@ OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function createfeature!(layer::FeatureLayer, feature::Feature)
+function writefeature!(layer::FeatureLayer, feature::Feature)
     result = GDAL.createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
+    feature.ownedbylayer = layer
     layer
 end
 
+"""
+Create and returns a new feature based on the layer definition.
+
+The newly feature is owned by the layer (it will increase the number of features
+the layer by one), but the feature has not been written to the layer yet.
+"""
 unsafe_createfeature(layer::FeatureLayer) =
     unsafe_createfeature(getlayerdefn(layer))
 
@@ -317,9 +331,9 @@ schema of the features of the layer.
 getlayerdefn(layer::FeatureLayer) = FeatureDefn(GDAL.getlayerdefn(layer.ptr))
 
 """
-Find the index of field in a layer.
+Find the index of the field in a layer.
 
-If `exactMatch` is set to `false` and the field doesn't exists in the given form
+If `exactmatch` is set to `false` and the field doesn't exists in the given form
 the driver might apply some changes to make it match, like those it might do if
 the layer was created (eg. like `LAUNDER` in the OCI driver).
 
@@ -334,8 +348,8 @@ Fetch the feature count in this layer.
 
 ### Parameters
 * `layer`: handle to the layer that owned the features.
-* `force`: Flag indicating whether the count should be computed even if it
-    is expensive.
+* `force`: Flag indicating whether the count should be computed even if it is
+    expensive. (It is `false` by default.)
 
 ### Returns
 feature count, -1 if count not known.
@@ -535,7 +549,7 @@ to the layer.
 * `approx`: If TRUE, the field may be created in a slightly different form
             depending on the limitations of the format driver.
 """
-function createfield!(
+function writefield!(
         layer::FeatureLayer,
         field::FieldDefn,
         approx::Bool = false
@@ -574,7 +588,7 @@ to the layer.
 ### Returns
 OGRERR_NONE on success.
 """
-function creategeomfield!(
+function writegeomfield!(
         layer::FeatureLayer,
         field::GeomFieldDefn,
         approx::Bool = false

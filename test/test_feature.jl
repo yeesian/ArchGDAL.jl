@@ -91,28 +91,28 @@ end
     AG.create(AG.getdriver("MEMORY")) do output
         layer = AG.createlayer(output, "dummy", geom=GDAL.wkbPolygon)
         AG.createfielddefn("int64field", GDAL.OFTInteger64) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("doublefield", GDAL.OFTReal) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("intlistfield", GDAL.OFTIntegerList) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("int64listfield", GDAL.OFTInteger64List) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("doublelistfield", GDAL.OFTRealList) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("stringlistfield", GDAL.OFTStringList) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("binaryfield", GDAL.OFTBinary) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfielddefn("datetimefield", GDAL.OFTDateTime) do fielddefn
-            AG.createfield!(layer, fielddefn)
+            AG.writefield!(layer, fielddefn)
         end
         AG.createfeature(layer) do feature
             AG.setfield!(feature, 0, 1)
