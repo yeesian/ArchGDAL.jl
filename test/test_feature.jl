@@ -44,7 +44,7 @@ AG.read("data/point.geojson") do dataset
     
     AG.getfeature(layer, 0) do f
         @test AG.toWKT(AG.getgeomfield(f,0)) == "POINT (100 0)"
-        AG.setgeomfielddirectly!(f, 0, AG.unsafe_createpoint(0,100))
+        AG.setgeomfield!(f, 0, AG.createpoint(0,100))
         @test AG.toWKT(AG.getgeomfield(f,0)) == "POINT (0 100)"
         AG.createpolygon([(0.,100.),(100.,0.)]) do poly
             AG.setgeomfield!(f, 0, poly)
