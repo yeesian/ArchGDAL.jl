@@ -296,7 +296,7 @@ function setattrvalue!(
     value
 end
 
-function setattr!(spref::AbstractSpatialRef, path::AbstractString)
+function setattrvalue!(spref::AbstractSpatialRef, path::AbstractString)
     result = GDAL.setattrvalue(spref.ptr, path, C_NULL)
     @ogrerr result "Failed to set attribute $path"
 end
