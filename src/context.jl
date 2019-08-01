@@ -87,11 +87,11 @@ for gdalfunc in (
         :fromGML, :fromJSON, :fromWKB, :fromWKT, :gdalbuildvrt, :gdaldem,
         :gdalgrid, :gdalnearblack, :gdalrasterize, :gdaltranslate,
         :gdalvectortranslate, :gdalwarp, :getcolortable, :getcurvegeom,
-        :getfeature, :getlineargeom, :getpart, :getspatialref, :intersection,
-        :importEPSG, :importEPSGA, :importESRI, :importPROJ4, :importWKT,
-        :importXML, :importURL, :newspatialref, :nextfeature, :pointalongline,
-        :pointonsurface, :polygonfromedges, :polygonize, :read, :simplify,
-        :simplifypreservetopology, :symdifference, :union, :update
+        :getfeature, :getgeom, :getlineargeom, :getpart, :getspatialref,
+        :intersection, :importEPSG, :importEPSGA, :importESRI, :importPROJ4,
+        :importWKT, :importXML, :importURL, :newspatialref, :nextfeature,
+        :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
+        :simplify, :simplifypreservetopology, :symdifference, :union, :update
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)

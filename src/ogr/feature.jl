@@ -38,8 +38,23 @@ function setgeom!(feature::Feature, geom::AbstractGeometry)
 end
 
 "Returns a clone of the geometry corresponding to the feature."
-getgeom(feature::Feature) =
-    IGeometry(GDAL.clone(GDAL.getgeometryref(feature.ptr)))
+function getgeom(feature::Feature)
+    result = GDAL.getgeometryref(feature.ptr)
+    if result == C_NULL
+        return IGeometry()
+    else
+        return IGeometry(GDAL.clone(result))
+    end
+end
+
+function unsafe_getgeom(feature::Feature)
+    result = GDAL.getgeometryref(feature.ptr)
+    if result == C_NULL
+        return Geometry()
+    else
+        return Geometry(GDAL.clone(result))
+    end
+end
 
 """
 Fetch number of fields on this feature.
@@ -583,8 +598,23 @@ Fetch pointer to the feature geometry.
 ### Returns
 a clone of the feature geometry.
 """
-getgeomfield(feature::Feature, i::Integer) =
-    IGeometry(GDAL.clone(GDAL.getgeomfieldref(feature.ptr, i)))
+function getgeomfield(feature::Feature, i::Integer)
+    result = GDAL.getgeomfieldref(feature.ptr, i)
+    if result == C_NULL
+        return IGeometry()
+    else
+        return IGeometry(GDAL.clone(result))
+    end
+end
+
+function unsafe_getgeomfield(feature::Feature, i::Integer)
+    result = GDAL.getgeomfieldref(feature.ptr, i)
+    if result == C_NULL
+        return Geometry()
+    else
+        return Geometry(GDAL.clone(result))
+    end
+end
 
 """
 Set feature geometry of a specified geometry field.
