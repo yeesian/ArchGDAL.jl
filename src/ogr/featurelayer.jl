@@ -811,12 +811,12 @@ function synctodisk!(layer::FeatureLayer)
     layer
 end
 
-"""
-Return the total number of features read.
+# """
+# Return the total number of features read.
 
-Warning: not all drivers seem to update this count properly.
-"""
-getfeaturesread(layer::FeatureLayer) = GDAL.getfeaturesread(layer.ptr)
+# Warning: not all drivers seem to update this count properly.
+# """
+# getfeaturesread(layer::FeatureLayer) = GDAL.getfeaturesread(layer.ptr)
 
 """This method returns the name of the underlying database column being used as
 the FID column, or \"\" if not supported.
