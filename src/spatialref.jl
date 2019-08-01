@@ -1,6 +1,7 @@
 "Construct a Spatial Reference System from its WKT."
 newspatialref(wkt::AbstractString = "") =
     ISpatialRef(GDAL.newspatialreference(wkt))
+
 unsafe_newspatialref(wkt::AbstractString = "") =
     SpatialRef(GDAL.newspatialreference(wkt))
 
@@ -9,8 +10,22 @@ function destroy(spref::AbstractSpatialRef)
     spref.ptr = C_NULL
 end
 
-unsafe_clone(spref::AbstractSpatialRef) = SpatialRef(GDAL.clone(spref.ptr))
-clone(spref::AbstractSpatialRef) = ISpatialRef(GDAL.clone(spref.ptr))
+"Makes a clone of the Spatial Reference System. May return NULL."
+function clone(spref::AbstractSpatialRef)
+    if spref.ptr == C_NULL
+        return ISpatialRef()
+    else
+        return ISpatialRef(GDAL.clone(spref.ptr))
+    end
+end
+
+function unsafe_clone(spref::AbstractSpatialRef)
+    if spref.ptr == C_NULL
+        return SpatialRef()
+    else
+        return SpatialRef(GDAL.clone(spref.ptr))
+    end
+end
 
 """
 Initialize SRS based on EPSG GCS or PCS code.
