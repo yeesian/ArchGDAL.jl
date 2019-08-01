@@ -1,8 +1,9 @@
 function Base.iterate(layer::FeatureLayer, state::Int=0)
     layer.ptr == C_NULL && return nothing
+    state == 0 && resetreading!(layer)
     ptr = GDAL.getnextfeature(layer.ptr)
     if ptr == C_NULL
-        state > 0 && resetreading!(layer)
+        resetreading!(layer)
         return nothing
     end
     (Feature(ptr), state+1)
