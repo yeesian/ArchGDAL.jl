@@ -66,6 +66,9 @@ end
 
         AG.setspatialref!(gfd, AG.importEPSG(4326))
         @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+        AG.getspatialref(gfd) do spref
+            @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+        end
 
         @test AG.isignored(gfd) == false
         AG.setignored!(gfd, true)
