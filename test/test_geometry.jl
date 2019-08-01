@@ -251,5 +251,6 @@ end
 # getlineargeom(geom, options, stepsize) do g
 # g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
 # polygonfromedges(lines, besteffort,autoclose, tol) do g
-# getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
+# spref = getspatialref(geom::Geometry)
+# getspatialref(geom) do spref
 # transform!(geom::Geometry, coordtransform::CoordTransform)
