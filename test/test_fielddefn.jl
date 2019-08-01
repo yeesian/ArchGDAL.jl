@@ -55,7 +55,7 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Tests for Geom Field Defn" begin
-    AG.creategeomfielddefn("geomname", GDAL.wkbPolygon) do gfd
+    AG.creategeomdefn("geomname", GDAL.wkbPolygon) do gfd
         @test AG.getname(gfd) == "geomname"
         AG.setname!(gfd, "my name!")
         @test AG.getname(gfd) == "my name!"
@@ -122,11 +122,11 @@ end
             AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
             AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
         end
-        @test AG.ngeomfield(fd) == 1
+        @test AG.ngeom(fd) == 1
         @test AG.getgeomtype(fd) == GDAL.wkbUnknown
         AG.setgeomtype!(fd, GDAL.wkbPolygon)
         @test AG.getgeomtype(fd) == GDAL.wkbPolygon
-        @test AG.ngeomfield(fd) == 1
+        @test AG.ngeom(fd) == 1
 
         @test AG.isgeomignored(fd) == false
         AG.setgeomignored!(fd, true)
@@ -140,22 +140,22 @@ end
         AG.setstyleignored!(fd, false)
         @test AG.isstyleignored(fd) == false
 
-        @test AG.getgeomfieldindex(fd) == 0
-        gfd0 = AG.getgeomfielddefn(fd, 0)
-        @test AG.ngeomfield(fd) == 1
-        AG.addgeomfielddefn!(fd, gfd0)
-        @test AG.ngeomfield(fd) == 2
-        gfd1 = AG.getgeomfielddefn(fd, 1)
+        @test AG.getgeomindex(fd) == 0
+        gfd0 = AG.getgeomdefn(fd, 0)
+        @test AG.ngeom(fd) == 1
+        AG.addgeomdefn!(fd, gfd0)
+        @test AG.ngeom(fd) == 2
+        gfd1 = AG.getgeomdefn(fd, 1)
         AG.setname!(gfd0, "name0")
         AG.setname!(gfd1, "name1")
-        @test AG.getgeomfieldindex(fd, "") == -1
-        @test AG.getgeomfieldindex(fd, "name0") == 0
-        @test AG.getgeomfieldindex(fd, "name1") == 1
-        AG.deletegeomfielddefn!(fd, 0)
-        @test AG.ngeomfield(fd) == 1
-        @test AG.getgeomfieldindex(fd, "") == -1
-        @test AG.getgeomfieldindex(fd, "name0") == -1
-        @test AG.getgeomfieldindex(fd, "name1") == 0
+        @test AG.getgeomindex(fd, "") == -1
+        @test AG.getgeomindex(fd, "name0") == 0
+        @test AG.getgeomindex(fd, "name1") == 1
+        AG.deletegeomdefn!(fd, 0)
+        @test AG.ngeom(fd) == 1
+        @test AG.getgeomindex(fd, "") == -1
+        @test AG.getgeomindex(fd, "name0") == -1
+        @test AG.getgeomindex(fd, "name1") == 0
         @test AG.nreference(fd) == 0
         AG.createfeature(fd) do f
             @test AG.nreference(fd) == 2 # artificially inflated

@@ -7,9 +7,9 @@ import ArchGDAL; const AG = ArchGDAL
         AG.createcopy(dataset) do tmpcopy
             @test AG.nlayer(tmpcopy) == 1
             tmplayer = AG.getlayer(tmpcopy,0)
-            @test AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) == false
+            @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == false
             AG.setignoredfields!(tmplayer, ["OGR_GEOMETRY"])
-            @test AG.isignored(AG.getgeomfielddefn(AG.getlayerdefn(tmplayer),0)) == true
+            @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == true
             AG.synctodisk!(tmplayer)
         end
 
@@ -36,7 +36,7 @@ import ArchGDAL; const AG = ArchGDAL
 
         @test AG.nfeature(layer) == 4
         @test AG.getfield.(layer, 1) == ["point-a", "point-b", "a", "b"]
-        @test AG.getgeomfieldindex(AG.getlayerdefn(layer)) == 0
+        @test AG.getgeomindex(AG.getlayerdefn(layer)) == 0
         AG.setspatialfilter!(layer,0,100,-1,100.1,1)
         @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1.0,100 -1))"
         @test AG.nfeature(layer) == -1
@@ -87,7 +87,7 @@ end
 
 # writefeature!(layer::FeatureLayer, feature::Feature) 
 # deletefeature!(layer::FeatureLayer, i::Integer)
-# writegeomfield!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
+# writegeom!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
 # deletefield!(layer::FeatureLayer, i::Integer)
 # reorderfields!(layer::FeatureLayer, indices::Vector{Cint})
 # reorderfield!(layer::FeatureLayer, oldpos::Integer, newpos::Integer)

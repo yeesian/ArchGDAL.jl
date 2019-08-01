@@ -7,21 +7,21 @@ end
 
 function Source(layer::FeatureLayer)
     layerdefn = getlayerdefn(layer)
-    ngeom = ngeomfield(layerdefn)
+    ngeometries = ngeom(layerdefn)
     nfld = nfield(layerdefn)
     header = [
-        ["geometry$(i-1)" for i in 1:ngeom];
+        ["geometry$(i-1)" for i in 1:ngeometries];
         [getname(getfielddefn(layerdefn,i-1)) for i in 1:nfld]
     ]
     types = [
-        [IGeometry for i in 1:ngeom];
+        [IGeometry for i in 1:ngeometries];
         [_FIELDTYPE[gettype(getfielddefn(layerdefn,i-1))] for i in 1:nfld]
     ]
     ArchGDAL.Source(
         Data.Schema(types, header, nfeature(layer)),
         layer,
         unsafe_nextfeature(layer),
-        ngeom
+        ngeometries
     )
 end
 Data.schema(source::ArchGDAL.Source) = source.schema
@@ -39,9 +39,9 @@ function Data.streamfrom(
     ) where T
     val = if col <= source.ngeom
         @assert T <: IGeometry
-        T(GDAL.clone(GDAL.getgeomfieldref(source.feature.ptr, col-1)))
+        getgeom(source.feature, col-1)
     else
-        T(getfield(source.feature, col-source.ngeom-1))
+        T(getfield(source.feature, col - source.ngeom - 1))
     end
     if col == source.schema.cols
         destroy(source.feature)

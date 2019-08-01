@@ -79,7 +79,7 @@ for gdalfunc in (
         :boundary, :buffer, :centroid, :clone, :convexhull, :create,
         :createcolortable, :createcoordtrans, :createcopy, :createfeaturedefn,
         :createfielddefn, :creategeom, :creategeomcollection,
-        :creategeomfieldcollection, :creategeomfielddefn, :createlinearring,
+        :creategeomfieldcollection, :creategeomdefn, :createlinearring,
         :createlinestring, :createmultilinestring, :createmultipoint,
         :createmultipolygon, :createmultipolygon_noholes, :createpoint,
         :createpolygon, :createRAT, :createstylemanager, :createstyletable,

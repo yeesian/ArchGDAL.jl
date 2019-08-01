@@ -84,10 +84,10 @@ function Base.show(io::IO, layer::FeatureLayer)
     featuredefn = getlayerdefn(layer)
     
     # Print Geometries
-    n = ngeomfield(featuredefn)
+    n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
-        gfd = getgeomfielddefn(featuredefn, i-1)
+        gfd = getgeomdefn(featuredefn, i-1)
         display = "  Geometry $(i-1) ($(getname(gfd))): [$(gettype(gfd))]"
         if length(display) > 75
             println(io, "$display[1:70]...")
@@ -140,10 +140,10 @@ end
 
 function Base.show(io::IO, featuredefn::FeatureDefn)
     featuredefn.ptr == C_NULL && (return print(io, "NULL FeatureDefn"))
-    n = ngeomfield(featuredefn)
+    n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
-        gfd = getgeomfielddefn(featuredefn, i-1)
+        gfd = getgeomdefn(featuredefn, i-1)
         println(io, "  Geometry (index $(i-1)): $gfd")
     end
     n > 3 && println(io, "  ...\n  Number of Geometries: $n")
@@ -170,9 +170,9 @@ end
 function Base.show(io::IO, feature::Feature)
     feature.ptr == C_NULL && (return println(io, "NULL Feature"))
     println(io, "Feature")
-    n = ngeomfield(feature)
+    n = ngeom(feature)
     for i in 1:min(n, 3)
-        displayname = getgeomname(getgeomfield(feature, i-1))
+        displayname = getgeomname(getgeom(feature, i-1))
         println(io, "  (index $(i-1)) geom => $displayname")
     end
     n > 3 && println(io, "...\n Number of geometries: $n")
