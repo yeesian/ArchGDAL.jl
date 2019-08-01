@@ -607,7 +607,7 @@ to the layer.
 ### Returns
 OGRERR_NONE on success.
 """
-function writegeomfield!(
+function writegeom!(
         layer::FeatureLayer,
         field::GeomFieldDefn,
         approx::Bool = false

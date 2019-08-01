@@ -153,7 +153,7 @@ setstyleignored!(fd::FeatureDefn, ignore::Bool) =
     (GDAL.setstyleignored(fd.ptr, ignore); fd)
 
 "Fetch number of geometry fields on the passed feature definition."
-ngeomfield(fd::FeatureDefn) = GDAL.getgeomfieldcount(fd.ptr)
+ngeom(fd::FeatureDefn) = GDAL.getgeomfieldcount(fd.ptr)
 
 """
 Fetch geometry field definition of the passed feature definition.
@@ -165,7 +165,7 @@ Fetch geometry field definition of the passed feature definition.
 an internal field definition object or `NULL` if invalid index. This object
 should not be modified or freed by the application.
 """
-getgeomfielddefn(fd::FeatureDefn, i::Integer = 0) =
+getgeomdefn(fd::FeatureDefn, i::Integer = 0) =
     GeomFieldDefn(GDAL.getgeomfielddefn(fd.ptr, i))
 
 """
@@ -177,7 +177,7 @@ name (case insensitively) is returned.
 ### Returns
 the geometry field index, or -1 if no match found.
 """
-getgeomfieldindex(fd::FeatureDefn, name::AbstractString = "") =
+getgeomindex(fd::FeatureDefn, name::AbstractString = "") =
     GDAL.getgeomfieldindex(fd.ptr, name)
 
 """
@@ -194,7 +194,7 @@ This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRGeomFieldDefn passed in is
 copied, and remains the responsibility of the caller.
 """
-addgeomfielddefn!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn) =
+addgeomdefn!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn) =
     (GDAL.addgeomfielddefn(fd.ptr, geomfielddefn.ptr); fd)
 
 """
@@ -206,7 +206,7 @@ function directly, but use OGRLayer::DeleteGeomField() instead.
 This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn.
 """
-function deletegeomfielddefn!(fd::FeatureDefn, i::Integer)
+function deletegeomdefn!(fd::FeatureDefn, i::Integer)
     result = GDAL.deletegeomfielddefn(fd.ptr, i)
     @ogrerr result "Failed to delete geom field $i in the feature definition"
     fd

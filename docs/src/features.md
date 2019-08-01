@@ -32,9 +32,9 @@ You can also programmatically retrieve them using
 * `ArchGDAL.nfeature(layer)`: the number of features in the layer
 * `featuredefn = ArchGDAL.getlayerdefn(layer)`: the schema of the layer features
 * `ArchGDAL.nfield(featuredefn)`: the number of fields
-* `ArchGDAL.ngeomfield(featuredefn)`: the number of geometries
+* `ArchGDAL.ngeom(featuredefn)`: the number of geometries
 * `fielddefn = ArchGDAL.getfielddefn(featuredefn, i)`: the definition for field `i`
-* `geomfielddefn = ArchGDAL.getgeomfielddefn(featuredefn, i)`: the definition for geometry `i`
+* `geomdefn = ArchGDAL.getgeomdefn(featuredefn, i)`: the definition for geometry `i`
 
 ### Field Definitions
 
@@ -42,9 +42,9 @@ Each `fielddefn` defines an attribute of a feature, and supports the following:
 * `ArchGDAL.getname(fielddefn)`: the name of the field (`FID` or `pointname`)
 * `ArchGDAL.gettype(fielddefn)`: the type of the field (`OFTReal` or `OFTString`)
 
-Each `geomfielddefn` defines an attribute of a geometry, and supports the following:
-* `ArchGDAL.getgeomname(geomfielddefn)`: the name of the geometry (empty in this case)
-* `ArchGDAL.gettype(geomfielddefn)`: the type of the geometry (`wkbPoint`)
+Each `geomdefn` defines an attribute of a geometry, and supports the following:
+* `ArchGDAL.getgeomname(geomdefn)`: the name of the geometry (empty in this case)
+* `ArchGDAL.gettype(geomdefn)`: the type of the geometry (`wkbPoint`)
 
 ## Individual Features
 We can examine an individual feature
@@ -59,8 +59,8 @@ end
 
 You can programmatically retrieve the information using
 * `ArchGDAL.nfield(feature)`: the number of fields (`2`)
-* `ArchGDAL.ngeomfield(feature)`: the number of geometries (`1`)
+* `ArchGDAL.ngeom(feature)`: the number of geometries (`1`)
 * `ArchGDAL.getfield(feature, i)`: the `i`-th field (`0.0` and `"a"`)
-* `ArchGDAL.getgeomfield(feature, i)`: the `i`-th geometry (the WKT display `POINT`)
+* `ArchGDAL.getgeom(feature, i)`: the `i`-th geometry (the WKT display `POINT`)
 
 More information on geometries can be found in `Geometric Operations`.

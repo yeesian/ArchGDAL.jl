@@ -557,7 +557,7 @@ Fetch number of geometry fields on this feature.
 
 This will always be the same as the geometry field count for OGRFeatureDefn.
 """
-ngeomfield(feature::Feature) = GDAL.getgeomfieldcount(feature.ptr)
+ngeom(feature::Feature) = GDAL.getgeomfieldcount(feature.ptr)
 
 """
 Fetch definition for this geometry field.
@@ -570,7 +570,7 @@ Fetch definition for this geometry field.
 The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
-getgeomfielddefn(feature::Feature, i::Integer) =
+getgeomdefn(feature::Feature, i::Integer) =
     GeomFieldDefn(GDAL.getgeomfielddefnref(feature.ptr, i))
 
 """
@@ -585,7 +585,7 @@ This is a cover for the OGRFeatureDefn::GetGeomFieldIndex() method.
 ### Returns
 the geometry field index, or -1 if no matching geometry field is found.
 """
-getgeomfieldindex(feature::Feature, name::AbstractString="") =
+getgeomindex(feature::Feature, name::AbstractString="") =
     GDAL.getgeomfieldindex(feature.ptr, name)
 
 """
@@ -598,7 +598,7 @@ Fetch pointer to the feature geometry.
 ### Returns
 a clone of the feature geometry.
 """
-function getgeomfield(feature::Feature, i::Integer)
+function getgeom(feature::Feature, i::Integer)
     result = GDAL.getgeomfieldref(feature.ptr, i)
     if result == C_NULL
         return IGeometry()
@@ -607,7 +607,7 @@ function getgeomfield(feature::Feature, i::Integer)
     end
 end
 
-function unsafe_getgeomfield(feature::Feature, i::Integer)
+function unsafe_getgeom(feature::Feature, i::Integer)
     result = GDAL.getgeomfieldref(feature.ptr, i)
     if result == C_NULL
         return Geometry()
@@ -632,7 +632,7 @@ the passed geometry, but instead makes a copy of it.
 OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type
 is illegal for the OGRFeatureDefn (checking not yet implemented).
 """
-function setgeomfield!(feature::Feature, i::Integer, geom::AbstractGeometry)
+function setgeom!(feature::Feature, i::Integer, geom::AbstractGeometry)
     result = GDAL.setgeomfield(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry"
     feature
