@@ -589,14 +589,11 @@ getgeomindex(feature::Feature, name::AbstractString="") =
     GDAL.getgeomfieldindex(feature.ptr, name)
 
 """
-Fetch pointer to the feature geometry.
+Returns a clone of the feature geometry at index `i`.
 
 ### Parameters
 * `feature`: the feature to get geometry from.
 * `i`: geometry field to get.
-
-### Returns
-a clone of the feature geometry.
 """
 function getgeom(feature::Feature, i::Integer)
     result = GDAL.getgeomfieldref(feature.ptr, i)
