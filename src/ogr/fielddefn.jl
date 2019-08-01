@@ -204,8 +204,10 @@ function destroy(gfd::GeomFieldDefn)
 end
 
 "Set the name of this field."
-setname!(gfd::GeomFieldDefn, name::AbstractString) =
-    (GDAL.setname(gfd.ptr, name); gfd)
+function setname!(gfd::GeomFieldDefn, name::AbstractString)
+    GDAL.setname(gfd.ptr, name)
+    gfd
+end
 
 "Fetch name of this field."
 getname(gfd::GeomFieldDefn) = GDAL.getnameref(gfd.ptr)
@@ -220,8 +222,11 @@ function settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType)
 end
 
 "Returns a clone of the spatial reference system for this field. May be NULL."
-unsafe_getspatialref(gfd::GeomFieldDefn) = SpatialRef(GDAL.clone(GDAL.getspatialref(gfd.ptr)))
-getspatialref(gfd::GeomFieldDefn) = ISpatialRef(GDAL.clone(GDAL.getspatialref(gfd.ptr)))
+getspatialref(gfd::GeomFieldDefn) =
+    ISpatialRef(GDAL.clone(GDAL.getspatialref(gfd.ptr)))
+
+unsafe_getspatialref(gfd::GeomFieldDefn) =
+    SpatialRef(GDAL.clone(GDAL.getspatialref(gfd.ptr)))
 
 """
 Set the spatial reference of this field.
@@ -229,8 +234,10 @@ Set the spatial reference of this field.
 This function drops the reference of the previously set SRS object and acquires
 a new reference on the passed object (if non-NULL).
 """
-setspatialref!(gfd::GeomFieldDefn, spatialref::AbstractSpatialRef) =
-    (GDAL.setspatialref(gfd.ptr, spatialref.ptr); gfd)
+function setspatialref!(gfd::GeomFieldDefn, spatialref::AbstractSpatialRef)
+    GDAL.setspatialref(gfd.ptr, spatialref.ptr)
+    gfd
+end
 
 """
 Return whether this geometry field can receive null values.
@@ -255,8 +262,10 @@ to set a not-null constraint.
 Drivers that support writing not-null constraint will advertize the
 GDAL_DCAP_NOTNULL_GEOMFIELDS driver metadata item.
 """
-setnullable!(gfd::GeomFieldDefn, nullable::Bool) = 
-    (GDAL.setnullable(gfd.ptr, nullable), gfd)
+function setnullable!(gfd::GeomFieldDefn, nullable::Bool)
+    GDAL.setnullable(gfd.ptr, nullable)
+    gfd
+end
 
 "Return whether this field should be omitted when fetching features."
 isignored(gfd::GeomFieldDefn) = Bool(GDAL.isignored(gfd.ptr))
