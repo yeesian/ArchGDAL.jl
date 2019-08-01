@@ -244,7 +244,12 @@ end
 end
 
 # Untested
+# g = clone(geom)
 # toISOWKT(geom::Geometry)
-# unsafe_polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
+# toJSON(geom, options)
+# g = getlineargeom(geom, options, stepsize)
+# getlineargeom(geom, options, stepsize) do g
+# g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
+# polygonfromedges(lines, besteffort,autoclose, tol) do g
 # getspatialref(geom::Geometry) = GDAL.getspatialreference(geom)
 # transform!(geom::Geometry, coordtransform::CoordTransform)
