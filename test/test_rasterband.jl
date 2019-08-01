@@ -125,3 +125,4 @@ end
 
 # untested
 # setcategorynames!(rasterband, names)
+# getcolortable(band) do C_NULL

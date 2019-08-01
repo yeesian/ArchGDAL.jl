@@ -85,6 +85,8 @@ end
 
 # Untested:
 
+# C_NULL == getspatialref(layer)
+# getspatialref(layer) do C_NULL
 # writefeature!(layer::FeatureLayer, feature::Feature) 
 # deletefeature!(layer::FeatureLayer, i::Integer)
 # writegeom!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)

@@ -160,3 +160,12 @@ end
         end
     end
 end
+
+# untested
+# C_NULL == getgeom(geom)
+# C_NULL == getgeom(geom, i)
+# getgeom(geom) do C_NULL
+# getgeom(geom) do g
+# getgeom(geom, i) do C_NULL
+# getgeom(geom, i) do g
+# getstyletable
