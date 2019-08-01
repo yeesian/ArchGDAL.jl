@@ -122,3 +122,6 @@ import ArchGDAL; const AG = ArchGDAL
         end
     end
 end
+
+# untested
+# setcategorynames!(rasterband, names)
