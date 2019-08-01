@@ -808,7 +808,7 @@ OGRERR_NONE if no error occurs (even if nothing is done) or an error code.
 function synctodisk!(layer::FeatureLayer)
     result = GDAL.synctodisk(layer.ptr)
     @ogrerr result "Failed to flush pending changes to disk"
-    layer
+    layer.ptr = GDALFeatureLayer(C_NULL)
 end
 
 # """
