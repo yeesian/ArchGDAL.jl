@@ -306,8 +306,23 @@ Returns a clone of the spatial reference system for the geometry.
 
 (The original SRS may be shared with many objects, and should not be modified.)
 """
-getspatialref(geom::AbstractGeometry) =
-    ISpatialRef(GDAL.clone(GDAL.getspatialreference(geom.ptr)))
+function getspatialref(geom::AbstractGeometry)
+    result = GDAL.getspatialreference(geom.ptr)
+    if result == C_NULL
+        return ISpatialRef()
+    else
+        return ISpatialRef(GDAL.clone(result))
+    end
+end
+
+function unsafe_getspatialref(geom::AbstractGeometry)
+    result = GDAL.getspatialreference(geom.ptr)
+    if result == C_NULL
+        return SpatialRef()
+    else
+        return SpatialRef(GDAL.clone(result))
+    end
+end
 
 """
 Apply arbitrary coordinate transformation to geometry.

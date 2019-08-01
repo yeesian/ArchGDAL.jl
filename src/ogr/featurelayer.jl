@@ -18,12 +18,23 @@ function getspatialfilter(layer::FeatureLayer)
 end
 
 "Returns a clone of the spatial reference system for this layer."
-unsafe_getspatialref(layer::FeatureLayer) =
-    SpatialRef(GDAL.clone(GDAL.getspatialref(layer.ptr)))
+function getspatialref(layer::FeatureLayer)
+    result = GDAL.getspatialref(layer.ptr)
+    if result == C_NULL
+        return ISpatialRef()
+    else
+        return ISpatialRef(GDAL.clone(result))
+    end
+end
 
-"Returns a clone of the spatial reference system for this layer."
-getspatialref(layer::FeatureLayer) =
-    ISpatialRef(GDAL.clone(GDAL.getspatialref(layer.ptr)))
+function unsafe_getspatialref(layer::FeatureLayer)
+    result = GDAL.getspatialref(layer.ptr)
+    if result == C_NULL
+        return SpatialRef()
+    else
+        return SpatialRef(GDAL.clone(result))
+    end
+end
 
 """
 Set a new spatial filter for the layer, using the geom.
