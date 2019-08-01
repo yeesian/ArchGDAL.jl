@@ -250,11 +250,15 @@ end
 # toISOWKT(geom::Geometry)
 # toJSON(geom, options)
 # g = getgeom(g, i)
+# C_NULL == getgeom(g, i)
 # getgeom(g, i) do g
+# getgeom(g, i) do C_NULL
 # g = getlineargeom(geom, options, stepsize)
 # getlineargeom(geom, options, stepsize) do g
 # g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
 # polygonfromedges(lines, besteffort,autoclose, tol) do g
 # spref = getspatialref(geom::Geometry)
+# C_NULL == getspatialref(geom::Geometry)
 # getspatialref(geom) do spref
+# getspatialref(geom) do C_NULL
 # transform!(geom::Geometry, coordtransform::CoordTransform)
