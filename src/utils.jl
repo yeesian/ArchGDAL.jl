@@ -36,24 +36,24 @@ macro cplprogress(progressfunc)
     @cfunction($(esc(progressfunc)),Cint,(Cdouble,Cstring,Ptr{Cvoid}))
 end
 
-"""
-Load a `NULL`-terminated list of strings
+# """
+# Load a `NULL`-terminated list of strings
 
-That is it expects a "StringList", in the sense of the CPL functions, as a
-NULL terminated array of strings.
-"""
-function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
-    stringlist = Vector{String}()
-    (pstringlist == C_NULL) && return stringlist
-    i = 1
-    item = unsafe_load(pstringlist, i)
-    while item != C_NULL
-        push!(stringlist, unsafe_string(item))
-        i += 1
-        item = unsafe_load(pstringlist, i)
-    end
-    stringlist
-end
+# That is it expects a "StringList", in the sense of the CPL functions, as a
+# NULL terminated array of strings.
+# """
+# function unsafe_loadstringlist(pstringlist::Ptr{Cstring})
+#     stringlist = Vector{String}()
+#     (pstringlist == C_NULL) && return stringlist
+#     i = 1
+#     item = unsafe_load(pstringlist, i)
+#     while item != C_NULL
+#         push!(stringlist, unsafe_string(item))
+#         i += 1
+#         item = unsafe_load(pstringlist, i)
+#     end
+#     stringlist
+# end
 
 "Fetch list of (non-empty) metadata domains. (Since: GDAL 1.11)"
 metadatadomainlist(obj) = GDAL.getmetadatadomainlist(obj.ptr)
