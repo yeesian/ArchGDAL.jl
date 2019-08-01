@@ -79,7 +79,7 @@ AG.read("ospy/data1/sites.shp") do input
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
     for (i,feature) in enumerate(AG.getlayer(input, 0))
         id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
-        (x,y) = AG.getpoint(AG.getgeomfield(feature, 0), 0)
+        (x,y) = AG.getpoint(AG.getgeom(feature, 0), 0)
         @test id == i
         @test 4e5 <= x <= 5e5
         @test 4.5e6 <= y <= 5e6

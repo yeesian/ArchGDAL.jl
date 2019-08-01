@@ -194,7 +194,7 @@ isdefaultdriverspecific(fielddefn::FieldDefn) =
     Bool(GDAL.isdefaultdriverspecific(fielddefn.ptr))
 
 "Create a new field geometry definition."
-unsafe_creategeomfielddefn(name::AbstractString, etype::OGRwkbGeometryType) =
+unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType) =
     GeomFieldDefn(GDAL.gfld_create(name, etype))
 
 "Destroy a geometry field definition."

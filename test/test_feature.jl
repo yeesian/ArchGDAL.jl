@@ -33,23 +33,23 @@ AG.read("data/point.geojson") do dataset
             @test AG.getfid(f1) == 2
             @test AG.getfid(f2) == 0
 
-            @test AG.getgeomfieldindex(f1, "geom") == -1
-            @test AG.getgeomfieldindex(f1, "") == 0
-            @test AG.getgeomfieldindex(f2, "geom") == -1
-            @test AG.getgeomfieldindex(f2, "") == 0
-            @test AG.gettype(AG.getgeomfielddefn(f1, 0)) == GDAL.wkbPoint
-            @test AG.gettype(AG.getgeomfielddefn(f2, 0)) == GDAL.wkbPoint
+            @test AG.getgeomindex(f1, "geom") == -1
+            @test AG.getgeomindex(f1, "") == 0
+            @test AG.getgeomindex(f2, "geom") == -1
+            @test AG.getgeomindex(f2, "") == 0
+            @test AG.gettype(AG.getgeomdefn(f1, 0)) == GDAL.wkbPoint
+            @test AG.gettype(AG.getgeomdefn(f2, 0)) == GDAL.wkbPoint
         end
     end
     
     AG.getfeature(layer, 0) do f
-        @test AG.toWKT(AG.getgeomfield(f,0)) == "POINT (100 0)"
-        AG.setgeomfield!(f, 0, AG.createpoint(0,100))
-        @test AG.toWKT(AG.getgeomfield(f,0)) == "POINT (0 100)"
+        @test AG.toWKT(AG.getgeom(f,0)) == "POINT (100 0)"
+        AG.setgeom!(f, 0, AG.createpoint(0,100))
+        @test AG.toWKT(AG.getgeom(f,0)) == "POINT (0 100)"
         AG.createpolygon([(0.,100.),(100.,0.)]) do poly
-            AG.setgeomfield!(f, 0, poly)
+            AG.setgeom!(f, 0, poly)
         end
-        @test AG.toWKT(AG.getgeomfield(f,0)) == "POLYGON ((0 100,100 0))"
+        @test AG.toWKT(AG.getgeom(f,0)) == "POLYGON ((0 100,100 0))"
 
         AG.setstylestring!(f, "@Name")
         @test AG.getstylestring(f) == "@Name"
