@@ -64,6 +64,10 @@ end
         AG.settype!(gfd, GDAL.wkbPolyhedralSurface)
         @test AG.gettype(gfd) == GDAL.wkbPolyhedralSurface
 
+        @test sprint(print, AG.getspatialref(gfd)) == "NULL Spatial Reference System"
+        AG.getspatialref(gfd) do spref
+            @test sprint(print, spref) == "NULL Spatial Reference System"
+        end
         AG.setspatialref!(gfd, AG.importEPSG(4326))
         @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
         AG.getspatialref(gfd) do spref
