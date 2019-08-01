@@ -847,11 +847,6 @@ end
 """
 Fetch geometry from a geometry container.
 
-This function returns an handle to a geometry within the container. The returned
-geometry remains owned by the container, and should not be modified. The handle
-is only valid until the next change to the geometry container. Use OGR_G_Clone()
-to make a copy.
-
 For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 `i == 0`, and the interior rings for `i > 0`.
 
@@ -859,8 +854,31 @@ For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 * `geom`: the geometry container from which to get a geometry from.
 * `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
 """
-getgeom(geom::AbstractGeometry, i::Integer) =
-    Geometry(GDAL.getgeometryref(geom.ptr, i))
+function getgeom(geom::AbstractGeometry, i::Integer)
+    # NOTE(yeesian): GDAL.getgeometryref(geom, i) returns an handle to a
+    # geometry within the container. The returned geometry remains owned by the
+    # container, and should not be modified. The handle is only valid until the
+    # next change to the geometry container. Use OGR_G_Clone() to make a copy.
+    result = GDAL.getgeometryref(geom.ptr, i)
+    if result == C_NULL
+        return IGeometry()
+    else
+        return IGeometry(GDAL.clone(result))
+    end
+end
+
+function unsafe_getgeom(geom::AbstractGeometry, i::Integer)
+    # NOTE(yeesian): GDAL.getgeometryref(geom, i) returns an handle to a
+    # geometry within the container. The returned geometry remains owned by the
+    # container, and should not be modified. The handle is only valid until the
+    # next change to the geometry container. Use OGR_G_Clone() to make a copy.
+    result = GDAL.getgeometryref(geom.ptr, i)
+    if result == C_NULL
+        return Geometry()
+    else
+        return Geometry(GDAL.clone(result))
+    end
+end
 
 """
 Add a geometry to a geometry container.

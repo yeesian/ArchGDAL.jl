@@ -247,6 +247,8 @@ end
 # g = clone(geom)
 # toISOWKT(geom::Geometry)
 # toJSON(geom, options)
+# g = getgeom(g, i)
+# getgeom(g, i) do g
 # g = getlineargeom(geom, options, stepsize)
 # getlineargeom(geom, options, stepsize) do g
 # g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
