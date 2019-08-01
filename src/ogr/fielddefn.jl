@@ -219,8 +219,8 @@ function settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType)
     gfd
 end
 
-"Fetch spatial reference system of this field. May return NULL"
-unsafe_getspatialref(gfd::GeomFieldDefn) = SpatialRef(GDAL.getspatialref(gfd.ptr))
+"Returns a clone of the spatial reference system for this field. May be NULL."
+unsafe_getspatialref(gfd::GeomFieldDefn) = SpatialRef(GDAL.clone(GDAL.getspatialref(gfd.ptr)))
 getspatialref(gfd::GeomFieldDefn) = ISpatialRef(GDAL.clone(GDAL.getspatialref(gfd.ptr)))
 
 """
