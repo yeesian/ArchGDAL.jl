@@ -245,6 +245,8 @@ end
 
 # Untested
 # g = clone(geom)
+# C_NULL == clone(geom)
+# clone(geom) do C_NULL
 # toISOWKT(geom::Geometry)
 # toJSON(geom, options)
 # g = getgeom(g, i)

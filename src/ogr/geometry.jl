@@ -76,9 +76,21 @@ function destroy(geom::AbstractGeometry)
 end
 
 "Returns a copy of the geometry with the original spatial reference system."
-clone(geom::AbstractGeometry) = IGeometry(GDAL.clone(geom.ptr))
+function clone(geom::AbstractGeometry)
+    if geom.ptr == C_NULL
+        return IGeometry()
+    else
+        return IGeometry(GDAL.clone(geom.ptr))
+    end
+end
 
-unsafe_clone(geom::AbstractGeometry) = Geometry(GDAL.clone(geom.ptr))
+function unsafe_clone(geom::AbstractGeometry)
+    if geom.ptr == C_NULL
+        return Geometry()
+    else
+        return Geometry(GDAL.clone(geom.ptr))
+    end
+end
 
 """
 Create an empty geometry of desired type.
