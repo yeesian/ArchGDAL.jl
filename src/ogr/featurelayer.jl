@@ -281,7 +281,7 @@ random access writing via OGR_L_SetFeature().
 OGRERR_NONE if the operation works, otherwise an appropriate error code
 (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
 """
-function setfeature!(layer::FeatureLayer, feature::Feature)
+function writefeature!(layer::FeatureLayer, feature::Feature)
     result = GDAL.setfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to set feature."
     layer
