@@ -62,3 +62,10 @@ end
                        (6) 16x8 """
     end
 end
+
+# untested
+# FeatureDefn
+# GeomFieldDefn
+# SpatialRef
+# Geometry with length(toWKT(geom)) > 60 # should be able to see ...
+# Dataset with nlayer(dataset) > 5
