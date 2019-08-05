@@ -72,6 +72,7 @@ end
         include("test_gdal_tutorials.jl")
         include("test_geometry.jl")
         include("test_types.jl")
+        include("test_display.jl")
         include("test_drivers.jl")
         include("test_feature.jl")
         include("test_featurelayer.jl")
