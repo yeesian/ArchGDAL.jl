@@ -58,6 +58,16 @@ function writefeature(f::Function, layer::FeatureLayer)
     end
 end
 
+function pushfeature(f::Function, layer::FeatureLayer)
+    feature = unsafe_createfeature(layer)
+    try
+        f(feature)
+        push!(layer, feature)
+    finally
+        destroy(feature)
+    end
+end
+
 function createfeature(f::Function, featuredefn::FeatureDefn)
     feature = unsafe_createfeature(featuredefn)
     reference(featuredefn)

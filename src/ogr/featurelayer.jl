@@ -307,7 +307,7 @@ OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function write!(layer::FeatureLayer, feature::Feature)
+function push!(layer::FeatureLayer, feature::Feature)
     result = GDAL.createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
     layer
