@@ -29,8 +29,8 @@ passed geometry, but instead makes a copy of it.
 * `geom`: the new geometry to apply to feature.
 
 ### Returns
-OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry
-type is illegal for the OGRFeatureDefn (checking not yet implemented).
+`OGRERR_NONE` if successful, or `OGR_UNSUPPORTED_GEOMETRY_TYPE` if the geometry
+type is illegal for the `OGRFeatureDefn` (checking not yet implemented).
 """
 function setgeom!(feature::Feature, geom::AbstractGeometry)
     result = GDAL.setgeometry(feature.ptr, geom.ptr)
@@ -626,8 +626,8 @@ the passed geometry, but instead makes a copy of it.
 * `geom`: the new geometry to apply to feature.
 
 ### Returns
-OGRERR_NONE if successful, or OGR_UNSUPPORTED_GEOMETRY_TYPE if the geometry type
-is illegal for the OGRFeatureDefn (checking not yet implemented).
+`OGRERR_NONE` if successful, or `OGR_UNSUPPORTED_GEOMETRY_TYPE` if the geometry
+type is illegal for the `OGRFeatureDefn` (checking not yet implemented).
 """
 function setgeom!(feature::Feature, i::Integer, geom::AbstractGeometry)
     result = GDAL.setgeomfield(feature.ptr, i, geom.ptr)
