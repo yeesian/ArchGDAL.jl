@@ -123,7 +123,7 @@ end
             AG.setfield!(feature, 6, GDAL.GByte[1,2,3,4])
             AG.setfield!(feature, 7, Dates.DateTime(2016,9,25,21,17,0))
 
-            AG.writefeature(layer) do newfeature
+            AG.pushfeature(layer) do newfeature
                 AG.setfrom!(newfeature, feature)
                 @test AG.getfield(newfeature, 0) == 1 
                 @test AG.getfield(newfeature, 1) ≈ 1.0
