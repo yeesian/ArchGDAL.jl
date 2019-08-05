@@ -1036,31 +1036,35 @@ Build a ring from a bunch of arcs.
 ### Parameters
 * `lines`: handle to an OGRGeometryCollection (or OGRMultiLineString)
     containing the line string geometries to be built into rings.
-* `besteffort`: not yet implemented???.
-* `autoclose`: indicates if the ring should be close when first and last
-    points of the ring are the same.
 * `tol`: whether two arcs are considered close enough to be joined.
+
+### Keyword Arguments
+* `besteffort`: (defaults to `false`) not yet implemented???.
+* `autoclose`: indicates if the ring should be close when first and last
+    points of the ring are the same. (defaults to `false`)
 """
 function polygonfromedges(
         lines::AbstractGeometry,
-        besteffort::Bool,
-        autoclose::Bool,
-        tol::Real
+        tol::Real;
+        besteffort::Bool = false,
+        autoclose::Bool = false
     )
     perr = Ref{GDAL.OGRErr}()
-    result = GDAL.buildpolygonfromedges(lines, besteffort, autoclose, tol, perr)
+    result = GDAL.buildpolygonfromedges(lines.ptr, besteffort, autoclose, tol,
+        perr)
     @ogrerr perr[] "Failed to build polygon from edges."
     IGeometry(result)
 end
 
 function unsafe_polygonfromedges(
         lines::AbstractGeometry,
-        besteffort::Bool,
-        autoclose::Bool,
-        tol::Real
+        tol::Real;
+        besteffort::Bool = false,
+        autoclose::Bool = false
     )
     perr = Ref{GDAL.OGRErr}()
-    result = GDAL.buildpolygonfromedges(lines, besteffort, autoclose, tol, perr)
+    result = GDAL.buildpolygonfromedges(lines.ptr, besteffort, autoclose, tol,
+        perr)
     @ogrerr perr[] "Failed to build polygon from edges."
     Geometry(result)
 end
