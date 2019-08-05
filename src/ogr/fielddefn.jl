@@ -7,11 +7,16 @@ unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType) =
     FieldDefn(GDAL.fld_create(name, etype))
 
 "Destroy a field definition."
-destroy(fd::FieldDefn) = (GDAL.destroy(fd.ptr); fd.ptr = C_NULL)
+function destroy(fd::FieldDefn)
+    GDAL.destroy(fd.ptr)
+    fd.ptr = C_NULL
+end
 
 "Set the name of this field."
-setname!(fielddefn::FieldDefn, name::AbstractString) =
-    (GDAL.setname(fielddefn.ptr, name); fielddefn)
+function setname!(fielddefn::FieldDefn, name::AbstractString)
+    GDAL.setname(fielddefn.ptr, name)
+    fielddefn
+end
 
 "Fetch the name of this field."
 getname(fielddefn::FieldDefn) = GDAL.getnameref(fielddefn.ptr)
@@ -20,8 +25,10 @@ getname(fielddefn::FieldDefn) = GDAL.getnameref(fielddefn.ptr)
 gettype(fielddefn::FieldDefn) = GDAL.gettype(fielddefn.ptr)
 
 "Set the type of this field."
-settype!(fielddefn::FieldDefn, etype::OGRFieldType) =
-    (GDAL.settype(fielddefn.ptr, etype); fielddefn)
+function settype!(fielddefn::FieldDefn, etype::OGRFieldType)
+    GDAL.settype(fielddefn.ptr, etype)
+    fielddefn
+end
 
 """
 Fetch subtype of this field.
@@ -44,8 +51,10 @@ OGRFeatureDefn.
 * `fielddefn`: handle to the field definition to set type to.
 * `subtype`: the new field subtype.
 """
-setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType) =
-    (GDAL.setsubtype(fielddefn.ptr, subtype); fielddefn)
+function setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)
+    GDAL.setsubtype(fielddefn.ptr, subtype)
+    fielddefn
+end
 
 """
 Get the justification for this field.
@@ -59,8 +68,10 @@ Set the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification) =
-    (GDAL.setjustify(fielddefn.ptr, ejustify); fielddefn)
+function setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification)
+    GDAL.setjustify(fielddefn.ptr, ejustify)
+    fielddefn
+end
 
 """Get the formatting width for this field.
 
@@ -75,8 +86,10 @@ Set the formatting width for this field in characters.
 This should never be done to an OGRFieldDefn that is already part of an
 OGRFeatureDefn.
 """
-setwidth!(fielddefn::FieldDefn, width::Integer) =
-    (GDAL.setwidth(fielddefn.ptr, width); fielddefn)
+function setwidth!(fielddefn::FieldDefn, width::Integer)
+    GDAL.setwidth(fielddefn.ptr, width)
+    fielddefn
+end
 
 """
 Get the formatting precision for this field.
@@ -90,8 +103,10 @@ Set the formatting precision for this field in characters.
 
 This should normally be zero for fields of types other than OFTReal.
 """
-setprecision!(fielddefn::FieldDefn, precision::Integer) =
-    (GDAL.setprecision(fielddefn.ptr, precision); fielddefn)
+function setprecision!(fielddefn::FieldDefn, precision::Integer)
+    GDAL.setprecision(fielddefn.ptr, precision)
+    fielddefn
+end
 
 """
 Set defining parameters for a field in one call.
@@ -127,8 +142,10 @@ end
 isignored(fielddefn::FieldDefn) = Bool(GDAL.isignored(fielddefn.ptr))
 
 "Set whether this field should be omitted when fetching features."
-setignored!(fielddefn::FieldDefn, ignore::Bool) =
-    (GDAL.setignored(fielddefn.ptr, ignore); fielddefn)
+function setignored!(fielddefn::FieldDefn, ignore::Bool)
+    GDAL.setignored(fielddefn.ptr, ignore)
+    fielddefn
+end
 
 """
 Return whether this field can receive null values.
@@ -151,13 +168,19 @@ to set a not-null constraint.
 Drivers that support writing not-null constraint will advertize the
 GDAL_DCAP_NOTNULL_FIELDS driver metadata item.
 """
-setnullable!(fielddefn::FieldDefn, nullable::Bool) =
-    (GDAL.setnullable(fielddefn.ptr, nullable); fielddefn)
+function setnullable!(fielddefn::FieldDefn, nullable::Bool)
+    GDAL.setnullable(fielddefn.ptr, nullable)
+    fielddefn
+end
 
 "Get default field value"
 function getdefault(fielddefn::FieldDefn)
     result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
-    return result == C_NULL ? "" : unsafe_string(result)
+    if result == C_NULL
+        return ""
+    else
+        return unsafe_string(result)
+    end
 end
 
 """
@@ -180,8 +203,10 @@ datetime literal value, format should be 'YYYY/MM/DD HH:MM:SS[.sss]'
 Drivers that support writing DEFAULT clauses will advertize the
 GDAL_DCAP_DEFAULT_FIELDS driver metadata item.
 """
-setdefault!(fielddefn::FieldDefn, default) =
-    (GDAL.setdefault(fielddefn.ptr, default); fielddefn)
+function setdefault!(fielddefn::FieldDefn, default)
+    GDAL.setdefault(fielddefn.ptr, default)
+    fielddefn
+end
 
 """
 Returns whether the default value is driver specific.
