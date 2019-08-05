@@ -167,6 +167,18 @@ to the layer.
 * `approx`: If `true` (default `false`), the geometry field may be created in a
             slightly different form depending on the limitations of the driver.
 """
+function writegeomdefn!(
+        layer::FeatureLayer,
+        name::AbstractString,
+        etype::OGRwkbGeometryType;
+        approx::Bool = false
+    )
+    geomdefn = unsafe_creategeomdefn(name, etype)
+    write!(layer, geomdefn)
+    destroy(geomdefn)
+    layer
+end
+
 function writegeomdefn(
         f::Function,
         layer::FeatureLayer,
