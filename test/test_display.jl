@@ -1,14 +1,8 @@
 using Test
 import ArchGDAL; const AG = ArchGDAL
 
-function read(f, filename)
-    AG.read(filename) do dataset
-        f(dataset)
-    end
-end
-
 @testset "Testing Displays for different objects" begin
-    read("data/point.geojson") do dataset
+    AG.read("data/point.geojson") do dataset
         @test sprint(print, dataset) == """
         GDAL Dataset (Driver: GeoJSON/GeoJSON)
         File(s): 
@@ -18,24 +12,31 @@ end
           Layer 0: point (wkbPoint)
         """
 
-        @test sprint(print, AG.getlayer(dataset, 0)) == """
+        layer = AG.getlayer(dataset, 0)
+        @test sprint(print, layer) == """
         Layer: point
           Geometry 0 (): [wkbPoint], POINT (100 0), POINT (100.2785 0.0893), ...
              Field 0 (FID): [OFTReal], 2.0, 3.0, 0.0, 3.0
              Field 1 (pointname): [OFTString], point-a, point-b, a, b
         """
+        @test sprint(print, AG.getspatialref(layer)) ==
+            "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
 
-        AG.getfeature(AG.getlayer(dataset, 0), 2) do feature
+        AG.getfeature(layer, 2) do feature
             @test sprint(print, feature) == """
             Feature
               (index 0) geom => POINT
               (index 0) FID => 0.0
               (index 1) pointname => a
             """
+            @test sprint(print, AG.getfielddefn(feature, 1)) ==
+                "pointname (OFTString)"
+            @test sprint(print, AG.getgeomdefn(feature, 0)) ==
+                " (wkbPoint)"
         end
-    end;
+    end
 
-    read("gdalworkshop/world.tif") do dataset
+    AG.read("gdalworkshop/world.tif") do dataset
         @test sprint(print, dataset) == """
         GDAL Dataset (Driver: GTiff/GeoTIFF)
         File(s): 
@@ -58,8 +59,5 @@ end
 end
 
 # untested
-# FeatureDefn
-# GeomFieldDefn
-# SpatialRef
 # Geometry with length(toWKT(geom)) > 60 # should be able to see ...
 # Dataset with nlayer(dataset) > 5
