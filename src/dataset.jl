@@ -467,7 +467,8 @@ function createlayer(
     # the spatialref to take ownership, and not make a full copy. Therefore,
     # we need to enclose it within a do-block to be safe.
     f(FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name,
-        spref.ptr, geom, options), ownedby = dataset))
+        spatialref.ptr, geom, options), ownedby = dataset))
+    nothing
 end
 
 """
