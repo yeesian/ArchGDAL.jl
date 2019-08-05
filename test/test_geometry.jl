@@ -253,6 +253,14 @@ end
     @test AG.toISOWKT(geom3) == "GEOMETRYCOLLECTION Z (POINT Z (2 5 8),POLYGON Z ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON Z ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)),POINT Z EMPTY)"
     @test AG.toJSON(geom3) == """{ "type": "GeometryCollection", "geometries": [ { "type": "Point", "coordinates": [ 2.0, 5.0, 8.0 ] }, { "type": "Polygon", "coordinates": [ [ [ 0.0, 0.0, 8.0 ], [ 0.0, 4.0, 8.0 ], [ 4.0, 4.0, 8.0 ], [ 4.0, 0.0, 8.0 ], [ 0.0, 0.0, 8.0 ] ], [ [ 1.0, 1.0, 8.0 ], [ 3.0, 1.0, 8.0 ], [ 3.0, 3.0, 8.0 ], [ 1.0, 3.0, 8.0 ], [ 1.0, 1.0, 8.0 ] ] ] }, { "type": "Polygon", "coordinates": [ [ [ 10.0, 0.0, 8.0 ], [ 10.0, 4.0, 8.0 ], [ 14.0, 4.0, 8.0 ], [ 14.0, 0.0, 8.0 ], [ 10.0, 0.0, 8.0 ] ], [ [ 11.0, 1.0, 8.0 ], [ 13.0, 1.0, 8.0 ], [ 13.0, 3.0, 8.0 ], [ 11.0, 3.0, 8.0 ], [ 11.0, 1.0, 8.0 ] ] ] }, null ] }"""
 
+    AG.createmultilinestring([[[1.,4.], [2.,5.], [3.,6.], [1.,4.]]]) do geom4
+        @test AG.toWKT(geom4) == "MULTILINESTRING ((1 4,2 5,3 6,1 4))"
+        @test AG.toWKT(AG.polygonfromedges(geom4, 0.1)) == "POLYGON ((1 4,2 5,3 6,1 4))"
+        AG.polygonfromedges(geom4, 0.1) do geom5
+            @test AG.toWKT(geom5) == "POLYGON ((1 4,2 5,3 6,1 4))"
+        end
+    end
+
     @test AG.getgeomtype(AG.getgeom(geom3, 0)) == GDAL.wkbPoint25D
     @test AG.getgeomtype(AG.getgeom(geom3, 1)) == GDAL.wkbPolygon25D
     @test AG.getgeomtype(AG.getgeom(geom3, 2)) == GDAL.wkbPolygon25D
@@ -270,13 +278,6 @@ end
         @test AG.getgeomtype(geom4) == GDAL.wkbPoint25D
     end
 end
-
-# Untested
-
-# g = getlineargeom(geom, options, stepsize)
-# getlineargeom(geom, options, stepsize) do g
-# g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
-# polygonfromedges(lines, besteffort,autoclose, tol) do g
 
 @testset "Spatial Reference Systems" begin
     AG.read("data/point.geojson") do dataset
