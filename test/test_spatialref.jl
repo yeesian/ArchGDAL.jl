@@ -247,6 +247,3 @@ end
         @test AG.getattrvalue(spatialref, "AUTHORITY", 1) == "4326"
     end
 end
-
-# untested
-# transform!(coordtransform, xs, ys, zs)
