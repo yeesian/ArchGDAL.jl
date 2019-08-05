@@ -319,6 +319,9 @@ Returns a clone of the spatial reference system for the geometry.
 (The original SRS may be shared with many objects, and should not be modified.)
 """
 function getspatialref(geom::AbstractGeometry)
+    if geom.ptr == C_NULL
+        return ISpatialRef()
+    end
     result = GDAL.getspatialreference(geom.ptr)
     if result == C_NULL
         return ISpatialRef()
