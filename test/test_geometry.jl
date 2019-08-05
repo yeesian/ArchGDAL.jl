@@ -203,7 +203,7 @@ end
                                 [(10,0),(10,4),(14,4),(14,0)],
                                 [(11,1),(11,3),(13,3),(13,1)]]])
     geom2 = AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.])
-    
+
     AG.closerings!(geom1)
     @test AG.disjoint(geom1, geom2) == false
     @test AG.touches(geom1, geom2) == true
@@ -240,22 +240,44 @@ end
         AG.removeallgeoms!(result)
         @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
     end
+
+    geom3 = AG.fromWKT("GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)), POINT EMPTY)")
+    AG.clone(geom3) do geom4
+        @test sprint(print, AG.clone(geom3)) == "Geometry: GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8, ... MPTY)"
+        @test sprint(print, AG.clone(geom4)) == "Geometry: GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8, ... MPTY)"
+    end
+    AG.clone(AG.getgeom(geom3, 3)) do geom4
+        @test sprint(print, geom4) == "Geometry: POINT EMPTY"
+    end
+
+    @test AG.toISOWKT(geom3) == "GEOMETRYCOLLECTION Z (POINT Z (2 5 8),POLYGON Z ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON Z ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)),POINT Z EMPTY)"
+    @test AG.toJSON(geom3) == """{ "type": "GeometryCollection", "geometries": [ { "type": "Point", "coordinates": [ 2.0, 5.0, 8.0 ] }, { "type": "Polygon", "coordinates": [ [ [ 0.0, 0.0, 8.0 ], [ 0.0, 4.0, 8.0 ], [ 4.0, 4.0, 8.0 ], [ 4.0, 0.0, 8.0 ], [ 0.0, 0.0, 8.0 ] ], [ [ 1.0, 1.0, 8.0 ], [ 3.0, 1.0, 8.0 ], [ 3.0, 3.0, 8.0 ], [ 1.0, 3.0, 8.0 ], [ 1.0, 1.0, 8.0 ] ] ] }, { "type": "Polygon", "coordinates": [ [ [ 10.0, 0.0, 8.0 ], [ 10.0, 4.0, 8.0 ], [ 14.0, 4.0, 8.0 ], [ 14.0, 0.0, 8.0 ], [ 10.0, 0.0, 8.0 ] ], [ [ 11.0, 1.0, 8.0 ], [ 13.0, 1.0, 8.0 ], [ 13.0, 3.0, 8.0 ], [ 11.0, 3.0, 8.0 ], [ 11.0, 1.0, 8.0 ] ] ] }, null ] }"""
+
+    @test AG.getgeomtype(AG.getgeom(geom3, 0)) == GDAL.wkbPoint25D
+    @test AG.getgeomtype(AG.getgeom(geom3, 1)) == GDAL.wkbPolygon25D
+    @test AG.getgeomtype(AG.getgeom(geom3, 2)) == GDAL.wkbPolygon25D
+    @test AG.getgeomtype(AG.getgeom(geom3, 3)) == GDAL.wkbPoint25D
+    AG.getgeom(geom3, 0) do geom4
+        @test AG.getgeomtype(geom4) == GDAL.wkbPoint25D
+    end
+    AG.getgeom(geom3, 1) do geom4
+        @test AG.getgeomtype(geom4) == GDAL.wkbPolygon25D
+    end
+    AG.getgeom(geom3, 2) do geom4
+        @test AG.getgeomtype(geom4) == GDAL.wkbPolygon25D
+    end
+    AG.getgeom(geom3, 3) do geom4
+        @test AG.getgeomtype(geom4) == GDAL.wkbPoint25D
+    end
 end
 
 # Untested
-# g = clone(geom)
-# C_NULL == clone(geom)
-# clone(geom) do C_NULL
-# toISOWKT(geom::Geometry)
-# toJSON(geom, options)
-# g = getgeom(g, i)
-# C_NULL == getgeom(g, i)
-# getgeom(g, i) do g
-# getgeom(g, i) do C_NULL
+
 # g = getlineargeom(geom, options, stepsize)
 # getlineargeom(geom, options, stepsize) do g
 # g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
 # polygonfromedges(lines, besteffort,autoclose, tol) do g
+
 # spref = getspatialref(geom::Geometry)
 # C_NULL == getspatialref(geom::Geometry)
 # getspatialref(geom) do spref

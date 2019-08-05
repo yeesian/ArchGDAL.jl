@@ -70,6 +70,26 @@ import ArchGDAL; const AG = ArchGDAL
                       Geometry 1 (new geom): [wkbLineString]
                       Geometry 2 (new poly): [wkbPolygon]
                     """
+
+                AG.pushfeature(newlayer) do newfeature
+                    AG.setgeom!(newfeature, 0, AG.createpoint())
+                    AG.setgeom!(newfeature, 1, AG.createlinestring())
+                    AG.setgeom!(newfeature, 2, AG.createpolygon([[[0.,0.], [1.,1.], [0.,1.]]]))
+
+                    @test sprint(print, AG.getgeom(newfeature)) == "Geometry: POINT EMPTY"
+                    @test sprint(print, AG.getgeom(newfeature, 0)) == "Geometry: POINT EMPTY"
+                    @test sprint(print, AG.getgeom(newfeature, 1)) == "Geometry: LINESTRING EMPTY"
+                    @test sprint(print, AG.getgeom(newfeature, 2)) == "Geometry: POLYGON ((0 0,1 1,0 1))"
+                    AG.getgeom(newfeature) do g
+                        @test sprint(print, g) == "Geometry: POINT EMPTY"
+                    end
+                    AG.getgeom(newfeature, 1) do g
+                        @test sprint(print, g) == "Geometry: LINESTRING EMPTY"
+                    end
+                    AG.getgeom(newfeature, 2) do g
+                        @test sprint(print, g) == "Geometry: POLYGON ((0 0,1 1,0 1))"
+                    end
+                end
             end
         end
 
