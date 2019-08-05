@@ -56,8 +56,10 @@ function importEPSG!(spref::AbstractSpatialRef, code::Integer)
     spref
 end
 
-unsafe_importEPSG(code::Integer) = importEPSG!(unsafe_newspatialref(), code)
+"Construct a Spatial Reference System from its EPSG GCS or PCS code."
 importEPSG(code::Integer) = importEPSG!(newspatialref(), code)
+
+unsafe_importEPSG(code::Integer) = importEPSG!(unsafe_newspatialref(), code)
 
 """
 Initialize SRS based on EPSG GCS or PCS code.
@@ -75,8 +77,19 @@ function importEPSGA!(spref::AbstractSpatialRef, code::Integer)
     spref
 end
 
-unsafe_importEPSGA(code::Integer) = importEPSGA!(unsafe_newspatialref(), code)
+"""
+Construct a Spatial Reference System from its EPSG GCS or PCS code.
+
+This method is similar to `importFromEPSG()` except that EPSG preferred axis
+ordering will be applied for geographic and projected coordinate systems. EPSG
+normally defines geographic coordinate systems to use lat/long, and also there
+are also a few projected coordinate systems that use northing/easting order
+contrary to typical GIS use). See `importFromEPSG()` for more
+details on operation of this method.
+"""
 importEPSGA(code::Integer) = importEPSGA!(newspatialref(), code)
+
+unsafe_importEPSGA(code::Integer) = importEPSGA!(unsafe_newspatialref(), code)
 
 """
 Import from WKT string.
@@ -92,9 +105,10 @@ function importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
     spref
 end
 
-"Create SRS from WKT string."
-unsafe_importWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
+"Create SRS from its WKT string."
 importWKT(wktstr::AbstractString) = newspatialref(wktstr)
+
+unsafe_importWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
 
 """
 Import PROJ.4 coordinate string.
@@ -122,10 +136,12 @@ function importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
     spref
 end
 
-unsafe_importPROJ4(projstr::AbstractString) =
-    importPROJ4!(unsafe_newspatialref(), projstr)
+"Create SRS from its PROJ.4 string."
 importPROJ4(projstr::AbstractString) =
     importPROJ4!(newspatialref(), projstr)
+
+unsafe_importPROJ4(projstr::AbstractString) =
+    importPROJ4!(unsafe_newspatialref(), projstr)
 
 """
 Import coordinate system from ESRI .prj format(s).
@@ -153,23 +169,26 @@ function importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
     spref
 end
 
-unsafe_importESRI(esristr::AbstractString) =
-    importESRI!(unsafe_newspatialref(), esristr)
+"Create SRS from its ESRI .prj format(s)."
 importESRI(esristr::AbstractString) =
     importESRI!(newspatialref(), esristr)
 
-"Import coordinate system from XML format (GML only currently)."
+unsafe_importESRI(esristr::AbstractString) =
+    importESRI!(unsafe_newspatialref(), esristr)
+
+"Import SRS from XML format (GML only currently)."
 function importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
     result = GDAL.importfromxml(spref.ptr, xmlstr)
     @ogrerr result "Failed to initialize SRS based on XML string: $xmlstr"
     spref
 end
 
-"Construct coordinate system from XML format (GML only currently)."
-unsafe_importXML(xmlstr::AbstractString) =
-    importXML!(unsafe_newspatialref(), xmlstr)
+"Construct SRS from XML format (GML only currently)."
 importXML(xmlstr::AbstractString) =
     importXML!(newspatialref(), xmlstr)
+
+unsafe_importXML(xmlstr::AbstractString) =
+    importXML!(unsafe_newspatialref(), xmlstr)
 
 """
 Set spatial reference from a URL.
@@ -183,8 +202,15 @@ function importURL!(spref::AbstractSpatialRef, url::AbstractString)
     spref
 end
 
-unsafe_importURL(url::AbstractString) = importURL!(unsafe_newspatialref(), url)
+"""
+Construct SRS from a URL.
+
+This method will download the spatial reference at a given URL and feed it into
+SetFromUserInput for you.
+"""
 importURL(url::AbstractString) = importURL!(newspatialref(), url)
+
+unsafe_importURL(url::AbstractString) = importURL!(unsafe_newspatialref(), url)
 
 "Convert this SRS into WKT format."
 function toWKT(spref::AbstractSpatialRef)
