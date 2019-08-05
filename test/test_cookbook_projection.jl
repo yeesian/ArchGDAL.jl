@@ -4,18 +4,6 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "Reproject a Geometry" begin
     @testset "Method 1" begin
-        source = AG.unsafe_importEPSG(2927); target = AG.unsafe_importEPSG(4326)
-            transform = AG.unsafe_createcoordtrans(source, target)
-                point = AG.unsafe_fromWKT("POINT (1120351.57 741921.42)")
-                    @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
-                    AG.transform!(point, transform)
-                    @test GeoInterface.coordinates(point) ≈ [-122.598135, 47.348801]
-                AG.destroy(point)
-            AG.destroy(transform)
-        AG.destroy(target); AG.destroy(source)
-    end
-
-    @testset "Method 2" begin
         AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
             AG.createcoordtrans(source, target) do transform
                 AG.fromWKT("POINT (1120351.57 741921.42)") do point
