@@ -195,14 +195,15 @@ end
 end
 
 @testset "Testing remaining methods for geometries" begin
-    AG.createmultipolygon(Vector{Vector{Tuple{Cdouble,Cdouble}}}[
+    geom1 = AG.createmultipolygon(Vector{Vector{Tuple{Cdouble,Cdouble}}}[
                             Vector{Tuple{Cdouble,Cdouble}}[
                                 [(0,0),(0,4),(4,4),(4,0)],
                                 [(1,1),(1,3),(3,3),(3,1)]],
                             Vector{Tuple{Cdouble,Cdouble}}[
                                 [(10,0),(10,4),(14,4),(14,0)],
-                                [(11,1),(11,3),(13,3),(13,1)]]]) do geom1
-    AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom2
+                                [(11,1),(11,3),(13,3),(13,1)]]])
+    geom2 = AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.])
+    
         AG.closerings!(geom1)
         @test AG.disjoint(geom1, geom2) == false
         @test AG.touches(geom1, geom2) == true
@@ -239,8 +240,6 @@ end
             AG.removeallgeoms!(result)
             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
         end
-    end
-    end
 end
 
 # Untested
