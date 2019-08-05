@@ -83,12 +83,14 @@ end
 mutable struct FeatureLayer
     ptr::GDALFeatureLayer
     ownedby::AbstractDataset
+    spatialref::AbstractSpatialRef
 
     function FeatureLayer(
             ptr::GDALFeatureLayer = GDALFeatureLayer(C_NULL);
-            ownedby::AbstractDataset = Dataset()
+            ownedby::AbstractDataset = Dataset(),
+            spatialref::AbstractSpatialRef = SpatialRef()
         )
-        new(ptr, ownedby)
+        new(ptr, ownedby, spatialref)
     end
 end
 
