@@ -101,40 +101,18 @@ end
         end
     end
 
-    @testset "Approach 1" begin
-        AG.create(AG.getdriver("MEMORY")) do dataset
-            layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
-            AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
-                AG.setwidth!(fielddefn, 32)
-                AG.write!(layer, fielddefn, true)
-            end
-            featuredefn = AG.getlayerdefn(layer)
-            @test AG.getname(featuredefn) == "point_out"
-            @test AG.nfeature(layer) == 0
-            AG.createfeature(featuredefn) do feature
-                AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
-                AG.setgeom!(feature, AG.createpoint(100.123, 0.123))
-                AG.write!(layer, feature)
-            end
-            @test AG.nfeature(layer) == 1
+    AG.create(AG.getdriver("MEMORY")) do dataset
+        layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
+        AG.writefielddefn(layer, "Name", GDAL.OFTString) do fielddefn
+            AG.setwidth!(fielddefn, 32)
         end
-    end
-
-    @testset "Approach 2" begin
-        AG.create(AG.getdriver("MEMORY")) do dataset
-            layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
-            AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
-                AG.setwidth!(fielddefn, 32)
-                AG.write!(layer, fielddefn, true)
-            end
-            featuredefn = AG.getlayerdefn(layer)
-            @test AG.getname(featuredefn) == "point_out"
-            @test AG.nfeature(layer) == 0
-            AG.createfeature(layer) do feature
-                AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
-                AG.setgeom!(feature, AG.createpoint(100.123, 0.123))
-            end
-            @test AG.nfeature(layer) == 1
+        featuredefn = AG.getlayerdefn(layer)
+        @test AG.getname(featuredefn) == "point_out"
+        @test AG.nfeature(layer) == 0
+        AG.writefeature(layer) do feature
+            AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
+            AG.setgeom!(feature, AG.createpoint(100.123, 0.123))
         end
+        @test AG.nfeature(layer) == 1
     end
 end

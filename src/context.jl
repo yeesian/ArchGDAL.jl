@@ -48,7 +48,7 @@ function executesql(f::Function, dataset::Dataset, args...)
     end
 end
 
-function createfeature(f::Function, layer::FeatureLayer)
+function writefeature(f::Function, layer::FeatureLayer)
     feature = unsafe_createfeature(layer)
     try
         f(feature)
@@ -72,6 +72,88 @@ function createfeature(f::Function, featuredefn::FeatureDefn)
     finally
         destroy(feature)
         dereference(featuredefn)
+    end
+end
+
+"""
+Create a new field on a layer.
+
+This function should not be called while there are feature objects in existence
+that were obtained or created with the previous layer definition.
+
+Not all drivers support this function. You can query a layer to check if it
+supports it with the OLCCreateField capability. Some drivers may only support
+this method while there are still no features in the layer. When it is
+supported, the existing features of the backing file/database should be updated
+accordingly.
+
+Drivers may or may not support not-null constraints. If they support creating
+fields with not-null constraints, this is generally before creating any feature
+to the layer.
+
+### Parameters
+* `layer`:  the layer to write the field definition.
+* `name`:   name of the field definition to write to disk.
+* `etype`:  type of the field definition to write to disk.
+
+### Keyword arguments
+* `approx`: If `true` (default `false`), the field may be created in a slightly
+            different form depending on the limitations of the format driver.
+"""
+function writefielddefn(
+        f::Function,
+        layer::FeatureLayer,
+        name::AbstractString,
+        etype::OGRFieldType;
+        approx::Bool = false
+    )
+    fielddefn = unsafe_createfielddefn(name, etype)
+    try
+        f(fielddefn)
+        write!(layer, fielddefn)
+    finally
+        destroy(fielddefn)
+    end
+end
+
+"""
+Write a new geometry field on a layer.
+
+This function should not be called while there are feature objects in existence
+that were obtained or created with the previous layer definition.
+
+Not all drivers support this function. You can query a layer to check if it
+supports it with the OLCCreateField capability. Some drivers may only support
+this method while there are still no features in the layer. When it is
+supported, the existing features of the backing file/database should be updated
+accordingly.
+
+Drivers may or may not support not-null constraints. If they support creating
+fields with not-null constraints, this is generally before creating any feature
+to the layer.
+
+### Parameters
+* `layer`:  the layer to write the field definition.
+* `name`:   name of the field definition to write to disk.
+* `etype`:  type of the geometry field defintion to write to disk.
+
+### Keyword arguments
+* `approx`: If `true` (default `false`), the geometry field may be created in a
+            slightly different form depending on the limitations of the driver.
+"""
+function writegeomdefn(
+        f::Function,
+        layer::FeatureLayer,
+        name::AbstractString,
+        etype::OGRwkbGeometryType;
+        approx::Bool = false
+    )
+    geomdefn = unsafe_creategeomdefn(name, etype)
+    try
+        f(geomdefn)
+        write!(layer, geomdefn)
+    finally
+        destroy(geomdefn)
     end
 end
 
