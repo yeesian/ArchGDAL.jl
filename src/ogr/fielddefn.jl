@@ -117,7 +117,6 @@ Set defining parameters for a field in one call.
 * `etype`:      the new type (one of the OFT values like OFTInteger).
 * `nwidth`:     the preferred formatting width. 0 (default) indicates undefined.
 * `nprecision`: number of decimals for formatting. 0 (default) for undefined.
-                indicating undefined.
 * `justify`:    the formatting justification ([OJUndefined], OJLeft or OJRight)
 """
 function setparams!(
@@ -126,7 +125,7 @@ function setparams!(
         etype::OGRFieldType;
         nwidth::Integer             = 0,
         nprecision::Integer         = 0,
-        justify::OGRJustification   = OJUndefined
+        justify::OGRJustification   = GDAL.OJUndefined
     )
     GDAL.set(fielddefn.ptr,
         name,
