@@ -553,8 +553,8 @@ This function should not be called while there are feature objects in existence
 that were obtained or created with the previous layer definition.
 
 Not all drivers support this function. You can query a layer to check if it
-supports it with the OLCCreateField capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
+supports it with the `GDAL.OLCCreateField` capability. Some drivers may only
+support this method while there are still no features in the layer. When it is
 supported, the existing features of the backing file/database should be updated
 accordingly.
 
@@ -589,8 +589,8 @@ This function should not be called while there are feature objects in existence
 that were obtained or created with the previous layer definition.
 
 Not all drivers support this function. You can query a layer to check if it
-supports it with the OLCCreateField capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
+supports it with the `GDAL.OLCCreateGeomField` capability. Some drivers may only
+support this method while there are still no features in the layer. When it is
 supported, the existing features of the backing file/database should be updated
 accordingly.
 
@@ -642,6 +642,10 @@ function deletefield!(layer::FeatureLayer, i::Integer)
     @ogrerr result "Failed to delete field $i"
     layer
 end
+
+# function deletegeomdefn!(layer::FeatureLayer, i::Integer)
+#     error("OGR_L_DeleteGeomField() is not implemented in GDAL yet.")
+# end
 
 """
 Reorder all the fields of a layer.
