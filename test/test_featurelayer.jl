@@ -89,17 +89,9 @@ end
 
 # Untested:
 
-# write!(layer::FeatureLayer, feature::Feature) 
+# write!(layer::FeatureLayer, feature::Feature)
+# write!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
 # deletefeature!(layer::FeatureLayer, i::Integer)
-# writegeom!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
-# deletefield!(layer::FeatureLayer, i::Integer)
-# reorderfields!(layer::FeatureLayer, indices::Vector{Cint})
-# reorderfield!(layer::FeatureLayer, oldpos::Integer, newpos::Integer)
-# alterfielddefn!(layer::FeatureLayer, i::Integer, newfielddefn::FieldDefn, flags::UInt8)
-
-# starttransaction(layer)
-# committransaction(layer)
-# rollbacktransaction(layer)
 
 # intersection(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
 # union(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressdata = C_NULL, progressfunc::Function = GDAL.C.GDALDummyProgress)
@@ -108,3 +100,11 @@ end
 # update(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
 # clip(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
 # erase(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
+
+# deletefield!(layer::FeatureLayer, i::Integer)
+# reorderfields!(layer::FeatureLayer, indices::Vector{Cint})
+# reorderfield!(layer::FeatureLayer, oldpos::Integer, newpos::Integer)
+# alterfielddefn!(layer::FeatureLayer, i::Integer, newfielddefn::FieldDefn, flags::UInt8)
+# starttransaction(layer)
+# committransaction(layer)
+# rollbacktransaction(layer)

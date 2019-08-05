@@ -565,7 +565,7 @@ to the layer.
 ### Parameters
 * `layer`:  the layer to write the field definition.
 * `field`:  the field definition to write to disk.
-* `approx`: If TRUE, the field may be created in a slightly different form
+* `approx`: If `true`, the field may be created in a slightly different form
             depending on the limitations of the format driver.
 """
 function write!(
@@ -613,7 +613,7 @@ function write!(
         approx::Bool = false
     )
     result = GDAL.creategeomfield(layer.ptr, field.ptr, approx)
-    @ogrerr result "Failed to create new field"
+    @ogrerr result "Failed to create new geometry field"
     layer
 end
 
