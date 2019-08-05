@@ -52,7 +52,7 @@ for details.
 """
 function importEPSG!(spref::AbstractSpatialRef, code::Integer)
     result = GDAL.importfromepsg(spref.ptr, code)
-    @ogrerr result "Failed to initialize SRS based on EPSG $code"
+    @ogrerr result "Failed to initialize SRS based on EPSG"
     spref
 end
 
@@ -73,7 +73,7 @@ details on operation of this method.
 """
 function importEPSGA!(spref::AbstractSpatialRef, code::Integer)
     result = GDAL.importfromepsga(spref.ptr, code)
-    @ogrerr result "Failed to initializ SRS based on EPSGA $code"
+    @ogrerr result "Failed to initializ SRS based on EPSGA"
     spref
 end
 
@@ -101,7 +101,7 @@ pointer is then updated to point to the remaining (unused) input.
 """
 function importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
     result = GDAL.importfromwkt(spref.ptr, [wktstr])
-    @ogrerr result "Failed to initialize SRS based on WKT string: $wktstr"
+    @ogrerr result "Failed to initialize SRS based on WKT string"
     spref
 end
 
@@ -132,7 +132,7 @@ For example: `\"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
 """
 function importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
     result = GDAL.importfromproj4(spref.ptr, projstr)
-    @ogrerr result "Failed to initialize SRS based on PROJ4 string: $projstr"
+    @ogrerr result "Failed to initialize SRS based on PROJ4 string"
     spref
 end
 
@@ -165,7 +165,7 @@ new style (Arc 8) .prj files.
 """
 function importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
     result = GDAL.importfromesri(spref.ptr, [esristr])
-    @ogrerr result "Failed to initialize SRS based on ESRI string: $esristr"
+    @ogrerr result "Failed to initialize SRS based on ESRI string"
     spref
 end
 
@@ -179,7 +179,7 @@ unsafe_importESRI(esristr::AbstractString) =
 "Import SRS from XML format (GML only currently)."
 function importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
     result = GDAL.importfromxml(spref.ptr, xmlstr)
-    @ogrerr result "Failed to initialize SRS based on XML string: $xmlstr"
+    @ogrerr result "Failed to initialize SRS based on XML string"
     spref
 end
 
@@ -198,7 +198,7 @@ SetFromUserInput for you.
 """
 function importURL!(spref::AbstractSpatialRef, url::AbstractString)
     result = GDAL.importfromurl(spref.ptr, url)
-    @ogrerr result "Failed to initialize SRS from URL: $url"
+    @ogrerr result "Failed to initialize SRS from URL"
     spref
 end
 
@@ -333,13 +333,13 @@ function setattrvalue!(
         value::AbstractString
     )
     result = GDAL.setattrvalue(spref.ptr, path, value)
-    @ogrerr result "Failed to set attribute $path to value $value"
+    @ogrerr result "Failed to set attribute path to value"
     value
 end
 
 function setattrvalue!(spref::AbstractSpatialRef, path::AbstractString)
     result = GDAL.setattrvalue(spref.ptr, path, C_NULL)
-    @ogrerr result "Failed to set attribute $path"
+    @ogrerr result "Failed to set attribute path"
 end
 
 """
