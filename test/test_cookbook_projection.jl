@@ -44,5 +44,18 @@ end
         @test AG.toWKT(spatialref)[1:6] == "PROJCS"
         AG.morphtoESRI!(spatialref)
         @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +ellps=GRS80 +units=m +no_defs "
+        AG.morphfromESRI!(spatialref)
+        @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs "
+        AG.importEPSGA!(spatialref, 4326)
+        @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs "
+    end
+
+    AG.importEPSGA(4326) do spatialref
+        cloneref = AG.clone(spatialref)
+        AG.clone(spatialref) do cloneref2
+            @test AG.toWKT(cloneref) == AG.toWKT(cloneref2)
+        end
+        @test AG.toWKT(cloneref) == AG.toWKT(AG.importEPSGA(4326))
+        @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs "
     end
 end

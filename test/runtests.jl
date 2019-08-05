@@ -80,6 +80,7 @@ end
         include("test_dataset.jl")
         include("test_rasterband.jl")
         include("test_rasterio.jl")
+        include("test_spatialref.jl")
         include("test_gdalutilities.jl")
         include("test_rasterattrtable.jl")
         include("test_ospy_examples.jl")
