@@ -19,6 +19,11 @@ import ArchGDAL; const AG = ArchGDAL
              Field 0 (FID): [OFTReal], 2.0, 3.0, 0.0, 3.0
              Field 1 (pointname): [OFTString], point-a, point-b, a, b
         """
+        @test sprint(print, AG.getlayerdefn(layer)) == """
+          Geometry (index 0):  (wkbPoint)
+             Field (index 0): FID (OFTReal)
+             Field (index 1): pointname (OFTString)
+        """
         @test sprint(print, AG.getspatialref(layer)) ==
             "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
 
