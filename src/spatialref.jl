@@ -395,10 +395,10 @@ Transform points from source to destination space.
 `true` on success, or `false` if some or all points fail to transform.
 """
 function transform!(
-        obj::CoordTransform,
         xvertices::Vector{Cdouble},
         yvertices::Vector{Cdouble},
-        zvertices::Vector{Cdouble}
+        zvertices::Vector{Cdouble},
+        obj::CoordTransform
     )
     # The method TransformEx() allows extended success information to be captured
     # indicating which points failed to transform.
