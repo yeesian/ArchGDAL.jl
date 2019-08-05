@@ -2,8 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
-@testset "Test methods for Spatial Reference Systems" begin
-    @testset "PROJ4 String Format" begin
+@testset "Test Formats for Spatial Reference Systems" begin
+    @testset "PROJ4 Format" begin
         proj4326 = "+proj=longlat +datum=WGS84 +no_defs "
         proj26912 = "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs "
         AG.importPROJ4(proj4326) do spatialref
@@ -14,13 +14,13 @@ import ArchGDAL; const AG = ArchGDAL
         end
     end
 
-    @testset "WKT String Format" begin
+    @testset "WKT Format" begin
         wkt4326 = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
         wkt26912 = "PROJCS[\"NAD83 / UTM zone 12N\",GEOGCS[\"NAD83\",DATUM[\"North_American_Datum_1983\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],TOWGS84[0,0,0,0,0,0,0],AUTHORITY[\"EPSG\",\"6269\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4269\"]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",0],PARAMETER[\"central_meridian\",-111],PARAMETER[\"scale_factor\",0.9996],PARAMETER[\"false_easting\",500000],PARAMETER[\"false_northing\",0],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH],AUTHORITY[\"EPSG\",\"26912\"]]"
         AG.importWKT(wkt4326) do spatialref
             spatialref2 = AG.importWKT(wkt26912)
             @test AG.toWKT(spatialref2) == wkt26912
-            AG.importPROJ4!(spatialref2, AG.toPROJ4(spatialref))
+            AG.importWKT!(spatialref2, AG.toWKT(spatialref))
             @test AG.toWKT(spatialref2) == wkt4326
         end
     end
