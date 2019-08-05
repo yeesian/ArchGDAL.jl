@@ -241,7 +241,7 @@ end
         @test sprint(print, spatialref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
         AG.setattrvalue!(spatialref, "GEOGCS|AUTHORITY|EPSG")
         @test AG.toWKT(spatialref) == "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"]]"
-        AG.setattrvalue!(spatialref, "GEOGCS|NEWATTRIBUTE|7031")
+        AG.setattrvalue!(spatialref, "GEOGCS|NEWATTRIBUTE", "7031")
         @test AG.toWKT(spatialref) == "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AUTHORITY[\"EPSG\",\"4326\"],NEWATTRIBUTE[7031]]"
         @test AG.getattrvalue(spatialref, "AUTHORITY", 0) == "EPSG"
         @test AG.getattrvalue(spatialref, "AUTHORITY", 1) == "4326"
