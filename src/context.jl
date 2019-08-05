@@ -52,7 +52,7 @@ function createfeature(f::Function, layer::FeatureLayer)
     feature = unsafe_createfeature(layer)
     try
         f(feature)
-        writefeature!(layer, feature)
+        write!(layer, feature)
     finally
         destroy(feature)
     end

@@ -106,7 +106,7 @@ end
             layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
             AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
                 AG.setwidth!(fielddefn, 32)
-                AG.writefield!(layer, fielddefn, true)
+                AG.write!(layer, fielddefn, true)
             end
             featuredefn = AG.getlayerdefn(layer)
             @test AG.getname(featuredefn) == "point_out"
@@ -114,7 +114,7 @@ end
             AG.createfeature(featuredefn) do feature
                 AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
                 AG.setgeom!(feature, AG.createpoint(100.123, 0.123))
-                AG.writefeature!(layer, feature)
+                AG.write!(layer, feature)
             end
             @test AG.nfeature(layer) == 1
         end
@@ -125,7 +125,7 @@ end
             layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
             AG.createfielddefn("Name", GDAL.OFTString) do fielddefn
                 AG.setwidth!(fielddefn, 32)
-                AG.writefield!(layer, fielddefn, true)
+                AG.write!(layer, fielddefn, true)
             end
             featuredefn = AG.getlayerdefn(layer)
             @test AG.getname(featuredefn) == "point_out"

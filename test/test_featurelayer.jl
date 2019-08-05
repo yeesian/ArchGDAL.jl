@@ -89,7 +89,7 @@ end
 
 # Untested:
 
-# writefeature!(layer::FeatureLayer, feature::Feature) 
+# write!(layer::FeatureLayer, feature::Feature) 
 # deletefeature!(layer::FeatureLayer, i::Integer)
 # writegeom!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
 # deletefield!(layer::FeatureLayer, i::Integer)

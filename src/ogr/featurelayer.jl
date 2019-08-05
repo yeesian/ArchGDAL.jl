@@ -292,7 +292,7 @@ random access writing via OGR_L_SetFeature().
 OGRERR_NONE if the operation works, otherwise an appropriate error code
 (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
 """
-function writefeature!(layer::FeatureLayer, feature::Feature)
+function write!(layer::FeatureLayer, feature::Feature)
     result = GDAL.setfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to set feature."
     layer
@@ -307,7 +307,7 @@ OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function writefeature!(layer::FeatureLayer, feature::Feature)
+function write!(layer::FeatureLayer, feature::Feature)
     result = GDAL.createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
     layer
@@ -568,7 +568,7 @@ to the layer.
 * `approx`: If TRUE, the field may be created in a slightly different form
             depending on the limitations of the format driver.
 """
-function writefield!(
+function write!(
         layer::FeatureLayer,
         field::FieldDefn,
         approx::Bool = false
@@ -607,7 +607,7 @@ to the layer.
 ### Returns
 OGRERR_NONE on success.
 """
-function writegeom!(
+function write!(
         layer::FeatureLayer,
         field::GeomFieldDefn,
         approx::Bool = false
