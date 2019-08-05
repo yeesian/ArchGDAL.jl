@@ -7,6 +7,10 @@ import ArchGDAL; const AG = ArchGDAL
         AG.createcopy(dataset) do tmpcopy
             @test AG.nlayer(tmpcopy) == 1
             tmplayer = AG.getlayer(tmpcopy,0)
+            @test sprint(print, AG.getspatialref(tmplayer)) == "NULL Spatial Reference System"
+            AG.getspatialref(tmplayer) do spref
+                @test sprint(print, spref) == "NULL Spatial Reference System"
+            end
             @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == false
             AG.setignoredfields!(tmplayer, ["OGR_GEOMETRY"])
             @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == true
@@ -85,8 +89,6 @@ end
 
 # Untested:
 
-# C_NULL == getspatialref(layer)
-# getspatialref(layer) do C_NULL
 # writefeature!(layer::FeatureLayer, feature::Feature) 
 # deletefeature!(layer::FeatureLayer, i::Integer)
 # writegeom!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
