@@ -756,29 +756,29 @@ function alterfielddefn!(
     layer
 end
 
-"For datasources which support transactions, creates a transaction."
-function starttransaction(layer::FeatureLayer)
-    result = GDAL.starttransaction(layer.ptr)
-    @ogrerr result "Failed to start transaction."
-    layer
-end
+# "For datasources which support transactions, creates a transaction."
+# function starttransaction(layer::FeatureLayer)
+#     result = GDAL.starttransaction(layer.ptr)
+#     @ogrerr result "Failed to start transaction."
+#     layer
+# end
 
-"For datasources which support transactions, commits a transaction."
-function committransaction(layer::FeatureLayer)
-    result = GDAL.committransaction(layer.ptr)
-    @ogrerr result "Failed to commit transaction."
-    layer
-end
+# "For datasources which support transactions, commits a transaction."
+# function committransaction(layer::FeatureLayer)
+#     result = GDAL.committransaction(layer.ptr)
+#     @ogrerr result "Failed to commit transaction."
+#     layer
+# end
 
-"""
-For datasources which support transactions, RollbackTransaction will roll back
-a datasource to its state before the start of the current transaction.
-"""
-function rollbacktransaction(layer::FeatureLayer)
-    result = GDAL.rollbacktransaction(layer.ptr)
-    @ogrerr result "Failed to rollback transaction."
-    layer
-end
+# """
+# For datasources which support transactions, RollbackTransaction will roll back
+# a datasource to its state before the start of the current transaction.
+# """
+# function rollbacktransaction(layer::FeatureLayer)
+#     result = GDAL.rollbacktransaction(layer.ptr)
+#     @ogrerr result "Failed to rollback transaction."
+#     layer
+# end
 
 """
 Increment layer reference count.
