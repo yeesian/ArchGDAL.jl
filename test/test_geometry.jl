@@ -278,8 +278,29 @@ end
 # g = polygonfromedges(lines::Geometry, besteffort::Bool,autoclose::Bool, tol::Real)
 # polygonfromedges(lines, besteffort,autoclose, tol) do g
 
-# spref = getspatialref(geom::Geometry)
-# C_NULL == getspatialref(geom::Geometry)
-# getspatialref(geom) do spref
-# getspatialref(geom) do C_NULL
-# transform!(geom::Geometry, coordtransform::CoordTransform)
+@testset "Spatial Reference Systems" begin
+    AG.read("data/point.geojson") do dataset
+        layer = AG.getlayer(dataset, 0)
+        AG.nextfeature(layer) do feature
+            geom = AG.getgeom(feature)
+            @test AG.toPROJ4(AG.getspatialref(geom)) == "+proj=longlat +datum=WGS84 +no_defs "
+            AG.getspatialref(geom) do spatialref
+                @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs "
+            end
+        end
+        AG.createpoint(1,2) do point
+            @test sprint(print, AG.getspatialref(point)) == "NULL Spatial Reference System"
+            AG.getspatialref(point) do spatialref
+                @test sprint(print, spatialref) == "NULL Spatial Reference System"
+            end
+        end
+    end
+
+    AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
+        AG.createcoordtrans(source, target) do transform
+            AG.fromWKT("POINT (1120351.57 741921.42)") do point
+                @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
+                AG.transform!(point, transform)
+                @test GeoInterface.coordinates(point) ≈ [-122.598135, 47.348801]
+    end end end end
+end
