@@ -212,13 +212,30 @@ import ArchGDAL; const AG = ArchGDAL
             AG.importXML!(spatialref2, xml4326)
             @test startswith(AG.toXML(spatialref2), "<gml:GeographicCRS")
         end
+
+        # ERROR: GDALError (CE_Failure, code 6):
+        #   GDAL/OGR not compiled with libcurl support, remote requests not supported.
+        # url4326 = "http://spatialreference.org/ref/epsg/4326/ogcwkt/"
+        # proj4326 = "+proj=longlat +datum=WGS84 +no_defs "
+        # urlsample = "http://spatialreference.org/ref/epsg/2039/esriwkt/"
+        # projsample = "+proj=tmerc +lat_0=31.73439361111111 +lon_0=35.20451694444445 +k=1.0000067 +x_0=219529.584 +y_0=626907.39 +ellps=GRS80 +units=m +no_defs "
+        # AG.importURL(url4326) do spatialref
+        #     spatialref2 = AG.importURL(urlsample)
+        #     @test AG.toWKT(spatialref2) == projsample
+        #     AG.importURL!(spatialref2, url4326)
+        #     @test AG.toWKT(spatialref2) == proj4326
+        # end
+    end
+end
+
+@testset "Cloning NULL SRS" begin
+    @test sprint(print, AG.clone(AG.ISpatialRef())) == "NULL Spatial Reference System"
+    AG.clone(AG.ISpatialRef()) do spatialref
+        @test sprint(print, spatialref) == "NULL Spatial Reference System"
     end
 end
 
 # untested
-# importURL!(spref, projstring)
-# importURL(projstring) do spref
-# spref = importURL(projstring)
 # setattrvalue!(spref, path, value)
 # setattrvalue!(spref, path)
 # getattrvalue(spref, name, i)
