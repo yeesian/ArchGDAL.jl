@@ -12,6 +12,19 @@ import ArchGDAL; const AG = ArchGDAL
                     @test GeoInterface.coordinates(point) ≈ [-122.598135, 47.348801]
         end end end end
     end
+
+    @testset "Method 2" begin
+        AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
+            AG.createcoordtrans(source, target) do transform
+                xs = [-122.598135,-122.598135]
+                ys = [47.348801, 47.348801]
+                zs = [0.0, 0.0]
+                @test AG.transform!(xs, ys, zs, transform) == true
+                @test xs ≈ [-126.864185, -126.864185]
+                @test ys ≈ [45.151885, 45.151885]
+                @test zs ≈ [0.0, 0.0]
+        end end end
+    end
 end
 
 @testset "Get Projection" begin
