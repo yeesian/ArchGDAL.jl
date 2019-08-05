@@ -17,11 +17,63 @@ import ArchGDAL; const AG = ArchGDAL
             AG.synctodisk!(tmplayer)
         end
 
-        layer = AG.getlayer(dataset, 0)
-        @test sprint(print, AG.getspatialref(layer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
-        AG.getspatialref(layer) do spref
-            @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+        AG.createcopy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
+            tmplayer = AG.getlayer(dataset, 0)
+            @test sprint(print, AG.getspatialref(tmplayer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+            AG.getspatialref(tmplayer) do spref
+                @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+            end
+            AG.createlayer(tmpcopy,
+                           "new layer",
+                           AG.getspatialref(tmplayer),
+                           geom = GDAL.wkbPoint) do newlayer
+                @test AG.ngeom(AG.getlayerdefn(newlayer)) == 1
+                @test sprint(print, newlayer) == """
+                    Layer: new layer
+                      Geometry 0 (): [wkbPoint]
+                    """
+                AG.writegeomdefn(newlayer,
+                                 "new geom",
+                                 GDAL.wkbLineString) do gfd
+                    @test AG.getname(gfd) == "new geom"
+                    @test AG.gettype(gfd) == GDAL.wkbLineString
+                end
+                @test sprint(print, newlayer) == """
+                    Layer: new layer
+                      Geometry 0 (): [wkbPoint]
+                      Geometry 1 (new geom): [wkbLineString]
+                    """
+                @test AG.ngeom(AG.getlayerdefn(newlayer)) == 2
+                @test AG.nfeature(newlayer) == 0
+                AG.writefeature(newlayer) do newfeature
+                    AG.setgeom!(newfeature, 0, AG.createpoint())
+                    AG.setgeom!(newfeature, 1, AG.createlinestring())
+                end
+                @test AG.nfeature(newlayer) == 1
+                @test sprint(print, newlayer) == """
+                    Layer: new layer
+                      Geometry 0 (): [wkbPoint]
+                      Geometry 1 (new geom): [wkbLineString]
+                    """
+                AG.deletefeature!(newlayer, 0)
+                @test AG.nfeature(newlayer) == 0
+                @test sprint(print, newlayer) == """
+                    Layer: new layer
+                      Geometry 0 (): [wkbPoint]
+                      Geometry 1 (new geom): [wkbLineString]
+                    """
+                AG.writegeomdefn!(newlayer, "new poly", GDAL.wkbPolygon)
+                @test AG.ngeom(AG.getlayerdefn(newlayer)) == 3
+                @test sprint(print, newlayer) == """
+                    Layer: new layer
+                      Geometry 0 (): [wkbPoint]
+                      Geometry 1 (new geom): [wkbLineString]
+                      Geometry 2 (new poly): [wkbPolygon]
+                    """
+            end
         end
+
+        layer = AG.getlayer(dataset, 0)
         @test AG.getfidcolname(layer) == ""
         @test AG.getgeomcolname(layer) == ""
         @test AG.nreference(layer) == 0
@@ -89,10 +141,6 @@ end
 
 # Untested:
 
-# write!(layer::FeatureLayer, feature::Feature)
-# write!(layer::FeatureLayer, field::GeomFieldDefn, approx::Bool = false)
-# deletefeature!(layer::FeatureLayer, i::Integer)
-
 # intersection(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
 # union(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressdata = C_NULL, progressfunc::Function = GDAL.C.GDALDummyProgress)
 # symdifference(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
@@ -101,10 +149,11 @@ end
 # clip(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
 # erase(input::FeatureLayer, method::FeatureLayer, result::FeatureLayer; options = StringList(C_NULL), progressfunc::Function = GDAL.C.GDALDummyProgress, progressdata = C_NULL)
 
-# deletefield!(layer::FeatureLayer, i::Integer)
-# reorderfields!(layer::FeatureLayer, indices::Vector{Cint})
-# reorderfield!(layer::FeatureLayer, oldpos::Integer, newpos::Integer)
-# alterfielddefn!(layer::FeatureLayer, i::Integer, newfielddefn::FieldDefn, flags::UInt8)
+# deletefielddefn!(layer::FeatureLayer, i::Integer)
+# reorderfielddefn!(layer::FeatureLayer, indices::Vector{Cint})
+# reorderfielddefn!(layer::FeatureLayer, oldpos::Integer, newpos::Integer)
+# updatefielddefn!(layer::FeatureLayer, i::Integer, newfielddefn::FieldDefn, flags::UInt8)
+
 # starttransaction(layer)
 # committransaction(layer)
 # rollbacktransaction(layer)
