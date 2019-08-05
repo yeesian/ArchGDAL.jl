@@ -97,17 +97,43 @@ to the layer.
 * `etype`:  type of the field definition to write to disk.
 
 ### Keyword arguments
-* `approx`: If `true` (default `false`), the field may be created in a slightly
-            different form depending on the limitations of the format driver.
+* `nwidth`:     the preferred formatting width. 0 (default) indicates undefined.
+* `nprecision`: number of decimals for formatting. 0 (default) for undefined.
+* `justify`:    the formatting justification ([OJUndefined], OJLeft or OJRight)
+* `approx`:     If `true` (default `false`), the field may be created in a
+                slightly different form depending on the limitations of the
+                format driver.
 """
+function writefielddefn!(
+        layer::FeatureLayer,
+        name::AbstractString,
+        etype::OGRFieldType;
+        nwidth::Integer             = 0,
+        nprecision::Integer         = 0,
+        justify::OGRJustification   = GDAL.OJUndefined,
+        approx::Bool                = false
+    )
+    fielddefn = unsafe_createfielddefn(name, etype)
+    setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
+        justify = justify)
+    write!(layer, fielddefn)
+    destroy(fielddefn)
+    layer
+end
+
 function writefielddefn(
         f::Function,
         layer::FeatureLayer,
         name::AbstractString,
         etype::OGRFieldType;
-        approx::Bool = false
+        nwidth::Integer             = 0,
+        nprecision::Integer         = 0,
+        justify::OGRJustification   = GDAL.OJUndefined,
+        approx::Bool                = false
     )
     fielddefn = unsafe_createfielddefn(name, etype)
+    setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
+        justify = justify)
     try
         f(fielddefn)
         write!(layer, fielddefn)
