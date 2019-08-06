@@ -51,7 +51,7 @@ identifydriver(filename::AbstractString) =
 """
 Validate the list of creation options that are handled by a drv.
 
-This is a helper method primarily used by `create()` and `createcopy()` to
+This is a helper method primarily used by `create()` and `copy()` to
 validate that the passed in list of creation options is compatible with the
 `GDAL_DMD_CREATIONOPTIONLIST` metadata item defined by some drivers.
 
@@ -63,7 +63,7 @@ validate that the passed in list of creation options is compatible with the
 
 ### Returns
 `true` if the list of creation options is compatible with the `create()` and
-`createCopy()` method of the driver, `false` otherwise.
+`createcopy()` method of the driver, `false` otherwise.
 
 ### Additional Remarks
 See also: `options(drv::Driver)`

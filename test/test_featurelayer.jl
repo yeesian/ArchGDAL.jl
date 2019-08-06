@@ -4,7 +4,7 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "Testing FeatureLayer Methods" begin
     AG.read("data/point.geojson") do dataset
-        AG.createcopy(dataset) do tmpcopy
+        AG.copy(dataset) do tmpcopy
             @test AG.nlayer(tmpcopy) == 1
             tmplayer = AG.getlayer(tmpcopy,0)
             @test sprint(print, AG.getspatialref(tmplayer)) == "NULL Spatial Reference System"
@@ -17,7 +17,7 @@ import ArchGDAL; const AG = ArchGDAL
             AG.synctodisk!(tmplayer)
         end
 
-        AG.createcopy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
+        AG.copy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
             tmplayer = AG.getlayer(dataset, 0)
             @test sprint(print, AG.getspatialref(tmplayer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
             AG.getspatialref(tmplayer) do spref

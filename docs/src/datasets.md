@@ -86,7 +86,7 @@ For more on working with raster data, see the Section on `Raster Data`.
 ## Working with Files
 We provide the following methods for working with files:
 
-* `ArchGDAL.createcopy()`: create a copy of a raster dataset. This is often used with a virtual source dataset allowing configuration of band types, and other information without actually duplicating raster data.
+* `ArchGDAL.copy()`: create a copy of a raster dataset. This is often used with a virtual source dataset allowing configuration of band types, and other information without actually duplicating raster data.
 * `ArchGDAL.create()`: creates a new dataset Note: many sequential write-once formats (such as JPEG and PNG) don't implement the `Create()` method but do implement the `CreateCopy()` method. If the driver doesn't implement `CreateCopy()`, but does implement `Create()` then the default `CreateCopy()` mechanism built on calling `Create()` will be used.
 * `ArchGDAL.read()`: opens a dataset in read-only mode. The returned dataset should only be accessed by one thread at a time. To use it from different threads, you must add all necessary code (mutexes, etc.) to avoid concurrent use of the object. (Some drivers, such as GeoTIFF, maintain internal state variables that are updated each time a new block is read, preventing concurrent use.)
 * `ArchGDAL.update()`: opens a dataset with the possibility of updating it. If you open a dataset object with update access, it is not recommended to open a new dataset on the same underlying file.
