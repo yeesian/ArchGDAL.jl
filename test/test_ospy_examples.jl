@@ -174,7 +174,7 @@ end
                         AG.addpoint!(ring, parse(Float64, xy[1]),
                                            parse(Float64, xy[2]))
                     end
-                    AG.addgeom!(poly, ring)
+                    AG.push!(poly, ring)
                     AG.setgeom!(feature, poly)    
         end end end
         @test sprint(print, layer) == """
