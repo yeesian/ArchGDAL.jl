@@ -162,7 +162,7 @@ function Base.show(io::IO, fd::FieldDefn)
     print(io, "$(getname(fd)) ($(gettype(fd)))")
 end
 
-function Base.show(io::IO, gfd::GeomFieldDefn)
+function Base.show(io::IO, gfd::AbstractGeomFieldDefn)
     gfd.ptr == C_NULL && (return print(io, "NULL GeomFieldDefn"))
     print(io, "$(getname(gfd)) ($(gettype(gfd)))")
 end

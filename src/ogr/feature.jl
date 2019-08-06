@@ -575,7 +575,7 @@ The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
 getgeomdefn(feature::Feature, i::Integer) =
-    GeomFieldDefn(GDAL.getgeomfielddefnref(feature.ptr, i))
+    IGeomFieldDefnView(GDAL.getgeomfielddefnref(feature.ptr, i))
 
 """
 Fetch the geometry field index given geometry field name.
