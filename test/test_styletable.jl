@@ -47,7 +47,7 @@ import ArchGDAL; const AG = ArchGDAL
             AG.addstyle!(stbl, "name2", "style2")
             AG.addstyle!(stbl, "name3", "style3")
             AG.addstyle!(stbl, "name4", "style4")
-            @test AG.find(stbl, "name3") == "style3"
+            @test AG.findstylestring(stbl, "name3") == "style3"
             @test AG.laststyle(stbl) == ""
             @test AG.nextstyle(stbl) == "style1"
             @test AG.nextstyle(stbl) == "style2"
@@ -57,7 +57,7 @@ import ArchGDAL; const AG = ArchGDAL
         end
         AG.createstyletable() do stbl
             AG.loadstyletable!(stbl, "tmp/styletable.txt")
-            @test AG.find(stbl, "name3") == "style3"
+            @test AG.findstylestring(stbl, "name3") == "style3"
             @test AG.laststyle(stbl) == ""
             @test AG.nextstyle(stbl) == "style1"
             @test AG.nextstyle(stbl) == "style2"
