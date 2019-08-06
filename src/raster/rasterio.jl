@@ -2,56 +2,52 @@
 """
 Read/write a region of image data from multiple bands.
 
-This method allows reading a region of one or more `GDALRasterBands` from this
+This method allows reading a region of one or more `RasterBand`s from this
 dataset into a buffer, or writing data from a buffer into a region of the
-`GDALRasterBands`. It automatically takes care of data type translation if the
-data type (`eBufType`) of the buffer is different than that of the
+`RasterBand`s. It automatically takes care of data type translation if the
+element type (`<:Real`) of the buffer is different than that of the
 `GDALRasterBand`. The method also takes care of image decimation / replication
-if the buffer size (`nBufXSize x nBufYSize`) is different than the size of the
-region being accessed (`nXSize x nYSize`).
+if the buffer size (`xsz x ysz`) is different than the size of the
+region being accessed (`xsize x ysize`).
 
 The `pxspace`, `linespace` and `bandspace` parameters allow reading into
 or writing from various organization of buffers.
 
 For highest performance full resolution data access, read and write on \"block
-boundaries\" as returned by `GetBlockSize()`, or use the `ReadBlock()` and
-`WriteBlock()` methods.
+boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
+`writeblock!()` methods.
 
 ### Parameters
-* `access`      Either `GF_Read` to read a region of data, or `GF_Write` to
-                write a region of data.
-* `xoffset`     The pixel offset to the top left corner of the band to be
-                accessed. This would be 0 to start from the left side.
-* `yoffset`     The line offset to the top left corner of the region of the
-                band to be accessed. This would be zero to start from the top.
+* `access`      Either `GDAL.GF_Read` to read a region of data, or
+                `GDAL.GF_Write` to write a region of data.
+* `xoffset`     The pixel offset to the top left corner of the region to be
+                accessed. It will be `0` (default) to start from the left.
+* `yoffset`     The line offset to the top left corner of the region to be
+                accessed. It will be `0` (default) to start from the top.
 * `xsize`       The width of the region of the band to be accessed in pixels.
 * `ysize`       The height of the region of the band to be accessed in lines.
 * `buffer`      The buffer into which the data should be read, or from which it
-                should be written. It must contain
-                    ≥`nBufXSize * nBufYSize * nBandCount`
-                words of type `eBufType`. It is organized in left to right,
-                top to bottom pixel order. Spacing is controlled by the
-                `nPixelSpace`, and `nLineSpace` parameters
+                should be written. It must contain `≥ xsz * ysz * <# of bands>`
+                words of type `eltype(buffer)`. It is organized in left to
+                right, top to bottom pixel order. Spacing is controlled by the
+                `pxspace`, and `linespace` parameters
 * `xsz`         The width of the buffer image into which the desired region is
                 to be read, or from which it is to be written.
 * `ysz`         The height of the buffer image into which the desired region is
                 to be read, or from which it is to be written.
-* `bands`       The list of bands (1 based) to be read/written.
-* `pxspace`     The byte offset from the start of one pixel value in `pBuffer`
-                to the start of the next pixel value within a scanline.
-                If defaulted (0) the size of the datatype `eBufType` is used.
+* `bands`       The list of bands (`1`-based) to be read/written.
+* `pxspace`     The byte offset from the start of a pixel value in the `buffer`
+                to the start of the next pixel value within a scanline. By
+                default (i.e., `0`) the size of `eltype(buffer)` will be used.
 * `linespace`   The byte offset from the start of one scanline in pBuffer to
-                the start of the next. If defaulted (0) the size of the datatype
-                `eBufType * nBufXSize` is used.
+                the start of the next. By default (i.e., `0`) the value of
+                `sizeof(eltype(buffer)) * xsz` will be used.
 * `bandspace`   The byte offset from the start of one bands data to the start
-                of the next. If defaulted (0) the value will be
-                    `nlinespace * nBufYSize`
-                implying band sequential organization of the data buffer.
-* `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg structure
-with additional arguments to specify resampling and progress callback, or
-`NULL` for default behaviour. The `GDAL_RASTERIO_RESAMPLING` configuration
-option can also be defined to override the default resampling to one of
-`BILINEAR`, `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
+                of the next. By default (`0`), it will be `linespace * ysz`
+                implying band sequential organization of the buffer.
+
+### Returns
+`CE_Failure` if the access fails, otherwise `CE_None`.
 """
 function rasterio!(
         dataset::AbstractDataset,
@@ -88,55 +84,48 @@ end
 """
 Read/write a region of image data for this band.
 
-This method allows reading a region of a `GDALRasterBand` into a buffer, or
-writing data from a buffer into a region of a `GDALRasterBand`. It
-automatically takes care of data type translation if the data type (`eBufType`)
-of the buffer is different than that of the `GDALRasterBand`. The method also
-takes care of image decimation / replication if the buffer size
-`(nBufXSize x nBufYSize)` is different than the size of the region being
-accessed `(nXSize x nYSize)`.
+This method allows reading a region of a `rasterband` into a buffer, or
+writing data from a buffer into a region of a `rasterband`. It automatically
+takes care of data type translation if the element type (`<:Real`) of the
+buffer is different than that of the `rasterband`. The method also takes care
+of image decimation / replication if the buffer size (`xsz x ysz`) is different
+than the size of the region being accessed (`xsize x ysize`).
 
-The `nPixelSpace` and `nLineSpace` parameters allow reading into or writing
-from unusually organized buffers. This is primarily used for buffers containing
+The `pxspace` and `linespace` parameters allow reading into or writing from
+unusually organized buffers. This is primarily used for buffers containing
 more than one bands raster data in interleaved format.
 
 Some formats may efficiently implement decimation into a buffer by reading from
 lower resolution overview images.
 
-For highest performance full resolution data access, read and write on "block
-boundaries" returned by `GetBlockSize()`, or use the `ReadBlock()` and 
-`WriteBlock()` methods.
+For highest performance full resolution data access, read and write on \"block
+boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
+`writeblock!()` methods.
 
 ### Parameters
-* `eRWFlag`     Either GF_Read to read a region of data, or GF_Write to write a
-region of data.
-* `nXOff`       The pixel offset to the top left corner of the region of the
-band to be accessed. This would be zero to start from the left side.
-* `nYOff`       The line offset to the top left corner of the region of the
-band to be accessed. This would be zero to start from the top.
-* `nXSize`      The width of the region of the band to be accessed in pixels.
-* `nYSize`      The height of the region of the band to be accessed in lines.
-* `pData`       The buffer into which the data should be read, or from which it
-should be written. This buffer must contain at least `(nBufXSize * nBufYSize)`
-words of type `eBufType`. It is organized in left to right, top to bottom pixel
-order. Spacing is controlled by the `nPixelSpace`, and `nLineSpace` parameters.
-* `nBXSize`     The width of the buffer image into which the desired region is
-to be read, or from which it is to be written.
-* `nBYSize`     The height of the buffer image into which the desired region is
-to be read, or from which it is to be written.
-* `eBufType`    The type of the pixel values in the `buffer`. The pixel values
-will be auto-translated to/from the `GDALRasterBand` data type as needed.
-* `nPixelSpace` The byte offset from the start of one pixel value in `buffer`
-to the start of the next pixel value within a scanline. If defaulted (0) the
-size of the datatype `eBufType` is used.
-* `nLineSpace`  The byte offset from the start of one scanline in `buffer` to
-the start of the next. If defaulted (0) the size of the datatype
-`(eBufType * nBufXSize)` is used.
-* `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg structure
-with additional arguments to specify resampling and progress callback, or
-`NULL` for default behaviour. The `GDAL_RASTERIO_RESAMPLING` configuration
-option can also be defined to override the default resampling to one of
-`BILINEAR`, `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
+* `access`      Either `GDAL.GF_Read` to read a region of data, or
+                `GDAL.GF_Write` to write a region of data.
+* `xoffset`     The pixel offset to the top left corner of the region to be
+                accessed. It will be `0` (default) to start from the left.
+* `yoffset`     The line offset to the top left corner of the region to be
+                accessed. It will be `0` (default) to start from the top.
+* `xsize`       The width of the region of the band to be accessed in pixels.
+* `ysize`       The height of the region of the band to be accessed in lines.
+* `buffer`      The buffer into which the data should be read, or from which it
+                should be written. It must contain `≥ xsz * ysz * <nband>` words
+                of type `eltype(buffer)`. It is organized in left to right,
+                top to bottom pixel order. Spacing is controlled by the
+                `pxspace`, and `linespace` parameters
+* `xsz`         The width of the buffer into which the desired region is to be
+                read, or from which it is to be written.
+* `ysz`         The height of the buffer into which the desired region is to be
+                read, or from which it is to be written.
+* `pxspace`     The byte offset from the start of a pixel value in `buffer`
+                to the start of the next pixel value within a scanline. By
+                default (i.e., `0`) the size of `eltype(buffer)` will be used.
+* `linespace`   The byte offset from the start of one scanline in pBuffer to
+                the start of the next. By default (i.e., `0`) the value of
+                `sizeof(eltype(buffer)) * xsz` will be used.
 
 ### Returns
 `CE_Failure` if the access fails, otherwise `CE_None`.
@@ -459,6 +448,12 @@ for (T,GT) in _GDALTYPE
                 bandspace::Integer   = 0,
                 extraargs            = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL)
             )
+            # `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg
+            # structure with additional arguments to specify resampling and
+            # progress callback, or `NULL` for default behaviour. The
+            # `GDAL_RASTERIO_RESAMPLING` configuration option can also be
+            # defined to override the default resampling to one of `BILINEAR`,
+            # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
             (dataset == C_NULL) && error("Can't read invalid rasterband")
             xbsize, ybsize, zbsize = size(buffer)
             nband = length(bands); @assert nband == zbsize
@@ -485,6 +480,12 @@ for (T,GT) in _GDALTYPE
                 linespace::Integer   = 0,
                 extraargs            = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL)
             )
+            # `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg
+            # structure with additional arguments to specify resampling and
+            # progress callback, or `NULL` for default behaviour. The
+            # `GDAL_RASTERIO_RESAMPLING` configuration option can also be
+            # defined to override the default resampling to one of `BILINEAR`,
+            # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
             (rasterband == C_NULL) && error("Can't read invalid rasterband")
             xbsize, ybsize = size(buffer)
             result = ccall((:GDALRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
