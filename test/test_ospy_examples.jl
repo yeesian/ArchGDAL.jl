@@ -196,7 +196,7 @@ end
         #         geom = GDAL.wkbPolygon
         #     )
         #     infeaturedefn = AG.getlayerdefn(inlayer)
-        #     nameindex = AG.getfieldindex(infeaturedefn, "name")
+        #     nameindex = AG.findfieldindex(infeaturedefn, "name")
         #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)
         #     AG.createfield!(outlayer, fielddefn)
         #     for infeature in inlayer
@@ -242,7 +242,7 @@ AG.read("ospy/data4/aster.img") do ds
     @testset "Homework 4a" begin
         AG.read("ospy/data4/sites.shp") do shp
             shplayer = AG.getlayer(shp, 0)
-            id = AG.getfieldindex(AG.getlayerdefn(shplayer), "ID")
+            id = AG.findfieldindex(AG.getlayerdefn(shplayer), "ID")
 
             transform = AG.getgeotransform(ds)
             xOrigin = transform[1]; yOrigin = transform[4]
