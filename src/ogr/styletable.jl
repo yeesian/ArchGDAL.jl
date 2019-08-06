@@ -369,7 +369,7 @@ Get a style string by name.
 ### Returns
 the style string matching the name or NULL if not found or error.
 """
-find(styletable::StyleTable, name::AbstractString) =
+findstylestring(styletable::StyleTable, name::AbstractString) =
     GDAL.find(styletable.ptr, name)
 
 """

@@ -52,7 +52,7 @@ function summarize(io::IO, rasterband::AbstractRasterBand)
     color = getname(getcolorinterp(rasterband))
     xsize = width(rasterband)
     ysize = height(rasterband)
-    i = indexofband(rasterband)
+    i = indexof(rasterband)
     pxtype = pixeltype(rasterband)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
 end
