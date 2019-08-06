@@ -69,8 +69,10 @@ This function should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRFieldDefn passed in is copied,
 and remains the responsibility of the caller.
 """
-addfielddefn!(fd::FeatureDefn, fielddefn::FieldDefn) =
-    (GDAL.addfielddefn(fd.ptr, fielddefn.ptr); fd)
+function push!(fd::FeatureDefn, fielddefn::FieldDefn)
+    GDAL.addfielddefn(fd.ptr, fielddefn.ptr)
+    fd
+end
 
 """
 Delete an existing field definition.
@@ -194,8 +196,10 @@ This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRGeomFieldDefn passed in is
 copied, and remains the responsibility of the caller.
 """
-addgeomdefn!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn) =
-    (GDAL.addgeomfielddefn(fd.ptr, geomfielddefn.ptr); fd)
+function push!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn)
+    GDAL.addgeomfielddefn(fd.ptr, geomfielddefn.ptr)
+    fd
+end
 
 """
 Delete an existing geometry field definition.
