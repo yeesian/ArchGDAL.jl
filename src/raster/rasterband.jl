@@ -52,7 +52,7 @@ indexofband(rb::AbstractRasterBand) = GDAL.getbandnumber(rb.ptr)
 """
 Fetch the handle to its dataset handle, or `NULL` if this cannot be determined.
 
-Note that some `GDALRasterBands` are not considered to be a part of a dataset,
+Note that some `RasterBand`s are not considered to be a part of a dataset,
 such as overviews or other "freestanding" bands.
 """
 getdataset(rb::AbstractRasterBand) = Dataset(GDAL.getbanddataset(rb.ptr))
