@@ -46,7 +46,7 @@ function Base.show(io::IO, dataset::AbstractDataset)
     end
 end
 
-function summarize(io::IO, rasterband::RasterBand)
+function summarize(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     access = getaccess(rasterband)
     color = getname(getcolorinterp(rasterband))
@@ -57,7 +57,7 @@ function summarize(io::IO, rasterband::RasterBand)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
 end
 
-function Base.show(io::IO, rasterband::RasterBand)
+function Base.show(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     summarize(io, rasterband)
     (x,y) = getblocksize(rasterband)
@@ -77,7 +77,7 @@ function Base.show(io::IO, rasterband::RasterBand)
 end
 
 # assumes that the layer is reset, and will reset it after display
-function Base.show(io::IO, layer::FeatureLayer)
+function Base.show(io::IO, layer::AbstractFeatureLayer)
     layer.ptr == C_NULL && (return println(io, "NULL Layer"))
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")

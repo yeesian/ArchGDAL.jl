@@ -1,11 +1,11 @@
 mutable struct Source <: Data.Source
     schema::Data.Schema
-    featurelayer::FeatureLayer
+    featurelayer::AbstractFeatureLayer
     feature::ArchGDAL.Feature
     ngeom::Int
 end
 
-function Source(layer::FeatureLayer)
+function Source(layer::AbstractFeatureLayer)
     layerdefn = getlayerdefn(layer)
     ngeometries = ngeom(layerdefn)
     nfld = nfield(layerdefn)

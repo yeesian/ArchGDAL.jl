@@ -44,11 +44,11 @@ function executesql(f::Function, dataset::Dataset, args...)
     try
         f(result)
     finally
-        releaseresultset(result)
+        releaseresultset(dataset, result)
     end
 end
 
-function writefeature(f::Function, layer::FeatureLayer)
+function writefeature(f::Function, layer::AbstractFeatureLayer)
     feature = unsafe_createfeature(layer)
     try
         f(feature)
@@ -58,7 +58,7 @@ function writefeature(f::Function, layer::FeatureLayer)
     end
 end
 
-function pushfeature(f::Function, layer::FeatureLayer)
+function pushfeature(f::Function, layer::AbstractFeatureLayer)
     feature = unsafe_createfeature(layer)
     try
         f(feature)
@@ -115,7 +115,7 @@ to the layer.
                 format driver.
 """
 function writefielddefn!(
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         name::AbstractString,
         etype::OGRFieldType;
         nwidth::Integer             = 0,
@@ -133,7 +133,7 @@ end
 
 function writefielddefn(
         f::Function,
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         name::AbstractString,
         etype::OGRFieldType;
         nwidth::Integer             = 0,
@@ -178,7 +178,7 @@ to the layer.
             slightly different form depending on the limitations of the driver.
 """
 function writegeomdefn!(
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         name::AbstractString,
         etype::OGRwkbGeometryType;
         approx::Bool = false
@@ -191,7 +191,7 @@ end
 
 function writegeomdefn(
         f::Function,
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         name::AbstractString,
         etype::OGRwkbGeometryType;
         approx::Bool = false
@@ -209,19 +209,21 @@ for gdalfunc in (
         :boundary, :buffer, :centroid, :clone, :convexhull, :create,
         :createcolortable, :createcoordtrans, :copy, :createfeaturedefn,
         :createfielddefn, :creategeom, :creategeomcollection,
-        :creategeomfieldcollection, :creategeomdefn, :createlinearring,
-        :createlinestring, :createmultilinestring, :createmultipoint,
-        :createmultipolygon, :createmultipolygon_noholes, :createpoint,
-        :createpolygon, :createRAT, :createstylemanager, :createstyletable,
-        :createstyletool, :delaunaytriangulation, :difference, :forceto,
-        :fromGML, :fromJSON, :fromWKB, :fromWKT, :gdalbuildvrt, :gdaldem,
-        :gdalgrid, :gdalnearblack, :gdalrasterize, :gdaltranslate,
-        :gdalvectortranslate, :gdalwarp, :getcolortable, :getcurvegeom,
-        :getfeature, :getgeom, :getlineargeom, :getpart, :getspatialref,
-        :intersection, :importEPSG, :importEPSGA, :importESRI, :importPROJ4,
-        :importWKT, :importXML, :importURL, :newspatialref, :nextfeature,
-        :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
-        :simplify, :simplifypreservetopology, :symdifference, :union, :update
+        :creategeomfieldcollection, :creategeomdefn, :createlayer,
+        :createlinearring, :createlinestring, :createmultilinestring,
+        :createmultipoint, :createmultipolygon, :createmultipolygon_noholes,
+        :createpoint, :createpolygon, :createRAT, :createstylemanager,
+        :createstyletable, :createstyletool, :delaunaytriangulation,
+        :difference, :forceto, :fromGML, :fromJSON, :fromWKB, :fromWKT,
+        :gdalbuildvrt, :gdaldem, :gdalgrid, :gdalnearblack, :gdalrasterize,
+        :gdaltranslate, :gdalvectortranslate, :gdalwarp, :getband,
+        :getcolortable, :getcurvegeom, :getfeature, :getgeom, :getlayer,
+        :getlineargeom, :getmaskband, :getoverview, :getpart,
+        :getsampleoverview, :getspatialref, :intersection, :importEPSG,
+        :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
+        :importURL, :newspatialref, :nextfeature, :pointalongline,
+        :pointonsurface, :polygonfromedges, :polygonize, :read, :simplify,
+        :simplifypreservetopology, :symdifference, :union, :update
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
