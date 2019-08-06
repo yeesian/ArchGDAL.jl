@@ -4,7 +4,18 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "Test methods for raster dataset" begin
     AG.read("data/utmsmall.tif") do dataset
-        AG.createcopy(dataset, filename = "/vsimem/utmcopy.tif") do copydataset
+        @testset "Method 1" begin
+            AG.copy(dataset, filename = "/vsimem/utmcopy.tif") do copydataset
+                @test AG.ngcp(copydataset) == 0
+                @test AG.noverview(AG.getband(copydataset,1)) == 0
+                AG.buildoverviews!(copydataset, Cint[2,4,8])
+                @test AG.noverview(AG.getband(copydataset,1)) == 3
+                AG.copywholeraster(dataset, copydataset,
+                                   progressfunc=GDAL.C.GDALTermProgress)
+            end
+        end
+        @testset "Method 2" begin
+            copydataset = AG.copy(dataset, filename = "/vsimem/utmcopy.tif")
             @test AG.ngcp(copydataset) == 0
             @test AG.noverview(AG.getband(copydataset,1)) == 0
             AG.buildoverviews!(copydataset, Cint[2,4,8])
@@ -56,6 +67,16 @@ end
         geom = GDAL.wkbLineString
     )
     @test AG.nlayer(dataset4) == 1
+
+    AG.create(tempname(), driver = AG.getdriver("KML")) do dataset5
+        @test AG.nlayer(dataset5) == 0
+        layer4 = AG.createlayer(
+            name = "layer5",
+            dataset = dataset5,
+            geom = GDAL.wkbLineString
+        )
+        @test AG.nlayer(dataset5) == 1
+    end
     
     layer5 = AG.createlayer()
     @test AG.getname(layer5) == ""
