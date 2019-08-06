@@ -31,7 +31,7 @@ function destroy(featuredefn::FeatureDefn)
 end
 
 "Destroy a feature definition view"
-function destroy(featuredefn::FeatureDefnView)
+function destroy(featuredefn::IFeatureDefnView)
     featuredefn.ptr = C_NULL
 end
 
@@ -186,8 +186,11 @@ Fetch geometry field definition of the passed feature definition.
 an internal field definition object or `NULL` if invalid index. This object
 should not be modified or freed by the application.
 """
-getgeomdefn(featuredefn::AbstractFeatureDefn, i::Integer = 0) =
+getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0) =
     GeomFieldDefn(GDAL.getgeomfielddefn(featuredefn.ptr, i))
+
+getgeomdefn(featuredefn::IFeatureDefnView, i::Integer = 0) =
+    IGeomFieldDefnView(GDAL.getgeomfielddefn(featuredefn.ptr, i))
 
 """
 Find geometry field by name.
@@ -212,10 +215,10 @@ unless bCopy is set to FALSE (in which case it takes ownership of the field
 definition.
 
 This method should only be called while there are no OGRFeature objects in
-existence based on this OGRFeatureDefn. The OGRGeomFieldDefn passed in is
-copied, and remains the responsibility of the caller.
+existence based on this OGRFeatureDefn.
 """
-function write!(featuredefn::FeatureDefn, geomfielddefn::GeomFieldDefn)
+function write!(featuredefn::FeatureDefn, geomfielddefn::AbstractGeomFieldDefn)
+    # `geomfielddefn` is copied, and remains the responsibility of the caller.
     GDAL.addgeomfielddefn(featuredefn.ptr, geomfielddefn.ptr)
     return featuredefn
 end
@@ -256,4 +259,5 @@ function unsafe_createfeature(featuredefn::AbstractFeatureDefn)
 end
 
 "Fetch feature definition."
-getfeaturedefn(feature::Feature) = FeatureDefnView(GDAL.getdefnref(feature.ptr))
+getfeaturedefn(feature::Feature) =
+    IFeatureDefnView(GDAL.getdefnref(feature.ptr))

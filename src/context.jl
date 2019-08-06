@@ -186,7 +186,7 @@ function writegeomdefn!(
     geomdefn = unsafe_creategeomdefn(name, etype)
     write!(layer, geomdefn)
     destroy(geomdefn)
-    layer
+    return layer
 end
 
 function writegeomdefn(

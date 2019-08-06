@@ -456,7 +456,7 @@ Returns a view of the schema information for this layer.
 The `featuredefn` is owned by the `layer` and should not be modified.
 """
 getlayerdefn(layer::AbstractFeatureLayer) =
-    FeatureDefnView(GDAL.getlayerdefn(layer.ptr))
+    IFeatureDefnView(GDAL.getlayerdefn(layer.ptr))
 
 """
 Find the index of the field in a layer, or -1 if the field doesn't exist.
@@ -722,7 +722,7 @@ to the layer.
 """
 function write!(
         layer::AbstractFeatureLayer,
-        field::GeomFieldDefn,
+        field::AbstractGeomFieldDefn,
         approx::Bool = false
     )
     result = GDAL.creategeomfield(layer.ptr, field.ptr, approx)
