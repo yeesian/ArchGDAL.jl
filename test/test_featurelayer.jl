@@ -23,10 +23,12 @@ import ArchGDAL; const AG = ArchGDAL
             AG.getspatialref(tmplayer) do spref
                 @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
             end
-            AG.createlayer(tmpcopy,
-                           "new layer",
-                           AG.getspatialref(tmplayer),
-                           geom = GDAL.wkbPoint) do newlayer
+            newlayer = AG.createlayer(
+                name = "new layer",
+                dataset = tmpcopy,
+                spatialref = AG.getspatialref(tmplayer),
+                geom = GDAL.wkbPoint
+            )
                 @test AG.ngeom(AG.getlayerdefn(newlayer)) == 1
                 @test sprint(print, newlayer) == """
                     Layer: new layer
@@ -90,7 +92,6 @@ import ArchGDAL; const AG = ArchGDAL
                         @test sprint(print, g) == "Geometry: POLYGON ((0 0,1 1,0 1))"
                     end
                 end
-            end
         end
 
         layer = AG.getlayer(dataset, 0)
