@@ -1,21 +1,19 @@
 
 function destroy(layer::AbstractFeatureLayer)
     layer.ptr = GDALFeatureLayer(C_NULL)
+    return layer
 end
 
 function destroy(layer::IFeatureLayer)
     layer.ptr = GDALFeatureLayer(C_NULL)
     layer.ownedby = Dataset()
     layer.spatialref = SpatialRef()
+    return layer
 end
 
 """
 This function attempts to create a new layer on the dataset with the indicated
-name, coordinate system, geometry type.
-
-The `options` argument can be used to control driver specific creation
-options. These options are normally documented in the format specific
-documentation.
+`name`, `spatialref`, and geometry type.
 
 ### Parameters
 * `name`: the name for the new layer. This should ideally not match any
@@ -35,8 +33,12 @@ function createlayer(;
         spatialref::AbstractSpatialRef  = SpatialRef(),
         options                         = StringList(C_NULL)
     )
-    IFeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
-        geom, options), ownedby = dataset, spatialref = spatialref)
+    return IFeatureLayer(
+        GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr, geom,
+            options),
+        ownedby = dataset,
+        spatialref = spatialref
+    )
 end
 
 function unsafe_createlayer(;
@@ -46,8 +48,10 @@ function unsafe_createlayer(;
         spatialref::AbstractSpatialRef  = SpatialRef(),
         options                         = StringList(C_NULL)
     )
-    FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
-        geom, options))
+    return FeatureLayer(
+        GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr, geom,
+            options)
+    )
 end
 
 """
@@ -126,16 +130,8 @@ end
 Set a new spatial filter for the layer, using the geom.
 
 This method set the geometry to be used as a spatial filter when fetching
-features via the GetNextFeature() method. Only features that geometrically
+features via the `nextfeature()` method. Only features that geometrically
 intersect the filter geometry will be returned.
-
-Currently this test may be inaccurately implemented, but it is guaranteed
-that all features who's envelope (as returned by OGRGeometry::getEnvelope())
-overlaps the envelope of the spatial filter will be returned. This can result
-in more shapes being returned that should strictly be the case.
-
-This method makes an internal copy of the passed geometry. The passed geometry
-remains the responsibility of the caller, and may be safely destroyed.
 
 ### Parameters
 * `layer`  handle to the layer on which to set the spatial filter.
@@ -143,7 +139,12 @@ remains the responsibility of the caller, and may be safely destroyed.
            passed indicating that the current spatial filter should be cleared,
            but no new one instituted.
 
-### Additional Remarks
+### Remarks
+Currently this test may be inaccurately implemented, but it is guaranteed
+that all features whose envelope (as returned by OGRGeometry::getEnvelope())
+overlaps the envelope of the spatial filter will be returned. This can result
+in more shapes being returned that should strictly be the case.
+
 For the time being the passed filter geometry should be in the same SRS as the
 geometry field definition it corresponds to (as returned by
 `GetLayerDefn()->OGRFeatureDefn::GetGeomFieldDefn(i)->GetSpatialRef()`).
@@ -153,20 +154,22 @@ Note that only the last spatial filter set is applied, even if several
 successive calls are done with different iGeomField values.
 """
 function setspatialfilter!(layer::AbstractFeatureLayer, geom::Geometry)
+    # This method makes an internal copy of `geom`. The input `geom` remains
+    # the responsibility of the caller, and may be safely destroyed.
     GDAL.setspatialfilter(layer.ptr, geom.ptr)
-    layer
+    return layer
 end
 
 function clearspatialfilter!(layer::AbstractFeatureLayer)
     GDAL.setspatialfilter(layer.ptr, GDALGeometry(C_NULL))
-    layer
+    return layer
 end
 
 """
 Set a new rectangular spatial filter for the layer.
 
 This method set rectangle to be used as a spatial filter when fetching features
-via the GetNextFeature() method. Only features that geometrically intersect the
+via the `nextfeature()` method. Only features that geometrically intersect the
 given rectangle will be returned.
 
 The x/y values should be in the same coordinate system as the layer as a whole
@@ -185,27 +188,15 @@ function setspatialfilter!(
         ymax::Real
     )
     GDAL.setspatialfilterrect(layer.ptr, xmin, ymin, xmax, ymax)
-    layer
+    return layer
 end
 
 """
 Set a new spatial filter.
 
 This method set the geometry to be used as a spatial filter when fetching
-features via the GetNextFeature() method. Only features that geometrically
+features via the `nextfeature()` method. Only features that geometrically
 intersect the filter geometry will be returned.
-
-Currently this test is may be inaccurately implemented, but it is guaranteed
-that all features who's envelope (as returned by OGRGeometry::getEnvelope())
-overlaps the envelope of the spatial filter will be returned. This can result
-in more shapes being returned that should strictly be the case.
-
-This method makes an internal copy of the passed geometry. The passed geometry
-remains the responsibility of the caller, and may be safely destroyed.
-
-For the time being the passed filter geometry should be in the same SRS as the
-layer (as returned by OGRLayer::GetSpatialRef()). In the future this may be
-generalized.
 
 ### Parameters
 * `layer`: the layer on which to set the spatial filter.
@@ -213,25 +204,38 @@ generalized.
 * `geom`: the geometry to use as a filtering region. NULL may be passed
     indicating that the current spatial filter should be cleared, but
     no new one instituted.
+
+### Remarks
+Currently this test is may be inaccurately implemented, but it is guaranteed
+that all features who's envelope (as returned by OGRGeometry::getEnvelope())
+overlaps the envelope of the spatial filter will be returned. This can result
+in more shapes being returned that should strictly be the case.
+
+For the time being the passed filter geometry should be in the same SRS as the
+layer (as returned by OGRLayer::GetSpatialRef()). In the future this may be
+generalized.
 """
 function setspatialfilter!(
         layer::AbstractFeatureLayer,
         i::Integer,
         geom::AbstractGeometry
     )
+    # This method makes an internal copy of `geom`. The input `geom` remains
+    # the responsibility of the caller, and may be safely destroyed.
     GDAL.setspatialfilterex(layer.ptr, i, geom.ptr)
-    layer
+    return layer
 end
 
 function clearspatialfilter!(layer::AbstractFeatureLayer, i::Integer)
     GDAL.setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL))
-    layer
+    return layer
 end
 
 """
 Set a new rectangular spatial filter.
+
 ### Parameters
-* `layer`: handle to the layer on which to set the spatial filter.
+* `layer`: the feature layer on which to set the spatial filter.
 * `i`: index of the geometry field on which the spatial filter operates.
 * `xmin`: the minimum X coordinate for the rectangular region.
 * `ymin`: the minimum Y coordinate for the rectangular region.
@@ -247,16 +251,21 @@ function setspatialfilter!(
         ymax::Real
     )
     GDAL.setspatialfilterrectex(layer.ptr, i, xmin, ymin, xmax, ymax)
-    layer
+    return layer
 end
 
 """
 Set a new attribute query.
 
 This method sets the attribute query string to be used when fetching features
-via the GetNextFeature() method. Only features for which the query evaluates as
-true will be returned.
+via the `nextfeature()` method. Only features for which the query evaluates as
+`true` will be returned.
 
+### Parameters
+* `layer`: handle to the layer on which attribute query will be executed.
+* `query`: query in restricted SQL WHERE format.
+
+### Remarks
 The query string should be in the format of an SQL WHERE clause. For instance
 `"population > 1000000 and population < 5000000"` where population is an
 attribute in the layer. The query format is normally a restricted form of
@@ -266,91 +275,95 @@ be used to interpret the WHERE clause in which case the capabilities will be
 broader than those of OGR SQL.
 
 Note that installing a query string will generally result in resetting the
-current reading position (ala ResetReading()).
-
-### Parameters
-* `layer`: handle to the layer on which attribute query will be executed.
-* `query`: query in restricted SQL WHERE format, or NULL to clear the
-    current query.
+current reading position (ala `resetreading!()`).
 """
 function setattributefilter!(layer::AbstractFeatureLayer, query::AbstractString)
     result = GDAL.setattributefilter(layer.ptr, query)
     @ogrerr result """Failed to set a new attribute query. The query expression
     might be in error."""
-    layer
+    return layer
 end
 
 function clearattributefilter!(layer::AbstractFeatureLayer)
     result = GDAL.setattributefilter(layer.ptr, C_NULL)
     @ogrerr result "OGRErr $result: Failed to clear attribute query."
-    layer
+    return layer
 end
 
 """
 Reset feature reading to start on the first feature.
 
-This affects `GetNextFeature()`.
+This affects `nextfeature()`.
 """
 function resetreading!(layer::AbstractFeatureLayer)
     GDAL.resetreading(layer.ptr)
-    layer
+    return layer
 end
 
 """
 Fetch the next available feature from this layer.
 
-The returned feature becomes the responsibility of the caller to delete with
-`DestroyFeature()`. It is critical that all features associated with an OGRLayer
-(more specifically an OGRFeatureDefn) be deleted before that layer/datasource is
-deleted.
+### Parameters
+* `layer`: the feature layer to be read from.
 
-Only features matching the current spatial filter (set with SetSpatialFilter())
+### Remarks
+This method implements sequential access to the features of a layer. The
+`resetreading!()` method can be used to start at the beginning again. Only
+features matching the current spatial filter (set with `setspatialfilter!()`)
 will be returned.
 
-This method implements sequential access to the features of a layer. The
-`ResetReading()` method can be used to start at the beginning again.
+The returned feature becomes the responsibility of the caller to delete with
+`destroy()`. It is critical that all features associated with a `FeatureLayer`
+(more specifically a `FeatureDefn`) be destroyed before that layer is destroyed.
 
-Features returned by `GetNextFeature()` may or may not be affected by concurrent
+Features returned by `nextfeature()` may or may not be affected by concurrent
 modifications depending on drivers. A guaranteed way of seeing modifications in
-effect is to call ResetReading() on layers where `GetNextFeature()` has been
+effect is to call `resetreading!()` on layers where `nextfeature()` has been
 called, before reading again. Structural changes in layers (field addition,
 deletion, ...) when a read is in progress may or may not be possible depending
 on drivers. If a transaction is committed/aborted, the current sequential
 reading may or may not be valid after that operation and a call to
-`ResetReading()` might be needed.
+`resetreading!()` might be needed.
 """
-unsafe_nextfeature(layer::AbstractFeatureLayer) =
-    Feature(GDALFeature(GDAL.getnextfeature(layer.ptr)))
+function unsafe_nextfeature(layer::AbstractFeatureLayer)
+    return Feature(GDALFeature(GDAL.getnextfeature(layer.ptr)))
+end
 
 """
 Move read cursor to the `i`-th feature in the current resultset.
 
-This method allows positioning of a layer such that the GetNextFeature() call
+This method allows positioning of a layer such that the `nextfeature()` call
 will read the requested feature, where `i` is an absolute index into the
-current result set. So, setting it to 3 would mean the next feature read with
-`GetNextFeature()` would have been the 4th feature to have been read if
+current result set. So, setting it to `3` would mean the next feature read with
+`nextfeature()` would have been the fourth feature to have been read if
 sequential reading took place from the beginning of the layer, including
 accounting for spatial and attribute filters.
-
-Only in rare circumstances is `SetNextByIndex()` efficiently implemented. In all
-other cases the default implementation which calls `ResetReading()` and then
-calls `GetNextFeature()` `i` times is used. To determine if fast seeking is
-available on the current layer use the `TestCapability()` method with a value of
-`OLCFastSetNextByIndex`.
 
 ### Parameters
 * `layer`: handle to the layer
 * `i`: the index indicating how many steps into the result set to seek.
+
+### Remarks
+Only in rare circumstances is `setnextbyindex!()` efficiently implemented. In
+all other cases the default implementation which calls `resetreading!()` and
+then calls `nextfeature()` `i` times is used. To determine if fast seeking is
+available on the layer, use the `testcapability()` method with a value of
+`OLCFastSetNextByIndex`.
 """
 function setnextbyindex!(layer::AbstractFeatureLayer, i::Integer)
     result = GDAL.setnextbyindex(layer.ptr, i)
     @ogrerr result "Failed to move the cursor to index $i"
-    layer
+    return layer
 end
 
 """
 Return a feature (now owned by the caller) by its identifier or NULL on failure.
 
+### Parameters
+* `layer`: the feature layer to be read from.
+* `i`: the index of the feature to be returned.
+
+### Remarks
 This function will attempt to read the identified feature. The nFID value cannot
 be OGRNullFID. Success or failure of this operation is unaffected by the spatial
 or attribute filters (and specialized implementations in drivers should make
@@ -367,7 +380,7 @@ the features in the layer looking for the desired feature.
 Sequential reads (with OGR_L_GetNextFeature()) are generally considered
 interrupted by a OGR_L_GetFeature() call.
 
-The returned feature should be free with OGR_F_Destroy().
+The returned feature is now owned by the caller, and should be freed with `destroy()`.
 """
 unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer) =
     Feature(GDALFeature(GDAL.getfeature(layer.ptr, i)))
@@ -378,22 +391,22 @@ Rewrite an existing feature.
 This function will write a feature to the layer, based on the feature id within
 the OGRFeature.
 
+### Remarks
 Use OGR_L_TestCapability(OLCRandomWrite) to establish if this layer supports
 random access writing via OGR_L_SetFeature().
-
-### Returns
-OGRERR_NONE if the operation works, otherwise an appropriate error code
-(e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
 """
 function write!(layer::AbstractFeatureLayer, feature::Feature)
     result = GDAL.setfeature(layer.ptr, feature.ptr)
+    # OGRERR_NONE if the operation works, otherwise an appropriate error code
+    # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
     @ogrerr result "Failed to set feature."
-    layer
+    return layer
 end
 
 """
 Write a new feature within a layer.
 
+### Remarks
 The passed feature is written to the layer as a new feature, rather than
 overwriting an existing one. If the feature has a feature id other than
 OGRNullFID, then the native implementation may use that as the feature id of
@@ -403,7 +416,7 @@ will have been updated with the new feature id.
 function push!(layer::AbstractFeatureLayer, feature::Feature)
     result = GDAL.createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
-    layer
+    return layer
 end
 
 """
@@ -418,19 +431,18 @@ unsafe_createfeature(layer::AbstractFeatureLayer) =
 """
 Delete feature with fid `i` from layer.
 
+### Remarks
 The feature with the indicated feature id is deleted from the layer if supported
 by the driver. Most drivers do not support feature deletion, and will return
 OGRERR_UNSUPPORTED_OPERATION. The OGR_L_TestCapability() function may be called
 with OLCDeleteFeature to check if the driver supports feature deletion.
-
-### Returns
-OGRERR_NONE if the operation works, otherwise an appropriate error code
-(e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
 """
 function deletefeature!(layer::AbstractFeatureLayer, i::Integer)
     result = GDAL.deletefeature(layer.ptr, i)
+    # OGRERR_NONE if the operation works, otherwise an appropriate error code
+    # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
     @ogrerr result "OGRErr $result: Failed to delete feature $i"
-    layer
+    return layer
 end
 
 """
@@ -443,14 +455,11 @@ getlayerdefn(layer::AbstractFeatureLayer) =
     FeatureDefnView(GDAL.getlayerdefn(layer.ptr))
 
 """
-Find the index of the field in a layer.
+Find the index of the field in a layer, or -1 if the field doesn't exist.
 
 If `exactmatch` is set to `false` and the field doesn't exists in the given form
 the driver might apply some changes to make it match, like those it might do if
 the layer was created (eg. like `LAUNDER` in the OCI driver).
-
-### Returns
-field index, or -1 if the field doesn't exist
 """
 function findfieldindex(
         layer::AbstractFeatureLayer,
@@ -461,15 +470,12 @@ function findfieldindex(
 end
 
 """
-Fetch the feature count in this layer.
+Fetch the feature count in this layer, or `-1` if the count is not known.
 
 ### Parameters
 * `layer`: handle to the layer that owned the features.
-* `force`: Flag indicating whether the count should be computed even if it is
-    expensive. (It is `false` by default.)
-
-### Returns
-feature count, -1 if count not known.
+* `force`: flag indicating whether the count should be computed even if it is
+    expensive. (`false` by default.)
 """
 nfeature(layer::AbstractFeatureLayer, force::Bool = false) =
     GDAL.getfeaturecount(layer.ptr, force)
@@ -527,8 +533,8 @@ Test if this layer supported the named capability.
 * `capability`  the name of the capability to test.
 
 ### Returns
-TRUE if the layer has the requested capability, or FALSE otherwise.
-OGRLayers will return FALSE for any unrecognized capabilities.
+`true` if the layer has the requested capability, `false` otherwise. It will
+return `false` for any unrecognized capabilities.
 
 ### Additional Remarks
 The capability codes that can be tested are represented as strings, but
@@ -538,7 +544,7 @@ the caller.
 
 * `OLCRandomRead` / \"RandomRead\": TRUE if the GetFeature() method is
     implemented in an optimized way for this layer, as opposed to the default
-    implementation using ResetReading() and GetNextFeature() to find the
+    implementation using `resetreading!()` and `nextfeature()` to find the
     requested feature id.
 
 * `OLCSequentialWrite` / \"SequentialWrite\": TRUE if the CreateFeature() method
@@ -649,6 +655,13 @@ end
 """
 Create a new field on a layer.
 
+### Parameters
+* `layer`:  the layer to write the field definition.
+* `field`:  the field definition to write to disk.
+* `approx`: If `true`, the field may be created in a slightly different form
+            depending on the limitations of the format driver.
+
+### Remarks
 You must use this to create new fields on a real layer. Internally the
 OGRFeatureDefn for the layer will be updated to reflect the new field.
 Applications should never modify the OGRFeatureDefn used by a layer directly.
@@ -665,12 +678,6 @@ accordingly.
 Drivers may or may not support not-null constraints. If they support creating
 fields with not-null constraints, this is generally before creating any feature
 to the layer.
-
-### Parameters
-* `layer`:  the layer to write the field definition.
-* `field`:  the field definition to write to disk.
-* `approx`: If `true`, the field may be created in a slightly different form
-            depending on the limitations of the format driver.
 """
 function write!(
         layer::AbstractFeatureLayer,
@@ -679,12 +686,19 @@ function write!(
     )
     result = GDAL.createfield(layer.ptr, field.ptr, approx)
     @ogrerr result "Failed to create new field"
-    layer
+    return layer
 end
 
 """
 Create a new geometry field on a layer.
 
+### Parameters
+* `layer`:  the layer to write the field definition.
+* `field`:  the geometry field definition to write to disk.
+* `approx`: If TRUE, the field may be created in a slightly different form
+            depending on the limitations of the format driver.
+
+### Remarks
 You must use this to create new geometry fields on a real layer. Internally the
 OGRFeatureDefn for the layer will be updated to reflect the new field.
 Applications should never modify the OGRFeatureDefn used by a layer directly.
@@ -701,15 +715,6 @@ accordingly.
 Drivers may or may not support not-null constraints. If they support creating
 fields with not-null constraints, this is generally before creating any feature
 to the layer.
-
-### Parameters
-* `layer`:  the layer to write the field definition.
-* `field`:  the geometry field definition to write to disk.
-* `approx`: If TRUE, the field may be created in a slightly different form
-            depending on the limitations of the format driver.
-
-### Returns
-OGRERR_NONE on success.
 """
 function write!(
         layer::AbstractFeatureLayer,
@@ -717,8 +722,9 @@ function write!(
         approx::Bool = false
     )
     result = GDAL.creategeomfield(layer.ptr, field.ptr, approx)
+    # OGRERR_NONE on success.
     @ogrerr result "Failed to create new geometry field"
-    layer
+    return layer
 end
 
 # """
@@ -908,7 +914,7 @@ the reference count after decrementing.
 """
 dereference(layer::AbstractFeatureLayer) = GDAL.dereference(layer.ptr)
 
-"the current reference count for the layer object itself."
+"The current reference count for the layer object itself."
 nreference(layer::AbstractFeatureLayer) = GDAL.getrefcount(layer.ptr)
 
 # """
@@ -941,42 +947,36 @@ nreference(layer::AbstractFeatureLayer) = GDAL.getrefcount(layer.ptr)
 # """
 # getfeaturesread(layer::AbstractFeatureLayer) = GDAL.getfeaturesread(layer.ptr)
 
-"""This method returns the name of the underlying database column being used as
-the FID column, or \"\" if not supported.
-"""
+"The name of the FID column in the database, or \"\" if not supported."
 getfidcolname(layer::AbstractFeatureLayer) = GDAL.getfidcolumn(layer.ptr)
 
-"""
-This method returns the name of the underlying database column being used as
-the geometry column, or \"\" if not supported.
-"""
+"The name of the geometry column in the database, or \"\" if not supported."
 getgeomcolname(layer::AbstractFeatureLayer) = GDAL.getgeometrycolumn(layer.ptr)
 
 """
 Set which fields can be omitted when retrieving features from the layer.
 
+### Parameters
+* `fieldnames`: an array of field names terminated by NULL item. If NULL is
+passed, the ignored list is cleared.
+
+### Remarks
 If the driver supports this functionality (testable using `OLCIgnoreFields`
 capability), it will not fetch the specified fields in subsequent calls to
-`GetFeature()`/`GetNextFeature()` and thus save some processing time and/or
+`GetFeature()`/`nextfeature()` and thus save some processing time and/or
 bandwidth.
 
 Besides field names of the layers, the following special fields can be passed:
 `"OGR_GEOMETRY"` to ignore geometry and `"OGR_STYLE"` to ignore layer style.
 
 By default, no fields are ignored.
-
-### Parameters
-* `fieldnames`: an array of field names terminated by NULL item. If NULL is
-passed, the ignored list is cleared.
-
-### Returns
-OGRERR_NONE if all field names have been resolved (even if the driver does not
-support this method)
 """
 function setignoredfields!(layer::AbstractFeatureLayer, fieldnames)
     result = GDAL.setignoredfields(layer.ptr, fieldnames)
+    # OGRERR_NONE if all field names have been resolved (even if the driver
+    # does not support this method)
     @ogrerr result "Failed to set ignored fields $fieldnames."
-    layer
+    return layer
 end
 
 
