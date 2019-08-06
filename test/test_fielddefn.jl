@@ -150,7 +150,7 @@ end
         AG.setstyleignored!(fd, false)
         @test AG.isstyleignored(fd) == false
 
-        @test AG.getgeomindex(fd) == 0
+        @test AG.findgeomindex(fd) == 0
         gfd0 = AG.getgeomdefn(fd, 0)
         @test AG.ngeom(fd) == 1
         AG.write!(fd, gfd0)
@@ -158,14 +158,14 @@ end
         gfd1 = AG.getgeomdefn(fd, 1)
         AG.setname!(gfd0, "name0")
         AG.setname!(gfd1, "name1")
-        @test AG.getgeomindex(fd, "") == -1
-        @test AG.getgeomindex(fd, "name0") == 0
-        @test AG.getgeomindex(fd, "name1") == 1
+        @test AG.findgeomindex(fd, "") == -1
+        @test AG.findgeomindex(fd, "name0") == 0
+        @test AG.findgeomindex(fd, "name1") == 1
         AG.deletegeomdefn!(fd, 0)
         @test AG.ngeom(fd) == 1
-        @test AG.getgeomindex(fd, "") == -1
-        @test AG.getgeomindex(fd, "name0") == -1
-        @test AG.getgeomindex(fd, "name1") == 0
+        @test AG.findgeomindex(fd, "") == -1
+        @test AG.findgeomindex(fd, "name0") == -1
+        @test AG.findgeomindex(fd, "name1") == 0
         @test AG.nreference(fd) == 0
         AG.createfeature(fd) do f
             @test AG.nreference(fd) == 2 # artificially inflated
