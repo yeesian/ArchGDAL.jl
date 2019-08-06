@@ -74,11 +74,11 @@ Fetch definition for this field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 
 ### Returns
-an handle to the field definition (from the OGRFeatureDefn). This is an
+an handle to the field definition (from the `FeatureDefn`). This is an
 internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::Feature, i::Integer) =
-    FieldDefn(GDAL.getfielddefnref(feature.ptr, i))
+    IFieldDefnView(GDAL.getfielddefnref(feature.ptr, i))
 
 """
 Fetch the field index given field name.
@@ -322,7 +322,7 @@ end
 #           pfSecond,pnTZFlag)
 # end
 
-asnothing(feature::Feature, i::Integer) = nothing
+getdefault(feature::Feature, i::Integer) = getdefault(getfielddefn(feature, i))
 
 const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
     GDAL.OFTInteger         => asint,           #0
@@ -345,8 +345,10 @@ const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
 function getfield(feature::Feature, i::Integer)
     if isfieldset(feature, i)
         _fieldtype = gettype(getfielddefn(feature, i))
-        _fetchfield = get(_FETCHFIELD, _fieldtype, asnothing)
+        _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
         return _fetchfield(feature, i)
+    else
+        return getdefault(feature, i)
     end
 end
 

@@ -50,15 +50,18 @@ nfield(featuredefn::AbstractFeatureDefn) = GDAL.getfieldcount(featuredefn.ptr)
 Fetch field definition of the passed feature definition.
 
 ### Parameters
-* `fd`: the feature definition to get the field definition from.
-* `i`:  the index of the field to fetch, between `0` and `nfield(fd)-1`.
+* `featuredefn`: the feature definition to get the field definition from.
+* `i`:  index of the field to fetch, between `0` and `nfield(featuredefn)-1`.
 
 ### Returns
 an handle to an internal field definition object or NULL if invalid index. This
 object should not be modified or freed by the application.
 """
-getfielddefn(featuredefn::AbstractFeatureDefn, i::Integer) =
+getfielddefn(featuredefn::FeatureDefn, i::Integer) =
     FieldDefn(GDAL.getfielddefn(featuredefn.ptr, i))
+
+getfielddefn(featuredefn::IFeatureDefnView, i::Integer) =
+    IFieldDefnView(GDAL.getfielddefn(featuredefn.ptr, i))
 
 """
 Find field by name.
