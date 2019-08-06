@@ -53,8 +53,9 @@ end
 #     AG.read(inFN) do inDS
 #     AG.create("", "MEMORY") do outDS
 #         inlayer = AG.getlayer(inDS, 0)
-#         outlayer = AG.createlayer(outDS,
-#                         "outlayer",
+#         outlayer = AG.createlayer(
+#                         name = "outlayer",
+#                         dataset = outDS,
 #                         geom = AG.getgeomtype(AG.getlayerdefn(inlayer)))
 #         copyfields(inlayer, outlayer)
 #         featuredefn = AG.getlayerdefn(outlayer)
@@ -90,7 +91,11 @@ AG.read("ospy/data1/sites.shp") do input
     # version 1
     AG.create(AG.getdriver("MEMORY")) do output
         inlayer = AG.getlayer(input, 0)
-        outlayer = AG.createlayer(output, "hw1b", geom=GDAL.wkbPoint)
+        outlayer = AG.createlayer(
+            name = "hw1b",
+            dataset = output,
+            geom = GDAL.wkbPoint
+        )
         inlayerdefn = AG.getlayerdefn(inlayer)
         AG.write!(outlayer, AG.getfielddefn(inlayerdefn, 0))
         AG.write!(outlayer, AG.getfielddefn(inlayerdefn, 1))
@@ -123,7 +128,7 @@ AG.read("ospy/data1/sites.shp") do input
                  Field 0 (ID): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
                  Field 1 (COVER): [OFTString], trees, trees, trees, trees, trees, trees, ...
             """
-            AG.copylayer(output, results, "hw1b")
+            AG.copy(results, name = "hw1b", dataset = output)
         end
         @test sprint(print, output) == """
         GDAL Dataset (Driver: Memory/Memory)
@@ -140,7 +145,11 @@ end
     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
     open("ospy/data2/ut_counties.txt", "r") do file
     AG.create(AG.getdriver("MEMORY")) do output
-        layer = AG.createlayer(output, "hw2a", geom=GDAL.wkbPolygon)
+        layer = AG.createlayer(
+            name = "hw2a",
+            dataset = output,
+            geom = GDAL.wkbPolygon
+        )
         @test sprint(print, layer) == """
         Layer: hw2a
           Geometry 0 (): [wkbPolygon]
@@ -181,7 +190,11 @@ end
         # AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
         # AG.create("", "MEMORY") do output
         #     inlayer = AG.getlayer(input, 0)
-        #     outlayer = AG.createlayer(output, "hw2b", geom=GDAL.wkbPolygon)
+        #     outlayer = AG.createlayer(
+        #         name = "hw2b",
+        #         dataset = output,
+        #         geom = GDAL.wkbPolygon
+        #     )
         #     infeaturedefn = AG.getlayerdefn(inlayer)
         #     nameindex = AG.getfieldindex(infeaturedefn, "name")
         #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)

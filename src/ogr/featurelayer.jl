@@ -1,3 +1,58 @@
+"""
+This function attempts to create a new layer on the dataset with the indicated
+name, coordinate system, geometry type.
+
+The `options` argument can be used to control driver specific creation
+options. These options are normally documented in the format specific
+documentation.
+
+### Parameters
+* `name`: the name for the new layer. This should ideally not match any
+    existing layer on the datasource. Defaults to an empty string.
+
+### Keyword Arguments
+* `dataset`: the dataset
+* `geom`: the geometry type for the layer. Use wkbUnknown (default) if
+    there are no constraints on the types geometry to be written.
+* `spatialref`: the coordinate system to use for the new layer.
+* `options`: a StringList of name=value (driver-specific) options.
+"""
+function createlayer(;
+        name::AbstractString            = "",
+        dataset::AbstractDataset        = create(getdriver("Memory")),
+        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
+        spatialref::AbstractSpatialRef  = SpatialRef(),
+        options                         = StringList(C_NULL)
+    )
+    FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
+        geom, options), ownedby = dataset, spatialref = spatialref)
+end
+
+"""
+Copy an existing layer.
+
+This method creates a new layer, duplicate the field definitions of the source
+layer, and then duplicates each feature of the source layer.
+
+### Parameters
+* `layer`: source layer to be copied.
+
+### Keyword Arguments
+* `dataset`: the dataset handle. (Creates a new dataset in memory by default.)
+* `name`: the name of the layer to create on the dataset.
+* `options`: a StringList of name=value (driver-specific) options.
+"""
+function copy(
+        layer::FeatureLayer;
+        dataset::AbstractDataset = create(getdriver("Memory")),
+        name::AbstractString = "copy($(getname(layer)))",
+        options = StringList(C_NULL)
+    )
+    return FeatureLayer(
+        GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options),
+        ownedby = dataset
+    )
+end
 
 "Return the layer name."
 getname(layer::FeatureLayer) = GDAL.getname(layer.ptr)
@@ -375,6 +430,12 @@ feature count, -1 if count not known.
 """
 nfeature(layer::FeatureLayer, force::Bool = false) =
     GDAL.getfeaturecount(layer.ptr, force)
+
+"Fetch number of geometry fields on the feature layer."
+ngeom(layer::FeatureLayer) = ngeom(getlayerdefn(layer))
+
+"Fetch number of fields on the feature layer."
+nfield(layer::FeatureLayer) = nfield(getlayerdefn(layer))
 
 """
 Fetch the extent of this layer.
@@ -884,7 +945,7 @@ initialized to contain all fields in the input and method layers.
 ### Parameters
 * `input`: the input layer. Should not be NULL.
 * `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
+* `output`: the layer where the features resulting from the operation
     are inserted. Should not be NULL. See the note about the schema.
 
 ### Keyword Arguments

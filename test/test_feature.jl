@@ -88,7 +88,7 @@ end
 
 @testset "In-Memory Driver" begin
     AG.create(AG.getdriver("MEMORY")) do output
-        layer = AG.createlayer(output, "dummy", geom=GDAL.wkbPolygon)
+        layer = AG.createlayer(dataset = output, geom=GDAL.wkbPolygon)
         AG.createfielddefn("int64field", GDAL.OFTInteger64) do fielddefn
             AG.write!(layer, fielddefn)
         end
