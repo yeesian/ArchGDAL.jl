@@ -28,11 +28,13 @@ nreference(featuredefn::AbstractFeatureDefn) =
 function destroy(featuredefn::FeatureDefn)
     GDAL.destroy(featuredefn.ptr)
     featuredefn.ptr = C_NULL
+    return featuredefn
 end
 
 "Destroy a feature definition view"
 function destroy(featuredefn::IFeatureDefnView)
     featuredefn.ptr = C_NULL
+    return featuredefn
 end
 
 "Drop a reference, and destroy if unreferenced."
