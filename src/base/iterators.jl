@@ -73,7 +73,7 @@ function bufferwindows(raster::AbstractRasterBand)
     BufferIterator(
         raster,
         windows(raster),
-        Array{getdatatype(raster)}(undef, blocksize(raster)...)
+        Array{pixeltype(raster)}(undef, blocksize(raster)...)
     )
 end
 

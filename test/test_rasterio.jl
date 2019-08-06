@@ -7,7 +7,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)..., 1)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
         for (cols,rows) in AG.windows(band)
             AG.rasterio!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
             data = buffer[1:length(cols),1:length(rows)]
@@ -22,7 +22,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)..., 1)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
         for (cols,rows) in AG.windows(band)
             AG.read!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
             data = buffer[1:length(cols),1:length(rows)]
@@ -37,7 +37,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)...)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
         for (cols,rows) in AG.windows(band)
             AG.read!(ds, buffer, 1, rows, cols)
             data = buffer[1:length(cols),1:length(rows)]
@@ -52,7 +52,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)...)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
         for (cols,rows) in AG.windows(band)
             AG.read!(band, buffer, rows, cols)
             data = buffer[1:length(cols),1:length(rows)]
@@ -68,7 +68,7 @@ AG.read("ospy/data4/aster.img") do ds
         count = 0
         total = 0
         xbsize, ybsize = AG.blocksize(band)
-        buffer = Array{AG.getdatatype(band)}(undef, ybsize, xbsize)
+        buffer = Array{AG.pixeltype(band)}(undef, ybsize, xbsize)
         for ((i,j),(nrows,ncols)) in AG.blocks(band)
             # AG.rasterio!(ds,buffer,Cint[1],i,j,nrows,ncols)
             # AG.read!(band, buffer, j, i, ncols, nrows)
@@ -83,7 +83,7 @@ AG.read("ospy/data4/aster.img") do ds
 
     @testset "version 6" begin
         band = AG.getband(ds, 1)
-        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
         AG.rasterio!(ds, buffer, Cint[1])
         count = sum(buffer .> 0)
         total = sum(buffer)
@@ -93,7 +93,7 @@ AG.read("ospy/data4/aster.img") do ds
 
     @testset "version 7" begin
         band = AG.getband(ds, 1)
-        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
+        buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
         AG.read!(band, buffer)
         count = sum(buffer .> 0)
         total = sum(buffer)
@@ -103,7 +103,7 @@ AG.read("ospy/data4/aster.img") do ds
 
     @testset "version 8" begin
         band = AG.getband(ds, 1)
-        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds))
+        buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
         AG.read!(ds, buffer, 1)
         count = sum(buffer .> 0)
         total = sum(buffer)
@@ -113,7 +113,7 @@ AG.read("ospy/data4/aster.img") do ds
 
     @testset "version 9" begin
         band = AG.getband(ds, 1)
-        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
         AG.read!(ds, buffer, Cint[1])
         count = sum(buffer .> 0)
         total = sum(buffer)
@@ -123,7 +123,7 @@ AG.read("ospy/data4/aster.img") do ds
 
     @testset "version 10" begin
         band = AG.getband(ds, 1)
-        buffer = Array{AG.getdatatype(band)}(undef, AG.width(ds), AG.height(ds), 3)
+        buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 3)
         AG.read!(ds, buffer)
         count = sum(buffer[:,:,1] .> 0)
         total = sum(buffer[:,:,1])

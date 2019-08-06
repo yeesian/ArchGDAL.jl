@@ -186,7 +186,7 @@ function read!(
 end
 
 function read(rb::AbstractRasterBand)
-    rasterio!(rb, Array{getdatatype(rb)}(undef, width(rb), height(rb)))
+    rasterio!(rb, Array{pixeltype(rb)}(undef, width(rb), height(rb)))
 end
 
 function read(
@@ -196,7 +196,7 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    buffer = Array{getdatatype(rb)}(undef, width(rb), height(rb))
+    buffer = Array{pixeltype(rb)}(undef, width(rb), height(rb))
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
 end
 
@@ -206,7 +206,7 @@ function read(
         cols::UnitRange{<:Integer}
     )
     rasterio!(rb,
-        Array{getdatatype(rb)}(undef, length(cols), length(rows)),
+        Array{pixeltype(rb)}(undef, length(cols), length(rows)),
         rows, cols
     )
 end
@@ -312,14 +312,14 @@ function read(
         dataset::AbstractDataset,
         indices::Vector{Cint}
     )
-    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
+    buffer = Array{pixeltype(getband(dataset, indices[1]))}(
         undef, width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices)
 end
 
 function read(dataset::AbstractDataset)
-    read!(dataset, Array{getdatatype(getband(dataset, 1))}(
+    read!(dataset, Array{pixeltype(getband(dataset, 1))}(
         undef, width(dataset), height(dataset), nraster(dataset)
     ))
 end
@@ -343,7 +343,7 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
+    buffer = Array{pixeltype(getband(dataset, indices[1]))}(
         undef, width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
@@ -364,7 +364,7 @@ function read(
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
-    buffer = Array{getdatatype(getband(dataset, indices[1]))}(
+    buffer = Array{pixeltype(getband(dataset, indices[1]))}(
         undef, width(dataset), height(dataset), length(indices)
     )
     rasterio!(dataset, buffer, indices, rows, cols)

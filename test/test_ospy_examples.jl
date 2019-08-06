@@ -288,7 +288,7 @@ AG.read("ospy/data4/aster.img") do ds
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)...)
+            buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
             for (cols,rows) in AG.windows(band)
                 AG.rasterio!(band, buffer, rows, cols)
                 data = buffer[1:length(cols),1:length(rows)]
@@ -417,7 +417,7 @@ end end end end
             xOffset2 = round(Int, (minX2 - minX) / pixelWidth1)
             yOffset2 = round(Int, (maxY2 - maxY) / pixelHeight1)
 
-            dtype = AG.getdatatype(band1)
+            dtype = AG.pixeltype(band1)
             data1 = Array{dtype}(undef, rows, cols)
             data2 = Array{dtype}(undef, rows, cols)
             # create the output image
@@ -426,7 +426,7 @@ end end end end
                     width   = cols,
                     height  = rows,
                     nbands  = 1,
-                    dtype   = AG.getdatatype(band1)
+                    dtype   = AG.pixeltype(band1)
                 ) do dsout
                 # read in doq1 and write it to the output
                 AG.rasterio!(band1, data1, 0, 0, cols1, rows1)

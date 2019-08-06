@@ -48,12 +48,12 @@ end
 
 function summarize(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
-    access = getaccess(rasterband)
+    access = accessflag(rasterband)
     color = getname(getcolorinterp(rasterband))
     xsize = width(rasterband)
     ysize = height(rasterband)
     i = getnumber(rasterband)
-    pxtype = getdatatype(rasterband)
+    pxtype = pixeltype(rasterband)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
 end
 
