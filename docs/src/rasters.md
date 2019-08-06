@@ -28,7 +28,7 @@ You can programmatically retrieve the information in the header using
 * `ArchGDAL.getname(colorinterp)`: name (string) corresponding to color interpretation (`"Red"`)
 * `ArchGDAL.width(band)`: width (pixels) of the band (`2048`)
 * `ArchGDAL.height(band)`: height (pixels) of the band (`1024`)
-* `ArchGDAL.getnumber(band)`: the band number (1+) within its dataset, or 0 if unknown. (`1`)
+* `ArchGDAL.indexofband(band)`: the index of the band (1+) within its dataset, or 0 if unknown. (`1`)
 * `ArchGDAL.pixeltype(band)`: pixel data type for this band. (`UInt8`)
 
 You can get additional attribute information using

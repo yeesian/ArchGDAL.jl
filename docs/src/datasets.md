@@ -74,7 +74,7 @@ You can also programmatically retrieve them using
 * `ArchGDAL.shortname(drv)`: the short name of a driver
 * `ArchGDAL.longname(drv)`: the long name of a driver
 * `band = ArchGDAL.getband(dataset, i)`: the `i`-th raster band
-* `i = ArchGDAL.getnumber(band)`: the index of `band`.
+* `i = ArchGDAL.indexofband(band)`: the index of `band`.
 * `ArchGDAL.accessflag(band)`: the access flag (i.e. `GA_ReadOnly`)
 * `ArchGDAL.getname(ArchGDAL.getcolorinterp(rasterband))`: the color channel (e.g. `Red`)
 * `ArchGDAL.width(band)` the width (`2048` pixels) of the band

@@ -47,7 +47,7 @@ Fetch the band number (1+) within its dataset, or 0 if unknown.
 This method may return a value of 0 to indicate overviews, or free-standing
 `GDALRasterBand` objects without a relationship to a dataset.
 """
-getnumber(rb::AbstractRasterBand) = GDAL.getbandnumber(rb.ptr)
+indexofband(rb::AbstractRasterBand) = GDAL.getbandnumber(rb.ptr)
 
 """
 Fetch the handle to its dataset handle, or `NULL` if this cannot be determined.
