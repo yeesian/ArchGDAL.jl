@@ -77,12 +77,14 @@ AG.read("data/point.geojson") do dataset
         @test AG.validate(f, GDAL.OGR_F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) == true
 
         @test AG.getfield(f, 1) == "point-a"
-        AG.setdefault!(AG.getfielddefn(f, 1),"nope")
+        @test AG.getdefault(f, 1) == ""
+        AG.setdefault!(AG.getfielddefn(f, 1), "default value")
+        @test AG.getdefault(f, 1) == "default value"
         @test AG.getfield(f, 1) == "point-a"
         AG.unsetfield!(f, 1)
-        @test AG.getfield(f, 1) == nothing
-        AG.fillunsetwithdefault!(f, notnull=false)
-        @test AG.getfield(f, 1) == "nope"
+        @test AG.getfield(f, 1) == "default value"
+        AG.fillunsetwithdefault!(f, notnull = false)
+        @test AG.getfield(f, 1) == AG.getdefault(f, 1)
     end
 end
 

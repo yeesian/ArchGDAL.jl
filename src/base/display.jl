@@ -157,7 +157,7 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
     n > 5 && print(io, "...\n Number of Fields: $n")
 end
 
-function Base.show(io::IO, fd::FieldDefn)
+function Base.show(io::IO, fd::AbstractFieldDefn)
     fd.ptr == C_NULL && (return print(io, "NULL FieldDefn"))
     print(io, "$(getname(fd)) ($(gettype(fd)))")
 end

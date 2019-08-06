@@ -34,6 +34,9 @@ abstract type AbstractFeatureDefn end
 abstract type AbstractFeatureLayer end
     # needs to have a `ptr::GDALDataset` attribute
 
+abstract type AbstractFieldDefn end
+    # needs to have a `ptr::GDALFieldDefn` attribute
+
 abstract type AbstractGeomFieldDefn end
     # needs to have a `ptr::GDALGeomFieldDefn` attribute
 
@@ -68,8 +71,18 @@ mutable struct Field
     ptr::GDALField
 end
 
-mutable struct FieldDefn
+mutable struct FieldDefn <: AbstractFieldDefn
     ptr::GDALFieldDefn
+end
+
+mutable struct IFieldDefnView <: AbstractFieldDefn
+    ptr::GDALFieldDefn
+
+    function IFieldDefnView(ptr::GDALFieldDefn = GDALFieldDefn(C_NULL))
+        fielddefn = new(ptr)
+        finalizer(destroy, fielddefn)
+        return fielddefn
+    end
 end
 
 mutable struct GeomFieldDefn <: AbstractGeomFieldDefn

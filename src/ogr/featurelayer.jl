@@ -685,7 +685,7 @@ to the layer.
 """
 function write!(
         layer::AbstractFeatureLayer,
-        field::FieldDefn,
+        field::AbstractFieldDefn,
         approx::Bool = false
     )
     result = GDAL.createfield(layer.ptr, field.ptr, approx)

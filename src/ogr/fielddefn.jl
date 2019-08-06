@@ -13,6 +13,11 @@ function destroy(fielddefn::FieldDefn)
     return fielddefn
 end
 
+function destroy(fielddefn::IFieldDefnView)
+    fielddefn.ptr = C_NULL
+    return fielddefn
+end
+
 "Set the name of this field."
 function setname!(fielddefn::FieldDefn, name::AbstractString)
     GDAL.setname(fielddefn.ptr, name)
@@ -20,10 +25,10 @@ function setname!(fielddefn::FieldDefn, name::AbstractString)
 end
 
 "Fetch the name of this field."
-getname(fielddefn::FieldDefn) = GDAL.getnameref(fielddefn.ptr)
+getname(fielddefn::AbstractFieldDefn) = GDAL.getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
-gettype(fielddefn::FieldDefn) = GDAL.gettype(fielddefn.ptr)
+gettype(fielddefn::AbstractFieldDefn) = GDAL.gettype(fielddefn.ptr)
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)
@@ -40,7 +45,7 @@ Fetch subtype of this field.
 ### Returns
 field subtype.
 """
-getsubtype(fielddefn::FieldDefn) = GDAL.getsubtype(fielddefn.ptr)
+getsubtype(fielddefn::AbstractFieldDefn) = GDAL.getsubtype(fielddefn.ptr)
 
 """
 Set the subtype of this field.
@@ -62,7 +67,7 @@ Get the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-getjustify(fielddefn::FieldDefn) = GDAL.getjustify(fielddefn.ptr)
+getjustify(fielddefn::AbstractFieldDefn) = GDAL.getjustify(fielddefn.ptr)
 
 """
 Set the justification for this field.
@@ -79,7 +84,7 @@ end
 ### Returns
 the width, zero means no specified width.
 """
-getwidth(fielddefn::FieldDefn) = GDAL.getwidth(fielddefn.ptr)
+getwidth(fielddefn::AbstractFieldDefn) = GDAL.getwidth(fielddefn.ptr)
 
 """
 Set the formatting width for this field in characters.
@@ -97,7 +102,7 @@ Get the formatting precision for this field.
 
 This should normally be zero for fields of types other than OFTReal.
 """
-getprecision(fielddefn::FieldDefn) = GDAL.getprecision(fielddefn.ptr)
+getprecision(fielddefn::AbstractFieldDefn) = GDAL.getprecision(fielddefn.ptr)
 
 """
 Set the formatting precision for this field in characters.
@@ -139,7 +144,7 @@ function setparams!(
 end
 
 "Return whether this field should be omitted when fetching features."
-isignored(fielddefn::FieldDefn) = Bool(GDAL.isignored(fielddefn.ptr))
+isignored(fielddefn::AbstractFieldDefn) = Bool(GDAL.isignored(fielddefn.ptr))
 
 "Set whether this field should be omitted when fetching features."
 function setignored!(fielddefn::FieldDefn, ignore::Bool)
@@ -157,7 +162,7 @@ OGRFeature::IsFieldSet() will necessary return TRUE, as fields can be temporary
 unset and null/not-null validation is usually done when
 OGRLayer::CreateFeature()/SetFeature() is called.
 """
-isnullable(fielddefn::FieldDefn) = Bool(GDAL.isnullable(fielddefn.ptr))
+isnullable(fielddefn::AbstractFieldDefn) = Bool(GDAL.isnullable(fielddefn.ptr))
 
 """
 Set whether this field can receive null values.
@@ -174,7 +179,7 @@ function setnullable!(fielddefn::FieldDefn, nullable::Bool)
 end
 
 "Get default field value"
-function getdefault(fielddefn::FieldDefn)
+function getdefault(fielddefn::AbstractFieldDefn)
     result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
     if result == C_NULL
         return ""
@@ -203,7 +208,7 @@ datetime literal value, format should be 'YYYY/MM/DD HH:MM:SS[.sss]'
 Drivers that support writing DEFAULT clauses will advertize the
 GDAL_DCAP_DEFAULT_FIELDS driver metadata item.
 """
-function setdefault!(fielddefn::FieldDefn, default)
+function setdefault!(fielddefn::AbstractFieldDefn, default)
     GDAL.setdefault(fielddefn.ptr, default)
     return fielddefn
 end
@@ -215,7 +220,7 @@ Driver specific default values are those that are not NULL, a numeric value, a
 literal value enclosed between single quote characters, CURRENT_TIMESTAMP,
 CURRENT_TIME, CURRENT_DATE or datetime literal value.
 """
-isdefaultdriverspecific(fielddefn::FieldDefn) =
+isdefaultdriverspecific(fielddefn::AbstractFieldDefn) =
     Bool(GDAL.isdefaultdriverspecific(fielddefn.ptr))
 
 "Create a new field geometry definition."
