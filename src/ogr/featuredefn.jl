@@ -25,7 +25,10 @@ dereference(fd::FeatureDefn) = GDAL.dereference(fd.ptr)
 nreference(fd::FeatureDefn) = GDAL.getreferencecount(fd.ptr)
 
 "Destroy a feature definition object and release all memory associated with it"
-destroy(fd::FeatureDefn) = (GDAL.destroy(fd.ptr); fd.ptr = C_NULL)
+function destroy(fd::FeatureDefn)
+    GDAL.destroy(fd.ptr)
+    fd.ptr = C_NULL
+end
 
 "Drop a reference, and destroy if unreferenced."
 release(fd::FeatureDefn) = GDAL.release(fd.ptr)
