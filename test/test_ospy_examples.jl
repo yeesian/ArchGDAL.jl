@@ -362,7 +362,6 @@ AG.read("ospy/data4/aster.img") do ds
                 [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
                     blocksize: 5665×1, nodata: 0.0, units: 1.0px + 0.0
                     overviews: """
-                # AG.flushcache!(outband)
                 AG.setnodatavalue!(outband, -99)
                 # georeference the image and set the projection
                 AG.setgeotransform!(outDS, AG.getgeotransform(ds))
@@ -451,8 +450,6 @@ end end end end
                 [GA_Update] Band 1 (Undefined): 4500 x 3000 (UInt8)
                     blocksize: 4500×1, nodata: 0.0, units: 1.0px + 0.0
                     overviews: """
-                AG.flushcache!(bandout)
-                # stats = bandOut.GetStatistics(0, 1)
 
                 # set the geotransform and projection on the output
                 geotransform = [minX, pixelWidth1, 0, maxY, 0, pixelHeight1]

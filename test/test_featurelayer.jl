@@ -14,7 +14,6 @@ import ArchGDAL; const AG = ArchGDAL
             @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == false
             AG.setignoredfields!(tmplayer, ["OGR_GEOMETRY"])
             @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == true
-            AG.synctodisk!(tmplayer)
         end
 
         AG.copy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
