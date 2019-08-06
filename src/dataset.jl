@@ -140,7 +140,7 @@ end
 Writes the dataset to the designated filename.
 """
 function write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
-    destroy(unsafe_createcopy(dataset, filename = filename; kwargs...))
+    destroy(unsafe_copy(dataset, filename = filename; kwargs...))
 end
 
 """
