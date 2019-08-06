@@ -207,7 +207,7 @@ end
 
 for gdalfunc in (
         :boundary, :buffer, :centroid, :clone, :convexhull, :create,
-        :createcolortable, :createcoordtrans, :createcopy, :createfeaturedefn,
+        :createcolortable, :createcoordtrans, :copy, :createfeaturedefn,
         :createfielddefn, :creategeom, :creategeomcollection,
         :creategeomfieldcollection, :creategeomdefn, :createlinearring,
         :createlinestring, :createmultilinestring, :createmultipoint,
