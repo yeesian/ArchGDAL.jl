@@ -11,7 +11,10 @@ This is roughly equivalent to deleting the driver, but is guaranteed to take
 place in the GDAL heap. It is important this that function not be called on a
 driver that is registered with the `GDALDriverManager`.
 """
-destroy(drv::Driver) = (GDAL.destroydriver(drv.ptr); drv.ptr = C_NULL)
+function destroy(drv::Driver)
+    GDAL.destroydriver(drv.ptr)
+    drv.ptr = C_NULL
+end
 
 "Register a driver for use."
 register(drv::Driver) = GDAL.registerdriver(drv.ptr)
@@ -21,6 +24,7 @@ deregister(drv::Driver) = GDAL.deregisterdriver(drv.ptr)
 
 "Return the list of creation options of the driver [an XML string]"
 options(drv::Driver) = GDAL.getdrivercreationoptionlist(drv.ptr)
+
 driveroptions(name::AbstractString) = options(getdriver(name))
 
 "Return the short name of a driver (e.g. `GTiff`)"
