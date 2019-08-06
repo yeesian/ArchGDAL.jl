@@ -226,7 +226,11 @@ for gdalfunc in (
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
             obj = $(Symbol("unsafe_$gdalfunc"))(args...; kwargs...)
-            try f(obj) finally destroy(obj) end
+            try
+                f(obj)
+            finally
+                destroy(obj)
+            end
         end
     end)
 end

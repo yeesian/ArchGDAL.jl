@@ -15,7 +15,10 @@ to delete a feature created within the DLL. If the delete is done in the calling
 application the memory will be freed onto the application heap which is
 inappropriate.
 """
-destroy(feature::Feature) = (GDAL.destroy(feature.ptr); feature.ptr = C_NULL)
+function destroy(feature::Feature)
+    GDAL.destroy(feature.ptr)
+    feature.ptr = C_NULL
+end
 
 """
 Set feature geometry.
