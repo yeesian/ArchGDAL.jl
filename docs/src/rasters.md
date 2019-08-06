@@ -23,13 +23,13 @@ ArchGDAL.read(filepath) do dataset
 end
 ```
 You can programmatically retrieve the information in the header using
-* `ArchGDAL.getaccess(band)`: whether we have update permission for this band. (`GA_ReadOnly`)
+* `ArchGDAL.accessflag(band)`: the access flag for this band. (`GA_ReadOnly`)
 * `colorinterp = ArchGDAL.getcolorinterp(band)`: color interpretation of the values in the band (`GCI_RedBand`)
 * `ArchGDAL.getname(colorinterp)`: name (string) corresponding to color interpretation (`"Red"`)
 * `ArchGDAL.width(band)`: width (pixels) of the band (`2048`)
 * `ArchGDAL.height(band)`: height (pixels) of the band (`1024`)
 * `ArchGDAL.getnumber(band)`: the band number (1+) within its dataset, or 0 if unknown. (`1`)
-* `ArchGDAL.getdatatype(band)`: pixel data type for this band. (`UInt8`)
+* `ArchGDAL.pixeltype(band)`: pixel data type for this band. (`UInt8`)
 
 You can get additional attribute information using
 * `ArchGDAL.getscale(band)`: the scale in `units = (px * scale) + offset` (`1.0`)

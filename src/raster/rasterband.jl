@@ -30,7 +30,7 @@ function blocksize(rb::AbstractRasterBand)
 end
 
 "Fetch the pixel data type for this band."
-getdatatype(rb::AbstractRasterBand) = _JLTYPE[GDAL.getrasterdatatype(rb.ptr)]
+pixeltype(rb::AbstractRasterBand) = _JLTYPE[GDAL.getrasterdatatype(rb.ptr)]
 
 "Fetch the width in pixels of this band."
 width(rb::AbstractRasterBand) = GDAL.getrasterbandxsize(rb.ptr)
@@ -38,10 +38,11 @@ width(rb::AbstractRasterBand) = GDAL.getrasterbandxsize(rb.ptr)
 "Fetch the height in pixels of this band."
 height(rb::AbstractRasterBand) = GDAL.getrasterbandysize(rb.ptr)
 
-"Find out if we have update permission for this band."
-getaccess(rb::AbstractRasterBand) = GDAL.getrasteraccess(rb.ptr)
+"Return the access flag (e.g. `OF_ReadOnly` or `OF_Update`) for this band."
+accessflag(rb::AbstractRasterBand) = GDAL.getrasteraccess(rb.ptr)
 
-"""Fetch the band number (1+) within its dataset, or 0 if unknown.
+"""
+Fetch the band number (1+) within its dataset, or 0 if unknown.
 
 This method may return a value of 0 to indicate overviews, or free-standing
 `GDALRasterBand` objects without a relationship to a dataset.
