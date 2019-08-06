@@ -519,8 +519,8 @@ before destroying the GDALDataset may cause errors.
 * `dataset`: the dataset handle.
 * `layer`: the result of a previous ExecuteSQL() call.
 """
-function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
-    GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr)
+function releaseresultset(layer::FeatureLayer)
+    GDAL.datasetreleaseresultset(layer.ownedby.ptr, layer.ptr)
     layer.ptr = GDALFeatureLayer(C_NULL)
     layer.ownedby = Dataset()
 end

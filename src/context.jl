@@ -44,7 +44,7 @@ function executesql(f::Function, dataset::Dataset, args...)
     try
         f(result)
     finally
-        releaseresultset(dataset, result)
+        releaseresultset(result)
     end
 end
 
