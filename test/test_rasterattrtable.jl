@@ -13,8 +13,8 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.getcolumnname(rat, 0) == "col1"
         @test AG.getcolumnusage(rat, 0) == GDAL.GFU_Generic
         @test AG.getcolumntype(rat, 0) == GDAL.GFT_Integer
-        @test AG.getcolumnindex(rat, GDAL.GFU_Generic) == 0
-        @test AG.getcolumnindex(rat, GDAL.GFU_Red) == -1
+        @test AG.findcolumnindex(rat, GDAL.GFU_Generic) == 0
+        @test AG.findcolumnindex(rat, GDAL.GFU_Red) == -1
         
         AG.createcolumn!(rat, "col2", GDAL.GFT_Real, GDAL.GFU_MinMax)
         AG.createcolumn!(rat, "col3", GDAL.GFT_String, GDAL.GFU_PixelCount)
@@ -66,8 +66,8 @@ import ArchGDAL; const AG = ArchGDAL
             @test AG.asstring(ratclone, 4, 2) == "abc"
             @test AG.ncolumn(ratclone) == 3
             @test AG.nrow(ratclone) == 5
-            @test AG.getcolumnindex(ratclone, GDAL.GFU_Generic) == 0
-            @test AG.getcolumnindex(ratclone, GDAL.GFU_Red) == -1
+            @test AG.findcolumnindex(ratclone, GDAL.GFU_Generic) == 0
+            @test AG.findcolumnindex(ratclone, GDAL.GFU_Red) == -1
         end
 
         AG.setlinearbinning!(rat, 0, 10)
