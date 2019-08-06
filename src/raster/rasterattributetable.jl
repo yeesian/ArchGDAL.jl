@@ -47,7 +47,7 @@ match is found.
 ### Parameters
 * `usage`  usage type to search for.
 """
-getcolumnindex(rat::RasterAttrTable, usage::GDALRATFieldUsage) =
+findcolumnindex(rat::RasterAttrTable, usage::GDALRATFieldUsage) =
     GDAL.ratgetcolofusage(rat.ptr, usage)
 
 "Fetch row count."
