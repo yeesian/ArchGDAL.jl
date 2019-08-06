@@ -121,17 +121,19 @@ end
                 AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
                 AG.getname(AG.getfielddefn(fd,3)) == "newfield"
             end
-            AG.deletefielddefn!(fd, 0)
-            @test AG.nfield(fd) == 3
-            AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd,2)) == "newfield"
-            AG.reorderfielddefns!(fd, Cint[2,1,0])
-            @test AG.nfield(fd) == 3
-            AG.getname(AG.getfielddefn(fd,0)) == "newfield"
-            AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
         end
+        AG.deletefielddefn!(fd, 0)
+        @test AG.nfield(fd) == 3
+        AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
+        AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+        AG.getname(AG.getfielddefn(fd,2)) == "newfield"
+        
+        AG.reorderfielddefns!(fd, Cint[2,1,0])
+        @test AG.nfield(fd) == 3
+        AG.getname(AG.getfielddefn(fd,0)) == "newfield"
+        AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+        AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
+
         @test AG.ngeom(fd) == 1
         @test AG.getgeomtype(fd) == GDAL.wkbUnknown
         AG.setgeomtype!(fd, GDAL.wkbPolygon)
