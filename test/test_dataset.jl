@@ -7,11 +7,13 @@ import ArchGDAL; const AG = ArchGDAL
         @testset "Method 1" begin
             AG.copy(dataset, filename = "/vsimem/utmcopy.tif") do copydataset
                 @test AG.ngcp(copydataset) == 0
-                @test AG.noverview(AG.getband(copydataset,1)) == 0
-                AG.buildoverviews!(copydataset, Cint[2,4,8])
-                @test AG.noverview(AG.getband(copydataset,1)) == 3
-                AG.copywholeraster(dataset, copydataset,
-                                   progressfunc=GDAL.C.GDALTermProgress)
+                AG.getband(copydataset,1) do band
+                    @test AG.noverview(band) == 0
+                    AG.buildoverviews!(copydataset, Cint[2,4,8])
+                    @test AG.noverview(band) == 3
+                    AG.copywholeraster(dataset, copydataset,
+                                       progressfunc=GDAL.C.GDALTermProgress)
+                end
             end
         end
         @testset "Method 2" begin
@@ -37,6 +39,9 @@ end
     @test AG.nlayer(dataset1) == 1
     layer1 = AG.getlayer(dataset1, 0)
     @test AG.nfeature(layer1) == 4
+    AG.getlayer(dataset1, 0) do layer1
+        @test AG.nfeature(layer1) == 4
+    end
 
     dataset2 = AG.create(AG.getdriver("Memory"))
     @test AG.nlayer(dataset2) == 0
@@ -49,6 +54,10 @@ end
     @test AG.nlayer(dataset2) == 1
     @test AG.nfeature(layer3a) == 4
     @test AG.getname(layer3a) == "copy"
+    AG.getlayer(dataset2, "copy") do layer3a
+        @test AG.nfeature(layer3a) == 4
+        @test AG.getname(layer3a) == "copy"
+    end
     
     layer3b = AG.copy(layer3a)
     @test AG.nlayer(dataset2) == 1 # layer3b is not associated with dataset2
@@ -70,11 +79,13 @@ end
 
     AG.create(tempname(), driver = AG.getdriver("KML")) do dataset5
         @test AG.nlayer(dataset5) == 0
-        layer4 = AG.createlayer(
+        AG.createlayer(
             name = "layer5",
             dataset = dataset5,
             geom = GDAL.wkbLineString
-        )
+        ) do layer5
+            @test AG.nfeature(layer5) == 0
+        end
         @test AG.nlayer(dataset5) == 1
     end
     

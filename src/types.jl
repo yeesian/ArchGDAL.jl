@@ -28,6 +28,12 @@ abstract type AbstractSpatialRef end
 abstract type AbstractDataset end
     # needs to have a `ptr::GDALDataset` attribute
 
+abstract type AbstractFeatureLayer end
+    # needs to have a `ptr::GDALDataset` attribute
+
+abstract type AbstractRasterBand end
+    # needs to have a `ptr::GDALDataset` attribute
+
 mutable struct CoordTransform
     ptr::GDALCoordTransform
 end
@@ -80,17 +86,23 @@ mutable struct StyleTool
     ptr::GDALStyleTool
 end
 
-mutable struct FeatureLayer
+mutable struct FeatureLayer <: AbstractFeatureLayer
+    ptr::GDALFeatureLayer
+end
+
+mutable struct IFeatureLayer <: AbstractFeatureLayer
     ptr::GDALFeatureLayer
     ownedby::AbstractDataset
     spatialref::AbstractSpatialRef
 
-    function FeatureLayer(
+    function IFeatureLayer(
             ptr::GDALFeatureLayer = GDALFeatureLayer(C_NULL);
             ownedby::AbstractDataset = Dataset(),
             spatialref::AbstractSpatialRef = SpatialRef()
         )
-        new(ptr, ownedby, spatialref)
+        layer = new(ptr, ownedby, spatialref)
+        finalizer(destroy, layer)
+        layer
     end
 end
 
@@ -102,15 +114,21 @@ mutable struct FeatureDefn
     ptr::GDALFeatureDefn
 end
 
-mutable struct RasterBand
+mutable struct RasterBand <: AbstractRasterBand
+    ptr::GDALRasterBand
+end
+
+mutable struct IRasterBand <: AbstractRasterBand
     ptr::GDALRasterBand
     ownedby::AbstractDataset
 
-    function RasterBand(
+    function IRasterBand(
             ptr::GDALRasterBand = GDALRasterBand(C_NULL);
             ownedby::AbstractDataset = Dataset()
         )
-        new(ptr, ownedby)
+        rasterband = new(ptr, ownedby)
+        finalizer(destroy, rasterband)
+        rasterband
     end
 end
 
