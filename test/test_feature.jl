@@ -33,10 +33,10 @@ AG.read("data/point.geojson") do dataset
             @test AG.getfid(f1) == 2
             @test AG.getfid(f2) == 0
 
-            @test AG.getgeomindex(f1, "geom") == -1
-            @test AG.getgeomindex(f1, "") == 0
-            @test AG.getgeomindex(f2, "geom") == -1
-            @test AG.getgeomindex(f2, "") == 0
+            @test AG.findgeomindex(f1, "geom") == -1
+            @test AG.findgeomindex(f1, "") == 0
+            @test AG.findgeomindex(f2, "geom") == -1
+            @test AG.findgeomindex(f2, "") == 0
             @test AG.gettype(AG.getgeomdefn(f1, 0)) == GDAL.wkbPoint
             @test AG.gettype(AG.getgeomdefn(f2, 0)) == GDAL.wkbPoint
         end
