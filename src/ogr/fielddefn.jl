@@ -7,9 +7,10 @@ unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType) =
     FieldDefn(GDAL.fld_create(name, etype))
 
 "Destroy a field definition."
-function destroy(fd::FieldDefn)
-    GDAL.destroy(fd.ptr)
-    fd.ptr = C_NULL
+function destroy(fielddefn::FieldDefn)
+    GDAL.destroy(fielddefn.ptr)
+    fielddefn.ptr = C_NULL
+    return fielddefn
 end
 
 "Set the name of this field."
