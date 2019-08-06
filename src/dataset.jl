@@ -75,7 +75,7 @@ ensures that all the data and metadata has been written to the dataset
 In some situations, the new dataset can be created in another process through
 the GDAL API Proxy mechanism.
 """
-function unsafe_createcopy(
+function unsafe_copy(
         dataset::AbstractDataset;
         filename::AbstractString    = string("/vsimem/$(gensym())"),
         driver::Driver              = getdriver(dataset),
@@ -110,12 +110,12 @@ avoid prior destruction of existing dataset.
 
 ### Example
 ```
-dataset = ArchGDAL.createcopy(originaldataset)
+dataset = ArchGDAL.copy(originaldataset)
 # work with dataset from here
 ```
 or
 ```
-ArchGDAL.createcopy(originaldataset) do dataset
+ArchGDAL.copy(originaldataset) do dataset
     # work with dataset from here
 end
 ```
@@ -123,7 +123,7 @@ end
 ### Returns
 The newly created dataset.
 """
-function createcopy(
+function copy(
         dataset::AbstractDataset;
         filename::AbstractString    = string("/vsimem/$(gensym())"),
         driver::Driver              = getdriver(dataset),

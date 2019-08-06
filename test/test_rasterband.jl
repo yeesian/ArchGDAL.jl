@@ -47,7 +47,7 @@ import ArchGDAL; const AG = ArchGDAL
         AG.deletenodatavalue!(rb)
         @test AG.getnodatavalue(rb) ≈ -1e10
 
-        AG.createcopy(dataset) do dest
+        AG.copy(dataset) do dest
             destband = AG.getband(dest, 1)
             AG.copywholeraster!(rb, destband)
             @test sprint(print, destband) == """
