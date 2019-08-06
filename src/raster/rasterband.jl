@@ -356,17 +356,17 @@ function setcategorynames!(band::AbstractRasterBand, names::Vector{String})
     result
 end
 
-"""
-Flush raster data cache.
+# """
+# Flush raster data cache.
 
-This call will recover memory used to cache data blocks for this raster band,
-and ensure that new requests are referred to the underlying driver.
-"""
-function flushcache!(band::AbstractRasterBand)
-    result = GDAL.flushrastercache(band.ptr)
-    @cplerr result "Failed to flush raster data cache"
-    result
-end
+# This call will recover memory used to cache data blocks for this raster band,
+# and ensure that new requests are referred to the underlying driver.
+# """
+# function flushcache!(band::AbstractRasterBand)
+#     result = GDAL.flushrastercache(band.ptr)
+#     @cplerr result "Failed to flush raster data cache"
+#     result
+# end
 
 """
 Fill this band with a constant value.

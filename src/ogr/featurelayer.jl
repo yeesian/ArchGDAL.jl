@@ -912,28 +912,28 @@ dereference(layer::AbstractFeatureLayer) = GDAL.dereference(layer.ptr)
 "the current reference count for the layer object itself."
 nreference(layer::AbstractFeatureLayer) = GDAL.getrefcount(layer.ptr)
 
-"""
-Flush pending changes to disk.
+# """
+# Flush pending changes to disk.
 
-This call is intended to force the layer to flush any pending writes to disk,
-and leave the disk file in a consistent state. It would not normally have any
-effect on read-only datasources.
+# This call is intended to force the layer to flush any pending writes to disk,
+# and leave the disk file in a consistent state. It would not normally have any
+# effect on read-only datasources.
 
-Some layers do not implement this method, and will still return OGRERR_NONE.
-The default implementation just returns OGRERR_NONE. An error is only returned
-if an error occurs while attempting to flush to disk.
+# Some layers do not implement this method, and will still return OGRERR_NONE.
+# The default implementation just returns OGRERR_NONE. An error is only returned
+# if an error occurs while attempting to flush to disk.
 
-In any event, you should always close any opened datasource with
-DestroyDataSource() that will ensure all data is correctly flushed.
+# In any event, you should always close any opened datasource with
+# DestroyDataSource() that will ensure all data is correctly flushed.
 
-### Returns
-OGRERR_NONE if no error occurs (even if nothing is done) or an error code.
-"""
-function synctodisk!(layer::AbstractFeatureLayer)
-    result = GDAL.synctodisk(layer.ptr)
-    @ogrerr result "Failed to flush pending changes to disk"
-    layer.ptr = GDALFeatureLayer(C_NULL)
-end
+# ### Returns
+# OGRERR_NONE if no error occurs (even if nothing is done) or an error code.
+# """
+# function synctodisk!(layer::AbstractFeatureLayer)
+#     result = GDAL.synctodisk(layer.ptr)
+#     @ogrerr result "Failed to flush pending changes to disk"
+#     layer.ptr = GDALFeatureLayer(C_NULL)
+# end
 
 # """
 # Return the total number of features read.
