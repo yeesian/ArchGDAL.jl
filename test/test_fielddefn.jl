@@ -107,14 +107,14 @@ end
         @test AG.nreference(fd) == 0
         AG.createfielddefn("fieldname",GDAL.OFTInteger) do fielddef
             @test AG.nfield(fd) == 0
-            AG.push!(fd, fielddef)
+            AG.write!(fd, fielddef)
             @test AG.nfield(fd) == 1
-            AG.push!(fd, fielddef)
+            AG.write!(fd, fielddef)
             @test AG.nfield(fd) == 2
-            AG.push!(fd, fielddef)
+            AG.write!(fd, fielddef)
             @test AG.nfield(fd) == 3
             AG.createfielddefn("newfield",GDAL.OFTInteger) do fielddef2
-                AG.push!(fd, fielddef2)
+                AG.write!(fd, fielddef2)
                 @test AG.nfield(fd) == 4
                 AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
                 AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
@@ -153,7 +153,7 @@ end
         @test AG.getgeomindex(fd) == 0
         gfd0 = AG.getgeomdefn(fd, 0)
         @test AG.ngeom(fd) == 1
-        AG.push!(fd, gfd0)
+        AG.write!(fd, gfd0)
         @test AG.ngeom(fd) == 2
         gfd1 = AG.getgeomdefn(fd, 1)
         AG.setname!(gfd0, "name0")

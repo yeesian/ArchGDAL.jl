@@ -69,7 +69,7 @@ This function should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRFieldDefn passed in is copied,
 and remains the responsibility of the caller.
 """
-function push!(fd::FeatureDefn, fielddefn::FieldDefn)
+function write!(fd::FeatureDefn, fielddefn::FieldDefn)
     GDAL.addfielddefn(fd.ptr, fielddefn.ptr)
     fd
 end
@@ -196,7 +196,7 @@ This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRGeomFieldDefn passed in is
 copied, and remains the responsibility of the caller.
 """
-function push!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn)
+function write!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn)
     GDAL.addgeomfielddefn(fd.ptr, geomfielddefn.ptr)
     fd
 end
