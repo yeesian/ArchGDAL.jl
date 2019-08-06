@@ -28,6 +28,9 @@ abstract type AbstractSpatialRef end
 abstract type AbstractDataset end
     # needs to have a `ptr::GDALDataset` attribute
 
+abstract type AbstractFeatureDefn end
+    # needs to have a `ptr::GDALFeatureDefn` attribut
+
 abstract type AbstractFeatureLayer end
     # needs to have a `ptr::GDALDataset` attribute
 
@@ -110,7 +113,11 @@ mutable struct Feature
     ptr::GDALFeature
 end
 
-mutable struct FeatureDefn
+mutable struct FeatureDefn <: AbstractFeatureDefn
+    ptr::GDALFeatureDefn
+end
+
+mutable struct FeatureDefnView <: AbstractFeatureDefn
     ptr::GDALFeatureDefn
 end
 
