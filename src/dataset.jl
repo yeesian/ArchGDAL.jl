@@ -265,7 +265,7 @@ driver on how to access a dataset. It should be in UTF-8 encoding.
 
     - Driver kind: GDAL_OF_RASTER for raster drivers, GDAL_OF_VECTOR for vector
                    drivers. If none of the value is specified, both are implied.
-    - Access mode: `GDAL_OF_READONLY` (exclusive) or `GDAL_OF_UPDATE`.
+    - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
     - Shared mode: `GDAL_OF_SHARED`. If set, it allows the sharing of
                    GDALDataset handles for a dataset with other callers that
                    have set GDAL_OF_SHARED. In particular, GDALOpenEx() will
