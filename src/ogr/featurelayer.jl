@@ -113,6 +113,8 @@ function getspatialref(layer::AbstractFeatureLayer)
     if result == C_NULL
         return ISpatialRef()
     else
+        # NOTE(yeesian): we make a clone here so that the spatialref does not
+        # depend on the FeatureLayer/Dataset.
         return ISpatialRef(GDAL.clone(result))
     end
 end
@@ -122,6 +124,8 @@ function unsafe_getspatialref(layer::AbstractFeatureLayer)
     if result == C_NULL
         return SpatialRef()
     else
+        # NOTE(yeesian): we make a clone here so that the spatialref does not
+        # depend on the FeatureLayer/Dataset.
         return SpatialRef(GDAL.clone(result))
     end
 end
@@ -902,7 +906,7 @@ end
 Increment layer reference count.
 
 ### Returns
-the reference count after incrementing.
+The reference count after incrementing.
 """
 reference(layer::AbstractFeatureLayer) = GDAL.reference(layer.ptr)
 
@@ -910,7 +914,7 @@ reference(layer::AbstractFeatureLayer) = GDAL.reference(layer.ptr)
 Decrement layer reference count.
 
 ### Returns
-the reference count after decrementing.
+The reference count after decrementing.
 """
 dereference(layer::AbstractFeatureLayer) = GDAL.dereference(layer.ptr)
 
