@@ -102,7 +102,11 @@ end
     end
 
     AG.create(AG.getdriver("MEMORY")) do dataset
-        layer = AG.createlayer(dataset, "point_out", geom=GDAL.wkbPoint)
+        layer = AG.createlayer(
+            name = "point_out",
+            dataset = dataset,
+            geom = GDAL.wkbPoint
+        )
         AG.writefielddefn!(layer, "Name", GDAL.OFTString, nwidth = 32)
         featuredefn = AG.getlayerdefn(layer)
         @test AG.getname(featuredefn) == "point_out"
