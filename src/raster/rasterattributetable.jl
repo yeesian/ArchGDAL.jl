@@ -367,5 +367,5 @@ which row in the table applies to the pixel value. The row index is returned.
 ### Returns
 The row index or -1 if no row is appropriate.
 """
-getrowindex(rat::RasterAttrTable, pxvalue::Real) =
+findrowindex(rat::RasterAttrTable, pxvalue::Real) =
     GDAL.ratgetrowofvalue(rat.ptr, pxvalue)

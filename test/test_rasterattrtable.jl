@@ -75,12 +75,12 @@ import ArchGDAL; const AG = ArchGDAL
         AG.setlinearbinning!(rat, -1.5, 12.0)
         @test AG.getlinearbinning(rat) == (-1.5,12.0)
         
-        @test AG.getrowindex(rat, 0) == 0
-        @test AG.getrowindex(rat, -1) == 0
-        @test AG.getrowindex(rat, -1.5) == 0
-        @test AG.getrowindex(rat, 7.5) == 0
-        @test AG.getrowindex(rat, 12) == 1
-        @test AG.getrowindex(rat, 13) == 1
+        @test AG.findrowindex(rat, 0) == 0
+        @test AG.findrowindex(rat, -1) == 0
+        @test AG.findrowindex(rat, -1.5) == 0
+        @test AG.findrowindex(rat, 7.5) == 0
+        @test AG.findrowindex(rat, 12) == 1
+        @test AG.findrowindex(rat, 13) == 1
     end
 end
 
