@@ -36,7 +36,7 @@ You can get additional attribute information using
 * `ArchGDAL.getoffset(band)`: the offset in `units = (px * scale) + offset` (`0.0`)
 * `ArchGDAL.getunittype(band)`: name for the units, e.g. "m" (meters) or "ft" (feet). (`""`)
 * `ArchGDAL.getnodatavalue(band)`: a special marker value used to mark pixels that are not valid data. (`-1.0e10`)
-* `(x,y) = ArchGDAL.getblocksize(band)`: the "natural" block size of this band (`(256,256)`)
+* `(x,y) = ArchGDAL.blocksize(band)`: the "natural" block size of this band (`(256,256)`)
 
 !!! note
 

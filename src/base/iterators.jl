@@ -24,7 +24,7 @@ struct BlockIterator
 end
 
 function blocks(raster::AbstractRasterBand)
-    (xbsize, ybsize) = getblocksize(raster)
+    (xbsize, ybsize) = blocksize(raster)
     rows = height(raster)
     cols = width(raster)
     ni = ceil(Cint, rows / ybsize)
@@ -73,7 +73,7 @@ function bufferwindows(raster::AbstractRasterBand)
     BufferIterator(
         raster,
         windows(raster),
-        Array{getdatatype(raster)}(undef, getblocksize(raster)...)
+        Array{getdatatype(raster)}(undef, blocksize(raster)...)
     )
 end
 

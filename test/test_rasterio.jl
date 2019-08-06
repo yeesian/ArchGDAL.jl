@@ -7,7 +7,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)..., 1)
         for (cols,rows) in AG.windows(band)
             AG.rasterio!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
             data = buffer[1:length(cols),1:length(rows)]
@@ -22,7 +22,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)..., 1)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)..., 1)
         for (cols,rows) in AG.windows(band)
             AG.read!(ds, buffer, Cint[1], rows .- 1, cols .- 1)
             data = buffer[1:length(cols),1:length(rows)]
@@ -37,7 +37,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)...)
         for (cols,rows) in AG.windows(band)
             AG.read!(ds, buffer, 1, rows, cols)
             data = buffer[1:length(cols),1:length(rows)]
@@ -52,7 +52,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
+        buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)...)
         for (cols,rows) in AG.windows(band)
             AG.read!(band, buffer, rows, cols)
             data = buffer[1:length(cols),1:length(rows)]
@@ -67,7 +67,7 @@ AG.read("ospy/data4/aster.img") do ds
         band = AG.getband(ds, 1)
         count = 0
         total = 0
-        xbsize, ybsize = AG.getblocksize(band)
+        xbsize, ybsize = AG.blocksize(band)
         buffer = Array{AG.getdatatype(band)}(undef, ybsize, xbsize)
         for ((i,j),(nrows,ncols)) in AG.blocks(band)
             # AG.rasterio!(ds,buffer,Cint[1],i,j,nrows,ncols)

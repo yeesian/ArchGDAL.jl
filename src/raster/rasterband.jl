@@ -23,7 +23,7 @@ Note that the X and Y block sizes don't have to divide the image size evenly,
 meaning that right and bottom edge blocks may be incomplete. See `ReadBlock()`
 for an example of code dealing with these issues.
 """
-function getblocksize(rb::AbstractRasterBand)
+function blocksize(rb::AbstractRasterBand)
     xy = Array{Cint}(undef, 2); x = pointer(xy); y = x + sizeof(Cint)
     GDAL.getblocksize(rb.ptr, x, y)
     xy
