@@ -185,7 +185,7 @@ name (case insensitively) is returned.
 ### Returns
 the geometry field index, or -1 if no match found.
 """
-getgeomindex(fd::FeatureDefn, name::AbstractString = "") =
+findgeomindex(fd::FeatureDefn, name::AbstractString = "") =
     GDAL.getgeomfieldindex(fd.ptr, name)
 
 """

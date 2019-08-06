@@ -112,7 +112,7 @@ import ArchGDAL; const AG = ArchGDAL
 
         @test AG.nfeature(layer) == 4
         @test AG.getfield.(layer, 1) == ["point-a", "point-b", "a", "b"]
-        @test AG.getgeomindex(AG.getlayerdefn(layer)) == 0
+        @test AG.findgeomindex(AG.getlayerdefn(layer)) == 0
         AG.setspatialfilter!(layer,0,100,-1,100.1,1)
         @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1.0,100 -1))"
         @test AG.nfeature(layer) == -1

@@ -580,16 +580,17 @@ getgeomdefn(feature::Feature, i::Integer) =
 """
 Fetch the geometry field index given geometry field name.
 
-This is a cover for the OGRFeatureDefn::GetGeomFieldIndex() method.
-
 ### Parameters
 * `feature`: the feature on which the geometry field is found.
 * `name`: the name of the geometry field to search for. (defaults to \"\")
 
 ### Returns
 the geometry field index, or -1 if no matching geometry field is found.
+
+### Remarks
+This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
-getgeomindex(feature::Feature, name::AbstractString="") =
+findgeomindex(feature::Feature, name::AbstractString="") =
     GDAL.getgeomfieldindex(feature.ptr, name)
 
 """
