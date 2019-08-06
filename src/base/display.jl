@@ -138,7 +138,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)
     n > 5 && print(io, "...\n Number of Fields: $n")
 end
 
-function Base.show(io::IO, featuredefn::FeatureDefn)
+function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
     featuredefn.ptr == C_NULL && (return print(io, "NULL FeatureDefn"))
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)

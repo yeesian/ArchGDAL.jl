@@ -434,14 +434,13 @@ function deletefeature!(layer::AbstractFeatureLayer, i::Integer)
 end
 
 """
-Fetch the schema information for this layer.
+Returns a view of the schema information for this layer.
 
-The returned handle to the OGRFeatureDefn is owned by the OGRLayer, and should
-not be modified or freed by the application. It encapsulates the attribute
-schema of the features of the layer.
+### Remarks
+The `featuredefn` is owned by the `layer` and should not be modified.
 """
 getlayerdefn(layer::AbstractFeatureLayer) =
-    FeatureDefn(GDAL.getlayerdefn(layer.ptr))
+    FeatureDefnView(GDAL.getlayerdefn(layer.ptr))
 
 """
 Find the index of the field in a layer.
