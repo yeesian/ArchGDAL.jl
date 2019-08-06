@@ -397,7 +397,10 @@ The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer) =
-    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i), ownedby = dataset)
+    IFeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i), ownedby = dataset)
+
+unsafe_getlayer(dataset::AbstractDataset, i::Integer) =
+    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i))
 
 """
 Fetch the feature layer corresponding to the given name.
@@ -406,11 +409,13 @@ The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
 function getlayer(dataset::AbstractDataset, name::AbstractString)
-    FeatureLayer(
-        GDAL.datasetgetlayerbyname(dataset.ptr, name),
-        ownedby = dataset
+    IFeatureLayer(
+        GDAL.datasetgetlayerbyname(dataset.ptr, name), ownedby = dataset
     )
 end
+
+unsafe_getlayer(dataset::AbstractDataset, name::AbstractString) =
+    FeatureLayer(GDAL.datasetgetlayerbyname(dataset.ptr, name))
 
 """
 Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
@@ -497,15 +502,12 @@ function unsafe_executesql(
         dialect::AbstractString = "",
         spatialfilter::Geometry = Geometry(GDALGeometry(C_NULL))
     )
-    FeatureLayer(
-        GDALFeatureLayer(GDAL.datasetexecutesql(
-            dataset.ptr,
-            query,
-            spatialfilter.ptr,
-            dialect
-        )),
-        ownedby = dataset
-    )
+    FeatureLayer(GDALFeatureLayer(GDAL.datasetexecutesql(
+        dataset.ptr,
+        query,
+        spatialfilter.ptr,
+        dialect
+    )))
 end
 
 """
@@ -519,15 +521,17 @@ before destroying the GDALDataset may cause errors.
 * `dataset`: the dataset handle.
 * `layer`: the result of a previous ExecuteSQL() call.
 """
-function releaseresultset(layer::FeatureLayer)
-    GDAL.datasetreleaseresultset(layer.ownedby.ptr, layer.ptr)
-    layer.ptr = GDALFeatureLayer(C_NULL)
-    layer.ownedby = Dataset()
+function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
+    GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr)
+    destroy(layer)
 end
 
 "Fetch a band object for a dataset from its index"
 getband(dataset::AbstractDataset, i::Integer) =
-    RasterBand(GDAL.getrasterband(dataset.ptr, i), ownedby = dataset)
+    IRasterBand(GDAL.getrasterband(dataset.ptr, i), ownedby = dataset)
+
+unsafe_getband(dataset::AbstractDataset, i::Integer) =
+    RasterBand(GDAL.getrasterband(dataset.ptr, i))
 
 """
 Fetch the affine transformation coefficients.

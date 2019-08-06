@@ -1,4 +1,4 @@
-function Base.iterate(layer::FeatureLayer, state::Int=0)
+function Base.iterate(layer::AbstractFeatureLayer, state::Int=0)
     layer.ptr == C_NULL && return nothing
     state == 0 && resetreading!(layer)
     ptr = GDAL.getnextfeature(layer.ptr)
@@ -9,9 +9,9 @@ function Base.iterate(layer::FeatureLayer, state::Int=0)
     (Feature(ptr), state+1)
 end
 
-Base.eltype(layer::FeatureLayer) = Feature
+Base.eltype(layer::AbstractFeatureLayer) = Feature
 
-Base.length(layer::FeatureLayer) = nfeature(layer, true)
+Base.length(layer::AbstractFeatureLayer) = nfeature(layer, true)
 
 struct BlockIterator
     rows::Cint
@@ -23,7 +23,7 @@ struct BlockIterator
     ybsize::Cint
 end
 
-function blocks(raster::RasterBand)
+function blocks(raster::AbstractRasterBand)
     (xbsize, ybsize) = getblocksize(raster)
     rows = height(raster)
     cols = width(raster)
@@ -53,7 +53,7 @@ struct WindowIterator
     blockiter::BlockIterator
 end
 
-windows(raster::RasterBand) = WindowIterator(blocks(raster))
+windows(raster::AbstractRasterBand) = WindowIterator(blocks(raster))
 
 function Base.iterate(obj::WindowIterator, iter::Int=0)
     handle = obj.blockiter
@@ -64,12 +64,12 @@ function Base.iterate(obj::WindowIterator, iter::Int=0)
 end
 
 mutable struct BufferIterator{T <: Real}
-    raster::RasterBand
+    raster::AbstractRasterBand
     w::WindowIterator
     buffer::Array{T, 2}
 end
 
-function bufferwindows(raster::RasterBand)
+function bufferwindows(raster::AbstractRasterBand)
     BufferIterator(
         raster,
         windows(raster),

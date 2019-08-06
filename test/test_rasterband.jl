@@ -78,29 +78,35 @@ import ArchGDAL; const AG = ArchGDAL
             [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
                 blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
                 overviews: """
-            @test sprint(print, AG.getsampleoverview(destband, 1000)) == """
-            [GA_Update] Band 1 (Gray): 50 x 50 (UInt8)
-                blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
-                overviews: """
+            AG.getsampleoverview(destband, 1000) do sampleoverview
+                @test sprint(print, sampleoverview) == """
+                [GA_Update] Band 1 (Gray): 50 x 50 (UInt8)
+                    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
+            end
             @test sprint(print, AG.getmaskband(destband)) == """
             [GA_ReadOnly] Band 0 (Undefined): 100 x 100 (UInt8)
                 blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
                 overviews: """
             @test AG.getmaskflags(destband) == 1
             AG.createmaskband!(destband, 3)
-            @test sprint(print, AG.getmaskband(destband)) == """
-            [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
-                blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
-                overviews: """
+            AG.getmaskband(destband) do maskband
+                @test sprint(print, maskband) == """
+                [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
+                    blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
+                    overviews: """
+            end
             @test AG.getmaskflags(destband) == 3
             AG.fillraster!(destband, 3)
             AG.setcategorynames!(destband, ["foo","bar"])
             @test AG.getcategorynames(destband) == ["foo", "bar"]
 
-            AG.regenerateoverviews!(destband, AG.RasterBand[
-                AG.getoverview(destband, 0),
-                AG.getoverview(destband, 2)
-            ])
+            AG.getoverview(destband, 0) do overview
+                AG.regenerateoverviews!(destband, [
+                    overview,
+                    AG.getoverview(destband, 2)
+                ])
+            end
 
             AG.createcolortable(GDAL.GPI_RGB) do ct
                 AG.createcolorramp!(ct,
