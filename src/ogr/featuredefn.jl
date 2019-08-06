@@ -58,8 +58,11 @@ Find field by name.
 
 ### Returns
 the field index, or -1 if no match found.
+
+### Remarks
+This uses the OGRFeatureDefn::GetFieldIndex() method.
 """
-getfieldindex(fd::FeatureDefn, name::AbstractString) =
+findfieldindex(fd::FeatureDefn, name::AbstractString) =
     GDAL.getfieldindex(fd.ptr, name)
 
 """

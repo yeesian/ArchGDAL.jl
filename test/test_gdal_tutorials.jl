@@ -112,7 +112,7 @@ end
         @test AG.getname(featuredefn) == "point_out"
         @test AG.nfeature(layer) == 0
         AG.writefeature(layer) do feature
-            AG.setfield!(feature, AG.getfieldindex(feature, "Name"), "myname")
+            AG.setfield!(feature, AG.findfieldindex(feature, "Name"), "myname")
             AG.setgeom!(feature, AG.createpoint(100.123, 0.123))
         end
         @test AG.nfeature(layer) == 1

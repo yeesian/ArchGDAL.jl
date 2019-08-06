@@ -83,16 +83,17 @@ getfielddefn(feature::Feature, i::Integer) =
 """
 Fetch the field index given field name.
 
-This is a cover for the OGRFeatureDefn::GetFieldIndex() method.
-
 ### Parameters
 * `feature`: the feature on which the field is found.
 * `name`: the name of the field to search for.
 
 ### Returns
 the field index, or -1 if no matching field is found.
+
+### Remarks
+This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 """
-getfieldindex(feature::Feature, name::AbstractString) =
+findfieldindex(feature::Feature, name::AbstractString) =
     GDAL.getfieldindex(feature.ptr, name)
 
 """Test if a field has ever been assigned a value or not.
@@ -350,7 +351,7 @@ function getfield(feature::Feature, i::Integer)
 end
 
 getfield(feature::Feature, name::AbstractString) =
-    getfield(feature, getfieldindex(feature, name))
+    getfield(feature, findfieldindex(feature, name))
 
 """
 Set field to integer value.
