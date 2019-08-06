@@ -108,7 +108,7 @@ end
                      (1228580.428455506,  682719.3123998424),
                      (1218405.0658121984, 721108.1805541387),
                      (1179091.1646903288, 712782.8838459781)])
-        AG.addgeom!(poly, ring)
+        AG.push!(poly, ring)
     end
 
     AG.createlinearring(
@@ -119,7 +119,7 @@ end
                      (1218405.0658121984, 721108.1805541387),
                      (1179091.1646903288, 712782.8838459781)]) do ring
         AG.createpolygon() do poly
-            AG.addgeom!(poly, ring)
+            AG.push!(poly, ring)
             @test AG.toWKT(poly) == wktpoly
         end
     end
@@ -134,7 +134,7 @@ end
         AG.addpoint!(ring, 1179091.1646903288, 712782.8838459781)
 
         AG.creategeom(GDAL.wkbPolygon) do poly
-            AG.addgeom!(poly, ring)
+            AG.push!(poly, ring)
             @test AG.toWKT(poly) == wktpoly
         end
     end
@@ -149,7 +149,7 @@ end
         AG.addpoint!(ring, 1179091.1646903288, 712782.8838459781)
 
     poly = AG.creategeom(GDAL.wkbPolygon)
-    AG.addgeom!(poly, ring)
+    AG.push!(poly, ring)
     @test AG.toWKT(poly) == wktpoly
 
     @test AG.toWKT(AG.createpolygon([
@@ -204,8 +204,8 @@ end
             AG.addpoint!(innerring, 1191579.1097525698, 691044.6091080031)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
 
-        AG.addgeom!(poly, outring)
-        AG.addgeom!(poly, innerring)
+        AG.push!(poly, outring)
+        AG.push!(poly, innerring)
         @test AG.toWKT(poly) == wktpoly
     end
 
@@ -225,8 +225,8 @@ end
             AG.addpoint!(innerring, 1191579.1097525698, 691044.6091080031)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
 
-        AG.addgeom!(poly, outring)
-        AG.addgeom!(poly, innerring)
+        AG.push!(poly, outring)
+        AG.push!(poly, innerring)
         @test AG.toWKT(poly) == wktpoly
     end
 
@@ -238,7 +238,7 @@ end
             AG.addpoint!(outring, 1165678.1866605144, 653118.2574374934)
             AG.addpoint!(outring, 1165678.1866605144, 686419.4442701361)
             AG.addpoint!(outring, 1154115.274565847, 686419.4442701361)
-        AG.addgeom!(poly, outring)
+        AG.push!(poly, outring)
 
         innerring = AG.creategeom(GDAL.wkbLinearRing)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
@@ -246,7 +246,7 @@ end
             AG.addpoint!(innerring, 1191579.1097525698, 648030.5761158396)
             AG.addpoint!(innerring, 1191579.1097525698, 691044.6091080031)
             AG.addpoint!(innerring, 1149490.1097279799, 691044.6091080031)
-        AG.addgeom!(poly, innerring)
+        AG.push!(poly, innerring)
     @test AG.toWKT(poly) == wktpoly
 
     # Method 5
@@ -283,9 +283,9 @@ end
         point1 = AG.createpoint(1251243.7361610543, 598078.7958668759)
         point2 = AG.createpoint(1240605.8570339603, 601778.9277371694)
         point3 = AG.createpoint(1250318.7031934808, 606404.0925750365)
-        AG.addgeom!(multipoint, point1)
-        AG.addgeom!(multipoint, point2)
-        AG.addgeom!(multipoint, point3)
+        AG.push!(multipoint, point1)
+        AG.push!(multipoint, point2)
+        AG.push!(multipoint, point3)
         @test AG.toWKT(multipoint) == wktpoints
     end
 
@@ -294,9 +294,9 @@ end
         point1 = AG.createpoint(1251243.7361610543, 598078.7958668759)
         point2 = AG.createpoint(1240605.8570339603, 601778.9277371694)
         point3 = AG.createpoint(1250318.7031934808, 606404.0925750365)
-        AG.addgeom!(multipoint, point1)
-        AG.addgeom!(multipoint, point2)
-        AG.addgeom!(multipoint, point3)
+        AG.push!(multipoint, point1)
+        AG.push!(multipoint, point2)
+        AG.push!(multipoint, point3)
         @test AG.toWKT(multipoint) == wktpoints
     end
 
@@ -305,9 +305,9 @@ end
         point1 = AG.createpoint(1251243.7361610543, 598078.7958668759)
         point2 = AG.createpoint(1240605.8570339603, 601778.9277371694)
         point3 = AG.createpoint(1250318.7031934808, 606404.0925750365)
-        AG.addgeom!(multipoint, point1)
-        AG.addgeom!(multipoint, point2)
-        AG.addgeom!(multipoint, point3)
+        AG.push!(multipoint, point1)
+        AG.push!(multipoint, point2)
+        AG.push!(multipoint, point3)
     @test AG.toWKT(multipoint) == wktpoints
 
     # Method 5
@@ -336,10 +336,10 @@ end
 
     # Method 2
     AG.createmultilinestring() do multiline
-        AG.addgeom!(multiline, AG.createlinestring(
+        AG.push!(multiline, AG.createlinestring(
             [(1214242.4174581182, 617041.9717021306),
              (1234593.142744733,  629529.9167643716)]))
-        AG.addgeom!(multiline, AG.createlinestring(
+        AG.push!(multiline, AG.createlinestring(
             [(1184641.3624957693, 626754.8178616514),
              (1219792.6152635587, 606866.6090588232)]))
         @test AG.toWKT(multiline) == wktline
@@ -350,12 +350,12 @@ end
         line = AG.creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, 1214242.4174581182, 617041.9717021306)
             AG.addpoint!(line, 1234593.142744733, 629529.9167643716)
-        AG.addgeom!(multiline, line)
+        AG.push!(multiline, line)
 
         line = AG.creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, 1184641.3624957693, 626754.8178616514)
             AG.addpoint!(line, 1219792.6152635587, 606866.6090588232)
-        AG.addgeom!(multiline, line)
+        AG.push!(multiline, line)
 
         @test AG.toWKT(multiline) == wktline
     end
@@ -365,11 +365,11 @@ end
         line = AG.creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, 1214242.4174581182, 617041.9717021306)
             AG.addpoint!(line, 1234593.142744733, 629529.9167643716)
-        AG.addgeom!(multiline, line)
+        AG.push!(multiline, line)
         line = AG.creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, 1184641.3624957693, 626754.8178616514)
             AG.addpoint!(line, 1219792.6152635587, 606866.6090588232)
-        AG.addgeom!(multiline, line)
+        AG.push!(multiline, line)
     
     @test AG.toWKT(multiline) == wktline
 
@@ -416,7 +416,7 @@ end
              (1215167.4504256917, 620742.1035724243),
              (1215167.4504256917, 634617.5980860253),
              (1204067.0548148106, 634617.5980860253)])
-        AG.addgeom!(multipolygon,poly)
+        AG.push!(multipolygon,poly)
 
         poly = AG.createpolygon(
             [(1179553.6811741155, 647105.5431482664),
@@ -424,7 +424,7 @@ end
              (1194354.20865529,   626292.3013778647),
              (1194354.20865529,   647105.5431482664),
              (1179553.6811741155, 647105.5431482664)])
-        AG.addgeom!(multipolygon,poly)
+        AG.push!(multipolygon,poly)
 
         @test AG.toWKT(multipolygon) == wktmultipolygon
     end
@@ -438,8 +438,8 @@ end
                 AG.addpoint!(ring, 1215167.4504256917, 620742.1035724243)
                 AG.addpoint!(ring, 1215167.4504256917, 634617.5980860253)
                 AG.addpoint!(ring, 1204067.0548148106, 634617.5980860253)
-            AG.addgeom!(poly, ring)
-        AG.addgeom!(multipolygon,poly)
+            AG.push!(poly, ring)
+        AG.push!(multipolygon,poly)
 
         poly = AG.creategeom(GDAL.wkbPolygon)
             ring = AG.creategeom(GDAL.wkbLinearRing)
@@ -448,8 +448,8 @@ end
                 AG.addpoint!(ring, 1194354.20865529,   626292.3013778647)
                 AG.addpoint!(ring, 1194354.20865529,   647105.5431482664)
                 AG.addpoint!(ring, 1179553.6811741155, 647105.5431482664)
-            AG.addgeom!(poly, ring)
-        AG.addgeom!(multipolygon,poly)
+            AG.push!(poly, ring)
+        AG.push!(multipolygon,poly)
 
         @test AG.toWKT(multipolygon) == wktmultipolygon
     end
@@ -463,8 +463,8 @@ end
                 AG.addpoint!(ring, 1215167.4504256917, 620742.1035724243)
                 AG.addpoint!(ring, 1215167.4504256917, 634617.5980860253)
                 AG.addpoint!(ring, 1204067.0548148106, 634617.5980860253)
-            AG.addgeom!(poly, ring)
-        AG.addgeom!(multipolygon,poly)
+            AG.push!(poly, ring)
+        AG.push!(multipolygon,poly)
 
         poly = AG.creategeom(GDAL.wkbPolygon)
             ring = AG.creategeom(GDAL.wkbLinearRing)
@@ -473,8 +473,8 @@ end
                 AG.addpoint!(ring, 1194354.20865529,   626292.3013778647)
                 AG.addpoint!(ring, 1194354.20865529,   647105.5431482664)
                 AG.addpoint!(ring, 1179553.6811741155, 647105.5431482664)
-            AG.addgeom!(poly, ring)
-        AG.addgeom!(multipolygon,poly)
+            AG.push!(poly, ring)
+        AG.push!(multipolygon,poly)
 
     @test AG.toWKT(multipolygon) == wktmultipolygon
 
@@ -504,7 +504,7 @@ end
     AG.creategeomcollection() do geomcol
         for g in [AG.createpoint(-122.23, 47.09),
                   AG.createlinestring([(-122.60, 47.14), (-122.48, 47.23)])]
-            AG.addgeom!(geomcol, g)
+            AG.push!(geomcol, g)
         end
         @test AG.toWKT(geomcol) == wktcollection
     end
@@ -513,12 +513,12 @@ end
     AG.creategeom(GDAL.wkbGeometryCollection) do geomcol
         point = AG.creategeom(GDAL.wkbPoint)
             AG.addpoint!(point, -122.23, 47.09)
-        AG.addgeom!(geomcol, point)
+        AG.push!(geomcol, point)
 
         line = AG.creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, -122.60, 47.14)
             AG.addpoint!(line, -122.48, 47.23)
-        AG.addgeom!(geomcol, line)
+        AG.push!(geomcol, line)
 
         @test AG.toWKT(geomcol) == wktcollection
     end
@@ -527,12 +527,12 @@ end
     geomcol =  AG.creategeom(GDAL.wkbGeometryCollection)
         point = AG.creategeom(GDAL.wkbPoint)
             AG.addpoint!(point, -122.23, 47.09)
-        AG.addgeom!(geomcol, point)
+        AG.push!(geomcol, point)
 
         line = AG.creategeom(GDAL.wkbLineString)
             AG.addpoint!(line, -122.60, 47.14)
             AG.addpoint!(line, -122.48, 47.23)
-        AG.addgeom!(geomcol, line)
+        AG.push!(geomcol, line)
 
     @test AG.toWKT(geomcol) == wktcollection
 end
