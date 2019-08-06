@@ -60,7 +60,7 @@ end
 function Base.show(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     summarize(io, rasterband)
-    (x,y) = getblocksize(rasterband)
+    (x,y) = blocksize(rasterband)
     sc = getscale(rasterband)
     ofs = getoffset(rasterband)
     norvw = noverview(rasterband)

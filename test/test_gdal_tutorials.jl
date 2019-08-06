@@ -17,7 +17,7 @@ import ArchGDAL; const AG = ArchGDAL
                 [440720.0,60.0,0.0,3.75132e6,0.0,-60.0]
 
         band = AG.getband(dataset, 1)
-        @test AG.getblocksize(band) ≈ [100, 81]
+        @test AG.blocksize(band) ≈ [100, 81]
         @test AG.getdatatype(band) == UInt8
         @test AG.getname(AG.getcolorinterp(band)) == "Gray"
 

@@ -288,7 +288,7 @@ AG.read("ospy/data4/aster.img") do ds
             band = AG.getband(ds, 1)
             count = 0
             total = 0
-            buffer = Array{AG.getdatatype(band)}(undef, AG.getblocksize(band)...)
+            buffer = Array{AG.getdatatype(band)}(undef, AG.blocksize(band)...)
             for (cols,rows) in AG.windows(band)
                 AG.rasterio!(band, buffer, rows, cols)
                 data = buffer[1:length(cols),1:length(rows)]
@@ -319,7 +319,7 @@ AG.read("ospy/data4/aster.img") do ds
 
             # get the band and block sizes
             inband2 = AG.getband(ds, 2); inband3 = AG.getband(ds, 3)
-            (xbsize, ybsize) = AG.getblocksize(inband2)
+            (xbsize, ybsize) = AG.blocksize(inband2)
 
             buffer2 = Array{Float32}(undef, ybsize, xbsize)
             buffer3 = Array{Float32}(undef, ybsize, xbsize)
