@@ -198,12 +198,11 @@ for gdalfunc in (
         :gdalbuildvrt, :gdaldem, :gdalgrid, :gdalnearblack, :gdalrasterize,
         :gdaltranslate, :gdalvectortranslate, :gdalwarp, :getband,
         :getcolortable, :getfeature, :getgeom, :getlayer, :getmaskband,
-        :getoverview, :getpart, :getsampleoverview, :getspatialref,
-        :intersection, :importEPSG, :importEPSGA, :importESRI, :importPROJ4,
-        :importWKT, :importXML, :importURL, :lineargeom, :newspatialref,
-        :nextfeature, :pointalongline, :pointonsurface, :polygonfromedges,
-        :polygonize, :read, :simplify, :simplifypreservetopology,
-        :symdifference, :union, :update
+        :getoverview, :getpart, :getspatialref, :intersection, :importEPSG,
+        :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
+        :importURL, :lineargeom, :newspatialref, :nextfeature, :pointalongline,
+        :pointonsurface, :polygonfromedges, :polygonize, :read, :sampleoverview,
+        :simplify, :simplifypreservetopology, :symdifference, :union, :update
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
