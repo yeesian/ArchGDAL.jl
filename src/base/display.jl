@@ -81,7 +81,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)
     layer.ptr == C_NULL && (return println(io, "NULL Layer"))
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")
-    featuredefn = getlayerdefn(layer)
+    featuredefn = layerdefn(layer)
     
     # Print Geometries
     n = ngeom(featuredefn)
