@@ -213,17 +213,17 @@ for gdalfunc in (
         :createlinearring, :createlinestring, :createmultilinestring,
         :createmultipoint, :createmultipolygon, :createmultipolygon_noholes,
         :createpoint, :createpolygon, :createRAT, :createstylemanager,
-        :createstyletable, :createstyletool, :delaunaytriangulation,
+        :createstyletable, :createstyletool, :curvegeom, :delaunaytriangulation,
         :difference, :forceto, :fromGML, :fromJSON, :fromWKB, :fromWKT,
         :gdalbuildvrt, :gdaldem, :gdalgrid, :gdalnearblack, :gdalrasterize,
         :gdaltranslate, :gdalvectortranslate, :gdalwarp, :getband,
-        :getcolortable, :getcurvegeom, :getfeature, :getgeom, :getlayer,
-        :getlineargeom, :getmaskband, :getoverview, :getpart,
-        :getsampleoverview, :getspatialref, :intersection, :importEPSG,
-        :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
-        :importURL, :newspatialref, :nextfeature, :pointalongline,
-        :pointonsurface, :polygonfromedges, :polygonize, :read, :simplify,
-        :simplifypreservetopology, :symdifference, :union, :update
+        :getcolortable, :getfeature, :getgeom, :getlayer, :getmaskband,
+        :getoverview, :getpart, :getsampleoverview, :getspatialref,
+        :intersection, :importEPSG, :importEPSGA, :importESRI, :importPROJ4,
+        :importWKT, :importXML, :importURL, :lineargeom, :newspatialref,
+        :nextfeature, :pointalongline, :pointonsurface, :polygonfromedges,
+        :polygonize, :read, :simplify, :simplifypreservetopology,
+        :symdifference, :union, :update
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
