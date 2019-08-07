@@ -66,20 +66,20 @@ import ArchGDAL; const AG = ArchGDAL
             AG.setcolorinterp!(destband, GDAL.GCI_RedBand)
             @test AG.getcolorinterp(destband) == GDAL.GCI_RedBand
 
-            @test sprint(print, AG.getsampleoverview(destband, 100)) == """
+            @test sprint(print, AG.sampleoverview(destband, 100)) == """
             [GA_Update] Band 1 (Gray): 13 x 13 (UInt8)
                 blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
                 overviews: """
-            @test sprint(print, AG.getsampleoverview(destband, 200)) == """
+            @test sprint(print, AG.sampleoverview(destband, 200)) == """
             [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
                 blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
                 overviews: """
-            @test sprint(print, AG.getsampleoverview(destband, 500)) == """
+            @test sprint(print, AG.sampleoverview(destband, 500)) == """
             [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
                 blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
                 overviews: """
-            AG.getsampleoverview(destband, 1000) do sampleoverview
-                @test sprint(print, sampleoverview) == """
+            AG.sampleoverview(destband, 1000) do result
+                @test sprint(print, result) == """
                 [GA_Update] Band 1 (Gray): 50 x 50 (UInt8)
                     blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
                     overviews: """
