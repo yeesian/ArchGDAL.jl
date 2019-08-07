@@ -25,7 +25,7 @@ import ArchGDAL; const AG = ArchGDAL
              Field (index 1): pointname (OFTString)
         """
         @test sprint(print, AG.getspatialref(layer)) ==
-            "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+            "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
 
         AG.getfeature(layer, 2) do feature
             @test sprint(print, feature) == """
