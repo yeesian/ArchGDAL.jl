@@ -94,7 +94,7 @@ import ArchGDAL; const AG = ArchGDAL
         end
 
         layer = AG.getlayer(dataset, 0)
-        @test AG.getfidcolname(layer) == ""
+        @test AG.fidcolumnname(layer) == ""
         @test AG.getgeomcolname(layer) == ""
         @test AG.nreference(layer) == 0
         AG.reference(layer)
