@@ -11,12 +11,12 @@ There are two primary kinds of coordinate systems. The first is geographic (posi
 * **Projected Coordinate Systems**: A projected coordinate system (such as UTM, Lambert Conformal Conic, etc) requires and underlying geographic coordinate system as well as a definition for the projection transform used to translate between linear positions (in meters or feet) and angular long/lat positions.
 
 ## Creating Spatial References
-```@example spatialref
-import ArchGDAL; const AG = ArchGDAL
+```julia
+julia> spatialref = ArchGDAL.importEPSG(2927)
+Spatial Reference System: +proj=lcc +lat_1=47.33333333333334  ... defs
 
-projstring2927 = AG.importEPSG(2927) do spref
-    AG.toPROJ4(spref)
-end
+julia> print(ArchGDAL.toPROJ4(spatialref))
++proj=lcc +lat_1=47.33333333333334 +lat_2=45.83333333333334 +lat_0=45.33333333333334 +lon_0=-120.5 +x_0=500000.0001016001 +y_0=0 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=us-ft +no_defs
 ```
 
 The details of how to interpret the results can be found in http://proj4.org/usage/projections.html.
@@ -39,18 +39,23 @@ We currently support a few export formats too:
 * `ArchGDAL.toXML(spref)`: converts into XML format to the extent possible.
 
 ## Reprojecting a Geometry
-```@example spatialref
-AG.importEPSG(2927) do source
-    AG.importEPSG(4326) do target
-        AG.createcoordtrans(source, target) do transform
-            AG.fromWKT("POINT (1120351.57 741921.42)") do point
-                println("Before: $(AG.toWKT(point))")
-                AG.transform!(point, transform)
-                println("After: $(AG.toWKT(point))")
-end end end end
+```julia
+julia> source = ArchGDAL.importEPSG(2927)
+Spatial Reference System: +proj=lcc +lat_1=47.33333333333334  ... defs
+
+julia> target = ArchGDAL.importEPSG(4326)
+Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs
+
+julia> ArchGDAL.createcoordtrans(source, target) do transform
+           point = ArchGDAL.fromWKT("POINT (1120351.57 741921.42)")
+           println("Before: $(ArchGDAL.toWKT(point))")
+           ArchGDAL.transform!(point, transform)
+           println("After: $(ArchGDAL.toWKT(point))")
+       end
+Before: POINT (1120351.57 741921.42)
+After: POINT (-122.598135130878 47.3488013802885)
 ```
 
 ## References
 
 Some background on OpenGIS coordinate systems and services can be found in the Simple Features for COM, and Spatial Reference Systems Abstract Model documents available from the [Open Geospatial Consortium](http://www.opengeospatial.org/). The [GeoTIFF Projections Transform List](http://geotiff.maptools.org/proj_list/) may also be of assistance in understanding formulations of projections in WKT. The [EPSG](http://www.epsg.org/) Geodesy web page is also a useful resource. You may also consult the [OGC WKT Coordinate System Issues](http://www.gdal.org/wktproblems.html) page.
-

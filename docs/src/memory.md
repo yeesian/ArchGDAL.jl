@@ -1,91 +1,121 @@
-# Memory Management
+# Interactive versus Scoped Objects
 
-Unlike the [design of fiona](http://toblerity.org/fiona/manual.html#introduction), `ArchGDAL` does not automatically copy data from her data sources. This introduces concerns about memory management (whether objects should be managed by Julia's garbage collector, or by manually destroying the corresponding GDAL object).
+ArchGDAL provides two approaches for working with GDAL objects.
 
-Currently this package provides data types corresponding to GDAL's Data Model, e.g.
-```julia
-mutable struct ColorTable;                    ptr::GDALColorTable         end
-mutable struct CoordTransform;                ptr::GDALCoordTransform     end
-mutable struct Dataset;                       ptr::GDALDataset            end
-mutable struct Driver;                        ptr::GDALDriver             end
-mutable struct Feature;                       ptr::GDALFeature            end
-mutable struct FeatureDefn;                   ptr::GDALFeatureDefn        end
-mutable struct FeatureLayer;                  ptr::GDALFeatureLayer       end
-mutable struct Field;                         ptr::GDALField              end
-mutable struct FieldDefn;                     ptr::GDALFieldDefn          end
-mutable struct Geometry <: AbstractGeometry;  ptr::GDALGeometry           end
-mutable struct GeomFieldDefn;                 ptr::GDALGeomFieldDefn      end
-mutable struct RasterAttrTable;               ptr::GDALRasterAttrTable    end
-mutable struct RasterBand;                    ptr::GDALRasterBand         end
-mutable struct SpatialRef;                    ptr::GDALSpatialRef         end
-mutable struct StyleManager;                  ptr::GDALStyleManager       end
-mutable struct StyleTable;                    ptr::GDALStyleTable         end
-mutable struct StyleTool;                     ptr::GDALStyleTool          end
-```
-and makes it the responsibility of the user to free the allocation of memory from GDAL, by calling `ArchGDAL.destroy(obj)` (which sets `obj.ptr` to `C_NULL` after destroying the GDAL object corresponding to `obj`).
-
-## Manual versus Context Management
-
-There are two approaches for doing so.
-
-1. The first uses the [`unsafe_` prefix](https://docs.julialang.org/en/v0.6.2/manual/style-guide/#Don't-expose-unsafe-operations-at-the-interface-level-1) to indicate methods that returns objects that needs to be manually destroyed.
-
-2. The second uses [`do`-blocks](https://docs.julialang.org/en/release-0.6/manual/functions/#do-block-syntax-for-function-arguments) as context managers.
-
-The first approach will result in code that looks like
-```julia
-dataset = ArchGDAL.unsafe_read(filename)
-# work with dataset
-ArchGDAL.destroy(dataset) # the equivalent of GDAL.close(dataset.ptr)
-```
-This can be helpful when working interactively with `dataset` at the REPL. The second approach will result in the following code
+The first approach is through [Scoped Objects](@ref), which uses [`do`-blocks](https://docs.julialang.org/en/v1/manual/functions/index.html#Do-Block-Syntax-for-Function-Arguments-1) as context managers. The problem with using do-blocks to manage context is that they are difficult to work with in an interactive way:
 ```julia
 ArchGDAL.read(filename) do dataset
-    # work with dataset
+    # dataset exists within this scope
 end
+# we do not have access to dataset from here on
 ```
-which uses `do`-blocks to scope the lifetime of the `dataset` object.
+In the example above, we do not get to see information about `dataset` unless we write code to display information within the scope of the do-block. This makes it difficult to work with it in an exploratory "depth-first" manner.
 
-## Interactive versus Scoped Geometries
-There is a third option for managing memory, which is to register a finalizer with julia, which gets called by the garbage collector at some point after it is out-of-scope. This is in contrast to an approach where users manage memory by working with it within the scope of a `do`-block, or by manually destroying objects themselves. 
-
-Therefore, we introduce an `AbstractGeometry` type:
-
+The second approach is through [Interactive Objects](@ref), which are designed for use at the REPL.
 ```julia
-abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
+dataset = ArchGDAL.read(filename)
+# work with dataset
 ```
+A potential drawback of the second approach is that the objects are managed by Julia's garbage collector. This requires ArchGDAL to keep track of objects that interactive objects have a relationship with so that the interactive objects are not prematurely destroyed. For safety, ArchGDAL might make clones/copies of the underlying data, and only allow a subset of GDAL's objects to be created in this way.
 
-which is then subtyped into `Geometry` and `IGeometry`
+## Memory Management (Advanced)
 
+Unlike the design of [fiona](http://toblerity.org/fiona/manual.html#introduction), `ArchGDAL` does not immediately make copies from data sources. This introduces concerns about memory management (whether objects should be managed by Julia's garbage collector, or by other means of destroying GDAL object when they are [out of scope](https://pkg.julialang.org/docs/julia/THl1k/1.1.1/manual/variables-and-scoping.html)).
+
+### Scoped Objects
+For scoped objects, they are often created within the context of a do-block. As an example, the following code block
 ```julia
-mutable struct Geometry <: AbstractGeometry
-    ptr::GDALGeometry
-end
-
-mutable struct IGeometry <: AbstractGeometry
-    ptr::GDALGeometry
-
-    function IGeometry(ptr::GDALGeometry)
-        geom = new(GDAL.clone(ptr))
-        finalizer(destroy, geom)
-        geom
-    end
+ArchGDAL.getband(dataset, i) do rasterband
+    # do something with rasterband
 end
 ```
+corresponds to the following sequence of function calls:
+```julia
+rasterband = ArchGDAL.unsafe_getband(dataset, i)
+try
+    # do something with rasterband
+finally
+    ArchGDAL.destroy(rasterband)
+end
+```
+under the hood (see `src/context.jl`). Therefore, the objects themselves do not have a finalizer registered:
+```julia
+mutable struct RasterBand <: AbstractRasterBand
+    ptr::GDALRasterBand
+end
 
-Objects of type `IGeometry` use the third type of memory management, where we register `ArchGDAL.destroy()` as a [`finalizer`](https://docs.julialang.org/en/release-0.6/stdlib/base/?highlight=finalizer#Base.finalizer). This is useful for users who are interested in working with geometries in a julia session, when they wish to read it from a geospatial database into a dataframe, and want it to persist within the julia session even after the connection to the database has been closed.
+unsafe_getband(dataset::AbstractDataset, i::Integer) =
+    RasterBand(GDAL.getrasterband(dataset.ptr, i))
 
-As a result, the general API for geometries is
-
-* `unsafe_<method>(G, args...)` will return a geometry of type `G` (one of `Geometry` or `IGeometry`).
-* `unsafe_<method>(args...)` will return a geometry of type `Geometry` (which
-has to be destroyed by the user).
-* `<method>(::Function, args...)` allows for the `do`-block syntax which creates a `geometry::Geometry` which is operated on by the function, before being destroyed.
-* `<method>(args...)` returns a geometry of type `IGeometry`.
+function destroy(rb::AbstractRasterBand)
+    rb.ptr = GDALRasterBand(C_NULL)
+end
+```
 
 !!! note
 
-    So long as the user does not manually call `ArchGDAL.destroy()` on any object themselves, users are allowed to mix both the methods of memory management (i) using `do`-blocks for scoped geometries, and (ii) using finalizers for interactive geometries. However, there are plenty of pitfalls (e.g. in [PythonGotchas](https://trac.osgeo.org/gdal/wiki/PythonGotchas)) if users try to mix in their own custom style of calling `ArchGDAL.destroy()`.
+    We use the [`unsafe_` prefix](https://docs.julialang.org/en/v1/manual/style-guide/index.html#Don't-expose-unsafe-operations-at-the-interface-level-1) to indicate those methods that return scoped objects. These methods should not be used by users directly.
+
+### Interactive Objects
+By contrast, the following code
+```julia
+rasterband = ArchGDAL.getband(dataset, i)
+# do something with rasterband
+```
+returns an interactive rasterband that has `destroy()` registered with its finalizer.
+```julia
+mutable struct IRasterBand <: AbstractRasterBand
+    ptr::GDALRasterBand
+    ownedby::AbstractDataset
+
+    function IRasterBand(
+            ptr::GDALRasterBand = GDALRasterBand(C_NULL);
+            ownedby::AbstractDataset = Dataset()
+        )
+        rasterband = new(ptr, ownedby)
+        finalizer(destroy, rasterband)
+        return rasterband
+    end
+end
+
+getband(dataset::AbstractDataset, i::Integer) =
+    IRasterBand(GDAL.getrasterband(dataset.ptr, i), ownedby = dataset)
+
+function destroy(rasterband::IRasterBand)
+    rasterband.ptr = GDALRasterBand(C_NULL)
+    rasterband.ownedby = Dataset()
+    return rasterband
+end
+```
+The `I` in `IRasterBand` indicates that it is an [i]nteractive type. Other interactive types include `IDataset`, `IFeatureLayer`, `ISpatialRef` and `IGeometry`.
+
+ArchGDAL requires all interactive types to have a finalizer that calls `destroy()` on them. All objects that have a relationship with an interactive object are required to hold a reference to the interactive object. For example, objects of type `IRasterBand` might have a relationship with an `IDataset`, therefore they have an `ownedby` attribute which might refer to such a dataset.
+
+### Views
+Sometimes, it is helpful to work with objects that are "internal references" that have restrictions on the types of methods that they support. As an example
+`getlayerdefn(featurelayer)` returns a feature definition that is internal to the feature layer, and does not support methods such as `write!(featuredefn, fielddefn)` and `deletegeomdefn!(featuredefn, i)`. To indicate that they might have restrictions, some types have `View` as a postfix. Such types include `IFeatureDefnView`, `IFieldDefnView`, and `IGeomFieldDefnView`.
+
+### Summary
+To summarize,
+
+* `ArchGDAL.unsafe_<method>(args...)` will return a scoped object. The proper way of using them is within the setting of a do-block:
+
+```julia
+ArchGDAL.<method>(args...) do result
+    # result is a scoped object
+end
+```
+
+* `ArchGDAL.<method>(args...)` will return an interactive object.
+
+```julia
+result = ArchGDAL.<method>(args...)
+# result is an interactive object
+```
+
+!!! note
+
+    Users are allowed to mix both "interactive" and "scoped" objects. As long as they do not manually call `ArchGDAL.destroy()` on any object, ArchGDAL is designed to avoid the pitfalls of GDAL memory management (e.g. in [PythonGotchas](https://trac.osgeo.org/gdal/wiki/PythonGotchas)).
 
 ## References
 Here's a collection of references for developers who are interested.
