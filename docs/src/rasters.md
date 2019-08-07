@@ -1,26 +1,29 @@
 # Raster Data
 
 In this section, we revisit the [`gdalworkshop/world.tif`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif) dataset.
+```julia
+julia> dataset = AG.read("gdalworkshop/world.tif")
+GDAL Dataset (Driver: GTiff/GeoTIFF)
+File(s):
+  gdalworkshop/world.tif
 
-```@setup raster
-import ArchGDAL
-filepath = download("https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif?raw=true", "world.tif")
-```
-
-```@example raster
-ArchGDAL.read(filepath) do dataset
-    print(dataset)
-end
+Dataset (width x height): 2048 x 1024 (pixels)
+Number of raster bands: 3
+  [GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
+  [GA_ReadOnly] Band 2 (Green): 2048 x 1024 (UInt8)
+  [GA_ReadOnly] Band 3 (Blue): 2048 x 1024 (UInt8)
 ```
 A description of the display is available in [Raster Datasets](@ref).
 
 ## Raster Bands
 We can examine an individual raster band
-```@example raster
-ArchGDAL.read(filepath) do dataset
-    band = ArchGDAL.getband(dataset, 1)
-    print(band)
-end
+```julia
+julia> band = ArchGDAL.getband(dataset, 1)
+[GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
+    blocksize: 256×256, nodata: -1.0e10, units: 1.0px + 0.0
+    overviews: (0) 1024x512 (1) 512x256 (2) 256x128
+               (3) 128x64 (4) 64x32 (5) 32x16
+               (6) 16x8
 ```
 You can programmatically retrieve the information in the header using
 * `ArchGDAL.accessflag(band)`: the access flag for this band. (`GA_ReadOnly`)
@@ -40,15 +43,18 @@ You can get additional attribute information using
 
 !!! note
 
-    GDAL contains a concept of the natural block size of rasters so that applications can organized data access efficiently for some file formats. The natural block size is the block size that is most efficient for accessing the format. For many formats this is simple a whole scanline in which case `*pnXSize` is set to `GetXSize()`, and `*pnYSize` is set to `1`.
-
-    However, for tiled images this will typically be the tile size.
-
-    Note that the `X` and `Y` block sizes don't have to divide the image size evenly, meaning that right and bottom edge blocks may be incomplete.
+    GDAL contains a concept of the natural block size of rasters so that applications can organized data access efficiently for some file formats. The natural block size is the block size that is most efficient for accessing the format. For many formats this is simple a whole scanline. However, for tiled images this will typically be the tile size.
 
 Finally, you can obtain overviews:
 * `ArchGDAL.noverview(band)`: the number of overview layers available, zero if none. (`7`)
-* `ArchGDAL.getoverview(band, i)`: returns the `i`-th overview in the raster band. Each overview is itself a raster band.
+* `ArchGDAL.getoverview(band, i)`: returns the `i`-th overview in the raster band. Each overview is itself a raster band, e.g.
+
+```julia
+julia> ArchGDAL.getoverview(band, 2)
+[GA_ReadOnly] Band 1 (Red): 256 x 128 (UInt8)
+    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
+    overviews:
+```
 
 ## Raster I/O
 
@@ -103,23 +109,34 @@ Following the description in [mapbox/rasterio's documentation](https://rasterio.
 
 For that purpose, we have a method called `ArchGDAL.windows(band)` which iterates over the windows of a raster band, returning the indices corresponding to the rasterblocks within that raster band for efficiency:
 
-```@example raster
-ArchGDAL.read(filepath) do dataset
-    band = ArchGDAL.getband(dataset, 1)
-    for (cols,rows) in ArchGDAL.windows(band)
-        println((cols,rows))
-    end
-end
+```julia
+julia> for (cols,rows) in ArchGDAL.windows(band)
+           println((cols,rows))
+       end
+(1:256, 1:256)
+(1:256, 257:512)
+(1:256, 513:768)
+(1:256, 769:1024)
+(257:512, 1:256)
+(257:512, 257:512)
+(257:512, 513:768)
+(257:512, 769:1024)
+(513:768, 1:256)
+...
 ```
 
 Alternatively, we have another method called `ArchGDAL.blocks(band)` which iterates over the windows of a raster band, returning the `offset` and `size` corresponding to the rasterblocks within that raster band for efficiency:
-```@example raster
-ArchGDAL.read(filepath) do dataset
-    band = ArchGDAL.getband(dataset, 1)
-    for (xyoffset,xysize) in ArchGDAL.blocks(band)
-        println((xyoffset,xysize))
-    end
-end
+```julia
+julia> for (xyoffset,xysize) in ArchGDAL.blocks(band)
+           println((xyoffset,xysize))
+       end
+((0, 0), (256, 256))
+((1, 0), (256, 256))
+((2, 0), (256, 256))
+((3, 0), (256, 256))
+((0, 1), (256, 256))
+((1, 1), (256, 256))
+...
 ```
 
 !!! note

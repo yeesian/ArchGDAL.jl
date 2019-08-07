@@ -11,8 +11,8 @@ makedocs(
         "Raster Data" => "rasters.md",
         "Geometric Operations" => "geometries.md",
         "Spatial Projections" => "projections.md",
-        "Memory Management" => "memory.md",
-        "Working with Spatialite" => "spatialite.md"
+        "Interactive versus Scoped Objects" => "memory.md"
+        # "Working with Spatialite" => "spatialite.md"
         # "Naming Conventions" => "conventions.md", # table between GDAL, GDAL.jl, and ArchGDAL.jl
     ]
     
