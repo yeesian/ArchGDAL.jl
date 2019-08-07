@@ -114,7 +114,7 @@ to the layer.
                 slightly different form depending on the limitations of the
                 format driver.
 """
-function writefielddefn!(
+function addfielddefn!(
         layer::AbstractFeatureLayer,
         name::AbstractString,
         etype::OGRFieldType;
@@ -126,12 +126,12 @@ function writefielddefn!(
     fielddefn = unsafe_createfielddefn(name, etype)
     setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
         justify = justify)
-    write!(layer, fielddefn)
+    addfielddefn!(layer, fielddefn)
     destroy(fielddefn)
     layer
 end
 
-function writefielddefn(
+function addfielddefn(
         f::Function,
         layer::AbstractFeatureLayer,
         name::AbstractString,
@@ -146,7 +146,7 @@ function writefielddefn(
         justify = justify)
     try
         f(fielddefn)
-        write!(layer, fielddefn)
+        addfielddefn!(layer, fielddefn)
     finally
         destroy(fielddefn)
     end
@@ -184,7 +184,7 @@ function writegeomdefn!(
         approx::Bool = false
     )
     geomdefn = unsafe_creategeomdefn(name, etype)
-    write!(layer, geomdefn)
+    addgeomdefn!(layer, geomdefn)
     destroy(geomdefn)
     return layer
 end
@@ -199,7 +199,7 @@ function writegeomdefn(
     geomdefn = unsafe_creategeomdefn(name, etype)
     try
         f(geomdefn)
-        write!(layer, geomdefn)
+        addgeomdefn!(layer, geomdefn)
     finally
         destroy(geomdefn)
     end

@@ -85,7 +85,7 @@ This function should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRFieldDefn passed in is copied,
 and remains the responsibility of the caller.
 """
-function write!(featuredefn::FeatureDefn, fielddefn::FieldDefn)
+function addfielddefn!(featuredefn::FeatureDefn, fielddefn::FieldDefn)
     GDAL.addfielddefn(featuredefn.ptr, fielddefn.ptr)
     return featuredefn
 end
@@ -222,7 +222,10 @@ definition.
 This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn.
 """
-function write!(featuredefn::FeatureDefn, geomfielddefn::AbstractGeomFieldDefn)
+function addgeomdefn!(
+        featuredefn::FeatureDefn,
+        geomfielddefn::AbstractGeomFieldDefn
+    )
     # `geomfielddefn` is copied, and remains the responsibility of the caller.
     GDAL.addgeomfielddefn(featuredefn.ptr, geomfielddefn.ptr)
     return featuredefn
