@@ -17,7 +17,7 @@ Fetch palette interpretation.
 ### Returns
 palette interpretation enumeration value, usually `GPI_RGB`.
 """
-getpaletteinterp(ct::ColorTable) = GDAL.getpaletteinterpretation(ct.ptr)
+paletteinterp(ct::ColorTable) = GDAL.getpaletteinterpretation(ct.ptr)
 
 "Get number of color entries in table."
 ncolorentry(ct::ColorTable) = GDAL.getcolorentrycount(ct.ptr)
