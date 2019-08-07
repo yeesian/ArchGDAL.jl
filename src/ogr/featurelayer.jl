@@ -683,7 +683,7 @@ Drivers may or may not support not-null constraints. If they support creating
 fields with not-null constraints, this is generally before creating any feature
 to the layer.
 """
-function write!(
+function addfielddefn!(
         layer::AbstractFeatureLayer,
         field::AbstractFieldDefn,
         approx::Bool = false
@@ -720,7 +720,7 @@ Drivers may or may not support not-null constraints. If they support creating
 fields with not-null constraints, this is generally before creating any feature
 to the layer.
 """
-function write!(
+function addgeomdefn!(
         layer::AbstractFeatureLayer,
         field::AbstractGeomFieldDefn,
         approx::Bool = false
