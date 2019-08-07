@@ -689,7 +689,7 @@ end
     ]
     for (i, wkt) in enumerate(wkts)
         AG.fromWKT(wkt) do geom
-            @test AG.getgeomname(geom) == types[i]
+            @test AG.geomname(geom) == types[i]
         end
     end
 end
