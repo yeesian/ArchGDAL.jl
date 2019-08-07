@@ -251,7 +251,8 @@ end
     end
 
     @test AG.toISOWKT(geom3) == "GEOMETRYCOLLECTION Z (POINT Z (2 5 8),POLYGON Z ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON Z ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)),POINT Z EMPTY)"
-    @test AG.toJSON(geom3) == """{ "type": "GeometryCollection", "geometries": [ { "type": "Point", "coordinates": [ 2.0, 5.0, 8.0 ] }, { "type": "Polygon", "coordinates": [ [ [ 0.0, 0.0, 8.0 ], [ 0.0, 4.0, 8.0 ], [ 4.0, 4.0, 8.0 ], [ 4.0, 0.0, 8.0 ], [ 0.0, 0.0, 8.0 ] ], [ [ 1.0, 1.0, 8.0 ], [ 3.0, 1.0, 8.0 ], [ 3.0, 3.0, 8.0 ], [ 1.0, 3.0, 8.0 ], [ 1.0, 1.0, 8.0 ] ] ] }, { "type": "Polygon", "coordinates": [ [ [ 10.0, 0.0, 8.0 ], [ 10.0, 4.0, 8.0 ], [ 14.0, 4.0, 8.0 ], [ 14.0, 0.0, 8.0 ], [ 10.0, 0.0, 8.0 ] ], [ [ 11.0, 1.0, 8.0 ], [ 13.0, 1.0, 8.0 ], [ 13.0, 3.0, 8.0 ], [ 11.0, 3.0, 8.0 ], [ 11.0, 1.0, 8.0 ] ] ] }, null ] }"""
+    AG.removegeom!(geom3, AG.ngeom(geom3)-1) # the JSON driver in GDAL 3.0 does not handle null geometries well yet
+    @test AG.toJSON(geom3) == """{ "type": "GeometryCollection", "geometries": [ { "type": "Point", "coordinates": [ 2.0, 5.0, 8.0 ] }, { "type": "Polygon", "coordinates": [ [ [ 0.0, 0.0, 8.0 ], [ 0.0, 4.0, 8.0 ], [ 4.0, 4.0, 8.0 ], [ 4.0, 0.0, 8.0 ], [ 0.0, 0.0, 8.0 ] ], [ [ 1.0, 1.0, 8.0 ], [ 3.0, 1.0, 8.0 ], [ 3.0, 3.0, 8.0 ], [ 1.0, 3.0, 8.0 ], [ 1.0, 1.0, 8.0 ] ] ] }, { "type": "Polygon", "coordinates": [ [ [ 10.0, 0.0, 8.0 ], [ 10.0, 4.0, 8.0 ], [ 14.0, 4.0, 8.0 ], [ 14.0, 0.0, 8.0 ], [ 10.0, 0.0, 8.0 ] ], [ [ 11.0, 1.0, 8.0 ], [ 13.0, 1.0, 8.0 ], [ 13.0, 3.0, 8.0 ], [ 11.0, 3.0, 8.0 ], [ 11.0, 1.0, 8.0 ] ] ] } ] }"""
 
     AG.createmultilinestring([[[1.,4.], [2.,5.], [3.,6.], [1.,4.]]]) do geom4
         @test AG.toWKT(geom4) == "MULTILINESTRING ((1 4,2 5,3 6,1 4))"
@@ -264,7 +265,7 @@ end
     @test AG.getgeomtype(AG.getgeom(geom3, 0)) == GDAL.wkbPoint25D
     @test AG.getgeomtype(AG.getgeom(geom3, 1)) == GDAL.wkbPolygon25D
     @test AG.getgeomtype(AG.getgeom(geom3, 2)) == GDAL.wkbPolygon25D
-    @test AG.getgeomtype(AG.getgeom(geom3, 3)) == GDAL.wkbPoint25D
+    @test sprint(print, AG.getgeom(geom3, 3)) == "NULL Geometry"
     AG.getgeom(geom3, 0) do geom4
         @test AG.getgeomtype(geom4) == GDAL.wkbPoint25D
     end
@@ -275,7 +276,7 @@ end
         @test AG.getgeomtype(geom4) == GDAL.wkbPolygon25D
     end
     AG.getgeom(geom3, 3) do geom4
-        @test AG.getgeomtype(geom4) == GDAL.wkbPoint25D
+        @test sprint(print, geom4) == "NULL Geometry"
     end
 end
 
@@ -284,9 +285,9 @@ end
         layer = AG.getlayer(dataset, 0)
         AG.nextfeature(layer) do feature
             geom = AG.getgeom(feature)
-            @test AG.toPROJ4(AG.getspatialref(geom)) == "+proj=longlat +datum=WGS84 +no_defs "
+            @test AG.toPROJ4(AG.getspatialref(geom)) == "+proj=longlat +datum=WGS84 +no_defs"
             AG.getspatialref(geom) do spatialref
-                @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs "
+                @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
             end
         end
         AG.createpoint(1,2) do point
@@ -302,6 +303,6 @@ end
             AG.fromWKT("POINT (1120351.57 741921.42)") do point
                 @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
                 AG.transform!(point, transform)
-                @test GeoInterface.coordinates(point) ≈ [-122.598135, 47.348801]
+                @test GeoInterface.coordinates(point) ≈ [47.348801, -122.598135]
     end end end end
 end
