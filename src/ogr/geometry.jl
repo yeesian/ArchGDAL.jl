@@ -145,7 +145,7 @@ This function corresponds to the SFCOM IGeometry::GetDimension() method. It
 indicates the dimension of the geometry, but does not indicate the dimension of
 the underlying space (as indicated by OGR_G_GetCoordinateDimension() function).
 """
-getdim(geom::AbstractGeometry) = GDAL.getdimension(geom.ptr)
+geomdim(geom::AbstractGeometry) = GDAL.getdimension(geom.ptr)
 
 """
 Get the dimension of the coordinates in this geometry.
