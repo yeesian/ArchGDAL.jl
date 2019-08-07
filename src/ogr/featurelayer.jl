@@ -399,7 +399,7 @@ the OGRFeature.
 Use OGR_L_TestCapability(OLCRandomWrite) to establish if this layer supports
 random access writing via OGR_L_SetFeature().
 """
-function write!(layer::AbstractFeatureLayer, feature::Feature)
+function setfeature!(layer::AbstractFeatureLayer, feature::Feature)
     result = GDAL.setfeature(layer.ptr, feature.ptr)
     # OGRERR_NONE if the operation works, otherwise an appropriate error code
     # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
@@ -417,10 +417,20 @@ OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function push!(layer::AbstractFeatureLayer, feature::Feature)
+function addfeature!(layer::AbstractFeatureLayer, feature::Feature)
     result = GDAL.createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
     return layer
+end
+
+function addfeature(f::Function, layer::AbstractFeatureLayer)
+    feature = unsafe_createfeature(layer)
+    try
+        f(feature)
+        addfeature!(layer, feature)
+    finally
+        destroy(feature)
+    end
 end
 
 """
@@ -431,6 +441,16 @@ the layer by one), but the feature has not been written to the layer yet.
 """
 unsafe_createfeature(layer::AbstractFeatureLayer) =
     unsafe_createfeature(getlayerdefn(layer))
+
+function createfeature(f::Function, layer::AbstractFeatureLayer)
+    feature = unsafe_createfeature(layer)
+    try
+        f(feature)
+        setfeature!(layer, feature)
+    finally
+        destroy(feature)
+    end
+end
 
 """
 Delete feature with fid `i` from layer.

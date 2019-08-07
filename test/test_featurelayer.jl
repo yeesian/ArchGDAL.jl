@@ -46,7 +46,7 @@ import ArchGDAL; const AG = ArchGDAL
                     """
                 @test AG.ngeom(AG.getlayerdefn(newlayer)) == 2
                 @test AG.nfeature(newlayer) == 0
-                AG.writefeature(newlayer) do newfeature
+                AG.createfeature(newlayer) do newfeature
                     AG.setgeom!(newfeature, 0, AG.createpoint())
                     AG.setgeom!(newfeature, 1, AG.createlinestring())
                 end
@@ -72,7 +72,7 @@ import ArchGDAL; const AG = ArchGDAL
                       Geometry 2 (new poly): [wkbPolygon]
                     """
 
-                AG.pushfeature(newlayer) do newfeature
+                AG.addfeature(newlayer) do newfeature
                     AG.setgeom!(newfeature, 0, AG.createpoint())
                     AG.setgeom!(newfeature, 1, AG.createlinestring())
                     AG.setgeom!(newfeature, 2, AG.createpolygon([[[0.,0.], [1.,1.], [0.,1.]]]))

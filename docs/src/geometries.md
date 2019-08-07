@@ -31,22 +31,22 @@ linearring = AG.createlinearring()
 polygon = AG.createpolygon()
     for j in 1.0:-0.1:0.9
         ring = AG.createlinearring([(0.,0.), (0.,j), (j,j)])
-        AG.push!(polygon, ring)
+        AG.addgeom!(polygon, ring)
     end
 multipoint = AG.createmultipoint()
     for i in 1.0:3.0
         pt = AG.createpoint(i, i+1)
-        AG.push!(multipoint, pt)
+        AG.addgeom!(multipoint, pt)
     end
 multilinestring = AG.createmultilinestring()
     for j in 1.0:5.0:6.0
         line = AG.createlinestring([(i,i+1) for i in j:j+3])
-        AG.push!(multilinestring, line)
+        AG.addgeom!(multilinestring, line)
     end
 multipolygon = AG.createmultipolygon()
     for j in 1.0:-0.1:0.9
         poly = AG.createpolygon([(0.,0.), (0.,j), (j,j)])
-        AG.push!(multipolygon, poly)
+        AG.addgeom!(multipolygon, poly)
     end
 ```
 
@@ -73,7 +73,7 @@ The following methods are commonly used for modifying or adding to a geometry.
 * `AG.setpoint!(geom, i, x, y, z)`
 * `AG.addpoint!(geom, x, y)`
 * `AG.addpoint!(geom, x, y, z)`
-* `AG.push!(geom1, geom2)`
+* `AG.addgeom!(geom1, geom2)`
 * `AG.removegeom!(geom, i)`
 * `AG.removeallgeoms!(geom)`
 
@@ -165,5 +165,5 @@ The following methods do not mutate the input geomteries `g1` and `g2`.
 ### Mutable Operations
 The following method modifies the first argument `g1`.
 
-* `AG.push!(g1, g2)`
+* `AG.addgeom!(g1, g2)`
 

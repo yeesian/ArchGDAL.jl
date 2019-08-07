@@ -115,7 +115,7 @@ end
         AG.createfielddefn("datetimefield", GDAL.OFTDateTime) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.writefeature(layer) do feature
+        AG.createfeature(layer) do feature
             AG.setfield!(feature, 0, 1)
             AG.setfield!(feature, 1, 1.0)
             AG.setfield!(feature, 2, Cint[1, 2])
@@ -125,7 +125,7 @@ end
             AG.setfield!(feature, 6, GDAL.GByte[1,2,3,4])
             AG.setfield!(feature, 7, Dates.DateTime(2016,9,25,21,17,0))
 
-            AG.pushfeature(layer) do newfeature
+            AG.addfeature(layer) do newfeature
                 AG.setfrom!(newfeature, feature)
                 @test AG.getfield(newfeature, 0) == 1 
                 @test AG.getfield(newfeature, 1) ≈ 1.0
@@ -136,7 +136,7 @@ end
                 @test AG.getfield(newfeature, 6) == GDAL.GByte[1,2,3,4]
                 @test AG.getfield(newfeature, 7) == Dates.DateTime(2016,9,25,21,17,0)
 
-                AG.writefeature(layer) do lastfeature
+                AG.createfeature(layer) do lastfeature
                     AG.setfrom!(lastfeature, feature)
                     AG.setfield!(lastfeature, 0, 45)
                     AG.setfield!(lastfeature, 1, 18.2)

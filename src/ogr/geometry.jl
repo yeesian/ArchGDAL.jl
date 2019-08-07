@@ -910,7 +910,7 @@ interior rings.
 * `geomcontainer`: existing geometry.
 * `subgeom`: geometry to add to the existing geometry.
 """
-function push!(geomcontainer::AbstractGeometry, subgeom::AbstractGeometry)
+function addgeom!(geomcontainer::AbstractGeometry, subgeom::AbstractGeometry)
     result = GDAL.addgeometry(geomcontainer.ptr, subgeom.ptr)
     @ogrerr result "Failed to add geometry. The geometry type could be illegal"
     geomcontainer
