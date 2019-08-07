@@ -972,7 +972,7 @@ nreference(layer::AbstractFeatureLayer) = GDAL.getrefcount(layer.ptr)
 # getfeaturesread(layer::AbstractFeatureLayer) = GDAL.getfeaturesread(layer.ptr)
 
 "The name of the FID column in the database, or \"\" if not supported."
-getfidcolname(layer::AbstractFeatureLayer) = GDAL.getfidcolumn(layer.ptr)
+fidcolumnname(layer::AbstractFeatureLayer) = GDAL.getfidcolumn(layer.ptr)
 
 "The name of the geometry column in the database, or \"\" if not supported."
 getgeomcolname(layer::AbstractFeatureLayer) = GDAL.getgeometrycolumn(layer.ptr)
