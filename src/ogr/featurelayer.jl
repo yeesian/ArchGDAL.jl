@@ -440,7 +440,7 @@ The newly feature is owned by the layer (it will increase the number of features
 the layer by one), but the feature has not been written to the layer yet.
 """
 unsafe_createfeature(layer::AbstractFeatureLayer) =
-    unsafe_createfeature(getlayerdefn(layer))
+    unsafe_createfeature(layerdefn(layer))
 
 function createfeature(f::Function, layer::AbstractFeatureLayer)
     feature = unsafe_createfeature(layer)
@@ -475,7 +475,7 @@ Returns a view of the schema information for this layer.
 ### Remarks
 The `featuredefn` is owned by the `layer` and should not be modified.
 """
-getlayerdefn(layer::AbstractFeatureLayer) =
+layerdefn(layer::AbstractFeatureLayer) =
     IFeatureDefnView(GDAL.getlayerdefn(layer.ptr))
 
 """
@@ -505,10 +505,10 @@ nfeature(layer::AbstractFeatureLayer, force::Bool = false) =
     GDAL.getfeaturecount(layer.ptr, force)
 
 "Fetch number of geometry fields on the feature layer."
-ngeom(layer::AbstractFeatureLayer) = ngeom(getlayerdefn(layer))
+ngeom(layer::AbstractFeatureLayer) = ngeom(layerdefn(layer))
 
 "Fetch number of fields on the feature layer."
-nfield(layer::AbstractFeatureLayer) = nfield(getlayerdefn(layer))
+nfield(layer::AbstractFeatureLayer) = nfield(layerdefn(layer))
 
 """
 Fetch the extent of this layer.

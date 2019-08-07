@@ -93,7 +93,7 @@ ArchGDAL requires all interactive types to have a finalizer that calls `destroy(
 
 ### Views
 Sometimes, it is helpful to work with objects that are "internal references" that have restrictions on the types of methods that they support. As an example
-`getlayerdefn(featurelayer)` returns a feature definition that is internal to the feature layer, and does not support methods such as `write!(featuredefn, fielddefn)` and `deletegeomdefn!(featuredefn, i)`. To indicate that they might have restrictions, some types have `View` as a postfix. Such types include `IFeatureDefnView`, `IFieldDefnView`, and `IGeomFieldDefnView`.
+`layerdefn(featurelayer)` returns a feature definition that is internal to the feature layer, and does not support methods such as `write!(featuredefn, fielddefn)` and `deletegeomdefn!(featuredefn, i)`. To indicate that they might have restrictions, some types have `View` as a postfix. Such types include `IFeatureDefnView`, `IFieldDefnView`, and `IGeomFieldDefnView`.
 
 ### Summary
 To summarize,

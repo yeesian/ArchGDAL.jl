@@ -10,7 +10,7 @@ parameters:
   toLayer: layer object to copy the fields into
 """
 function copyfields(fromlayer, tolayer)
-    featuredefn = AG.getlayerdefn(fromlayer)
+    featuredefn = AG.layerdefn(fromlayer)
     for i in 0:(AG.nfield(featuredefn)-1)
         fd = AG.getfielddefn(featuredefn, i)
         if AG.gettype(fd) == OFTReal
@@ -56,9 +56,9 @@ end
 #         outlayer = AG.createlayer(
 #                         name = "outlayer",
 #                         dataset = outDS,
-#                         geom = AG.getgeomtype(AG.getlayerdefn(inlayer)))
+#                         geom = AG.getgeomtype(AG.layerdefn(inlayer)))
 #         copyfields(inlayer, outlayer)
-#         featuredefn = AG.getlayerdefn(outlayer)
+#         featuredefn = AG.layerdefn(outlayer)
 #         for infeature in inlayer
 #             geom = AG.getgeom(infeature)
 #             AG.createfeature(featuredefn) do outfeature
@@ -96,7 +96,7 @@ AG.read("ospy/data1/sites.shp") do input
             dataset = output,
             geom = GDAL.wkbPoint
         )
-        inlayerdefn = AG.getlayerdefn(inlayer)
+        inlayerdefn = AG.layerdefn(inlayer)
         AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
         AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
         for infeature in inlayer
@@ -195,7 +195,7 @@ end
         #         dataset = output,
         #         geom = GDAL.wkbPolygon
         #     )
-        #     infeaturedefn = AG.getlayerdefn(inlayer)
+        #     infeaturedefn = AG.layerdefn(inlayer)
         #     nameindex = AG.findfieldindex(infeaturedefn, "name")
         #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)
         #     AG.createfield!(outlayer, fielddefn)
@@ -242,7 +242,7 @@ AG.read("ospy/data4/aster.img") do ds
     @testset "Homework 4a" begin
         AG.read("ospy/data4/sites.shp") do shp
             shplayer = AG.getlayer(shp, 0)
-            id = AG.findfieldindex(AG.getlayerdefn(shplayer), "ID")
+            id = AG.findfieldindex(AG.layerdefn(shplayer), "ID")
 
             transform = AG.getgeotransform(ds)
             xOrigin = transform[1]; yOrigin = transform[4]

@@ -30,7 +30,7 @@ The display provides
 You can also programmatically retrieve them using
 * `ArchGDAL.getname(layer)`: the **name** of the feature layer
 * `ArchGDAL.nfeature(layer)`: the **number of features** in the layer
-* `featuredefn = ArchGDAL.getlayerdefn(layer)`: the **schema** of the layer features
+* `featuredefn = ArchGDAL.layerdefn(layer)`: the **schema** of the layer features
 * `ArchGDAL.nfield(featuredefn)`: the **number of fields**
 * `ArchGDAL.ngeom(featuredefn)`: the **number of geometries**
 * `ArchGDAL.getfielddefn(featuredefn, i)`: the definition for the `i`-th field
