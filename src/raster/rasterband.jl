@@ -35,7 +35,7 @@ end
 pixeltype(band::AbstractRasterBand) = _JLTYPE[GDAL.getrasterdatatype(band.ptr)]
 
 "Fetch the width in pixels of this band."
-width(band::AbstractRasterBand) = GDAL.getrastebandandxsize(band.ptr)
+width(band::AbstractRasterBand) = GDAL.getrasterbandxsize(band.ptr)
 
 "Fetch the height in pixels of this band."
 height(band::AbstractRasterBand) = GDAL.getrasterbandysize(band.ptr)
