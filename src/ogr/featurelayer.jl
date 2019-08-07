@@ -516,14 +516,14 @@ meaningful extents could be collected.
 Note that some implementations of this method may alter the read cursor of the
 layer.
 """
-function getextent(layer::AbstractFeatureLayer, i::Integer, force::Bool = false)
+function envelope(layer::AbstractFeatureLayer, i::Integer, force::Bool = false)
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
     result = GDAL.getextentex(layer.ptr, i, envelope, force)
     @ogrerr result "Extent not known"
     envelope[]
 end
 
-function getextent(layer::AbstractFeatureLayer, force::Bool = false)
+function envelope(layer::AbstractFeatureLayer, force::Bool = false)
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
     result = GDAL.getextent(layer.ptr, envelope, force)
     @ogrerr result "Extent not known"
