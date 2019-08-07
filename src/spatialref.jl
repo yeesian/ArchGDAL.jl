@@ -62,7 +62,7 @@ importEPSG(code::Integer) = importEPSG!(newspatialref(), code)
 unsafe_importEPSG(code::Integer) = importEPSG!(unsafe_newspatialref(), code)
 
 """
-Initialize SRS based on EPSG GCS or PCS code.
+Initialize SRS based on EPSG CRS code.
 
 This method is similar to `importFromEPSG()` except that EPSG preferred axis
 ordering will be applied for geographic and projected coordinate systems. EPSG
@@ -78,7 +78,7 @@ function importEPSGA!(spref::AbstractSpatialRef, code::Integer)
 end
 
 """
-Construct a Spatial Reference System from its EPSG GCS or PCS code.
+Construct a Spatial Reference System from its EPSG CRS code.
 
 This method is similar to `importFromEPSG()` except that EPSG preferred axis
 ordering will be applied for geographic and projected coordinate systems. EPSG
