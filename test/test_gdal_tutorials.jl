@@ -21,8 +21,8 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.pixeltype(band) == UInt8
         @test AG.getname(AG.getcolorinterp(band)) == "Gray"
 
-        @test AG.getminimum(band) ≈ 0.0
-        @test AG.getmaximum(band) ≈ 255.0
+        @test AG.minimum(band) ≈ 0.0
+        @test AG.maximum(band) ≈ 255.0
 
         @test AG.noverview(band) == 0
 
