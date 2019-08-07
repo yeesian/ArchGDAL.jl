@@ -996,16 +996,16 @@ MULTICURVE or MULTISURFACE in it, by approximating curve geometries.
 * `options`: options as a null-terminated list of strings or NULL.
     See OGRGeometryFactory::curveToLineString() for valid options.
 """
-getlineargeom(geom::AbstractGeometry, stepsize::Real = 0) =
+lineargeom(geom::AbstractGeometry, stepsize::Real = 0) =
     IGeometry(GDAL.getlineargeometry(geom.ptr, stepsize, C_NULL))
 
-unsafe_getlineargeom(geom::AbstractGeometry, stepsize::Real = 0) =
+unsafe_lineargeom(geom::AbstractGeometry, stepsize::Real = 0) =
     Geometry(GDAL.getlineargeometry(geom.ptr, stepsize, C_NULL))
 
-getlineargeom(geom::AbstractGeometry, options::Vector, stepsize::Real = 0) =
+lineargeom(geom::AbstractGeometry, options::Vector, stepsize::Real = 0) =
     IGeometry(GDAL.getlineargeometry(geom.ptr, stepsize, options))
 
-function unsafe_getlineargeom(
+function unsafe_lineargeom(
         geom::AbstractGeometry,
         options::Vector,
         stepsize::Real = 0
@@ -1024,10 +1024,10 @@ If the geometry has no curve portion, the returned geometry will be a clone.
 
 The reverse function is OGR_G_GetLinearGeometry().
 """
-getcurvegeom(geom::AbstractGeometry) =
+curvegeom(geom::AbstractGeometry) =
     IGeometry(GDAL.getcurvegeometry(geom.ptr, C_NULL))
 
-unsafe_getcurvegeom(geom::AbstractGeometry) =
+unsafe_curvegeom(geom::AbstractGeometry) =
     Geometry(GDAL.getcurvegeometry(geom.ptr, C_NULL))
 
 """
