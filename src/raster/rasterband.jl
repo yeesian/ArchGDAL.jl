@@ -233,14 +233,14 @@ number of desired samples to fetch the most reduced overview. The same band as
 was passed in will be returned if it has not overviews, or if none of the
 overviews have enough samples.
 """
-function getsampleoverview(band::IRasterBand, nsamples::Integer)
+function sampleoverview(band::IRasterBand, nsamples::Integer)
     return IRasterBand(
         GDAL.getrastersampleoverviewex(band.ptr, UInt64(nsamples)),
         ownedby = band.ownedby
     )
 end
 
-unsafe_getsampleoverview(band::AbstractRasterBand, nsamples::Integer) =
+unsafe_sampleoverview(band::AbstractRasterBand, nsamples::Integer) =
     RasterBand(GDAL.getrastersampleoverviewex(band.ptr, UInt64(nsamples)))
 
 "Color Interpretation value for band"
