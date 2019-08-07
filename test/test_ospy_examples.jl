@@ -104,7 +104,7 @@ AG.read("ospy/data1/sites.shp") do input
             @test AG.asint64(infeature, 0) == id
             cover = AG.getfield(infeature, 1)
             if cover == "trees"
-                AG.writefeature(outlayer) do outfeature
+                AG.createfeature(outlayer) do outfeature
                     AG.setgeom!(outfeature, AG.getgeom(infeature))
                     AG.setfield!(outfeature, 0, id)
                     AG.setfield!(outfeature, 1, cover)
@@ -166,7 +166,7 @@ end
         for line in readlines(file)
             (name, coords) = split(line, ":")
             coordlist = split(coords, ",")
-            AG.writefeature(layer) do feature
+            AG.createfeature(layer) do feature
                 AG.setfield!(feature, 0, name)
                 AG.createpolygon() do poly
                     ring = AG.createlinearring()
@@ -174,7 +174,7 @@ end
                         AG.addpoint!(ring, parse(Float64, xy[1]),
                                            parse(Float64, xy[2]))
                     end
-                    AG.push!(poly, ring)
+                    AG.addgeom!(poly, ring)
                     AG.setgeom!(feature, poly)    
         end end end
         @test sprint(print, layer) == """
@@ -200,7 +200,7 @@ end
         #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)
         #     AG.createfield!(outlayer, fielddefn)
         #     for infeature in inlayer
-        #         AG.writefeature(outlayer) do outfeature
+        #         AG.createfeature(outlayer) do outfeature
         #             geom = AG.getgeom(infeature)
         #             AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
         #             AG.setfield!(outfeature,0,AG.getfield(infeature, nameindex))
