@@ -10,9 +10,9 @@ import ArchGDAL; const AG = ArchGDAL
         
         AG.createcolumn!(rat, "col1", GDAL.GFT_Integer, GDAL.GFU_Generic)
         @test AG.ncolumn(rat) == 1
-        @test AG.getcolumnname(rat, 0) == "col1"
-        @test AG.getcolumnusage(rat, 0) == GDAL.GFU_Generic
-        @test AG.getcolumntype(rat, 0) == GDAL.GFT_Integer
+        @test AG.columnname(rat, 0) == "col1"
+        @test AG.columnusage(rat, 0) == GDAL.GFU_Generic
+        @test AG.columntype(rat, 0) == GDAL.GFT_Integer
         @test AG.findcolumnindex(rat, GDAL.GFU_Generic) == 0
         @test AG.findcolumnindex(rat, GDAL.GFU_Red) == -1
         
