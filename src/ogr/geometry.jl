@@ -331,6 +331,9 @@ function getspatialref(geom::AbstractGeometry)
 end
 
 function unsafe_getspatialref(geom::AbstractGeometry)
+    if geom.ptr == C_NULL
+        return SpatialRef()
+    end
     result = GDAL.getspatialreference(geom.ptr)
     if result == C_NULL
         return SpatialRef()
@@ -874,6 +877,9 @@ function getgeom(geom::AbstractGeometry, i::Integer)
     # geometry within the container. The returned geometry remains owned by the
     # container, and should not be modified. The handle is only valid until the
     # next change to the geometry container. Use OGR_G_Clone() to make a copy.
+    if geom.ptr == C_NULL
+        return Geometry()
+    end
     result = GDAL.getgeometryref(geom.ptr, i)
     if result == C_NULL
         return IGeometry()
@@ -887,6 +893,9 @@ function unsafe_getgeom(geom::AbstractGeometry, i::Integer)
     # geometry within the container. The returned geometry remains owned by the
     # container, and should not be modified. The handle is only valid until the
     # next change to the geometry container. Use OGR_G_Clone() to make a copy.
+    if geom.ptr == C_NULL
+        return Geometry()
+    end
     result = GDAL.getgeometryref(geom.ptr, i)
     if result == C_NULL
         return Geometry()
