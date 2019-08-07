@@ -97,8 +97,8 @@ AG.read("ospy/data1/sites.shp") do input
             geom = GDAL.wkbPoint
         )
         inlayerdefn = AG.getlayerdefn(inlayer)
-        AG.write!(outlayer, AG.getfielddefn(inlayerdefn, 0))
-        AG.write!(outlayer, AG.getfielddefn(inlayerdefn, 1))
+        AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
+        AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
         for infeature in inlayer
             id = AG.getfield(infeature, 0)
             @test AG.asint64(infeature, 0) == id
@@ -156,7 +156,7 @@ end
         """
         AG.createfielddefn("name", GDAL.OFTString) do fielddefn
             AG.setwidth!(fielddefn, 30)
-            AG.write!(layer, fielddefn)
+            AG.addfielddefn!(layer, fielddefn)
         end
         @test sprint(print, layer) == """
         Layer: hw2a

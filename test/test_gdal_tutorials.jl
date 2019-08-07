@@ -107,7 +107,7 @@ end
             dataset = dataset,
             geom = GDAL.wkbPoint
         )
-        AG.writefielddefn!(layer, "Name", GDAL.OFTString, nwidth = 32)
+        AG.addfielddefn!(layer, "Name", GDAL.OFTString, nwidth = 32)
         featuredefn = AG.getlayerdefn(layer)
         @test AG.getname(featuredefn) == "point_out"
         @test AG.nfeature(layer) == 0
