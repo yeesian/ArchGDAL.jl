@@ -16,12 +16,12 @@ import ArchGDAL; const AG = ArchGDAL
     @testset "Method 2" begin
         AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
             AG.createcoordtrans(source, target) do transform
-                xs = [-122.598135,-122.598135]
-                ys = [47.348801, 47.348801]
+                xs = [47.348801, 47.348801]
+                ys = [-122.598135,-122.598135]
                 zs = [0.0, 0.0]
                 @test AG.transform!(xs, ys, zs, transform) == true
-                @test xs ≈ [-126.864185, -126.864185]
-                @test ys ≈ [45.151885, 45.151885]
+                @test xs ≈ [45.151458, 45.151458]
+                @test ys ≈ [-126.863475, -126.863475]
                 @test zs ≈ [0.0, 0.0]
         end end end
     end
@@ -44,11 +44,11 @@ end
         @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
         @test AG.toWKT(spatialref)[1:6] == "PROJCS"
         AG.morphtoESRI!(spatialref)
-        @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +ellps=GRS80 +units=m +no_defs "
+        @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
         AG.morphfromESRI!(spatialref)
-        @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs "
+        @test AG.toPROJ4(spatialref) == "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
         AG.importEPSGA!(spatialref, 4326)
-        @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs "
+        @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
     end
 
     AG.importEPSGA(4326) do spatialref
@@ -57,6 +57,6 @@ end
             @test AG.toWKT(cloneref) == AG.toWKT(cloneref2)
         end
         @test AG.toWKT(cloneref) == AG.toWKT(AG.importEPSGA(4326))
-        @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs "
+        @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
     end
 end
