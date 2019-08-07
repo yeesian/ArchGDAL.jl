@@ -172,7 +172,7 @@ function Base.show(io::IO, feature::Feature)
     println(io, "Feature")
     n = ngeom(feature)
     for i in 1:min(n, 3)
-        displayname = getgeomname(getgeom(feature, i-1))
+        displayname = geomname(getgeom(feature, i-1))
         println(io, "  (index $(i-1)) geom => $displayname")
     end
     n > 3 && println(io, "...\n Number of geometries: $n")
