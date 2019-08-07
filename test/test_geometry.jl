@@ -25,8 +25,8 @@ end
         @test AG.isring(point) == false
         @test AG.getz(point, 0) == 0
 
-        @test sprint(print, AG.getenvelope(point)) == "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
-        @test sprint(print, AG.getenvelope3d(point)) == "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
+        @test sprint(print, AG.envelope(point)) == "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
+        @test sprint(print, AG.envelope3d(point)) == "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
         @test AG.toISOWKB(point, GDAL.wkbNDR) == UInt8[0x01,0xe9,0x03,0x00,0x00,
         0x00,0x00,0x00,0x00,0x00,0x00,0x59,0x40,0x00,0x00,0x00,0x00,0x00,0x80,
         0x51,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]
@@ -70,8 +70,8 @@ end
     @test AG.issimple(point) == true
     @test AG.isring(point) == false
     @test AG.getz(point, 0) == 0
-    @test sprint(print, AG.getenvelope(point)) == "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
-    @test sprint(print, AG.getenvelope3d(point)) == "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
+    @test sprint(print, AG.envelope(point)) == "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
+    @test sprint(print, AG.envelope3d(point)) == "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
     @test AG.toISOWKB(point, GDAL.wkbNDR) == UInt8[0x01,0xe9,0x03,0x00,0x00,
     0x00,0x00,0x00,0x00,0x00,0x00,0x59,0x40,0x00,0x00,0x00,0x00,0x00,0x80,
     0x51,0x40,0x00,0x00,0x00,0x00,0x00,0x00,0x00,0x00]

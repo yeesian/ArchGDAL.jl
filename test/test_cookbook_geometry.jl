@@ -661,7 +661,7 @@ end
 @testset "Calculate Envelope of a Geometry" begin
     wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
     AG.fromWKT(wkt) do line
-        env = AG.getenvelope(line)
+        env = AG.envelope(line)
         @test (env.MaxX - env.MinX) * (env.MaxY - env.MinY) ≈ 2.2431808256625123e9
     end
 end
