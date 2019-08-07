@@ -11,9 +11,9 @@ import ArchGDAL; const AG = ArchGDAL
             AG.getspatialref(tmplayer) do spref
                 @test sprint(print, spref) == "NULL Spatial Reference System"
             end
-            @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == false
+            @test AG.isignored(AG.getgeomdefn(AG.layerdefn(tmplayer),0)) == false
             AG.setignoredfields!(tmplayer, ["OGR_GEOMETRY"])
-            @test AG.isignored(AG.getgeomdefn(AG.getlayerdefn(tmplayer),0)) == true
+            @test AG.isignored(AG.getgeomdefn(AG.layerdefn(tmplayer),0)) == true
         end
 
         AG.copy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
@@ -28,7 +28,7 @@ import ArchGDAL; const AG = ArchGDAL
                 spatialref = AG.getspatialref(tmplayer),
                 geom = GDAL.wkbPoint
             )
-                @test AG.ngeom(AG.getlayerdefn(newlayer)) == 1
+                @test AG.ngeom(AG.layerdefn(newlayer)) == 1
                 @test sprint(print, newlayer) == """
                     Layer: new layer
                       Geometry 0 (): [wkbPoint]
@@ -44,7 +44,7 @@ import ArchGDAL; const AG = ArchGDAL
                       Geometry 0 (): [wkbPoint]
                       Geometry 1 (new geom): [wkbLineString]
                     """
-                @test AG.ngeom(AG.getlayerdefn(newlayer)) == 2
+                @test AG.ngeom(AG.layerdefn(newlayer)) == 2
                 @test AG.nfeature(newlayer) == 0
                 AG.createfeature(newlayer) do newfeature
                     AG.setgeom!(newfeature, 0, AG.createpoint())
@@ -64,7 +64,7 @@ import ArchGDAL; const AG = ArchGDAL
                       Geometry 1 (new geom): [wkbLineString]
                     """
                 AG.writegeomdefn!(newlayer, "new poly", GDAL.wkbPolygon)
-                @test AG.ngeom(AG.getlayerdefn(newlayer)) == 3
+                @test AG.ngeom(AG.layerdefn(newlayer)) == 3
                 @test sprint(print, newlayer) == """
                     Layer: new layer
                       Geometry 0 (): [wkbPoint]
@@ -112,7 +112,7 @@ import ArchGDAL; const AG = ArchGDAL
 
         @test AG.nfeature(layer) == 4
         @test AG.getfield.(layer, 1) == ["point-a", "point-b", "a", "b"]
-        @test AG.findgeomindex(AG.getlayerdefn(layer)) == 0
+        @test AG.findgeomindex(AG.layerdefn(layer)) == 0
         AG.setspatialfilter!(layer,0,100,-1,100.1,1)
         @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1.0,100 -1))"
         @test AG.nfeature(layer) == -1

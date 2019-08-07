@@ -6,16 +6,16 @@ mutable struct Source <: Data.Source
 end
 
 function Source(layer::AbstractFeatureLayer)
-    layerdefn = getlayerdefn(layer)
-    ngeometries = ngeom(layerdefn)
-    nfld = nfield(layerdefn)
+    featuredefn = layerdefn(layer)
+    ngeometries = ngeom(featuredefn)
+    nfld = nfield(featuredefn)
     header = [
         ["geometry$(i-1)" for i in 1:ngeometries];
-        [getname(getfielddefn(layerdefn,i-1)) for i in 1:nfld]
+        [getname(getfielddefn(featuredefn,i-1)) for i in 1:nfld]
     ]
     types = [
         [IGeometry for i in 1:ngeometries];
-        [_FIELDTYPE[gettype(getfielddefn(layerdefn,i-1))] for i in 1:nfld]
+        [_FIELDTYPE[gettype(getfielddefn(featuredefn,i-1))] for i in 1:nfld]
     ]
     ArchGDAL.Source(
         Data.Schema(types, header, nfeature(layer)),

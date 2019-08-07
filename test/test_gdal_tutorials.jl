@@ -76,7 +76,7 @@ end
         # @test layerbyname.ptr == layer.ptr
         AG.resetreading!(layer)
 
-        featuredefn = AG.getlayerdefn(layer)
+        featuredefn = AG.layerdefn(layer)
         @test AG.nfield(featuredefn) == 2
         fielddefn = AG.getfielddefn(featuredefn, 0)
         @test AG.gettype(fielddefn) == GDAL.OFTReal
@@ -108,7 +108,7 @@ end
             geom = GDAL.wkbPoint
         )
         AG.addfielddefn!(layer, "Name", GDAL.OFTString, nwidth = 32)
-        featuredefn = AG.getlayerdefn(layer)
+        featuredefn = AG.layerdefn(layer)
         @test AG.getname(featuredefn) == "point_out"
         @test AG.nfeature(layer) == 0
         AG.createfeature(layer) do feature
