@@ -82,7 +82,7 @@ The following is an non-exhaustive list of unary operations available for geomet
 
 ### Attributes
 
-* `AG.getdim(geom)`: `0` for points, `1` for lines and `2` for surfaces
+* `AG.geomdim(geom)`: `0` for points, `1` for lines and `2` for surfaces
 * `AG.getcoorddim(geom)`: dimension of the coordinates. Returns `0` for an empty point
 * `AG.getenvelope(geom)`: the bounding envelope for this geometry
 * `AG.getenvelope3d(geom)`: the bounding envelope for this geometry
