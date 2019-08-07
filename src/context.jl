@@ -48,26 +48,6 @@ function executesql(f::Function, dataset::Dataset, args...)
     end
 end
 
-function writefeature(f::Function, layer::AbstractFeatureLayer)
-    feature = unsafe_createfeature(layer)
-    try
-        f(feature)
-        write!(layer, feature)
-    finally
-        destroy(feature)
-    end
-end
-
-function pushfeature(f::Function, layer::AbstractFeatureLayer)
-    feature = unsafe_createfeature(layer)
-    try
-        f(feature)
-        push!(layer, feature)
-    finally
-        destroy(feature)
-    end
-end
-
 function createfeature(f::Function, featuredefn::FeatureDefn)
     feature = unsafe_createfeature(featuredefn)
     reference(featuredefn)
