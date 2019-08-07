@@ -975,7 +975,7 @@ nreference(layer::AbstractFeatureLayer) = GDAL.getrefcount(layer.ptr)
 fidcolumnname(layer::AbstractFeatureLayer) = GDAL.getfidcolumn(layer.ptr)
 
 "The name of the geometry column in the database, or \"\" if not supported."
-getgeomcolname(layer::AbstractFeatureLayer) = GDAL.getgeometrycolumn(layer.ptr)
+geomcolumnname(layer::AbstractFeatureLayer) = GDAL.getgeometrycolumn(layer.ptr)
 
 """
 Set which fields can be omitted when retrieving features from the layer.
