@@ -88,7 +88,7 @@ import ArchGDAL; const AG = ArchGDAL
             [GA_ReadOnly] Band 0 (Undefined): 100 x 100 (UInt8)
                 blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
                 overviews: """
-            @test AG.getmaskflags(destband) == 1
+            @test AG.maskflags(destband) == 1
             AG.createmaskband!(destband, 3)
             AG.getmaskband(destband) do maskband
                 @test sprint(print, maskband) == """
@@ -96,7 +96,7 @@ import ArchGDAL; const AG = ArchGDAL
                     blocksize: 100×81, nodata: -1.0e10, units: 1.0px + 0.0
                     overviews: """
             end
-            @test AG.getmaskflags(destband) == 3
+            @test AG.maskflags(destband) == 3
             AG.fillraster!(destband, 3)
             AG.setcategorynames!(destband, ["foo","bar"])
             @test AG.getcategorynames(destband) == ["foo", "bar"]

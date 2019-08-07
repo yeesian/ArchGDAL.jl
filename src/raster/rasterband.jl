@@ -159,10 +159,10 @@ function setcategorynames!(band::AbstractRasterBand, names)
 end
 
 "Fetch the minimum value for this band."
-getminimum(band::AbstractRasterBand) = GDAL.getrasterminimum(band.ptr, C_NULL)
+minimum(band::AbstractRasterBand) = GDAL.getrasterminimum(band.ptr, C_NULL)
 
 "Fetch the maximum value for this band."
-getmaximum(band::AbstractRasterBand) = GDAL.getrastermaximum(band.ptr, C_NULL)
+maximum(band::AbstractRasterBand) = GDAL.getrastermaximum(band.ptr, C_NULL)
 
 "Fetch default Raster Attribute Table."
 getdefaultRAT(band::AbstractRasterBand) = GDAL.getdefaultrat(band.ptr)
@@ -471,7 +471,7 @@ See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
 ### Returns
 a valid mask band.
 """
-getmaskflags(band::AbstractRasterBand) = GDAL.getmaskflags(band.ptr)
+maskflags(band::AbstractRasterBand) = GDAL.getmaskflags(band.ptr)
 
 """
 Adds a mask band to the current band.
