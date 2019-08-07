@@ -84,8 +84,8 @@ The following is an non-exhaustive list of unary operations available for geomet
 
 * `AG.geomdim(geom)`: `0` for points, `1` for lines and `2` for surfaces
 * `AG.getcoorddim(geom)`: dimension of the coordinates. Returns `0` for an empty point
-* `AG.getenvelope(geom)`: the bounding envelope for this geometry
-* `AG.getenvelope3d(geom)`: the bounding envelope for this geometry
+* `AG.envelope(geom)`: the bounding envelope for this geometry
+* `AG.envelope3d(geom)`: the bounding envelope for this geometry
 * `AG.wkbsize(geom)`: size (in bytes) of related binary representation
 * `AG.getgeomtype(geom)`: geometry type code (in `OGRwkbGeometryType`)
 * `AG.getgeomname(geom)`: WKT name for geometry type

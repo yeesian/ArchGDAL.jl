@@ -170,14 +170,14 @@ function setcoorddim!(geom::AbstractGeometry, dim::Integer)
 end
 
 "Computes and returns the bounding envelope for this geometry"
-function getenvelope(geom::AbstractGeometry)
+function envelope(geom::AbstractGeometry)
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
     GDAL.getenvelope(geom.ptr, envelope)
     envelope[]
 end
 
 "Computes and returns the bounding envelope (3D) for this geometry"
-function getenvelope3d(geom::AbstractGeometry)
+function envelope3d(geom::AbstractGeometry)
     envelope = Ref{GDAL.OGREnvelope3D}(GDAL.OGREnvelope3D(0, 0, 0, 0, 0, 0))
     GDAL.getenvelope3d(geom.ptr, envelope)
     envelope[]
