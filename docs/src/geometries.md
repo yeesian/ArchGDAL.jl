@@ -88,7 +88,7 @@ The following is an non-exhaustive list of unary operations available for geomet
 * `AG.envelope3d(geom)`: the bounding envelope for this geometry
 * `AG.wkbsize(geom)`: size (in bytes) of related binary representation
 * `AG.getgeomtype(geom)`: geometry type code (in `OGRwkbGeometryType`)
-* `AG.getgeomname(geom)`: WKT name for geometry type
+* `AG.geomname(geom)`: WKT name for geometry type
 * `AG.getspatialref(geom)`: spatial reference system. May be `NULL`
 * `AG.geomlength(geom)`: the length of the geometry, or `0.0` for unsupported types
 * `AG.geomarea(geom)`: the area of the geometry, or `0.0` for unsupported types

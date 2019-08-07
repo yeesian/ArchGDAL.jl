@@ -92,7 +92,7 @@ end
             @test AG.asstring(feature, 1) == "point-b"
 
             geometry = AG.getgeom(feature)
-            @test AG.getgeomname(geometry) == "POINT"
+            @test AG.geomname(geometry) == "POINT"
             @test AG.getgeomtype(geometry) == GDAL.wkbPoint
             @test AG.nfield(featuredefn) == 2
             @test AG.getx(geometry, 0) ≈ 100.2785

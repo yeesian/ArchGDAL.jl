@@ -238,7 +238,7 @@ end
 getgeomtype(geom::AbstractGeometry) = GDAL.getgeometrytype(geom.ptr)
 
 "Fetch WKT name for geometry type."
-getgeomname(geom::AbstractGeometry) = GDAL.getgeometryname(geom.ptr)
+geomname(geom::AbstractGeometry) = GDAL.getgeometryname(geom.ptr)
 
 "Convert geometry to strictly 2D."
 function flattento2d!(geom::G) where G <: AbstractGeometry
