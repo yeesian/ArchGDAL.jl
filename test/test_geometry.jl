@@ -179,9 +179,9 @@ end
     end
 
     AG.fromWKT("CURVEPOLYGON(CIRCULARSTRING(-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0 0.5,1 0,0 1,-1 0))") do geom
-        @test AG.toWKT(AG.getcurvegeom(AG.getlineargeom(geom, 0.5))) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
-        AG.getlineargeom(geom, 0.5) do lgeom
-            AG.getcurvegeom(lgeom) do clgeom
+        @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+        AG.lineargeom(geom, 0.5) do lgeom
+            AG.curvegeom(lgeom) do clgeom
                 @test AG.toWKT(clgeom) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
             end
             @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, GDAL.wkbMultiLineString))) == 2
