@@ -289,7 +289,7 @@ Return the r,g,b,a components of a color encoded in #RRGGBB[AA] format.
 ### Returns
 (R,G,B,A) tuple of Cints.
 """
-function getrgba(styletool::StyleTool, color::AbstractString)
+function toRGBA(styletool::StyleTool, color::AbstractString)
     red = Ref{Cint}(0); green = Ref{Cint}(0)
     blue = Ref{Cint}(0); alpha = Ref{Cint}(0)
     result = Bool(GDAL.getrgbfromstring(styletool.ptr, color, 
