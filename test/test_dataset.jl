@@ -12,7 +12,7 @@ import ArchGDAL; const AG = ArchGDAL
                     AG.buildoverviews!(copydataset, Cint[2,4,8])
                     @test AG.noverview(band) == 3
                     AG.copywholeraster(dataset, copydataset,
-                                       progressfunc=GDAL.C.GDALTermProgress)
+                                       progressfunc=GDAL.gdaltermprogress)
                 end
             end
         end
@@ -23,7 +23,7 @@ import ArchGDAL; const AG = ArchGDAL
             AG.buildoverviews!(copydataset, Cint[2,4,8])
             @test AG.noverview(AG.getband(copydataset,1)) == 3
             AG.copywholeraster(dataset, copydataset,
-                               progressfunc=GDAL.C.GDALTermProgress)
+                               progressfunc=GDAL.gdaltermprogress)
         end
         AG.copyfiles("GTiff", "/vsimem/utmcopy2.tif", "/vsimem/utmcopy.tif")
         AG.update("/vsimem/utmcopy2.tif") do copydataset

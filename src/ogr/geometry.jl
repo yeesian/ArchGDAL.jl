@@ -220,7 +220,7 @@ function toWKT(geom::AbstractGeometry)
     result = GDAL.exporttowkt(geom.ptr, wkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to WKT"
     wkt = unsafe_string(wkt_ptr[])
-    GDAL.C.VSIFree(pointer(wkt_ptr[]))
+    GDAL.vsifree(pointer(wkt_ptr[]))
     wkt
 end
 
@@ -230,7 +230,7 @@ function toISOWKT(geom::AbstractGeometry)
     result = GDAL.exporttoisowkt(geom.ptr, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
     wkt = unsafe_string(isowkt_ptr[])
-    GDAL.C.VSIFree(pointer(isowkt_ptr[]))
+    GDAL.vsifree(pointer(isowkt_ptr[]))
     wkt
 end
 

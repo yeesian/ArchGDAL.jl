@@ -97,7 +97,7 @@ getgeomtype(layer::AbstractFeatureLayer) = GDAL.getgeomtype(layer.ptr)
 
 "Returns the current spatial filter for this layer."
 function getspatialfilter(layer::AbstractFeatureLayer)
-    result = GDALGeometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr)))
+    result = GDALGeometry(GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr)))
     if result == C_NULL
         return IGeometry(result)
     else

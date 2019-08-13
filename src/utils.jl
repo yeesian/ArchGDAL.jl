@@ -79,7 +79,7 @@ If `setconfigoption()` is called several times with the same key, the value
 provided during the last call will be used.
 """
 setconfigoption(option::AbstractString, value) =
-    GDAL.C.CPLSetConfigOption(option, value)
+    GDAL.cplsetconfigoption(option, value)
 
 """
 This function can be used to clear a setting.
@@ -104,7 +104,7 @@ it in environment variables.
 the value associated to the key, or the default value if not found.
 """
 function getconfigoption(option::AbstractString, default = C_NULL)
-    result = GDAL.C.CPLGetConfigOption(option, default)
+    result = GDAL.cplgetconfigoption(option, default)
     return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
@@ -123,7 +123,7 @@ thread, as opposed to `setconfigoption()` which sets an option that applies on
 all threads.
 """
 setthreadconfigoption(option::AbstractString, value) =
-    GDAL.C.CPLSetThreadLocalConfigOption(option, value)
+    GDAL.cplsetthreadlocalconfigoption(option, value)
 
 """
 This function can be used to clear a setting.
@@ -136,6 +136,6 @@ clearthreadconfigoption(option::AbstractString) =
 
 "Same as `getconfigoption()` but with settings from `setthreadconfigoption()`."
 function getthreadconfigoption(option::AbstractString, default = C_NULL)
-    result = GDAL.C.CPLGetThreadLocalConfigOption(option, default)
+    result = GDAL.cplgetthreadlocalconfigoption(option, default)
     return (result == C_NULL) ? "" : unsafe_string(result)
 end
