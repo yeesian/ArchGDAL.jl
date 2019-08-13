@@ -247,7 +247,6 @@ OGRSTLabelParam = GDAL.OGRSTLabelParam
 GDALResampleAlg = GDAL.GDALResampleAlg
 GWKAverageOrModeAlg = GDAL.GWKAverageOrModeAlg
 OGRAxisOrientation = GDAL.OGRAxisOrientation
-# OGRDatumType = GDAL.OGRDatumType
 
 "return the corresponding `DataType` in julia"
 const _JLTYPE = Dict{GDAL.GDALDataType, DataType}(
