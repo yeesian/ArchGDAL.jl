@@ -56,10 +56,11 @@ end
 # end
 
 "Fetch list of (non-empty) metadata domains. (Since: GDAL 1.11)"
-metadatadomainlist(obj) = GDAL.getmetadatadomainlist(obj.ptr)
+metadatadomainlist(obj) = GDAL.gdalgetmetadatadomainlist(obj.ptr)
 
 "Fetch metadata. Note that relatively few formats return any metadata."
-metadata(obj; domain::AbstractString = "") = GDAL.getmetadata(obj.ptr, domain)
+metadata(obj; domain::AbstractString = "") =
+    GDAL.gdalgetmetadata(obj.ptr, domain)
 
 """
 Set a configuration option for GDAL/OGR use.
@@ -104,7 +105,10 @@ it in environment variables.
 the value associated to the key, or the default value if not found.
 """
 function getconfigoption(option::AbstractString, default = C_NULL)
-    result = GDAL.cplgetconfigoption(option, default)
+    result = @gdal(CPLGetConfigOption::Cstring,
+        option::Cstring,
+        default::Cstring
+    )
     return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
@@ -136,6 +140,9 @@ clearthreadconfigoption(option::AbstractString) =
 
 "Same as `getconfigoption()` but with settings from `setthreadconfigoption()`."
 function getthreadconfigoption(option::AbstractString, default = C_NULL)
-    result = GDAL.cplgetthreadlocalconfigoption(option, default)
+    result = @gdal(CPLGetThreadLocalConfigOption::Cstring,
+        option::Cstring,
+        default::Cstring
+    )
     return (result == C_NULL) ? "" : unsafe_string(result)
 end

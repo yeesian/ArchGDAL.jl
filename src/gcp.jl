@@ -12,7 +12,7 @@ converts the equation from being pixel to geo to being geo to pixel.
 `gt_out`
 """
 function invgeotransform!(gt_in::Vector{Cdouble}, gt_out::Vector{Cdouble})
-    result = Bool(GDAL.invgeotransform(pointer(gt_in), pointer(gt_out)))
+    result = Bool(GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)))
     result || error("Geotransform coefficients is uninvertable")
     gt_out
 end
@@ -40,7 +40,7 @@ function applygeotransform(geotransform::Vector{Cdouble},
     geo_xy = Array{Cdouble}(undef, 2)
     geo_x = pointer(geo_xy)
     geo_y = geo_x + sizeof(Cdouble)
-    GDAL.applygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
+    GDAL.gdalapplygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
     geo_xy
 end 
 
@@ -58,7 +58,7 @@ array as `gt1` or `gt2`.
 """
 function composegeotransform!(gt1::Vector{Cdouble}, gt2::Vector{Cdouble},
                               gtout::Vector{Cdouble})
-    GDAL.composegeotransform(pointer(gt1), pointer(gt2), pointer(gtout))
+    GDAL.gdalcomposegeotransform(pointer(gt1), pointer(gt2), pointer(gtout))
     gtout
 end
 

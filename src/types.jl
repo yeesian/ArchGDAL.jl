@@ -50,13 +50,13 @@ end
 mutable struct Dataset <: AbstractDataset
     ptr::GDALDataset
 
-    Dataset(ptr::GDALDataset = GDALDataset(C_NULL)) = new(ptr)
+    Dataset(ptr = GDALDataset(C_NULL)) = new(ptr)
 end
 
 mutable struct IDataset <: AbstractDataset
     ptr::GDALDataset
 
-    function IDataset(ptr::GDALDataset = GDALDataset(C_NULL))
+    function IDataset(ptr = GDALDataset(C_NULL))
         dataset = new(ptr)
         finalizer(destroy, dataset)
         return dataset
@@ -78,7 +78,7 @@ end
 mutable struct IFieldDefnView <: AbstractFieldDefn
     ptr::GDALFieldDefn
 
-    function IFieldDefnView(ptr::GDALFieldDefn = GDALFieldDefn(C_NULL))
+    function IFieldDefnView(ptr = GDALFieldDefn(C_NULL))
         fielddefn = new(ptr)
         finalizer(destroy, fielddefn)
         return fielddefn
@@ -90,7 +90,7 @@ mutable struct GeomFieldDefn <: AbstractGeomFieldDefn
     spatialref::AbstractSpatialRef
 
     function GeomFieldDefn(
-            ptr::GDALGeomFieldDefn = GDALGeomFieldDefn(C_NULL);
+            ptr = GDALGeomFieldDefn(C_NULL);
             spatialref::AbstractSpatialRef = SpatialRef()
         )
         return new(ptr, spatialref)
@@ -101,7 +101,7 @@ mutable struct IGeomFieldDefnView <: AbstractGeomFieldDefn
     ptr::GDALGeomFieldDefn
 
     function IGeomFieldDefnView(
-            ptr::GDALGeomFieldDefn = GDALGeomFieldDefn(C_NULL)
+            ptr = GDALGeomFieldDefn(C_NULL)
         )
         geomdefn = new(ptr)
         finalizer(destroy, geomdefn)
@@ -135,7 +135,7 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     spatialref::AbstractSpatialRef
 
     function IFeatureLayer(
-            ptr::GDALFeatureLayer = GDALFeatureLayer(C_NULL);
+            ptr = GDALFeatureLayer(C_NULL);
             ownedby::AbstractDataset = Dataset(),
             spatialref::AbstractSpatialRef = SpatialRef()
         )
@@ -157,7 +157,7 @@ mutable struct IFeatureDefnView <: AbstractFeatureDefn
     ptr::GDALFeatureDefn
 
     function IFeatureDefnView(
-            ptr::GDALFeatureDefn = GDALFeatureDefn(C_NULL)
+            ptr = GDALFeatureDefn(C_NULL)
         )
         featuredefn = new(ptr)
         finalizer(destroy, featuredefn)
@@ -174,7 +174,7 @@ mutable struct IRasterBand <: AbstractRasterBand
     ownedby::AbstractDataset
 
     function IRasterBand(
-            ptr::GDALRasterBand = GDALRasterBand(C_NULL);
+            ptr = GDALRasterBand(C_NULL);
             ownedby::AbstractDataset = Dataset()
         )
         rasterband = new(ptr, ownedby)
@@ -186,13 +186,13 @@ end
 mutable struct SpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
 
-    SpatialRef(ptr::GDALSpatialRef = GDALSpatialRef(C_NULL)) = new(ptr)
+    SpatialRef(ptr = GDALSpatialRef(C_NULL)) = new(ptr)
 end
 
 mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
 
-    function ISpatialRef(ptr::GDALSpatialRef = GDALSpatialRef(C_NULL))
+    function ISpatialRef(ptr = GDALSpatialRef(C_NULL))
         spref = new(ptr)
         finalizer(destroy, spref)
         return spref
@@ -202,13 +202,13 @@ end
 mutable struct Geometry <: AbstractGeometry
     ptr::GDALGeometry
 
-    Geometry(ptr::GDALGeometry = GDALGeometry(C_NULL)) = new(ptr)
+    Geometry(ptr = GDALGeometry(C_NULL)) = new(ptr)
 end
 
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
 
-    function IGeometry(ptr::GDALGeometry = GDALGeometry(C_NULL))
+    function IGeometry(ptr = GDALGeometry(C_NULL))
         geom = new(ptr)
         finalizer(destroy, geom)
         return geom
@@ -311,43 +311,43 @@ import Base.|
 |(x::GDALOpenFlag,y::GDALOpenFlag) = UInt8(x) | UInt8(y)
 
 "Get data type size in bits."
-typesize(dt::GDALDataType) = GDAL.getdatatypesize(dt)
+typesize(dt::GDALDataType) = GDAL.gdalgetdatatypesize(dt)
 
 "name (string) corresponding to GDAL data type"
-typename(dt::GDALDataType) = GDAL.getdatatypename(dt)
+typename(dt::GDALDataType) = GDAL.gdalgetdatatypename(dt)
 
 "Returns GDAL data type by symbolic name."
-gettype(name::AbstractString) = GDAL.getdatatypebyname(name)
+gettype(name::AbstractString) = GDAL.gdalgetdatatypebyname(name)
 
 "Return the smallest data type that can fully express both input data types."
-typeunion(dt1::GDALDataType, dt2::GDALDataType) = GDAL.datatypeunion(dt1, dt2)
+typeunion(dt1::GDALDataType, dt2::GDALDataType) = GDAL.gdaldatatypeunion(dt1, dt2)
 
 """
 `true` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}`
 """
-iscomplex(dtype::GDALDataType) = Bool(GDAL.datatypeiscomplex(dtype))
+iscomplex(dtype::GDALDataType) = Bool(GDAL.gdaldatatypeiscomplex(dtype))
 
 "Get name of AsyncStatus data type."
-getname(dtype::GDALAsyncStatusType) = GDAL.getasyncstatustypename(dtype)
+getname(dtype::GDALAsyncStatusType) = GDAL.gdalgetasyncstatustypename(dtype)
 
 "Get AsyncStatusType by symbolic name."
-asyncstatustype(name::AbstractString) = GDAL.getasyncstatustypebyname(name)
+asyncstatustype(name::AbstractString) = GDAL.gdalgetasyncstatustypebyname(name)
 
 "Return name (string) corresponding to color interpretation"
-getname(obj::GDALColorInterp) = GDAL.getcolorinterpretationname(obj)
+getname(obj::GDALColorInterp) = GDAL.gdalgetcolorinterpretationname(obj)
 
 "Get color interpretation corresponding to the given symbolic name."
-colorinterp(name::AbstractString) = GDAL.getcolorinterpretationbyname(name)
+colorinterp(name::AbstractString) = GDAL.gdalgetcolorinterpretationbyname(name)
 
 "Get name of palette interpretation."
-getname(obj::GDALPaletteInterp) = GDAL.getpaletteinterpretationname(obj)
+getname(obj::GDALPaletteInterp) = GDAL.gdalgetpaletteinterpretationname(obj)
 
 "Fetch human readable name for a field type."
-getname(obj::OGRFieldType) = GDAL.getfieldtypename(obj)
+getname(obj::OGRFieldType) = GDAL.ogr_getfieldtypename(obj)
 
 "Fetch human readable name for a field subtype."
-getname(obj::OGRFieldSubType) = GDAL.getfieldsubtypename(obj)
+getname(obj::OGRFieldSubType) = GDAL.ogr_getfieldsubtypename(obj)
 
 "Return if type and subtype are compatible."
 arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType) =
-    Bool(GDAL.aretypesubtypecompatible(dtype, subtype))
+    Bool(GDAL.ogr_aretypesubtypecompatible(dtype, subtype))
