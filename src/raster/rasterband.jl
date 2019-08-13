@@ -206,7 +206,7 @@ function copywholeraster!(
         dest::AbstractRasterBand;
         options                 = StringList(C_NULL),
         progressdata            = C_NULL,
-        progressfunc::Function  = GDAL.C.GDALDummyProgress
+        progressfunc::Function  = GDAL.gdaldummyprogress
     )
     result = GDAL.rasterbandcopywholeraster(source.ptr, dest.ptr, options,
         @cplprogress(progressfunc), progressdata)
@@ -321,10 +321,10 @@ function regenerateoverviews!(
         band::AbstractRasterBand,
         overviewbands::Vector{<:AbstractRasterBand},
         resampling::AbstractString  = "NEAREST",
-        # progressfunc::Function      = GDAL.C.GDALDummyProgress,
+        # progressfunc::Function      = GDAL.gdaldummyprogress,
         progressdata                = C_NULL
     )
-    cfunc = @cfunction(GDAL.C.GDALDummyProgress,Cint,
+    cfunc = @cfunction(GDAL.gdaldummyprogress,Cint,
         (Cdouble,Cstring,Ptr{Cvoid}))
     result = GDAL.regenerateoverviews(band.ptr, length(overviewbands),
         GDALRasterBand[band.ptr for band in overviewbands], resampling,

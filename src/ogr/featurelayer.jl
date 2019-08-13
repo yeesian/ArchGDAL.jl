@@ -1062,7 +1062,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options                 = StringList(C_NULL),
-#         progressfunc::Function  = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
 #         progressdata            = C_NULL
 #     )
 #     result = GDAL.intersection(
@@ -1123,7 +1123,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options                 = StringList(C_NULL),
-#         progressfunc::Function  = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
 #         progressdata            = C_NULL
 #     )
 #     result = GDAL.union(
@@ -1178,7 +1178,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options                 = StringList(C_NULL),
-#         progressfunc::Function  = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
 #         progressdata            = C_NULL
 #     )
 #     result = GDAL.symdifference(
@@ -1239,7 +1239,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options                 = StringList(C_NULL),
-#         progressfunc::Function  = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
 #         progressdata            = C_NULL
 #     )
 #     result = GDAL.identity(
@@ -1294,7 +1294,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options                 = StringList(C_NULL),
-#         progressfunc::Function  = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
 #         progressdata            = C_NULL
 #     )
 #     result = GDAL.update(
@@ -1349,7 +1349,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options                 = StringList(C_NULL),
-#         progressfunc::Function  = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
 #         progressdata            = C_NULL
 #     )
 #     result = GDAL.clip(
@@ -1404,7 +1404,7 @@ end
 #         method::AbstractFeatureLayer,
 #         output::AbstractFeatureLayer;
 #         options = StringList(C_NULL),
-#         progressfunc::Function = GDAL.C.GDALDummyProgress,
+#         progressfunc::Function = GDAL.gdaldummyprogress,
 #         progressdata = C_NULL
 #     )
 #     result = GDAL.erase(
