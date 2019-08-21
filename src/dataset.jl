@@ -424,7 +424,7 @@ The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
 function getlayer(dataset::AbstractDataset, name::AbstractString)
-    IFeatureLayer(
+    return IFeatureLayer(
         GDAL.gdaldatasetgetlayerbyname(dataset.ptr, name),
         ownedby = dataset
     )
@@ -443,7 +443,7 @@ is not supported for this dataset.
 function deletelayer!(dataset::AbstractDataset, i::Integer)
     result = GDAL.gdaldatasetdeletelayer(dataset.ptr, i)
     @ogrerr result "Failed to delete layer"
-    dataset
+    return dataset
 end
 
 """
@@ -520,7 +520,7 @@ function unsafe_executesql(
         dialect::AbstractString = "",
         spatialfilter::Geometry = Geometry(GDALGeometry(C_NULL))
     )
-    FeatureLayer(GDALFeatureLayer(GDAL.gdaldatasetexecutesql(
+    return FeatureLayer(GDALFeatureLayer(GDAL.gdaldatasetexecutesql(
         dataset.ptr,
         query,
         spatialfilter.ptr,
@@ -580,7 +580,7 @@ function getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     @assert length(transform) == 6
     result = GDAL.gdalgetgeotransform(dataset.ptr, pointer(transform))
     @cplerr result "Failed to get geotransform"
-    transform
+    return transform
 end
 
 getgeotransform(dataset::AbstractDataset) =
@@ -591,7 +591,7 @@ function setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     @assert length(transform) == 6
     result = GDAL.gdalsetgeotransform(dataset.ptr, pointer(transform))
     @cplerr result "Failed to transform raster dataset"
-    dataset
+    return dataset
 end
 
 "Get number of GCPs for this dataset. Zero if there are none."
@@ -610,7 +610,7 @@ getproj(dataset::AbstractDataset) = GDAL.gdalgetprojectionref(dataset.ptr)
 function setproj!(dataset::AbstractDataset, projstring::AbstractString)
     result = GDAL.gdalsetprojection(dataset.ptr, projstring)
     @cplerr result "Could not set projection"
-    dataset
+    return dataset
 end
 
 """
