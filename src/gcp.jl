@@ -34,9 +34,11 @@ georeferenced `(geo_x,geo_y)` location.
 * `pixel`           input pixel position.
 * `line`            input line position.
 """
-function applygeotransform(geotransform::Vector{Cdouble},
-                           pixel::Cdouble,
-                           line::Cdouble)
+function applygeotransform(
+        geotransform::Vector{Cdouble},
+        pixel::Cdouble,
+        line::Cdouble
+    )
     geo_xy = Array{Cdouble}(undef, 2)
     geo_x = pointer(geo_xy)
     geo_y = geo_x + sizeof(Cdouble)
@@ -56,8 +58,11 @@ being applied to a point.
 * `gtout`   the output geotransform, six values, may safely be the same
 array as `gt1` or `gt2`.
 """
-function composegeotransform!(gt1::Vector{Cdouble}, gt2::Vector{Cdouble},
-                              gtout::Vector{Cdouble})
+function composegeotransform!(
+        gt1::Vector{Cdouble},
+        gt2::Vector{Cdouble},
+        gtout::Vector{Cdouble}
+    )
     GDAL.gdalcomposegeotransform(pointer(gt1), pointer(gt2), pointer(gtout))
     gtout
 end
