@@ -50,13 +50,13 @@ end
 mutable struct Dataset <: AbstractDataset
     ptr::GDALDataset
 
-    Dataset(ptr = GDALDataset(C_NULL)) = new(ptr)
+    Dataset(ptr::GDALDataset = C_NULL) = new(ptr)
 end
 
 mutable struct IDataset <: AbstractDataset
     ptr::GDALDataset
 
-    function IDataset(ptr = GDALDataset(C_NULL))
+    function IDataset(ptr::GDALDataset = C_NULL)
         dataset = new(ptr)
         finalizer(destroy, dataset)
         return dataset
@@ -78,7 +78,7 @@ end
 mutable struct IFieldDefnView <: AbstractFieldDefn
     ptr::GDALFieldDefn
 
-    function IFieldDefnView(ptr = GDALFieldDefn(C_NULL))
+    function IFieldDefnView(ptr::GDALFieldDefn = C_NULL)
         fielddefn = new(ptr)
         finalizer(destroy, fielddefn)
         return fielddefn
@@ -90,7 +90,7 @@ mutable struct GeomFieldDefn <: AbstractGeomFieldDefn
     spatialref::AbstractSpatialRef
 
     function GeomFieldDefn(
-            ptr = GDALGeomFieldDefn(C_NULL);
+            ptr::GDALGeomFieldDefn = C_NULL;
             spatialref::AbstractSpatialRef = SpatialRef()
         )
         return new(ptr, spatialref)
@@ -100,9 +100,7 @@ end
 mutable struct IGeomFieldDefnView <: AbstractGeomFieldDefn
     ptr::GDALGeomFieldDefn
 
-    function IGeomFieldDefnView(
-            ptr = GDALGeomFieldDefn(C_NULL)
-        )
+    function IGeomFieldDefnView(ptr::GDALGeomFieldDefn = C_NULL)
         geomdefn = new(ptr)
         finalizer(destroy, geomdefn)
         return geomdefn
@@ -135,7 +133,7 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     spatialref::AbstractSpatialRef
 
     function IFeatureLayer(
-            ptr = GDALFeatureLayer(C_NULL);
+            ptr::GDALFeatureLayer = C_NULL;
             ownedby::AbstractDataset = Dataset(),
             spatialref::AbstractSpatialRef = SpatialRef()
         )
@@ -156,9 +154,7 @@ end
 mutable struct IFeatureDefnView <: AbstractFeatureDefn
     ptr::GDALFeatureDefn
 
-    function IFeatureDefnView(
-            ptr = GDALFeatureDefn(C_NULL)
-        )
+    function IFeatureDefnView(ptr::GDALFeatureDefn = C_NULL)
         featuredefn = new(ptr)
         finalizer(destroy, featuredefn)
         return featuredefn
@@ -174,7 +170,7 @@ mutable struct IRasterBand <: AbstractRasterBand
     ownedby::AbstractDataset
 
     function IRasterBand(
-            ptr = GDALRasterBand(C_NULL);
+            ptr::GDALRasterBand = C_NULL;
             ownedby::AbstractDataset = Dataset()
         )
         rasterband = new(ptr, ownedby)
@@ -186,13 +182,13 @@ end
 mutable struct SpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
 
-    SpatialRef(ptr = GDALSpatialRef(C_NULL)) = new(ptr)
+    SpatialRef(ptr::GDALSpatialRef = C_NULL) = new(ptr)
 end
 
 mutable struct ISpatialRef <: AbstractSpatialRef
     ptr::GDALSpatialRef
 
-    function ISpatialRef(ptr = GDALSpatialRef(C_NULL))
+    function ISpatialRef(ptr::GDALSpatialRef = C_NULL)
         spref = new(ptr)
         finalizer(destroy, spref)
         return spref
@@ -202,13 +198,13 @@ end
 mutable struct Geometry <: AbstractGeometry
     ptr::GDALGeometry
 
-    Geometry(ptr = GDALGeometry(C_NULL)) = new(ptr)
+    Geometry(ptr::GDALGeometry = C_NULL) = new(ptr)
 end
 
 mutable struct IGeometry <: AbstractGeometry
     ptr::GDALGeometry
 
-    function IGeometry(ptr = GDALGeometry(C_NULL))
+    function IGeometry(ptr::GDALGeometry = C_NULL)
         geom = new(ptr)
         finalizer(destroy, geom)
         return geom
