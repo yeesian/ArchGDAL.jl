@@ -1,12 +1,13 @@
 function Base.iterate(layer::AbstractFeatureLayer, state::Int=0)
     layer.ptr == C_NULL && return nothing
     state == 0 && resetreading!(layer)
-    ptr = GDAL.getnextfeature(layer.ptr)
+    ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
     if ptr == C_NULL
         resetreading!(layer)
         return nothing
+    else
+        return (Feature(ptr), state+1)
     end
-    (Feature(ptr), state+1)
 end
 
 Base.eltype(layer::AbstractFeatureLayer) = Feature
@@ -82,5 +83,5 @@ function Base.iterate(obj::BufferIterator, iter::Int=0)
     next == nothing && return nothing
     ((cols, rows), iter) = next
     rasterio!(obj.raster, obj.buffer, rows, cols)
-    (obj.buffer[1:length(cols), 1:length(rows)], iter)
+    return (obj.buffer[1:length(cols), 1:length(rows)], iter)
 end
