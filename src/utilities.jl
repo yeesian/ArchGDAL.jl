@@ -66,7 +66,7 @@ function unsafe_gdalwarp(
     )
     options = GDAL.gdalwarpappoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdalwarp(dest, Ptr{GDAL.GDALDatasetH}(C_NULL),
+    result = GDAL.gdalwarp(dest, C_NULL,
         length(datasets), [ds.ptr for ds in datasets], options, usage_error)
     GDAL.gdalwarpappoptionsfree(options)
     _failsafe(usage_error)
@@ -91,8 +91,8 @@ function unsafe_gdalvectortranslate(
     )
     options = GDAL.gdalvectortranslateoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdalvectortranslate(dest, Ptr{GDAL.GDALDatasetH}(C_NULL),
-        length(datasets), [ds.ptr for ds in datasets], options, usage_error)
+    result = GDAL.gdalvectortranslate(dest, C_NULL, length(datasets),
+        [ds.ptr for ds in datasets], options, usage_error)
     GDAL.gdalvectortranslateoptionsfree(options)
     _failsafe(usage_error)
     return Dataset(result)
@@ -152,8 +152,7 @@ function unsafe_gdalnearblack(
     )
     options = GDAL.gdalnearblackoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdalnearblack(dest, Ptr{GDAL.GDALDatasetH}(C_NULL),
-        dataset.ptr, options, usage_error)
+    result = GDAL.gdalnearblack(dest, C_NULL, dataset.ptr, options, usage_error)
     GDAL.gdalnearblackoptionsfree(options)
     _failsafe(usage_error)
     return Dataset(result)
