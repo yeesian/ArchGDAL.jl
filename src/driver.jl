@@ -1,8 +1,8 @@
 "Fetch driver by index"
-getdriver(i::Integer) = Driver(GDAL.getdriver(i))
+getdriver(i::Integer) = Driver(GDAL.gdalgetdriver(i))
 
 "Fetch a driver based on the short name (such as `GTiff`)."
-getdriver(name::AbstractString) = Driver(GDAL.getdriverbyname(name))
+getdriver(name::AbstractString) = Driver(GDAL.gdalgetdriverbyname(name))
 
 """
 Destroy a `GDALDriver`.
@@ -12,29 +12,29 @@ place in the GDAL heap. It is important this that function not be called on a
 driver that is registered with the `GDALDriverManager`.
 """
 function destroy(drv::Driver)
-    GDAL.destroydriver(drv.ptr)
+    GDAL.gdaldestroydriver(drv.ptr)
     drv.ptr = C_NULL
 end
 
 "Register a driver for use."
-register(drv::Driver) = GDAL.registerdriver(drv.ptr)
+register(drv::Driver) = GDAL.gdalregisterdriver(drv.ptr)
 
 "Deregister the passed drv."
-deregister(drv::Driver) = GDAL.deregisterdriver(drv.ptr)
+deregister(drv::Driver) = GDAL.gdalderegisterdriver(drv.ptr)
 
 "Return the list of creation options of the driver [an XML string]"
-options(drv::Driver) = GDAL.getdrivercreationoptionlist(drv.ptr)
+options(drv::Driver) = GDAL.gdalgetdrivercreationoptionlist(drv.ptr)
 
 driveroptions(name::AbstractString) = options(getdriver(name))
 
 "Return the short name of a driver (e.g. `GTiff`)"
-shortname(drv::Driver) = GDAL.getdrivershortname(drv.ptr)
+shortname(drv::Driver) = GDAL.gdalgetdrivershortname(drv.ptr)
 
 "Return the long name of a driver (e.g. `GeoTIFF`), or empty string."
-longname(drv::Driver) = GDAL.getdriverlongname(drv.ptr)
+longname(drv::Driver) = GDAL.gdalgetdriverlongname(drv.ptr)
 
 "Fetch the number of registered drivers."
-ndriver() = GDAL.getdrivercount()
+ndriver() = GDAL.gdalgetdrivercount()
 
 "Returns a listing of all registered drivers"
 listdrivers() = Dict{String,String}([
@@ -50,7 +50,7 @@ first driver that successful identifies the file name will be returned. If all
 drivers fail then `NULL` is returned.
 """
 identifydriver(filename::AbstractString) =
-    Driver(GDAL.identifydriver(filename, C_NULL))
+    Driver(GDAL.gdalidentifydriver(filename, C_NULL))
 
 """
 Validate the list of creation options that are handled by a drv.
@@ -73,17 +73,17 @@ validate that the passed in list of creation options is compatible with the
 See also: `options(drv::Driver)`
 
 If the `GDAL_DMD_CREATIONOPTIONLIST` metadata item is not defined, this
-function will return `TRUE`. Otherwise it will check that the keys and values
+function will return ``true``. Otherwise it will check that the keys and values
 in the list of creation options are compatible with the capabilities declared
 by the `GDAL_DMD_CREATIONOPTIONLIST` metadata item. In case of incompatibility
-a (non fatal) warning will be emited and `FALSE` will be returned.
+a (non fatal) warning will be emited and ``false`` will be returned.
 """
 validate(drv::Driver, options::Vector{T}) where {T <: AbstractString} = 
-    Bool(GDAL.validatecreationoptions(drv.ptr, options))
+    Bool(GDAL.gdalvalidatecreationoptions(drv.ptr, options))
 
 "Copy all the files associated with a dataset."
 function copyfiles(drv::Driver, new::AbstractString, old::AbstractString)
-    result = GDAL.copydatasetfiles(drv.ptr, new, old)
+    result = GDAL.gdalcopydatasetfiles(drv.ptr, new, old)
     @cplerr result "Failed to copy dataset files"
 end
 

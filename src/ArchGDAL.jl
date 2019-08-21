@@ -32,8 +32,8 @@ module ArchGDAL
     mutable struct DriverManager
         function DriverManager()
             drivermanager = new()
-            GDAL.allregister()
-            finalizer((dm,) -> GDAL.destroydrivermanager(), drivermanager)
+            GDAL.gdalallregister()
+            finalizer((dm,) -> GDAL.gdaldestroydrivermanager(), drivermanager)
             return drivermanager
         end
     end

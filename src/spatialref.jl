@@ -1,12 +1,12 @@
 "Construct a Spatial Reference System from its WKT."
 newspatialref(wkt::AbstractString = "") =
-    ISpatialRef(GDAL.newspatialreference(wkt))
+    ISpatialRef(GDAL.osrnewspatialreference(wkt))
 
 unsafe_newspatialref(wkt::AbstractString = "") =
-    SpatialRef(GDAL.newspatialreference(wkt))
+    SpatialRef(GDAL.osrnewspatialreference(wkt))
 
 function destroy(spref::AbstractSpatialRef)
-    GDAL.destroyspatialreference(spref.ptr)
+    GDAL.osrdestroyspatialreference(spref.ptr)
     spref.ptr = C_NULL
 end
 
@@ -15,7 +15,7 @@ function clone(spref::AbstractSpatialRef)
     if spref.ptr == C_NULL
         return ISpatialRef()
     else
-        return ISpatialRef(GDAL.clone(spref.ptr))
+        return ISpatialRef(GDAL.osrclone(spref.ptr))
     end
 end
 
@@ -23,7 +23,7 @@ function unsafe_clone(spref::AbstractSpatialRef)
     if spref.ptr == C_NULL
         return SpatialRef()
     else
-        return SpatialRef(GDAL.clone(spref.ptr))
+        return SpatialRef(GDAL.osrclone(spref.ptr))
     end
 end
 
@@ -51,9 +51,9 @@ directory identified by the GDAL_DATA configuration option. See CPLFindFile()
 for details.
 """
 function importEPSG!(spref::AbstractSpatialRef, code::Integer)
-    result = GDAL.importfromepsg(spref.ptr, code)
+    result = GDAL.osrimportfromepsg(spref.ptr, code)
     @ogrerr result "Failed to initialize SRS based on EPSG"
-    spref
+    return spref
 end
 
 "Construct a Spatial Reference System from its EPSG GCS or PCS code."
@@ -72,9 +72,9 @@ contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
 """
 function importEPSGA!(spref::AbstractSpatialRef, code::Integer)
-    result = GDAL.importfromepsga(spref.ptr, code)
+    result = GDAL.osrimportfromepsga(spref.ptr, code)
     @ogrerr result "Failed to initializ SRS based on EPSGA"
-    spref
+    return spref
 end
 
 """
@@ -100,9 +100,9 @@ construct this SRS is consumed from the input string, and the input string
 pointer is then updated to point to the remaining (unused) input.
 """
 function importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
-    result = GDAL.importfromwkt(spref.ptr, [wktstr])
+    result = GDAL.osrimportfromwkt(spref.ptr, [wktstr])
     @ogrerr result "Failed to initialize SRS based on WKT string"
-    spref
+    return spref
 end
 
 "Create SRS from its WKT string."
@@ -131,9 +131,9 @@ For example: `\"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
 +ellps=intl +units=m +nadgrids=nzgd2kgrid0005.gsb +wktext\"`
 """
 function importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
-    result = GDAL.importfromproj4(spref.ptr, projstr)
+    result = GDAL.osrimportfromproj4(spref.ptr, projstr)
     @ogrerr result "Failed to initialize SRS based on PROJ4 string"
-    spref
+    return spref
 end
 
 "Create SRS from its PROJ.4 string."
@@ -164,9 +164,9 @@ and `exportToWkt()` methods can be used to generate output suitable to write to
 new style (Arc 8) .prj files.
 """
 function importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
-    result = GDAL.importfromesri(spref.ptr, [esristr])
+    result = GDAL.osrimportfromesri(spref.ptr, [esristr])
     @ogrerr result "Failed to initialize SRS based on ESRI string"
-    spref
+    return spref
 end
 
 "Create SRS from its ESRI .prj format(s)."
@@ -178,9 +178,9 @@ unsafe_importESRI(esristr::AbstractString) =
 
 "Import SRS from XML format (GML only currently)."
 function importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
-    result = GDAL.importfromxml(spref.ptr, xmlstr)
+    result = GDAL.osrimportfromxml(spref.ptr, xmlstr)
     @ogrerr result "Failed to initialize SRS based on XML string"
-    spref
+    return spref
 end
 
 "Construct SRS from XML format (GML only currently)."
@@ -197,9 +197,9 @@ This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
 """
 function importURL!(spref::AbstractSpatialRef, url::AbstractString)
-    result = GDAL.importfromurl(spref.ptr, url)
+    result = GDAL.osrimportfromurl(spref.ptr, url)
     @ogrerr result "Failed to initialize SRS from URL"
-    spref
+    return spref
 end
 
 """
@@ -215,9 +215,9 @@ unsafe_importURL(url::AbstractString) = importURL!(unsafe_newspatialref(), url)
 "Convert this SRS into WKT format."
 function toWKT(spref::AbstractSpatialRef)
     wktptr = Ref{Cstring}()
-    result = GDAL.exporttowkt(spref.ptr, wktptr)
+    result = GDAL.osrexporttowkt(spref.ptr, wktptr)
     @ogrerr result "Failed to convert this SRS into WKT format"
-    unsafe_string(wktptr[])
+    return unsafe_string(wktptr[])
 end
 
 """
@@ -225,14 +225,14 @@ Convert this SRS into a nicely formatted WKT string for display to a person.
 
 ### Parameters
 * `spref`:      the SRS to be converted
-* `simplify`:   TRUE if the `AXIS`, `AUTHORITY` and `EXTENSION` nodes should be
+* `simplify`:   `true` if the `AXIS`, `AUTHORITY` and `EXTENSION` nodes should be
                 stripped off.
 """
 function toWKT(spref::AbstractSpatialRef, simplify::Bool)
     wktptr = Ref{Cstring}()
-    result = GDAL.exporttoprettywkt(spref.ptr, wktptr, simplify)
+    result = GDAL.osrexporttoprettywkt(spref.ptr, wktptr, simplify)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
-    unsafe_string(wktptr[])
+    return unsafe_string(wktptr[])
 end
 
 """
@@ -242,9 +242,9 @@ Export coordinate system in PROJ.4 format.
 """
 function toPROJ4(spref::AbstractSpatialRef)
     projptr = Ref{Cstring}()
-    result = GDAL.exporttoproj4(spref.ptr, projptr)
+    result = GDAL.osrexporttoproj4(spref.ptr, projptr)
     @ogrerr result "Failed to export this SRS to PROJ.4 format"
-    unsafe_string(projptr[])
+    return unsafe_string(projptr[])
 end
 
 """
@@ -256,17 +256,17 @@ be returned along with OGRERR_NONE.
 """
 function toXML(spref::AbstractSpatialRef)
     xmlptr = Ref{Cstring}()
-    result = GDAL.exporttoxml(spref.ptr, xmlptr, C_NULL)
+    result = GDAL.osrexporttoxml(spref.ptr, xmlptr, C_NULL)
     @ogrerr result "Failed to convert this SRS into XML"
-    unsafe_string(xmlptr[])
+    return unsafe_string(xmlptr[])
 end
 
 "Export coordinate system in Mapinfo style CoordSys format."
 function toMICoordSys(spref::AbstractSpatialRef)
     ptr = Ref{Cstring}()
-    result = GDAL.exporttomicoordsys(spref.ptr, ptr)
+    result = GDAL.osrexporttomicoordsys(spref.ptr, ptr)
     @ogrerr result "Failed to convert this SRS into XML"
-    unsafe_string(ptr[])
+    return unsafe_string(ptr[])
 end
 
 """
@@ -278,9 +278,9 @@ variety of projections and arguments, and stripping out nodes note recognised by
 ESRI (like AUTHORITY and AXIS).
 """
 function morphtoESRI!(spref::AbstractSpatialRef)
-    result = GDAL.morphtoesri(spref.ptr)
+    result = GDAL.osrmorphtoesri(spref.ptr)
     @ogrerr result "Failed to convert in place to ESRI WKT format"
-    spref
+    return spref
 end
 
 """
@@ -310,9 +310,9 @@ of the following (`TOWGS84` recommended for proper datum shift calculations)
         `GEOGCS`. Does not impact `PROJCS` values.
 """
 function morphfromESRI!(spref::AbstractSpatialRef)
-    result = GDAL.morphfromesri(spref.ptr)
+    result = GDAL.osrmorphfromesri(spref.ptr)
     @ogrerr result "Failed to convert in place from ESRI WKT format"
-    spref
+    return spref
 end
 
 """
@@ -332,14 +332,15 @@ function setattrvalue!(
         path::AbstractString,
         value::AbstractString
     )
-    result = GDAL.setattrvalue(spref.ptr, path, value)
+    result = GDAL.osrsetattrvalue(spref.ptr, path, value)
     @ogrerr result "Failed to set attribute path to value"
-    value
+    return spref
 end
 
 function setattrvalue!(spref::AbstractSpatialRef, path::AbstractString)
-    result = GDAL.setattrvalue(spref.ptr, path, C_NULL)
+    result = GDAL.osrsetattrvalue(spref.ptr, path, C_NULL)
     @ogrerr result "Failed to set attribute path"
+    return spref
 end
 
 """
@@ -358,7 +359,7 @@ Returns
 the requested value, or NULL if it fails for any reason.
 """
 getattrvalue(spref::AbstractSpatialRef, name::AbstractString, i::Integer) =
-    GDAL.getattrvalue(spref.ptr, name, i)
+    GDAL.osrgetattrvalue(spref.ptr, name, i)
 
 """
 Create transformation object.
@@ -374,7 +375,8 @@ function unsafe_createcoordtrans(
         source::AbstractSpatialRef,
         target::AbstractSpatialRef
     )
-    CoordTransform(GDAL.octnewcoordinatetransformation(source.ptr, target.ptr))
+    return CoordTransform(GDAL.octnewcoordinatetransformation(source.ptr,
+        target.ptr))
 end
 
 "OGRCoordinateTransformation destructor."
@@ -405,9 +407,6 @@ function transform!(
     n = length(xvertices)
     @assert length(yvertices) == n
     @assert length(zvertices) == n
-    Bool(GDAL.octtransform(obj.ptr, n,
-        pointer(xvertices),
-        pointer(yvertices),
-        pointer(zvertices)
-    ))
+    return Bool(GDAL.octtransform(obj.ptr, n, pointer(xvertices),
+        pointer(yvertices), pointer(zvertices)))
 end

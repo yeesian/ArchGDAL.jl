@@ -59,8 +59,8 @@ function rasterio!(
         bandspace::Integer  = 0
     )
     rasterio!(dataset, buffer, bands, 0, 0, width(dataset), height(dataset),
-        access, pxspace, linespace, bandspace
-    )
+        access, pxspace, linespace, bandspace)
+    return buffer
 end
 
 function rasterio!(
@@ -77,8 +77,8 @@ function rasterio!(
     xsize = cols[end] - cols[1] + 1; xsize < 0 && error("invalid window width")
     ysize = rows[end] - rows[1] + 1; ysize < 0 && error("invalid window height")
     rasterio!(dataset, buffer, bands, cols[1], rows[1], xsize, ysize, access,
-        pxspace, linespace, bandspace
-    )
+        pxspace, linespace, bandspace)
+    return buffer
 end
 
 """
@@ -138,8 +138,8 @@ function rasterio!(
         linespace::Integer  = 0
     )
     rasterio!(rasterband, buffer, 0, 0, width(rasterband), height(rasterband),
-        access, pxspace, linespace
-    )
+        access, pxspace, linespace)
+    return buffer
 end
 
 function rasterio!(
@@ -153,17 +153,13 @@ function rasterio!(
     )
     xsize = length(cols); xsize < 1 && error("invalid window width")
     ysize = length(rows); ysize < 1 && error("invalid window height")
-    rasterio!(rasterband, buffer, cols[1]-1, rows[1]-1, xsize, ysize,
-        access, pxspace, linespace
-    )
+    rasterio!(rasterband, buffer, cols[1]-1, rows[1]-1, xsize, ysize, access,
+        pxspace, linespace)
+    return buffer
 end
 
-function read!(
-        rb::AbstractRasterBand,
-        buffer::Matrix{<:Real}
-    )
+read!(rb::AbstractRasterBand, buffer::Matrix{<:Real}) =
     rasterio!(rb, buffer, GDAL.GF_Read)
-end
 
 function read!(
         rb::AbstractRasterBand,
@@ -174,6 +170,7 @@ function read!(
         ysize::Integer
     )
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function read!(
@@ -183,11 +180,11 @@ function read!(
         cols::UnitRange{<:Integer}
     )
     rasterio!(rb, buffer, rows, cols)
+    return buffer
 end
 
-function read(rb::AbstractRasterBand)
+read(rb::AbstractRasterBand) =
     rasterio!(rb, Array{pixeltype(rb)}(undef, width(rb), height(rb)))
-end
 
 function read(
         rb::AbstractRasterBand,
@@ -198,6 +195,7 @@ function read(
     )
     buffer = Array{pixeltype(rb)}(undef, width(rb), height(rb))
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function read(
@@ -205,17 +203,14 @@ function read(
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
-    rasterio!(rb,
-        Array{pixeltype(rb)}(undef, length(cols), length(rows)),
-        rows, cols
-    )
+    buffer = Array{pixeltype(rb)}(undef, length(cols), length(rows))
+    rasterio!(rb, buffer, rows, cols)
+    return buffer
 end
 
-function write!(
-        rb::AbstractRasterBand,
-        buffer::Matrix{<:Real}
-    )
+function write!(rb::AbstractRasterBand, buffer::Matrix{<:Real})
     rasterio!(rb, buffer, GDAL.GF_Write)
+    return buffer
 end
 
 function write!(
@@ -227,6 +222,7 @@ function write!(
         ysize::Integer
     )
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GDAL.GF_Write)
+    return buffer
 end
 
 function write!(
@@ -236,14 +232,12 @@ function write!(
         cols::UnitRange{<:Integer}
     )
     rasterio!(rb, buffer, rows, cols, GDAL.GF_Write)
+    return buffer
 end
 
-function read!(
-        dataset::AbstractDataset,
-        buffer::Matrix{<:Real},
-        i::Integer
-    )
+function read!(dataset::AbstractDataset, buffer::Matrix{<:Real}, i::Integer)
     read!(getband(dataset, i), buffer)
+    return buffer
 end
 
 function read!(
@@ -252,14 +246,14 @@ function read!(
         indices::Vector{Cint}
     )
     rasterio!(dataset, buffer, indices, GDAL.GF_Read)
+    return buffer
 end
 
-function read!(
-        dataset::AbstractDataset,
-        buffer::Array{<:Real, 3}
-    )
-    nband = nraster(dataset); @assert size(buffer, 3) == nband
+function read!(dataset::AbstractDataset, buffer::Array{<:Real, 3})
+    nband = nraster(dataset)
+    @assert size(buffer, 3) == nband
     rasterio!(dataset, buffer, collect(Cint, 1:nband), GDAL.GF_Read)
+    return buffer
 end
 
 function read!(
@@ -272,6 +266,7 @@ function read!(
         ysize::Integer
     )
     read!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function read!(
@@ -284,6 +279,7 @@ function read!(
         ysize::Integer
     )
     rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function read!(
@@ -294,6 +290,7 @@ function read!(
         cols::UnitRange{<:Integer}
     )
     read!(getband(dataset, i), buffer, rows, cols)
+    return buffer
 end
 
 function read!(
@@ -304,6 +301,7 @@ function read!(
         cols::UnitRange{<:Integer}
     )
     rasterio!(dataset, buffer, indices, rows, cols)
+    return buffer
 end
 
 read(dataset::AbstractDataset, i::Integer) = read(getband(dataset, i))
@@ -312,16 +310,17 @@ function read(
         dataset::AbstractDataset,
         indices::Vector{Cint}
     )
-    buffer = Array{pixeltype(getband(dataset, indices[1]))}(
-        undef, width(dataset), height(dataset), length(indices)
-    )
+    buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
+        width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices)
+    return buffer
 end
 
 function read(dataset::AbstractDataset)
-    read!(dataset, Array{pixeltype(getband(dataset, 1))}(
-        undef, width(dataset), height(dataset), nraster(dataset)
-    ))
+    buffer = Array{pixeltype(getband(dataset, 1))}(undef, width(dataset),
+        height(dataset), nraster(dataset))
+    read!(dataset, buffer)
+    return buffer
 end
 
 function read(
@@ -332,7 +331,8 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    read(getband(dataset, i), xoffset, yoffset, xsize, ysize)
+    buffer = read(getband(dataset, i), xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function read(
@@ -343,10 +343,10 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    buffer = Array{pixeltype(getband(dataset, indices[1]))}(
-        undef, width(dataset), height(dataset), length(indices)
-    )
+    buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
+        width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
+    return buffer
 end
 
 function read(
@@ -355,7 +355,8 @@ function read(
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
-    read(getband(dataset, i), rows, cols)
+    buffer = read(getband(dataset, i), rows, cols)
+    return buffer
 end
 
 function read(
@@ -364,18 +365,15 @@ function read(
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
-    buffer = Array{pixeltype(getband(dataset, indices[1]))}(
-        undef, width(dataset), height(dataset), length(indices)
-    )
+    buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
+        width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices, rows, cols)
+    return buffer
 end
 
-function write!(
-        dataset::AbstractDataset,
-        buffer::Matrix{<:Real},
-        i::Integer
-    )
+function write!(dataset::AbstractDataset, buffer::Matrix{<:Real}, i::Integer)
     write!(getband(dataset, i), buffer)
+    return dataset
 end
 
 function write!(
@@ -384,6 +382,7 @@ function write!(
         indices::Vector{Cint}
     )
     rasterio!(dataset, buffer, indices, GDAL.GF_Write)
+    return dataset
 end
 
 function write!(
@@ -396,6 +395,7 @@ function write!(
         ysize::Integer
     )
     write!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
+    return dataset
 end
 
 function write!(
@@ -407,9 +407,9 @@ function write!(
         xsize::Integer,
         ysize::Integer
     )
-    rasterio!(dataset, buffer, indices, xoffset, yoffset,
-        xsize, ysize, GDAL.GF_Write
-    )
+    rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize,
+        GDAL.GF_Write)
+    return dataset
 end
 
 function write!(
@@ -420,6 +420,7 @@ function write!(
         cols::UnitRange{<:Integer}
     )
     write!(getband(dataset, i), buffer, rows, cols)
+    return dataset
 end
 
 function write!(
@@ -430,6 +431,7 @@ function write!(
         cols::UnitRange{<:Integer}
     )
     rasterio!(dataset, buffer, indices, rows, cols, GDAL.GF_Write)
+    return dataset
 end
 
 for (T,GT) in _GDALTYPE
@@ -456,7 +458,8 @@ for (T,GT) in _GDALTYPE
             # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
             (dataset == C_NULL) && error("Can't read invalid rasterband")
             xbsize, ybsize, zbsize = size(buffer)
-            nband = length(bands); @assert nband == zbsize
+            nband = length(bands)
+            @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
                 (GDALDataset,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,Ptr{Cvoid},
                 Cint,Cint,GDAL.GDALDataType,Cint,Ptr{Cint},GDAL.GSpacing,
@@ -465,7 +468,7 @@ for (T,GT) in _GDALTYPE
                 xbsize,ybsize,$GT,nband,pointer(bands),pxspace,linespace,
                 bandspace,extraargs)
             @cplerr result "Access in DatasetRasterIO failed."
-            buffer
+            return buffer
         end
 
         function rasterio!(
@@ -495,7 +498,7 @@ for (T,GT) in _GDALTYPE
                 yoffset,xsize,ysize,pointer(buffer),xbsize,ybsize,$GT,pxspace,
                 linespace,extraargs)
             @cplerr result "Access in RasterIO failed."
-            buffer
+            return buffer
         end
     end)
 end
@@ -522,9 +525,9 @@ function readblock!(
         yoffset::Integer,
         buffer
     )
-    result = GDAL.readblock(rb.ptr, xoffset, yoffset, buffer)
+    result = GDAL.gdalreadblock(rb.ptr, xoffset, yoffset, buffer)
     @cplerr result "Failed to read block at ($xoffset,$yoffset)"
-    rb
+    return buffer
 end
 
 """
@@ -549,7 +552,7 @@ function writeblock!(
         yoffset::Integer,
         buffer
     )
-    result = GDAL.writeblock(rb.ptr, xoffset, yoffset, buffer)
+    result = GDAL.gdalwriteblock(rb.ptr, xoffset, yoffset, buffer)
     @cplerr result "Failed to write block at ($xoffset,$yoffset)"
-    rb
+    return rb
 end
