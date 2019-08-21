@@ -45,7 +45,7 @@ function Data.streamfrom(
     end
     if col == source.schema.cols
         destroy(source.feature)
-        source.feature.ptr = GDAL.getnextfeature(source.featurelayer.ptr)
+        source.feature.ptr = GDAL.ogr_l_getnextfeature(source.featurelayer.ptr)
         if row == source.schema.rows
             @assert source.feature.ptr == C_NULL
             resetreading!(source.featurelayer)

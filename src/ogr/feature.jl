@@ -4,7 +4,7 @@ Duplicate feature.
 The newly created feature is owned by the caller, and will have its own
 reference to the OGRFeatureDefn.
 """
-unsafe_clone(feature::Feature) = Feature(GDAL.clone(feature.ptr))
+unsafe_clone(feature::Feature) = Feature(GDAL.ogr_f_clone(feature.ptr))
 
 """
 Destroy the feature passed in.
@@ -16,7 +16,7 @@ application the memory will be freed onto the application heap which is
 inappropriate.
 """
 function destroy(feature::Feature)
-    GDAL.destroy(feature.ptr)
+    GDAL.ogr_f_destroy(feature.ptr)
     feature.ptr = C_NULL
 end
 
@@ -36,26 +36,26 @@ passed geometry, but instead makes a copy of it.
 type is illegal for the `OGRFeatureDefn` (checking not yet implemented).
 """
 function setgeom!(feature::Feature, geom::AbstractGeometry)
-    result = GDAL.setgeometry(feature.ptr, geom.ptr)
+    result = GDAL.ogr_f_setgeometry(feature.ptr, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
 end
 
 "Returns a clone of the geometry corresponding to the feature."
 function getgeom(feature::Feature)
-    result = GDAL.getgeometryref(feature.ptr)
+    result = GDAL.ogr_f_getgeometryref(feature.ptr)
     if result == C_NULL
         return IGeometry()
     else
-        return IGeometry(GDAL.clone(result))
+        return IGeometry(GDAL.ogr_g_clone(result))
     end
 end
 
 function unsafe_getgeom(feature::Feature)
-    result = GDAL.getgeometryref(feature.ptr)
+    result = GDAL.ogr_f_getgeometryref(feature.ptr)
     if result == C_NULL
         return Geometry()
     else
-        return Geometry(GDAL.clone(result))
+        return Geometry(GDAL.ogr_g_clone(result))
     end
 end
 
@@ -64,7 +64,7 @@ Fetch number of fields on this feature.
 
 This will always be the same as the field count for the OGRFeatureDefn.
 """
-nfield(feature::Feature) = GDAL.getfieldcount(feature.ptr)
+nfield(feature::Feature) = GDAL.ogr_f_getfieldcount(feature.ptr)
 
 """
 Fetch definition for this field.
@@ -78,7 +78,7 @@ an handle to the field definition (from the `FeatureDefn`). This is an
 internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::Feature, i::Integer) =
-    IFieldDefnView(GDAL.getfielddefnref(feature.ptr, i))
+    IFieldDefnView(GDAL.ogr_f_getfielddefnref(feature.ptr, i))
 
 """
 Fetch the field index given field name.
@@ -94,7 +94,7 @@ the field index, or -1 if no matching field is found.
 This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 """
 findfieldindex(feature::Feature, name::AbstractString) =
-    GDAL.getfieldindex(feature.ptr, name)
+    GDAL.ogr_f_getfieldindex(feature.ptr, name)
 
 """Test if a field has ever been assigned a value or not.
 
@@ -102,7 +102,8 @@ findfieldindex(feature::Feature, name::AbstractString) =
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-isfieldset(feature::Feature, i::Integer) = Bool(GDAL.isfieldset(feature.ptr, i))
+isfieldset(feature::Feature, i::Integer) =
+    Bool(GDAL.ogr_f_isfieldset(feature.ptr, i))
 
 """
 Clear a field, marking it as unset.
@@ -112,7 +113,7 @@ Clear a field, marking it as unset.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
 unsetfield!(feature::Feature, i::Integer) =
-    (GDAL.unsetfield(feature.ptr, i); feature)
+    (GDAL.ogr_f_unsetfield(feature.ptr, i); feature)
 
 # """
 #     OGR_F_GetRawFieldRef(OGRFeatureH hFeat,
@@ -136,7 +137,8 @@ unsetfield!(feature::Feature, i::Integer) =
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asint(feature::Feature, i::Integer) = GDAL.getfieldasinteger(feature.ptr, i)
+asint(feature::Feature, i::Integer) =
+    GDAL.ogr_f_getfieldasinteger(feature.ptr, i)
 
 """Fetch field value as integer 64 bit.
 
@@ -144,7 +146,8 @@ asint(feature::Feature, i::Integer) = GDAL.getfieldasinteger(feature.ptr, i)
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asint64(feature::Feature, i::Integer) = GDAL.getfieldasinteger64(feature.ptr, i)
+asint64(feature::Feature, i::Integer) =
+    GDAL.ogr_f_getfieldasinteger64(feature.ptr, i)
 
 """Fetch field value as a double.
 
@@ -152,7 +155,8 @@ asint64(feature::Feature, i::Integer) = GDAL.getfieldasinteger64(feature.ptr, i)
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asdouble(feature::Feature, i::Integer) = GDAL.getfieldasdouble(feature.ptr, i)
+asdouble(feature::Feature, i::Integer) =
+    GDAL.ogr_f_getfieldasdouble(feature.ptr, i)
 
 """
 Fetch field value as a string.
@@ -161,7 +165,8 @@ Fetch field value as a string.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asstring(feature::Feature, i::Integer) = GDAL.getfieldasstring(feature.ptr, i)
+asstring(feature::Feature, i::Integer) =
+    GDAL.ogr_f_getfieldasstring(feature.ptr, i)
 
 """
     OGR_F_GetFieldAsIntegerList(OGRFeatureH hFeat,
@@ -179,7 +184,7 @@ pointer may be NULL or non-NULL.
 """
 function asintlist(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    ptr = GDAL.getfieldasintegerlist(feature.ptr, i, n)
+    ptr = GDAL.ogr_f_getfieldasintegerlist(feature.ptr, i, n)
     return (n.x == 0) ? Int32[] : unsafe_wrap(Array{Int32}, ptr, n.x)
 end
 
@@ -199,7 +204,7 @@ pointer may be NULL or non-NULL.
 """
 function asint64list(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    ptr = GDAL.getfieldasinteger64list(feature.ptr, i, n)
+    ptr = GDAL.ogr_f_getfieldasinteger64list(feature.ptr, i, n)
     return (n.x == 0) ? Int64[] : unsafe_wrap(Array{Int64}, ptr, n.x)
 end
 
@@ -219,7 +224,7 @@ pointer may be NULL or non-NULL.
 """
 function asdoublelist(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    ptr = GDAL.getfieldasdoublelist(feature.ptr, i, n)
+    ptr = GDAL.ogr_f_getfieldasdoublelist(feature.ptr, i, n)
     return (n.x == 0) ? Float64[] : unsafe_wrap(Array{Float64}, ptr, n.x)
 end
 
@@ -235,7 +240,7 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
 asstringlist(feature::Feature, i::Integer) =
-    GDAL.getfieldasstringlist(feature.ptr, i)
+    GDAL.ogr_f_getfieldasstringlist(feature.ptr, i)
 
 """
     OGR_F_GetFieldAsBinary(OGRFeatureH hFeat,
@@ -252,7 +257,7 @@ Its lifetime may be very brief.
 """
 function asbinary(feature::Feature, i::Integer)
     n = Ref{Cint}()
-    ptr = GDAL.getfieldasbinary(feature.ptr, i, n)
+    ptr = GDAL.ogr_f_getfieldasbinary(feature.ptr, i, n)
     return (n.x == 0) ? UInt8[] : unsafe_wrap(Array{UInt8}, ptr, n.x)
 end
 
@@ -278,16 +283,15 @@ Fetch field value as date and time.
 * `pnSecond`: (0-59)
 * `pnTZFlag`: (0=unknown, 1=localtime, 100=GMT, see data model for details)
 ### Returns
-TRUE on success or FALSE on failure.
+`true` on success or `false` on failure.
 """
 function asdatetime(feature::Feature, i::Integer)
     pyr = Ref{Cint}(); pmth = Ref{Cint}(); pday = Ref{Cint}()
     phr = Ref{Cint}(); pmin = Ref{Cint}(); psec = Ref{Cint}(); ptz=Ref{Cint}()
-    result = Bool(GDAL.getfieldasdatetime(
-        feature.ptr, i, pyr, pmth, pday, phr, pmin, psec, ptz
-    ))
+    result = Bool(GDAL.ogr_f_getfieldasdatetime(feature.ptr, i, pyr, pmth, pday,
+        phr, pmin, psec, ptz))
     (result == false) && error("Failed to fetch datetime at index $i")
-    DateTime(pyr[], pmth[], pday[], phr[], pmin[], psec[])
+    return DateTime(pyr[], pmth[], pday[], phr[], pmin[], psec[])
 end
 
 # """
@@ -312,7 +316,7 @@ end
 # * `pfSecond`: (0-59 with millisecond accuracy)
 # * `pnTZFlag`: (0=unknown, 1=localtime, 100=GMT, see data model for details)
 # ### Returns
-# TRUE on success or FALSE on failure.
+# `true` on success or `false` on failure.
 # """
 # function getfieldasdatetimeex(hFeat::Ptr{OGRFeatureH},iField::Integer,pnYear,
 #                               pnMonth,pnDay,pnHour,pnMinute,pfSecond,pnTZFlag)
@@ -368,8 +372,10 @@ field types may be unaffected.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 * `value`: the value to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Cint) =
-    (GDAL.setfieldinteger(feature.ptr, i, value); feature)
+function setfield!(feature::Feature, i::Integer, value::Cint)
+    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
+    return feature
+end
 
 """
 Set field to 64 bit integer value.
@@ -384,8 +390,10 @@ field types may be unaffected.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 * `value`: the value to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Int64) =
-    (GDAL.setfieldinteger64(feature.ptr, i, value); feature)
+function setfield!(feature::Feature, i::Integer, value::Int64)
+    GDAL.ogr_f_setfieldinteger64(feature.ptr, i, value)
+    return feature
+end
 
 """
 Set field to double value.
@@ -400,8 +408,10 @@ field types may be unaffected.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 * `value`: the value to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Cdouble) =
-    (GDAL.setfielddouble(feature.ptr, i, value); feature)
+function setfield!(feature::Feature, i::Integer, value::Cdouble)
+    GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
+    return feature
+end
 
 """
 Set field to string value.
@@ -416,8 +426,10 @@ field types may be unaffected.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 * `value`: the value to assign.
 """
-setfield!(feature::Feature, i::Integer, value::AbstractString) =
-    (GDAL.setfieldstring(feature.ptr, i, value); feature)
+function setfield!(feature::Feature, i::Integer, value::AbstractString)
+    GDAL.ogr_f_setfieldstring(feature.ptr, i, value)
+    return feature
+end
 
 """
 Set field to list of integers value.
@@ -433,8 +445,10 @@ field types may be unaffected.
 * `nCount`: the number of values in the list being assigned.
 * `panValues`: the values to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Vector{Cint}) =
-    (GDAL.setfieldintegerlist(feature.ptr, i, length(value), value); feature)
+function setfield!(feature::Feature, i::Integer, value::Vector{Cint})
+    GDAL.ogr_f_setfieldintegerlist(feature.ptr, i, length(value), value)
+    return feature
+end
 
 """
 Set field to list of 64 bit integers value.
@@ -450,8 +464,10 @@ field types may be unaffected.
 * `nCount`: the number of values in the list being assigned.
 * `panValues`: the values to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GIntBig}) =
-    (GDAL.setfieldinteger64list(feature.ptr, i, length(value), value); feature)
+function setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GIntBig})
+    GDAL.ogr_f_setfieldinteger64list(feature.ptr, i, length(value), value)
+    return feature
+end
 
 """
 Set field to list of doubles value.
@@ -467,8 +483,10 @@ field types may be unaffected.
 * `nCount`: the number of values in the list being assigned.
 * `padfValues`: the values to assign.
 """
-setfield!(feature::Feature, i::Integer, value::Vector{Cdouble}) =
-    (GDAL.setfielddoublelist(feature.ptr, i, length(value), value); feature)
+function setfield!(feature::Feature, i::Integer, value::Vector{Cdouble})
+    GDAL.ogr_f_setfielddoublelist(feature.ptr, i, length(value), value)
+    return feature
+end
 
 """
 Set field to list of strings value.
@@ -488,8 +506,8 @@ function setfield!(
         i::Integer,
         value::Vector{T}
     ) where T <: AbstractString
-    GDAL.setfieldstringlist(feature.ptr, i, value)
-    feature
+    GDAL.ogr_f_setfieldstringlist(feature.ptr, i, value)
+    return feature
 end
 
 # """
@@ -521,8 +539,10 @@ field types may be unaffected.
 * `nBytes`: the number of bytes in pabyData array.
 * `pabyData`: the data to apply.
 """
-setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GByte}) =
-    (GDAL.setfieldbinary(feature.ptr, i, sizeof(value), value); feature)
+function setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GByte})
+    GDAL.ogr_f_setfieldbinary(feature.ptr, i, sizeof(value), value)
+    return feature
+end
 
 """
 Set field to datetime.
@@ -544,7 +564,7 @@ field types may be unaffected.
 * `nTZFlag`: (0=unknown, 1=localtime, 100=GMT, see data model for details)
 """
 function setfield!(feature::Feature, i::Integer, dt::DateTime, tzflag::Int = 0)
-    GDAL.setfielddatetime(
+    GDAL.ogr_f_setfielddatetime(
         feature.ptr,
         i,
         Dates.year(dt),
@@ -555,7 +575,7 @@ function setfield!(feature::Feature, i::Integer, dt::DateTime, tzflag::Int = 0)
         Dates.second(dt),
         tzflag
     )
-    feature
+    return feature
 end
 
 """
@@ -563,7 +583,7 @@ Fetch number of geometry fields on this feature.
 
 This will always be the same as the geometry field count for OGRFeatureDefn.
 """
-ngeom(feature::Feature) = GDAL.getgeomfieldcount(feature.ptr)
+ngeom(feature::Feature) = GDAL.ogr_f_getgeomfieldcount(feature.ptr)
 
 """
 Fetch definition for this geometry field.
@@ -577,7 +597,7 @@ The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
 getgeomdefn(feature::Feature, i::Integer) =
-    IGeomFieldDefnView(GDAL.getgeomfielddefnref(feature.ptr, i))
+    IGeomFieldDefnView(GDAL.ogr_f_getgeomfielddefnref(feature.ptr, i))
 
 """
 Fetch the geometry field index given geometry field name.
@@ -593,7 +613,7 @@ the geometry field index, or -1 if no matching geometry field is found.
 This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
 findgeomindex(feature::Feature, name::AbstractString="") =
-    GDAL.getgeomfieldindex(feature.ptr, name)
+    GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
 
 """
 Returns a clone of the feature geometry at index `i`.
@@ -603,20 +623,20 @@ Returns a clone of the feature geometry at index `i`.
 * `i`: geometry field to get.
 """
 function getgeom(feature::Feature, i::Integer)
-    result = GDAL.getgeomfieldref(feature.ptr, i)
+    result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
     if result == C_NULL
         return IGeometry()
     else
-        return IGeometry(GDAL.clone(result))
+        return IGeometry(GDAL.ogr_g_clone(result))
     end
 end
 
 function unsafe_getgeom(feature::Feature, i::Integer)
-    result = GDAL.getgeomfieldref(feature.ptr, i)
+    result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
     if result == C_NULL
         return Geometry()
     else
-        return Geometry(GDAL.clone(result))
+        return Geometry(GDAL.ogr_g_clone(result))
     end
 end
 
@@ -637,9 +657,9 @@ the passed geometry, but instead makes a copy of it.
 type is illegal for the `OGRFeatureDefn` (checking not yet implemented).
 """
 function setgeom!(feature::Feature, i::Integer, geom::AbstractGeometry)
-    result = GDAL.setgeomfield(feature.ptr, i, geom.ptr)
+    result = GDAL.ogr_f_setgeomfield(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry"
-    feature
+    return feature
 end
 
 """
@@ -648,7 +668,7 @@ Get feature identifier.
 ### Returns
 feature id or `OGRNullFID` (`-1`) if none has been assigned.
 """
-getfid(feature::Feature) = GDAL.getfid(feature.ptr)
+getfid(feature::Feature) = GDAL.ogr_f_getfid(feature.ptr)
 
 """
 Set the feature identifier.
@@ -661,9 +681,9 @@ Set the feature identifier.
 On success OGRERR_NONE, or on failure some other value.
 """
 function setfid!(feature::Feature, i::Integer)
-    result = GDAL.setfid(feature.ptr, i)
+    result = GDAL.ogr_f_setfid(feature.ptr, i)
     @ogrerr result "OGRErr $result: Failed to set FID $i"
-    feature
+    return feature
 end
 
 """
@@ -681,9 +701,9 @@ OGRERR_NONE if the operation succeeds, even if some values are not transferred,
 otherwise an error code.
 """
 function setfrom!(feature1::Feature, feature2::Feature, forgiving::Bool = false)
-    result = GDAL.setfrom(feature1.ptr, feature2.ptr, forgiving)
+    result = GDAL.ogr_f_setfrom(feature1.ptr, feature2.ptr, forgiving)
     @ogrerr result "OGRErr $result: Failed to set feature"
-    feature1
+    return feature1
 end
 
 """
@@ -709,14 +729,15 @@ function setfrom!(
         indices::Vector{Cint},
         forgiving::Bool = false
     )
-    result = GDAL.setfromwithmap(feature1.ptr, feature2.ptr, forgiving, indices)
+    result = GDAL.ogr_f_setfromwithmap(feature1.ptr, feature2.ptr, forgiving,
+        indices)
     @ogrerr result "OGRErr $result: Failed to set feature with map"
-    feature1
+    return feature1
 end
 
 
 "Fetch style string for this feature."
-getstylestring(feature::Feature) = GDAL.getstylestring(feature.ptr)
+getstylestring(feature::Feature) = GDAL.ogr_f_getstylestring(feature.ptr)
 
 """
 Set feature style string.
@@ -724,18 +745,23 @@ Set feature style string.
 This method operate exactly as `setstylestringdirectly!()` except that
 it doesn't assume ownership of the passed string, but makes a copy of it.
 """
-setstylestring!(feature::Feature, style::AbstractString) =
-    (GDAL.setstylestring(feature.ptr, style); feature)
+function setstylestring!(feature::Feature, style::AbstractString)
+    GDAL.ogr_f_setstylestring(feature.ptr, style)
+    return feature
+end
 
 "OGR_F_GetStyleTable(OGRFeatureH hFeat) -> OGRStyleTableH"
-getstyletable(feature::Feature) = StyleTable(GDAL.getstyletable(feature.ptr))
+getstyletable(feature::Feature) =
+    StyleTable(GDAL.ogr_f_getstyletable(feature.ptr))
 
 """
     OGR_F_SetStyleTable(OGRFeatureH hFeat,
                         OGRStyleTableH hStyleTable) -> void
 """
-setstyletable!(feature::Feature, styletable::StyleTable) =
-    (GDAL.setstyletable(feature.ptr, styletable.ptr); feature)
+function setstyletable!(feature::Feature, styletable::StyleTable)
+    GDAL.ogr_f_setstyletable(feature.ptr, styletable.ptr)
+    return feature
+end
 
 """
 Returns the native data for the feature.
@@ -754,7 +780,7 @@ than what can be obtained with the rest of the API, but it may be useful in
 round-tripping scenarios where some characteristics of the underlying format
 are not captured otherwise by the OGR abstraction.
 """
-getnativedata(feature::Feature) = GDAL.getnativedata(feature.ptr)
+getnativedata(feature::Feature) = GDAL.ogr_f_getnativedata(feature.ptr)
 
 """
 Sets the native data for the feature.
@@ -764,8 +790,10 @@ driver that created this feature, or that is aimed at an output driver. The
 native data may be in different format, which is indicated by
 GetNativeMediaType().
 """
-setnativedata!(feature::Feature, data::AbstractString) =
-    (GDAL.setnativedata(feature.ptr, data); feature)
+function setnativedata!(feature::Feature, data::AbstractString)
+    GDAL.ogr_f_setnativedata(feature.ptr, data)
+    return feature
+end
 
 """
 Returns the native media type for the feature.
@@ -774,7 +802,7 @@ The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
 e.g. \"application/vnd.geo+json\" for JSON.
 """
-getmediatype(feature::Feature) = GDAL.getnativemediatype(feature.ptr)
+getmediatype(feature::Feature) = GDAL.ogr_f_getnativemediatype(feature.ptr)
 
 """
 Sets the native media type for the feature.
@@ -783,8 +811,10 @@ The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
 e.g. \"application/vnd.geo+json\" for JSON.
 """
-setmediatype!(feature::Feature, mediatype::AbstractString) =
-    (GDAL.setnativemediatype(feature.ptr, mediatype); feature)
+function setmediatype!(feature::Feature, mediatype::AbstractString)
+    GDAL.ogr_f_setnativemediatype(feature.ptr, mediatype)
+    return feature
+end
 
 """
 Fill unset fields with default values that might be defined.
@@ -799,7 +829,7 @@ function fillunsetwithdefault!(
         notnull::Bool   = true,
         options         = StringList(C_NULL)
     )
-    GDAL.fillunsetwithdefault(feature.ptr, notnull, options)
+    GDAL.ogr_f_fillunsetwithdefault(feature.ptr, notnull, options)
 end
 
 """
@@ -823,4 +853,4 @@ fails, then it will fail for all interpretations).
 `true` if all enabled validation tests pass.
 """
 validate(feature::Feature, flags::Integer, emiterror::Bool) =
-    Bool(GDAL.validate(feature.ptr, flags, emiterror))
+    Bool(GDAL.ogr_f_validate(feature.ptr, flags, emiterror))
