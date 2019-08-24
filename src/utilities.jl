@@ -1,11 +1,3 @@
-"Throw an error if the pointer to int variable indicates an error."
-function _failsafe(usage_error::Ref{Cint})
-    # follows https://github.com/JuliaGeo/GDAL.jl/blob/017bf6b8492dcd2186ced297076b283c3591d798/src/error.jl#L31-L37
-    if usage_error[] != 0 && GDAL.cplgetlasterrortype() in GDAL.throw_class
-        throw(GDAL.GDALError())
-    end
-end
-
 """
 List various information about a GDAL supported raster dataset.
 
@@ -44,7 +36,6 @@ function unsafe_gdaltranslate(
     usage_error = Ref{Cint}()
     result = GDAL.gdaltranslate(dest, dataset.ptr, options, usage_error)
     GDAL.gdaltranslateoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -69,7 +60,6 @@ function unsafe_gdalwarp(
     result = GDAL.gdalwarp(dest, C_NULL,
         length(datasets), [ds.ptr for ds in datasets], options, usage_error)
     GDAL.gdalwarpappoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -94,7 +84,6 @@ function unsafe_gdalvectortranslate(
     result = GDAL.gdalvectortranslate(dest, C_NULL, length(datasets),
         [ds.ptr for ds in datasets], options, usage_error)
     GDAL.gdalvectortranslateoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -130,7 +119,6 @@ function unsafe_gdaldem(
     result = GDAL.gdaldemprocessing(dest, dataset.ptr, processing, colorfile,
         options, usage_error)
     GDAL.gdaldemprocessingoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -154,7 +142,6 @@ function unsafe_gdalnearblack(
     usage_error = Ref{Cint}()
     result = GDAL.gdalnearblack(dest, C_NULL, dataset.ptr, options, usage_error)
     GDAL.gdalnearblackoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -178,7 +165,6 @@ function unsafe_gdalgrid(
     usage_error = Ref{Cint}()
     result = GDAL.gdalgrid(dest, dataset.ptr, options, usage_error)
     GDAL.gdalgridoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -202,7 +188,6 @@ function unsafe_gdalrasterize(
     usage_error = Ref{Cint}()
     result = GDAL.gdalrasterize(dest, C_NULL, dataset.ptr, options, usage_error)
     GDAL.gdalrasterizeoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
 
@@ -227,6 +212,5 @@ function unsafe_gdalbuildvrt(
     result = GDAL.gdalbuildvrt(dest, length(datasets),
         [ds.ptr for ds in datasets], C_NULL, options, usage_error)
     GDAL.gdalbuildvrtoptionsfree(options)
-    _failsafe(usage_error)
     return Dataset(result)
 end
