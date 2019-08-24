@@ -87,7 +87,7 @@ function unsafe_copy(
     return Dataset(GDAL.gdalcreatecopy(
         driver.ptr,
         filename,
-        GDAL.failsafe(dataset.ptr),
+        dataset.ptr,
         strict,
         options,
         @cplprogress(progressfunc),
@@ -142,7 +142,7 @@ function copy(
     return IDataset(GDAL.gdalcreatecopy(
         driver.ptr,
         filename,
-        GDAL.failsafe(dataset.ptr),
+        dataset.ptr,
         strict,
         options,
         @cplprogress(progressfunc),
