@@ -9,7 +9,6 @@ platform:
   - x64 # 64-bit
 
 matrix:
-  fast_finish: true
   allow_failures:
   - julia_version: nightly
 
