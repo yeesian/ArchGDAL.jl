@@ -2,7 +2,7 @@ using Documenter, ArchGDAL
 
 makedocs(
     modules = [ArchGDAL],
-    format = :html,
+    format = Documenter.HTML(),
     sitename = "ArchGDAL.jl",
     pages = [
         "index.md",
@@ -23,5 +23,4 @@ deploydocs(
     make = nothing,
     target = "build",
     repo = "github.com/yeesian/ArchGDAL.jl.git",
-    julia = "1.0"
 )

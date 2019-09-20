@@ -5,28 +5,22 @@ os:
   - osx
 julia:
   - 1.0
-  - 1.1
+  - 1
   - nightly
-# matrix:
-#   allow_failures:
-#   - julia: nightly
-#   fast_finish: true
+matrix:
+  fast_finish: true
+  allow_failures:
+    - julia: nightly
 notifications:
   email: false
-# uncomment the following lines to override the default test script
-# script:
-#  - if [[ -a .git/shallow ]]; then git fetch --unshallow; fi
-#  - julia -e 'using Pkg; Pkg.clone(pwd()); Pkg.build("ArchGDAL"); Pkg.test("ArchGDAL"; coverage=true)'
-after_success:
-- julia -e 'using Pkg; Pkg.add("Coverage")'
-- julia -e 'using ArchGDAL, Coverage; cd(dirname(dirname(pathof(ArchGDAL)))); Coveralls.submit(process_folder())'
+coveralls: true
 jobs:
   include:
     - stage: "Documentation"
-      julia: 1.0
+      julia: 1
       os: linux
       script:
-        - julia -e 'import Pkg; Pkg.add("Documenter")'
-        - julia --project=docs -e 'using Pkg; Pkg.instantiate(); Pkg.add(PackageSpec(path=pwd()))'
-        - julia --project=docs/ --color=yes docs/make.jl
+        - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
+                                               Pkg.instantiate()'
+        - julia --project=docs/ docs/make.jl
       after_success: skip
