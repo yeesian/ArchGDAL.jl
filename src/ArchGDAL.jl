@@ -2,6 +2,7 @@ module ArchGDAL
 
     import GDAL, GeoInterface
     import DataStreams: Data
+    import GeoInterface: coordinates, geotype
     using Dates
 
     include("utils.jl")
