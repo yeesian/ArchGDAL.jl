@@ -1,4 +1,86 @@
 """
+Import format and run function `f` on the result.
+
+The name could be improved?
+"""
+importcrs(f::Function, sourceformat::GFT.GeoFormat) = begin
+    obj = importcrs(sourceformat)
+    try f(obj) finally destroy(obj) end
+end
+importcrs(x::GFT.EPSG) = importEPSG(GFT.val(x))
+importcrs(x::GFT.AbstractWellKnownText) = importWKT(GFT.val(x))
+importcrs(x::GFT.ESRIWellKnownText) = importESRI(GFT.val(x))
+importcrs(x::GFT.ProjString) = importPROJ4(GFT.val(x))
+importcrs(x::GFT.GML) = importXML(GFT.val(x))
+importcrs(x::GFT.KML) = importEPSG(EPSG(4327))
+importcrs(x::GFT.GeoJSON) = importEPSG(EPSG(4327)) # TODO check GeoJSON standard
+
+Base.convert(target::Type{GFT.GeoFormat}, mode::GFT.CRS, input::GFT.GeoFormat) =
+    unsafe_convert(target, mode, importcrs(input))
+
+unsafe_convert(::Type{GFT.CoordSys}, mode::GFT.CRS, srs::Ref) = GFT.CoordSys(toMICoordSys(srs))
+unsafe_convert(::Type{GFT.ProjString}, mode::GFT.CRS, srs::Ref) = GFT.ProjString(toPROJ4(srs))
+unsafe_convert(::Type{GFT.WellKnownText}, mode::GFT.CRS, srs::Ref) = GFT.WellKnownText(toWKT(srs))
+unsafe_convert(::Type{GFT.ESRIWellKnownText}, mode::GFT.CRS, srs::Ref) =
+    GFT.ESRIWellKnownText(toWKT(morphtoESRI!(srs)))
+unsafe_convert(::Type{GFT.GML}, mode::GFT.CRS, srs::Ref) = GFT.GML(toXML(srs))
+
+# These should be better integrated with geometry packages or follow some standard
+const ReprojectCoord = Union{<:NTuple{2,<:Number},<:NTuple{3,<:Number},AbstractVector{<:Number}}
+
+"""
+    reproject(points, sourceproj::GeoFormat, destproj::GeoFormat)
+
+Reproject points to a different coordinate reference system and/or format.
+
+## Arguments
+-`points`: Vector of Geometry points
+-`crs`: The current coordinate reference system, using any GeoFormat
+-`targetcrs`: The coordinate reference system to transform to, using any CRS capable GeoFormat
+
+## Example
+
+reproject([(118, 34), (119, 35)], EPSG(2025), EPSG(4326))
+"""
+reproject(x, crs::GFT.GeoFormat, targetcrs::Nothing) = x
+
+# Vector/Tuple coordinate(s)
+reproject(coord::ReprojectCoord, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    GeoInterface.coordinates(reproject(createpoint(coord...), crs, targetcrs))
+reproject(coords::AbstractArray{<:ReprojectCoord}, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    GeoInterface.coordinates.(reproject([createpoint(c...) for c in coords], crs, targetcrs))
+
+# GeoFormat
+reproject(geom::GFT.GeoFormat, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    convert(typeof(geom), reproject(convert(Geometry, geom), crs, targetcrs))
+
+# Geometries
+reproject(geom::AbstractGeometry, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    crs2transform(crs, targetcrs) do transform
+        transform!(geom, transform)
+    end
+reproject(geoms::AbstractArray{<:AbstractGeometry}, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    crs2transform(crs, targetcrs) do transform
+        transform!.(geoms, Ref(transform))
+    end
+
+"""
+    crs2transform(f, crs::GeoFormat, targetcrs::GeoFormat)
+
+Run the function on a coord transform generated from
+two crs definitions. These can be in any GeoFormatTypes format
+that holds a coordinate reference system.
+"""
+crs2transform(f, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    importcrs(crs) do crs_ref
+        importcrs(targetcrs) do targetcrs_ref
+            createcoordtrans(crs_ref, targetcrs_ref) do transform
+                f(transform)
+            end
+        end
+    end
+
+"""
     newspatialref(wkt::AbstractString = "")
 
 Construct a Spatial Reference System from its WKT.

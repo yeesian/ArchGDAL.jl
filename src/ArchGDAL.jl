@@ -1,9 +1,13 @@
 module ArchGDAL
 
-    import GDAL, GeoInterface
+    import GDAL, GeoInterface, GeoFormatTypes
     import DataStreams: Data
     import GeoInterface: coordinates, geotype
+    import Base: convert
+
     using Dates
+    
+    const GFT = GeoFormatTypes
 
     include("utils.jl")
     include("types.jl")
