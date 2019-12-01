@@ -1,6 +1,6 @@
 name = "ArchGDAL"
 uuid = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"
-version = "0.2.1"
+version = "0.2.2"
 
 [deps]
 DataStreams = "9a8bc11e-79be-5b39-94d7-1ccc349a1a85"
@@ -9,9 +9,10 @@ GDAL = "add2ef01-049f-52c4-9ee2-e494f65e021a"
 GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
 
 [compat]
-GDAL = "~ 0.2.0"
-GeoInterface = "≥ 0.4.0"
-julia = "≥ 0.7.0"
+DataStreams = "0.4.2"
+GDAL = "0.2"
+GeoInterface = "0.4"
+julia = "0.7, 1.0"
 
 [extras]
 BinaryProvider = "b99e7846-7c00-51b0-8f62-c81ae34c0232"
