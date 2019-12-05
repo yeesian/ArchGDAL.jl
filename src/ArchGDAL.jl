@@ -13,6 +13,7 @@ module ArchGDAL
     include("dataset.jl")
     include("raster/rasterband.jl")
     include("raster/rasterio.jl")
+    include("raster/array.jl")
     include("raster/rasterattributetable.jl")
     include("raster/colortable.jl")
     include("ogr/geometry.jl")
