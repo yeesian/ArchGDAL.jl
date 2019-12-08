@@ -64,22 +64,40 @@ AG.registerdrivers() do
 end
 
 cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
+
 AG.registerdrivers() do
     AG.read("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
         @testset "Dataset setindex" begin
             @test ds[755, 2107, 1] == 0xff
             ds[755, 2107, 1] = 0x00
             @test ds[755, 2107, 1] == 0x00
-            ds[755:755, 2107:2107, 1] = reshape([0xff], 1, 1, 1)
-            @test ds[755, 2107, 1] == 0xff
+            ds[755:755, 2107:2107, 1:1] = reshape([0x01], 1, 1, 1)
+            @test ds[755, 2107, 1] == 0x01
+            ds[755:755, 2107:2107, 1] = reshape([0x02], 1, 1)
+            @test ds[755, 2107, 1] == 0x02
+            ds[755:755, 2107, 1] = [0x03]
+            @test ds[755, 2107, 1] == 0x03
+            ds[755, 2107] = 0x04
+            @test ds[755, 2107] == 0x04
+            ds[755:755, 2107:2107] = reshape([0xff], 1, 1)
+            @test ds[755, 2107] == 0xff
+            @test_throws ArgumentError ds[755:755, 2107:2107, 1] = reshape([0x01], 1, 1, 1)
+            @test_throws ArgumentError ds[755:755, 2107:2107, 1:1] = reshape([0x01], 1, 1)
+            @test_throws ArgumentError ds[755, 2107, 1:1] = reshape([0x01], 1, 1)
+            @test_throws ArgumentError ds[755, 2107, 1] = [0x01]
         end
-        band = AG.getband(ds, 1)
         @testset "RasterBand setindex" begin
+            band = AG.getband(ds, 1)
             @test band[755, 2107] == 0xff
-            band[755, 2107] = 0x00
+            band[755:755, 2107] = [0x00]
             @test band[755, 2107] == 0x00
+            band[755, 2107] = 0x01
+            @test band[755, 2107] == 0x01
             band[755:755, 2107:2107] = reshape([0xff], 1, 1)
             @test band[755, 2107] == 0xff
+            @test_throws ArgumentError ds[755:755, 2107:2107] = [0x01]
+            @test_throws ArgumentError ds[755:755, 2107] = reshape([0x01], 1, 1)
+            @test_throws ArgumentError ds[755, 2107] = [0x01]
         end
     end
 end

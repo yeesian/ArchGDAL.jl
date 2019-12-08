@@ -25,9 +25,10 @@ end
 Base.setindex!(band::RasterBand, value, x::AllowedXY, y::AllowedXY) = begin
     I = map(colon2range, (x, y), size(band))
     if value isa AbstractArray
-        if size(value) != length.(I)
+        if size(value) != length.(dropint(I...))
             throw(ArgumentError("size of value $(size(value)) does not match indices $I"))
         end
+        value = reshape(value, length.(I))
     else
         value = reshape([value], 1, 1)
     end
@@ -60,12 +61,12 @@ Base.getindex(dataset::Dataset, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1
 end
 
 Base.setindex!(dataset::Dataset, value, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1) = begin
-    # Convert colons to ranges
     I = x, y, bands = map(colon2range, (x, y, bands), size(dataset))
     if value isa AbstractArray
-        if size(value) != length.(I)
+        if size(value) != length.(dropint(I...))
             throw(ArgumentError("size of value $(size(value)) does not match indices $I"))
         end
+        value = reshape(value, length.(I))
     else
         value = reshape([value], 1, 1, 1)
     end
@@ -75,7 +76,6 @@ Base.setindex!(dataset::Dataset, value, x::AllowedXY, y::AllowedXY, bands::Allow
     indices = bandindices(bands)
     write!(dataset, value, indices, xoffset, yoffset, xsize, ysize)
 end
-
 
 # Index conversion utilities
 
