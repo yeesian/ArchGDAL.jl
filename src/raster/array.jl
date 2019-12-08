@@ -5,6 +5,8 @@ const AllowedBand = Union{Integer,Colon,AbstractArray}
 # RasterBand indexing
 
 Base.size(band::RasterBand) = width(band), height(band)
+Base.firstindex(band::RasterBand, d) = 1
+Base.lastindex(band::RasterBand, d) = size(band)[d]
 
 Base.getindex(band::RasterBand, x::AllowedXY, y::AllowedXY) = begin
     I = map(colon2range, (x, y), size(band))
@@ -42,6 +44,8 @@ end
 # Dataset indexing
 
 Base.size(dataset::Dataset) = (size(getband(dataset, 1))..., nraster(dataset))
+Base.firstindex(dataset::Dataset, d) = 1
+Base.lastindex(dataset::Dataset, d) = size(dataset)[d]
 
 Base.getindex(dataset::Dataset, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1) = begin
     I = x, y, bands = map(colon2range, (x, y, bands), size(dataset))

@@ -81,6 +81,12 @@ AG.registerdrivers() do
             @test ds[755, 2107] == 0x04
             ds[755:755, 2107:2107] = reshape([0xff], 1, 1)
             @test ds[755, 2107] == 0xff
+            buffer = ds[:, :]
+            ds[:, :] = buffer .* 0x00 
+            @test sum(ds[:, :]) == 0x00
+            ds[:, 1:500] = buffer[:, 1:500]
+            ds[:, 501:end] = buffer[:, 501:end]
+            @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
             @test_throws ArgumentError ds[755:755, 2107:2107, 1] = reshape([0x01], 1, 1, 1)
             @test_throws ArgumentError ds[755:755, 2107:2107, 1:1] = reshape([0x01], 1, 1)
             @test_throws ArgumentError ds[755, 2107, 1:1] = reshape([0x01], 1, 1)
@@ -95,6 +101,12 @@ AG.registerdrivers() do
             @test band[755, 2107] == 0x01
             band[755:755, 2107:2107] = reshape([0xff], 1, 1)
             @test band[755, 2107] == 0xff
+            buffer = band[:, :]
+            band[:, :] = buffer .* 0x00 
+            @test sum(band[:, :]) == 0x00
+            band[:, 1:500] = buffer[:, 1:500]
+            band[:, 501:end] = buffer[:, 501:end]
+            @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
             @test_throws ArgumentError ds[755:755, 2107:2107] = [0x01]
             @test_throws ArgumentError ds[755:755, 2107] = reshape([0x01], 1, 1)
             @test_throws ArgumentError ds[755, 2107] = [0x01]
