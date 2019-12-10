@@ -87,10 +87,7 @@ AG.registerdrivers() do
             ds[:, 1:500] = buffer[:, 1:500]
             ds[:, 501:end] = buffer[:, 501:end]
             @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-            @test_throws ArgumentError ds[755:755, 2107:2107, 1] = reshape([0x01], 1, 1, 1)
-            @test_throws ArgumentError ds[755:755, 2107:2107, 1:1] = reshape([0x01], 1, 1)
-            @test_throws ArgumentError ds[755, 2107, 1:1] = reshape([0x01], 1, 1)
-            @test_throws ArgumentError ds[755, 2107, 1] = [0x01]
+            @test_throws DimensionMismatch ds[:, 501:end] = [1, 2, 3]  
         end
         @testset "RasterBand setindex" begin
             band = AG.getband(ds, 1)
@@ -107,9 +104,7 @@ AG.registerdrivers() do
             band[:, 1:500] = buffer[:, 1:500]
             band[:, 501:end] = buffer[:, 501:end]
             @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-            @test_throws ArgumentError ds[755:755, 2107:2107] = [0x01]
-            @test_throws ArgumentError ds[755:755, 2107] = reshape([0x01], 1, 1)
-            @test_throws ArgumentError ds[755, 2107] = [0x01]
+            @test_throws DimensionMismatch band[:, 501:end] = [1, 2, 3]  
         end
     end
 end

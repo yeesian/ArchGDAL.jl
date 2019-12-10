@@ -9,7 +9,7 @@ Base.firstindex(band::RasterBand, d) = 1
 Base.lastindex(band::RasterBand, d) = size(band)[d]
 
 Base.getindex(band::RasterBand, x::AllowedXY, y::AllowedXY) = begin
-    I = map(_colon2range, (x, y), size(band))
+    I = Base.to_indices(band, (x, y))
     buffer = Array{getdatatype(band),2}(undef, length.(I)...)
     # Calculate `read!` args and read
     xoffset, yoffset = first.(I) .- 1
@@ -25,11 +25,9 @@ Base.getindex(band::RasterBand, x::AllowedXY, y::AllowedXY) = begin
 end
 
 Base.setindex!(band::RasterBand, value, x::AllowedXY, y::AllowedXY) = begin
-    I = map(_colon2range, (x, y), size(band))
+    I = Base.to_indices(band, (x, y))
     if value isa AbstractArray
-        if size(value) != length.(_dropint(I...))
-            throw(ArgumentError("size of value $(size(value)) does not match indices $I"))
-        end
+        Base.setindex_shape_check(value, length.(I)...)
         value = reshape(value, length.(I))
     else
         value = reshape([value], 1, 1)
@@ -48,7 +46,7 @@ Base.firstindex(dataset::Dataset, d) = 1
 Base.lastindex(dataset::Dataset, d) = size(dataset)[d]
 
 Base.getindex(dataset::Dataset, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1) = begin
-    I = x, y, bands = map(_colon2range, (x, y, bands), size(dataset))
+    I = x, y, bands = Base.to_indices(dataset, (x, y, bands))
     buffer = Array{getdatatype(getband(dataset, 1)),3}(undef, length.(I)...)
     # Calculate `read!` args and read
     xoffset, yoffset = first.((x, y)) .- 1
@@ -65,11 +63,9 @@ Base.getindex(dataset::Dataset, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1
 end
 
 Base.setindex!(dataset::Dataset, value, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1) = begin
-    I = x, y, bands = map(_colon2range, (x, y, bands), size(dataset))
+    I = x, y, bands = Base.to_indices(dataset, (x, y, bands))
     if value isa AbstractArray
-        if size(value) != length.(_dropint(I...))
-            throw(ArgumentError("size of value $(size(value)) does not match indices $I"))
-        end
+        Base.setindex_shape_check(value, length.((x, y, bands))...)
         value = reshape(value, length.(I))
     else
         value = reshape([value], 1, 1, 1)
@@ -87,8 +83,6 @@ _dropint(x::Integer, args...) = _dropint(args...)
 _dropint(x::AbstractRange, args...) = (x, _dropint(args...)...)
 _dropint() = ()
 
-_colon2range(i::Colon, sze) = 1:sze
-_colon2range(i, sze) = i
-
 _bandindices(band::Integer) = Cint[band]
 _bandindices(bands::AbstractArray) = Cint[b for b in bands]
+
