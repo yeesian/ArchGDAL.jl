@@ -60,6 +60,14 @@ AG.registerdrivers() do
                 @test band[755, 2107] == 0xff
             end
         end
+        @testset "Array constructor" begin
+            buffer = Array(ds)
+            typeof(buffer) <: Array{UInt8,3}
+            total = sum(buffer[:, :, 1:1])
+            count = sum(buffer[:, :, 1:1] .> 0)
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
     end
 end
 
