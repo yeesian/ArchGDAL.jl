@@ -106,5 +106,13 @@ cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
             @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
             @test_throws DimensionMismatch band[:, 501:end] = [1, 2, 3]  
         end
+        @testset "Array constructor" begin
+            buffer = Array(ds)
+            typeof(buffer) <: Array{UInt8,3}
+            total = sum(buffer[:, :, 1:1])
+            count = sum(buffer[:, :, 1:1] .> 0)
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
     end
 end
