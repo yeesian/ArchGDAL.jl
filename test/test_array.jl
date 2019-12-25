@@ -2,7 +2,7 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
-AG.registerdrivers() do
+@testset "Test Array" begin
     AG.read("ospy/data4/aster.img") do ds
         @testset "Dataset indexing" begin
             @testset "dims dropped correctly" begin
@@ -65,7 +65,7 @@ end
 
 cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
 
-AG.registerdrivers() do
+@testset "Test Array setindex" begin
     AG.read("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
         @testset "Dataset setindex" begin
             @test ds[755, 2107, 1] == 0xff
@@ -108,4 +108,3 @@ AG.registerdrivers() do
         end
     end
 end
-
