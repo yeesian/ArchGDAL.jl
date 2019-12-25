@@ -85,3 +85,5 @@ _dropint() = ()
 
 _bandindices(band::Integer) = Cint[band]
 _bandindices(bands::AbstractArray) = Cint[b for b in bands]
+
+Array(dataset::AbstractDataset) = read(dataset)
