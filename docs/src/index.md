@@ -25,3 +25,20 @@ To test if it is installed correctly,
 ```julia
 pkg> test ArchGDAL
 ```
+
+To load the package,
+
+```julia
+julia> using ArchGDAL
+```
+
+In the documentation `AG` is often used as a shorthand for `ArchGDAL`. To use this shorthand you can use:
+```julia
+using ArchGDAL
+const AG = ArchGDAL
+```
+
+## Contents
+
+```@contents
+```

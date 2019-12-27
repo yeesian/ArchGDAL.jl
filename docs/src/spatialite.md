@@ -1,3 +1,9 @@
+```
+#=
+This piece of documentation is currently commented out until the GDAL build provided by GDAL.jl provides spatialite support.
+Currently it already includes sqlite support, so everything up to X(Geometry) works, but then it doesn't recognize that function.
+The reason this is commented out is because Documenter.jl would still run the examples here and give warnings that they didn't work.
+
 # Working with Spatialite
 
 Here is an example of how you can work with a SQLite Database in ArchGDAL.jl, and follows the tutorial in [http://www.gaia-gis.it/gaia-sins/spatialite-tutorial-2.3.1.html](http://www.gaia-gis.it/gaia-sins/spatialite-tutorial-2.3.1.html).
@@ -264,3 +270,5 @@ We'll not explain in detail this kind of collections, because it will be simply 
 * the `GLength()` function applied to a `MULTILINESTRING` returns the sum of individual lengths for each `LINESTRING` composing the collection.
 * the `Area()` function applied to a `MULTIPOLYGON` returns the sum of individual areas for each `POLYGON` in the collection.
 * the `Centroid()` function returns the *average centroid* when applied to a `MULTIPOLYGON`.
+=#
+```

@@ -4,6 +4,8 @@ makedocs(
     modules = [ArchGDAL],
     format = Documenter.HTML(),
     sitename = "ArchGDAL.jl",
+    workdir = joinpath(@__DIR__, "..", "test"),
+    strict = true,
     pages = [
         "index.md",
         "GDAL Datasets" => "datasets.md",
