@@ -13,8 +13,8 @@ GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
 
 [compat]
 DataStreams = "0.4.2"
-GDAL = "~1.0.2"
-GeoInterface = "~0.4.0"
+GDAL = "1.0.2"
+GeoInterface = "0.4"
 julia = "1"
 
 [extras]
