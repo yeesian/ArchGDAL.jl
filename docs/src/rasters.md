@@ -1,30 +1,22 @@
 # Raster Data
 
-In this section, we revisit the [`gdalworkshop/world.tif`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif) dataset.
-```julia
-julia> dataset = AG.read("gdalworkshop/world.tif")
-GDAL Dataset (Driver: GTiff/GeoTIFF)
-File(s):
-  gdalworkshop/world.tif
+```@setup rasters
+using ArchGDAL
+const AG = ArchGDAL
+```
 
-Dataset (width x height): 2048 x 1024 (pixels)
-Number of raster bands: 3
-  [GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
-  [GA_ReadOnly] Band 2 (Green): 2048 x 1024 (UInt8)
-  [GA_ReadOnly] Band 3 (Blue): 2048 x 1024 (UInt8)
+In this section, we revisit the [`gdalworkshop/world.tif`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif) dataset.
+```@example rasters
+dataset = AG.read("gdalworkshop/world.tif")
 ```
 A description of the display is available in [Raster Datasets](@ref).
 
 ## Raster Bands
 We can examine an individual raster band
-```julia
-julia> band = ArchGDAL.getband(dataset, 1)
-[GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
-    blocksize: 256×256, nodata: -1.0e10, units: 1.0px + 0.0
-    overviews: (0) 1024x512 (1) 512x256 (2) 256x128
-               (3) 128x64 (4) 64x32 (5) 32x16
-               (6) 16x8
+```@example rasters
+band = ArchGDAL.getband(dataset, 1)
 ```
+
 You can programmatically retrieve the information in the header using
 * `ArchGDAL.accessflag(band)`: the access flag for this band. (`GA_ReadOnly`)
 * `colorinterp = ArchGDAL.getcolorinterp(band)`: color interpretation of the values in the band (`GCI_RedBand`)
@@ -49,11 +41,8 @@ Finally, you can obtain overviews:
 * `ArchGDAL.noverview(band)`: the number of overview layers available, zero if none. (`7`)
 * `ArchGDAL.getoverview(band, i)`: returns the `i`-th overview in the raster band. Each overview is itself a raster band, e.g.
 
-```julia
-julia> ArchGDAL.getoverview(band, 2)
-[GA_ReadOnly] Band 1 (Red): 256 x 128 (UInt8)
-    blocksize: 128×128, nodata: -1.0e10, units: 1.0px + 0.0
-    overviews:
+```@example rasters
+ArchGDAL.getoverview(band, 2)
 ```
 
 ## Raster I/O
@@ -109,34 +98,21 @@ Following the description in [mapbox/rasterio's documentation](https://rasterio.
 
 For that purpose, we have a method called `ArchGDAL.windows(band)` which iterates over the windows of a raster band, returning the indices corresponding to the rasterblocks within that raster band for efficiency:
 
-```julia
-julia> for (cols,rows) in ArchGDAL.windows(band)
-           println((cols,rows))
-       end
-(1:256, 1:256)
-(1:256, 257:512)
-(1:256, 513:768)
-(1:256, 769:1024)
-(257:512, 1:256)
-(257:512, 257:512)
-(257:512, 513:768)
-(257:512, 769:1024)
-(513:768, 1:256)
-...
+```@example rasters
+using Base.Iterators: take  # to prevent showing all blocks
+windows = ArchGDAL.windows(band)
+
+for (cols, rows) in take(windows, 5)
+    @info "Window" cols rows
+end
 ```
 
 Alternatively, we have another method called `ArchGDAL.blocks(band)` which iterates over the windows of a raster band, returning the `offset` and `size` corresponding to the rasterblocks within that raster band for efficiency:
-```julia
-julia> for (xyoffset,xysize) in ArchGDAL.blocks(band)
-           println((xyoffset,xysize))
-       end
-((0, 0), (256, 256))
-((1, 0), (256, 256))
-((2, 0), (256, 256))
-((3, 0), (256, 256))
-((0, 1), (256, 256))
-((1, 1), (256, 256))
-...
+```@example rasters
+blocks = ArchGDAL.blocks(band)
+for (xyoffset, xysize) in take(blocks, 5)
+    @info "Window offset" xyoffset xysize
+end
 ```
 
 !!! note

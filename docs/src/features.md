@@ -1,25 +1,19 @@
 # Feature Data
 
+```@setup features
+using ArchGDAL
+```
+
 In this section, we revisit the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset.
 
-```julia
-julia> dataset = AG.read("data/point.geojson")
-GDAL Dataset (Driver: GeoJSON/GeoJSON)
-File(s):
-  data/point.geojson
-
-Number of feature layers: 1
-  Layer 0: point (wkbPoint)
+```@example features
+dataset = ArchGDAL.read("data/point.geojson")
 ```
 
 ## Feature Layers
 
-```julia
-julia> layer = ArchGDAL.getlayer(dataset, 0)
-Layer: point
-  Geometry 0 (): [wkbPoint], POINT (100 0), POINT (100.2785 0.0893), ...
-     Field 0 (FID): [OFTReal], 2.0, 3.0, 0.0, 3.0
-     Field 1 (pointname): [OFTString], point-a, point-b, a, b
+```@example features
+layer = ArchGDAL.getlayer(dataset, 0)
 ```
 
 The display provides
@@ -48,14 +42,10 @@ Each `geomdefn` defines an attribute of a geometry, and supports the following:
 
 ## Individual Features
 We can examine an individual feature
-```julia
-julia> ArchGDAL.getfeature(layer, 2) do feature
-           print(feature)
-       end
-Feature
-  (index 0) geom => POINT
-  (index 0) FID => 0.0
-  (index 1) pointname => a
+```@example features
+ArchGDAL.getfeature(layer, 2) do feature
+    print(feature)
+end
 ```
 
 You can programmatically retrieve the information using

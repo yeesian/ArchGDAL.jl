@@ -1,5 +1,9 @@
 # Data Model
 
+```@setup datasets
+using ArchGDAL
+```
+
 ## GDAL Datasets
 
 The following code demonstrates the general workflow for reading in a dataset:
@@ -14,14 +18,9 @@ We defer the discussion on `ArchGDAL.read(filename)` to the section on [Working 
 
 ## Vector Datasets
 In this section, we work with the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset:
-```julia
-julia> dataset = ArchGDAL.read("data/point.geojson")
-GDAL Dataset (Driver: GeoJSON/GeoJSON)
-File(s):
-  data/point.geojson
 
-Number of feature layers: 1
-  Layer 0: point (wkbPoint)
+```@example datasets
+dataset = ArchGDAL.read("data/point.geojson")
 ```
 
 The display indicates
@@ -46,17 +45,8 @@ For more on working with features and vector data, see the Section on [Feature D
 
 ## Raster Datasets
 In this section, we work with the [`gdalworkshop/world.tif`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/gdalworkshop/world.tif) dataset:
-```julia
-julia> dataset = AG.read("gdalworkshop/world.tif")
-GDAL Dataset (Driver: GTiff/GeoTIFF)
-File(s):
-  gdalworkshop/world.tif
-
-Dataset (width x height): 2048 x 1024 (pixels)
-Number of raster bands: 3
-  [GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
-  [GA_ReadOnly] Band 2 (Green): 2048 x 1024 (UInt8)
-  [GA_ReadOnly] Band 3 (Blue): 2048 x 1024 (UInt8)
+```@example datasets
+dataset = ArchGDAL.read("gdalworkshop/world.tif")
 ```
 
 The display indicates

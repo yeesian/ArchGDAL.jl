@@ -1,11 +1,16 @@
 # Geometric Operations
 
+```@setup geometries
+using ArchGDAL
+const AG = ArchGDAL
+```
+
 In this section, we consider some of the common kinds of geometries that arises in applications. These include `Point`, `LineString`, `Polygon`, `GeometryCollection`, `MultiPolygon`, `MultiPoint`, and `MultiLineString`. For brevity in the examples, we will use the prefix `const AG = ArchGDAL`.
 
 ## Geometry Creation
 To create geometries of different types.
 
-```julia
+```@example geometries
 point = AG.createpoint(1.0, 2.0)
 linestring = AG.createlinestring([(i,i+1) for i in 1.0:3.0])
 linearring = AG.createlinearring([(0.,0.), (0.,1.), (1.,1.)])
@@ -17,37 +22,43 @@ multipolygon = AG.createmultipolygon([[[(0.,0.), (0.,j), (j,j)]] for j in 1.0:-0
 ```
 
 Alternatively, they can be assembled from their components.
-```julia
+```@example geometries
 point = AG.createpoint()
-    AG.addpoint!(point, 1.0, 2.0)
+AG.addpoint!(point, 1.0, 2.0)
+
 linestring = AG.createlinestring()
-    for i in 1.0:3.0
-        AG.addpoint!(linestring, i, i+1)
-    end
+for i in 1.0:3.0
+    AG.addpoint!(linestring, i, i+1)
+end
+
 linearring = AG.createlinearring()
-    for i in 1.0:3.0
-        AG.addpoint!(linearring, i, i+1)
-    end
+for i in 1.0:3.0
+    AG.addpoint!(linearring, i, i+1)
+end
+
 polygon = AG.createpolygon()
-    for j in 1.0:-0.1:0.9
-        ring = AG.createlinearring([(0.,0.), (0.,j), (j,j)])
-        AG.addgeom!(polygon, ring)
-    end
+for j in 1.0:-0.1:0.9
+    ring = AG.createlinearring([(0.,0.), (0.,j), (j,j)])
+    AG.addgeom!(polygon, ring)
+end
+
 multipoint = AG.createmultipoint()
-    for i in 1.0:3.0
-        pt = AG.createpoint(i, i+1)
-        AG.addgeom!(multipoint, pt)
-    end
+for i in 1.0:3.0
+    pt = AG.createpoint(i, i+1)
+    AG.addgeom!(multipoint, pt)
+end
+
 multilinestring = AG.createmultilinestring()
-    for j in 1.0:5.0:6.0
-        line = AG.createlinestring([(i,i+1) for i in j:j+3])
-        AG.addgeom!(multilinestring, line)
-    end
+for j in 1.0:5.0:6.0
+    line = AG.createlinestring([(i,i+1) for i in j:j+3])
+    AG.addgeom!(multilinestring, line)
+end
+
 multipolygon = AG.createmultipolygon()
-    for j in 1.0:-0.1:0.9
-        poly = AG.createpolygon([(0.,0.), (0.,j), (j,j)])
-        AG.addgeom!(multipolygon, poly)
-    end
+for j in 1.0:-0.1:0.9
+    poly = AG.createpolygon([(0.,0.), (0.,j), (j,j)])
+    AG.addgeom!(multipolygon, poly)
+end
 ```
 
 They can also be constructed from other data formats such as:
