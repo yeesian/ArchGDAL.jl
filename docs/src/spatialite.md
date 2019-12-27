@@ -1,6 +1,6 @@
 # Working with Spatialite
 
-Here is an example of how you can work with a SQLite Database in ArchGDAL.jl, and follows the tutorial in http://www.gaia-gis.it/gaia-sins/spatialite-tutorial-2.3.1.html.
+Here is an example of how you can work with a SQLite Database in ArchGDAL.jl, and follows the tutorial in [http://www.gaia-gis.it/gaia-sins/spatialite-tutorial-2.3.1.html](http://www.gaia-gis.it/gaia-sins/spatialite-tutorial-2.3.1.html).
 
 We will work with the following database:
 
