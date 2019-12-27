@@ -11,11 +11,12 @@ makedocs(
         "Raster Data" => "rasters.md",
         "Geometric Operations" => "geometries.md",
         "Spatial Projections" => "projections.md",
-        "Interactive versus Scoped Objects" => "memory.md"
-        # "Working with Spatialite" => "spatialite.md"
+        # "Working with Spatialite" => "spatialite.md",
+        "Interactive versus Scoped Objects" => "memory.md",
+        "Design Considerations" => "considerations.md",
+        "API Reference" => "reference.md",
         # "Naming Conventions" => "conventions.md", # table between GDAL, GDAL.jl, and ArchGDAL.jl
     ]
-    
 )
 
 deploydocs(

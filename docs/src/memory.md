@@ -115,15 +115,15 @@ result = ArchGDAL.<method>(args...)
 
 !!! note
 
-    Users are allowed to mix both "interactive" and "scoped" objects. As long as they do not manually call `ArchGDAL.destroy()` on any object, ArchGDAL is designed to avoid the pitfalls of GDAL memory management (e.g. in [PythonGotchas](https://trac.osgeo.org/gdal/wiki/PythonGotchas)).
+    Users are allowed to mix both "interactive" and "scoped" objects. As long as they do not manually call `ArchGDAL.destroy()` on any object, ArchGDAL is designed to avoid the pitfalls of GDAL memory management (e.g. in [Python Gotchas](https://gdal.org/api/python_gotchas.html)).
 
 ## References
 Here's a collection of references for developers who are interested.
 
-- http://docs.julialang.org/en/release-0.4/manual/calling-c-and-fortran-code/
-- https://github.com/JuliaLang/julia/issues/7721
-- https://github.com/JuliaLang/julia/issues/11207
-- https://trac.osgeo.org/gdal/wiki/PythonGotchas
-- https://lists.osgeo.org/pipermail/gdal-dev/2010-September/026027.html
-- https://sgillies.net/2013/12/17/teaching-python-gis-users-to-be-more-rational.html
-- https://pcjericks.github.io/py-gdalogr-cookbook/gotchas.html#features-and-geometries-have-a-relationship-you-don-t-want-to-break
+- [https://docs.julialang.org/en/v1.3/manual/calling-c-and-fortran-code/](https://docs.julialang.org/en/v1.3/manual/calling-c-and-fortran-code/)
+- [https://github.com/JuliaLang/julia/issues/7721](https://github.com/JuliaLang/julia/issues/7721)
+- [https://github.com/JuliaLang/julia/issues/11207](https://github.com/JuliaLang/julia/issues/11207)
+- [https://gdal.org/api/python_gotchas.html](https://gdal.org/api/python_gotchas.html)
+- [https://lists.osgeo.org/pipermail/gdal-dev/2010-September/026027.html](https://lists.osgeo.org/pipermail/gdal-dev/2010-September/026027.html)
+- [https://sgillies.net/2013/12/17/teaching-python-gis-users-to-be-more-rational.html](https://sgillies.net/2013/12/17/teaching-python-gis-users-to-be-more-rational.html)
+- [https://pcjericks.github.io/py-gdalogr-cookbook/gotchas.html#features-and-geometries-have-a-relationship-you-don-t-want-to-break](https://pcjericks.github.io/py-gdalogr-cookbook/gotchas.html#features-and-geometries-have-a-relationship-you-don-t-want-to-break)
