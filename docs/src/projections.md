@@ -29,20 +29,20 @@ The details of how to interpret the results can be found in http://proj4.org/usa
 
 In the above example, we constructed a `SpatialRef` object from the [EPSG Code 2927](http://spatialreference.org/ref/epsg/2927/). There are a variety of other formats from which `SpatialRef`s can be constructed, such as
 
-* `ArchGDAL.importEPSG(::Int)`: based on the [EPSG code](http://spatialreference.org/ref/epsg/)
-* `ArchGDAL.importEPSGA(::Int)`: based on the EPSGA code
-* `ArchGDAL.importESRI(::String)`: based on ESRI projection codes
-* `ArchGDAL.importPROJ4(::String)` based on the PROJ.4 string ([reference](http://proj4.org/usage/projections.html))
-* `ArchGDAL.importURL(::String)`: download from a given URL and feed it into `SetFromUserInput` for you.
-* `ArchGDAL.importWKT(::String)`: WKT string
-* `ArchGDAL.importXML(::String)`: XML format (GML only currently)
+* [`ArchGDAL.importEPSG(::Int)`](@ref): based on the [EPSG code](http://spatialreference.org/ref/epsg/)
+* [`ArchGDAL.importEPSGA(::Int)`](@ref): based on the EPSGA code
+* [`ArchGDAL.importESRI(::String)`](@ref): based on ESRI projection codes
+* [`ArchGDAL.importPROJ4(::String)` based on the PROJ.4 string ([reference](http://proj4.org/usage/projections.html))
+* [`ArchGDAL.importURL(::String)`](@ref): download from a given URL and feed it into `SetFromUserInput` for you.
+* [`ArchGDAL.importWKT(::String)`](@ref): WKT string
+* [`ArchGDAL.importXML(::String)`](@ref): XML format (GML only currently)
 
 We currently support a few export formats too:
 
-* `ArchGDAL.toMICoordSys(spref)`: Mapinfo style CoordSys format.
-* `ArchGDAL.toPROJ4(spref)`: coordinate system in PROJ.4 format.
-* `ArchGDAL.toWKT(spref)`: nicely formatted WKT string for display to a person.
-* `ArchGDAL.toXML(spref)`: converts into XML format to the extent possible.
+* [`ArchGDAL.toMICoordSys(spref)`](@ref): Mapinfo style CoordSys format.
+* [`ArchGDAL.toPROJ4(spref)`](@ref): coordinate system in PROJ.4 format.
+* [`ArchGDAL.toWKT(spref)`](@ref): nicely formatted WKT string for display to a person.
+* [`ArchGDAL.toXML(spref)`](@ref): converts into XML format to the extent possible.
 
 ## Reprojecting a Geometry
 ```@example projections
