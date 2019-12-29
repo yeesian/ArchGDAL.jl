@@ -66,6 +66,8 @@ function createfeature(f::Function, featuredefn::FeatureDefn)
 end
 
 """
+    addfielddefn!(layer::AbstractFeatureLayer, name, etype::OGRFieldType; <keyword arguments>)
+
 Create a new field on a layer.
 
 This function should not be called while there are feature objects in existence
@@ -133,6 +135,8 @@ function addfielddefn(
 end
 
 """
+    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::OGRwkbGeometryType, approx=false)
+
 Write a new geometry field on a layer.
 
 This function should not be called while there are feature objects in existence

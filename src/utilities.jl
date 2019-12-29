@@ -1,4 +1,6 @@
 """
+    gdalinfo(dataset::Dataset, options = String[])
+
 List various information about a GDAL supported raster dataset.
 
 ### Parameters
@@ -17,6 +19,8 @@ function gdalinfo(dataset::Dataset, options = String[])
 end
 
 """
+    unsafe_gdaltranslate(dataset::Dataset, options = String[]; dest = "/vsimem/tmp")
+
 Convert raster data between different formats.
 
 ### Parameters
@@ -40,6 +44,8 @@ function unsafe_gdaltranslate(
 end
 
 """
+    unsafe_gdalwarp(datasets::Vector{Dataset}, options = String[]; dest = "/vsimem/tmp")
+
 Image reprojection and warping function.
 
 ### Parameters
@@ -64,6 +70,8 @@ function unsafe_gdalwarp(
 end
 
 """
+    unsafe_gdalvectortranslate(datasets::Vector{Dataset}, options = String[]; dest = "/vsimem/tmp")
+
 Convert vector data between file formats.
 
 ### Parameters
@@ -88,6 +96,8 @@ function unsafe_gdalvectortranslate(
 end
 
 """
+    unsafe_gdaldem(dataset::Dataset, processing::String, options = String[]; dest = "/vsimem/tmp", colorfile)
+
 Tools to analyze and visualize DEMs.
 
 ### Parameters
@@ -123,6 +133,8 @@ function unsafe_gdaldem(
 end
 
 """
+    unsafe_gdalnearblack(dataset::Dataset, options = String[]; dest = "/vsimem/tmp")
+
 Convert nearly black/white borders to exact value.
 
 ### Parameters
@@ -146,6 +158,8 @@ function unsafe_gdalnearblack(
 end
 
 """
+    unsafe_gdalgrid(dataset::Dataset, options = String[]; dest = "/vsimem/tmp")
+
 Create a raster from the scattered data.
 
 ### Parameters
@@ -169,6 +183,8 @@ function unsafe_gdalgrid(
 end
 
 """
+    unsafe_gdalrasterize(dataset::Dataset, options = String[]; dest = "/vsimem/tmp")
+
 Burn vector geometries into a raster.
 
 ### Parameters
@@ -192,6 +208,8 @@ function unsafe_gdalrasterize(
 end
 
 """
+    unsafe_gdalbuildvrt(datasets::Vector{Dataset}, options = String[]; dest = "/vsimem/tmp")
+
 Build a VRT from a list of datasets.
 
 ### Parameters

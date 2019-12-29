@@ -305,44 +305,94 @@ import Base.|
 |(x::UInt8,y::GDALOpenFlag) = x | UInt8(y)
 |(x::GDALOpenFlag,y::GDALOpenFlag) = UInt8(x) | UInt8(y)
 
-"Get data type size in bits."
+"""
+    typesize(dt::GDALDataType)
+
+Get data type size in bits.
+"""
 typesize(dt::GDALDataType) = GDAL.gdalgetdatatypesize(dt)
 
-"name (string) corresponding to GDAL data type"
+"""
+    typename(dt::GDALDataType)
+
+name (string) corresponding to GDAL data type.
+"""
 typename(dt::GDALDataType) = GDAL.gdalgetdatatypename(dt)
 
-"Returns GDAL data type by symbolic name."
+"""
+    gettype(name::AbstractString)
+
+Returns GDAL data type by symbolic name.
+"""
 gettype(name::AbstractString) = GDAL.gdalgetdatatypebyname(name)
 
-"Return the smallest data type that can fully express both input data types."
+"""
+    typeunion(dt1::GDALDataType, dt2::GDALDataType)
+
+Return the smallest data type that can fully express both input data types.
+"""
 typeunion(dt1::GDALDataType, dt2::GDALDataType) = GDAL.gdaldatatypeunion(dt1, dt2)
 
 """
-`true` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}`
+    iscomplex(dtype::GDALDataType)
+
+`true` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}.`
 """
 iscomplex(dtype::GDALDataType) = Bool(GDAL.gdaldatatypeiscomplex(dtype))
 
-"Get name of AsyncStatus data type."
+"""
+    getname(dtype::GDALAsyncStatusType)
+
+Get name of AsyncStatus data type.
+"""
 getname(dtype::GDALAsyncStatusType) = GDAL.gdalgetasyncstatustypename(dtype)
 
-"Get AsyncStatusType by symbolic name."
+"""
+    asyncstatustype(name::AbstractString)
+
+Get AsyncStatusType by symbolic name.
+"""
 asyncstatustype(name::AbstractString) = GDAL.gdalgetasyncstatustypebyname(name)
 
-"Return name (string) corresponding to color interpretation"
+"""
+    getname(obj::GDALColorInterp)
+
+Return name (string) corresponding to color interpretation.
+"""
 getname(obj::GDALColorInterp) = GDAL.gdalgetcolorinterpretationname(obj)
 
-"Get color interpretation corresponding to the given symbolic name."
+"""
+    colorinterp(name::AbstractString)
+
+Get color interpretation corresponding to the given symbolic name.
+"""
 colorinterp(name::AbstractString) = GDAL.gdalgetcolorinterpretationbyname(name)
 
-"Get name of palette interpretation."
+"""
+    getname(obj::GDALPaletteInterp)
+
+Get name of palette interpretation.
+"""
 getname(obj::GDALPaletteInterp) = GDAL.gdalgetpaletteinterpretationname(obj)
 
-"Fetch human readable name for a field type."
+"""
+    getname(obj::OGRFieldType)
+
+Fetch human readable name for a field type.
+"""
 getname(obj::OGRFieldType) = GDAL.ogr_getfieldtypename(obj)
 
-"Fetch human readable name for a field subtype."
+"""
+    getname(obj::OGRFieldSubType)
+
+Fetch human readable name for a field subtype.
+"""
 getname(obj::OGRFieldSubType) = GDAL.ogr_getfieldsubtypename(obj)
 
-"Return if type and subtype are compatible."
+"""
+    arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType)
+
+Return if type and subtype are compatible.
+"""
 arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType) =
     Bool(GDAL.ogr_aretypesubtypecompatible(dtype, subtype))

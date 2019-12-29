@@ -1,5 +1,11 @@
 
 """
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands::Vector{Cint}; <keyword arguments>)
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands::Vector{Cint}, rows, cols; <keyword arguments>)
+    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}; <keyword arguments>)
+    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}, rows, cols; <keyword arguments>)
+
+
 Read/write a region of image data from multiple bands.
 
 This method allows reading a region of one or more `RasterBand`s from this
@@ -7,8 +13,8 @@ dataset into a buffer, or writing data from a buffer into a region of the
 `RasterBand`s. It automatically takes care of data type translation if the
 element type (`<:Real`) of the buffer is different than that of the
 `GDALRasterBand`. The method also takes care of image decimation / replication
-if the buffer size (`xsz x ysz`) is different than the size of the
-region being accessed (`xsize x ysize`).
+if the buffer size (`xsz × ysz`) is different than the size of the
+region being accessed (`xsize × ysize`).
 
 The `pxspace`, `linespace` and `bandspace` parameters allow reading into
 or writing from various organization of buffers.
@@ -18,6 +24,10 @@ boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
 `writeblock!()` methods.
 
 ### Parameters
+* `rows`        A continuous range of rows expressed as a `UnitRange{<:Integer}`,
+                such as 2:9.
+* `cols`        A continuous range of columns expressed as a `UnitRange{<:Integer}`,
+                such as 2:9.
 * `access`      Either `GDAL.GF_Read` to read a region of data, or
                 `GDAL.GF_Write` to write a region of data.
 * `xoffset`     The pixel offset to the top left corner of the region to be
@@ -31,9 +41,9 @@ boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
                 words of type `eltype(buffer)`. It is organized in left to
                 right, top to bottom pixel order. Spacing is controlled by the
                 `pxspace`, and `linespace` parameters
-* `xsz`         The width of the buffer image into which the desired region is
+* `xsz`         The width of the buffer into which the desired region is
                 to be read, or from which it is to be written.
-* `ysz`         The height of the buffer image into which the desired region is
+* `ysz`         The height of the buffer into which the desired region is
                 to be read, or from which it is to be written.
 * `bands`       The list of bands (`1`-based) to be read/written.
 * `pxspace`     The byte offset from the start of a pixel value in the `buffer`
@@ -49,6 +59,8 @@ boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
 ### Returns
 `CE_Failure` if the access fails, otherwise `CE_None`.
 """
+function rasterio! end
+
 function rasterio!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
@@ -81,55 +93,6 @@ function rasterio!(
     return buffer
 end
 
-"""
-Read/write a region of image data for this band.
-
-This method allows reading a region of a `rasterband` into a buffer, or
-writing data from a buffer into a region of a `rasterband`. It automatically
-takes care of data type translation if the element type (`<:Real`) of the
-buffer is different than that of the `rasterband`. The method also takes care
-of image decimation / replication if the buffer size (`xsz x ysz`) is different
-than the size of the region being accessed (`xsize x ysize`).
-
-The `pxspace` and `linespace` parameters allow reading into or writing from
-unusually organized buffers. This is primarily used for buffers containing
-more than one bands raster data in interleaved format.
-
-Some formats may efficiently implement decimation into a buffer by reading from
-lower resolution overview images.
-
-For highest performance full resolution data access, read and write on \"block
-boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
-`writeblock!()` methods.
-
-### Parameters
-* `access`      Either `GDAL.GF_Read` to read a region of data, or
-                `GDAL.GF_Write` to write a region of data.
-* `xoffset`     The pixel offset to the top left corner of the region to be
-                accessed. It will be `0` (default) to start from the left.
-* `yoffset`     The line offset to the top left corner of the region to be
-                accessed. It will be `0` (default) to start from the top.
-* `xsize`       The width of the region of the band to be accessed in pixels.
-* `ysize`       The height of the region of the band to be accessed in lines.
-* `buffer`      The buffer into which the data should be read, or from which it
-                should be written. It must contain `≥ xsz * ysz * <nband>` words
-                of type `eltype(buffer)`. It is organized in left to right,
-                top to bottom pixel order. Spacing is controlled by the
-                `pxspace`, and `linespace` parameters
-* `xsz`         The width of the buffer into which the desired region is to be
-                read, or from which it is to be written.
-* `ysz`         The height of the buffer into which the desired region is to be
-                read, or from which it is to be written.
-* `pxspace`     The byte offset from the start of a pixel value in `buffer`
-                to the start of the next pixel value within a scanline. By
-                default (i.e., `0`) the size of `eltype(buffer)` will be used.
-* `linespace`   The byte offset from the start of one scanline in pBuffer to
-                the start of the next. By default (i.e., `0`) the value of
-                `sizeof(eltype(buffer)) * xsz` will be used.
-
-### Returns
-`CE_Failure` if the access fails, otherwise `CE_None`.
-"""
 function rasterio!(
         rasterband::AbstractRasterBand,
         buffer::Matrix{<:Real},
@@ -504,19 +467,21 @@ for (T,GT) in _GDALTYPE
 end
 
 """
+    readblock!(rb::AbstractRasterBand, xoffset::Integer, yoffset::Integer, buffer)
+
 Read a block of image data efficiently.
 
-This method accesses a "natural" block from the raster band without resampling, 
-or data type conversion. For a more generalized, but potentially less efficient 
+This method accesses a "natural" block from the raster band without resampling,
+or data type conversion. For a more generalized, but potentially less efficient
 access use RasterIO().
 
 ### Parameters
-* `xoffset` the horizontal block offset, with zero indicating the left most 
+* `xoffset` the horizontal block offset, with zero indicating the left most
             block, 1 the next block and so forth.
 * `yoffset` the vertical block offset, with zero indicating the top most block,
             1 the next block and so forth.
-* `buffer`  the buffer into which the data will be read. The buffer must be 
-            large enough to hold GetBlockXSize()*GetBlockYSize() words of type 
+* `buffer`  the buffer into which the data will be read. The buffer must be
+            large enough to hold GetBlockXSize()*GetBlockYSize() words of type
             GetRasterDataType().
 """
 function readblock!(
@@ -531,18 +496,20 @@ function readblock!(
 end
 
 """
+    writeblock!(rb::AbstractRasterBand, xoffset::Integer, yoffset::Integer, buffer)
+
 Write a block of image data efficiently.
 
 This method accesses a "natural" block from the raster band without resampling,
-or data type conversion. For a more generalized, but potentially less efficient 
+or data type conversion. For a more generalized, but potentially less efficient
 access use RasterIO().
 
 ### Parameters
-* `xoffset` the horizontal block offset, with zero indicating the left most 
+* `xoffset` the horizontal block offset, with zero indicating the left most
             block, 1 the next block and so forth.
 * `yoffset` the vertical block offset, with zero indicating the left most block,
             1 the next block and so forth.
-* `buffer`  the buffer from which the data will be written. The buffer must be 
+* `buffer`  the buffer from which the data will be written. The buffer must be
             large enough to hold GetBlockXSize()*GetBlockYSize() words of type
             GetRasterDataType().
 """

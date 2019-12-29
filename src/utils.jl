@@ -55,14 +55,24 @@ end
 #     stringlist
 # end
 
-"Fetch list of (non-empty) metadata domains. (Since: GDAL 1.11)"
+"""
+    metadatadomainlist(obj)
+
+Fetch list of (non-empty) metadata domains.
+"""
 metadatadomainlist(obj) = GDAL.gdalgetmetadatadomainlist(obj.ptr)
 
-"Fetch metadata. Note that relatively few formats return any metadata."
+"""
+    metadata(obj; domain::AbstractString = "")
+
+Fetch metadata. Note that relatively few formats return any metadata.
+"""
 metadata(obj; domain::AbstractString = "") =
     GDAL.gdalgetmetadata(obj.ptr, domain)
 
 """
+    setconfigoption(option::AbstractString, value)
+
 Set a configuration option for GDAL/OGR use.
 
 Those options are defined as a (key, value) couple. The value corresponding to a
@@ -83,6 +93,8 @@ setconfigoption(option::AbstractString, value) =
     GDAL.cplsetconfigoption(option, value)
 
 """
+    clearconfigoption(option::AbstractString)
+
 This function can be used to clear a setting.
 
 Note: it will not unset an existing environment variable; it will
@@ -91,6 +103,8 @@ just unset a value previously set by `setconfigoption()`.
 clearconfigoption(option::AbstractString) = setconfigoption(option, C_NULL)
 
 """
+    getconfigoption(option::AbstractString, default = C_NULL)
+
 Get the value of a configuration option.
 
 The value is the value of a (key, value) option set with `setconfigoption()`.
@@ -113,6 +127,8 @@ function getconfigoption(option::AbstractString, default = C_NULL)
 end
 
 """
+    setthreadconfigoption(option::AbstractString, value)
+
 Set a configuration option for GDAL/OGR use.
 
 Those options are defined as a (key, value) couple. The value corresponding to a
@@ -130,6 +146,8 @@ setthreadconfigoption(option::AbstractString, value) =
     GDAL.cplsetthreadlocalconfigoption(option, value)
 
 """
+    clearthreadconfigoption(option::AbstractString)
+
 This function can be used to clear a setting.
 
 Note: it will not unset an existing environment variable; it will
@@ -138,7 +156,11 @@ just unset a value previously set by `setthreadconfigoption()`.
 clearthreadconfigoption(option::AbstractString) =
     setthreadconfigoption(option, C_NULL)
 
-"Same as `getconfigoption()` but with settings from `setthreadconfigoption()`."
+"""
+    getthreadconfigoption(option::AbstractString, default = C_NULL)
+
+Same as `getconfigoption()` but with settings from `setthreadconfigoption()`.
+"""
 function getthreadconfigoption(option::AbstractString, default = C_NULL)
     result = @gdal(CPLGetThreadLocalConfigOption::Cstring,
         option::Cstring,

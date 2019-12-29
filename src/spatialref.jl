@@ -1,4 +1,8 @@
-"Construct a Spatial Reference System from its WKT."
+"""
+    newspatialref(wkt::AbstractString = "")
+
+Construct a Spatial Reference System from its WKT.
+"""
 newspatialref(wkt::AbstractString = "") =
     ISpatialRef(GDAL.osrnewspatialreference(wkt))
 
@@ -10,7 +14,11 @@ function destroy(spref::AbstractSpatialRef)
     spref.ptr = C_NULL
 end
 
-"Makes a clone of the Spatial Reference System. May return NULL."
+"""
+    clone(spref::AbstractSpatialRef)
+
+Makes a clone of the Spatial Reference System. May return NULL.
+"""
 function clone(spref::AbstractSpatialRef)
     if spref.ptr == C_NULL
         return ISpatialRef()
@@ -28,6 +36,8 @@ function unsafe_clone(spref::AbstractSpatialRef)
 end
 
 """
+    importEPSG!(spref::AbstractSpatialRef, code::Integer)
+
 Initialize SRS based on EPSG GCS or PCS code.
 
 This method will initialize the spatial reference based on the passed in
@@ -56,12 +66,18 @@ function importEPSG!(spref::AbstractSpatialRef, code::Integer)
     return spref
 end
 
-"Construct a Spatial Reference System from its EPSG GCS or PCS code."
+"""
+    importEPSG(code::Integer)
+
+Construct a Spatial Reference System from its EPSG GCS or PCS code.
+"""
 importEPSG(code::Integer) = importEPSG!(newspatialref(), code)
 
 unsafe_importEPSG(code::Integer) = importEPSG!(unsafe_newspatialref(), code)
 
 """
+    importEPSGA!(spref::AbstractSpatialRef, code::Integer)
+
 Initialize SRS based on EPSG CRS code.
 
 This method is similar to `importFromEPSG()` except that EPSG preferred axis
@@ -78,6 +94,8 @@ function importEPSGA!(spref::AbstractSpatialRef, code::Integer)
 end
 
 """
+    importEPSGA(code::Integer)
+
 Construct a Spatial Reference System from its EPSG CRS code.
 
 This method is similar to `importFromEPSG()` except that EPSG preferred axis
@@ -92,6 +110,8 @@ importEPSGA(code::Integer) = importEPSGA!(newspatialref(), code)
 unsafe_importEPSGA(code::Integer) = importEPSGA!(unsafe_newspatialref(), code)
 
 """
+    importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
+
 Import from WKT string.
 
 This method will wipe the existing SRS definition, and reassign it based on the
@@ -105,12 +125,18 @@ function importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
     return spref
 end
 
-"Create SRS from its WKT string."
+"""
+    importWKT(wktstr::AbstractString)
+
+Create SRS from its WKT string.
+"""
 importWKT(wktstr::AbstractString) = newspatialref(wktstr)
 
 unsafe_importWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
 
 """
+    importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
+
 Import PROJ.4 coordinate string.
 
 The OGRSpatialReference is initialized from the passed PROJ.4 style coordinate
@@ -136,7 +162,11 @@ function importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
     return spref
 end
 
-"Create SRS from its PROJ.4 string."
+"""
+    importPROJ4(projstr::AbstractString)
+
+Create SRS from its PROJ.4 string.
+"""
 importPROJ4(projstr::AbstractString) =
     importPROJ4!(newspatialref(), projstr)
 
@@ -144,6 +174,8 @@ unsafe_importPROJ4(projstr::AbstractString) =
     importPROJ4!(unsafe_newspatialref(), projstr)
 
 """
+    importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
+
 Import coordinate system from ESRI .prj format(s).
 
 This function will read the text loaded from an ESRI .prj file, and translate it
@@ -169,21 +201,33 @@ function importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
     return spref
 end
 
-"Create SRS from its ESRI .prj format(s)."
+"""
+    importESRI(esristr::AbstractString)
+
+Create SRS from its ESRI .prj format(s).
+"""
 importESRI(esristr::AbstractString) =
     importESRI!(newspatialref(), esristr)
 
 unsafe_importESRI(esristr::AbstractString) =
     importESRI!(unsafe_newspatialref(), esristr)
 
-"Import SRS from XML format (GML only currently)."
+"""
+    importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
+
+Import SRS from XML format (GML only currently).
+"""
 function importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
     result = GDAL.osrimportfromxml(spref.ptr, xmlstr)
     @ogrerr result "Failed to initialize SRS based on XML string"
     return spref
 end
 
-"Construct SRS from XML format (GML only currently)."
+"""
+    importXML(xmlstr::AbstractString)
+
+Construct SRS from XML format (GML only currently).
+"""
 importXML(xmlstr::AbstractString) =
     importXML!(newspatialref(), xmlstr)
 
@@ -191,6 +235,8 @@ unsafe_importXML(xmlstr::AbstractString) =
     importXML!(unsafe_newspatialref(), xmlstr)
 
 """
+    importURL!(spref::AbstractSpatialRef, url::AbstractString)
+
 Set spatial reference from a URL.
 
 This method will download the spatial reference at a given URL and feed it into
@@ -203,6 +249,8 @@ function importURL!(spref::AbstractSpatialRef, url::AbstractString)
 end
 
 """
+    importURL(url::AbstractString)
+
 Construct SRS from a URL.
 
 This method will download the spatial reference at a given URL and feed it into
@@ -212,7 +260,11 @@ importURL(url::AbstractString) = importURL!(newspatialref(), url)
 
 unsafe_importURL(url::AbstractString) = importURL!(unsafe_newspatialref(), url)
 
-"Convert this SRS into WKT format."
+"""
+    toWKT(spref::AbstractSpatialRef)
+
+Convert this SRS into WKT format.
+"""
 function toWKT(spref::AbstractSpatialRef)
     wktptr = Ref{Cstring}()
     result = GDAL.osrexporttowkt(spref.ptr, wktptr)
@@ -221,6 +273,8 @@ function toWKT(spref::AbstractSpatialRef)
 end
 
 """
+    toWKT(spref::AbstractSpatialRef, simplify::Bool)
+
 Convert this SRS into a nicely formatted WKT string for display to a person.
 
 ### Parameters
@@ -236,8 +290,8 @@ function toWKT(spref::AbstractSpatialRef, simplify::Bool)
 end
 
 """
-    OSRExportToProj4(OGRSpatialReferenceH,
-                     char **) -> OGRErr
+    toPROJ4(spref::AbstractSpatialRef)
+
 Export coordinate system in PROJ.4 format.
 """
 function toPROJ4(spref::AbstractSpatialRef)
@@ -248,6 +302,8 @@ function toPROJ4(spref::AbstractSpatialRef)
 end
 
 """
+    toXML(spref::AbstractSpatialRef)
+
 Export coordinate system in XML format.
 
 Converts the loaded coordinate reference system into XML format to the extent
@@ -261,7 +317,11 @@ function toXML(spref::AbstractSpatialRef)
     return unsafe_string(xmlptr[])
 end
 
-"Export coordinate system in Mapinfo style CoordSys format."
+"""
+    toMICoordSys(spref::AbstractSpatialRef)
+
+Export coordinate system in Mapinfo style CoordSys format.
+"""
 function toMICoordSys(spref::AbstractSpatialRef)
     ptr = Ref{Cstring}()
     result = GDAL.osrexporttomicoordsys(spref.ptr, ptr)
@@ -270,10 +330,12 @@ function toMICoordSys(spref::AbstractSpatialRef)
 end
 
 """
+    morphtoESRI!(spref::AbstractSpatialRef)
+
 Convert in place to ESRI WKT format.
 
 The value nodes of this coordinate system are modified in various manners more
-closely map onto the ESRI concept of WKT format. This includes renaming a 
+closely map onto the ESRI concept of WKT format. This includes renaming a
 variety of projections and arguments, and stripping out nodes note recognised by
 ESRI (like AUTHORITY and AXIS).
 """
@@ -284,6 +346,8 @@ function morphtoESRI!(spref::AbstractSpatialRef)
 end
 
 """
+    morphfromESRI!(spref::AbstractSpatialRef)
+
 Convert in place from ESRI WKT format.
 
 The value notes of this coordinate system are modified in various manners to
@@ -316,6 +380,8 @@ function morphfromESRI!(spref::AbstractSpatialRef)
 end
 
 """
+    setattrvalue!(spref::AbstractSpatialRef, path::AbstractString, value::AbstractString)
+
 Set attribute value in spatial reference.
 
 Missing intermediate nodes in the path will be created if not already in
@@ -344,6 +410,8 @@ function setattrvalue!(spref::AbstractSpatialRef, path::AbstractString)
 end
 
 """
+    getattrvalue(spref::AbstractSpatialRef, name::AbstractString, i::Integer)
+
 Fetch indicated attribute of named node.
 
 This method uses GetAttrNode() to find the named node, and then extracts the
@@ -362,6 +430,8 @@ getattrvalue(spref::AbstractSpatialRef, name::AbstractString, i::Integer) =
     GDAL.osrgetattrvalue(spref.ptr, name, i)
 
 """
+    unsafe_createcoordtrans(source::AbstractSpatialRef, target::AbstractSpatialRef)
+
 Create transformation object.
 
 ### Parameters
@@ -386,6 +456,8 @@ function destroy(obj::CoordTransform)
 end
 
 """
+    transform!(xvertices, yvertices, zvertices, obj::CoordTransform)
+
 Transform points from source to destination space.
 
 ### Parameters
