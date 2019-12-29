@@ -1,4 +1,6 @@
 """
+    invgeotransform!(gt_in::Vector{Cdouble}, gt_out::Vector{Cdouble})
+
 Invert Geotransform.
 
 This function will invert a standard 3x2 set of GeoTransform coefficients. This
@@ -21,6 +23,8 @@ invgeotransform(gt_in::Vector{Cdouble}) =
     invgeotransform!(gt_in, Array{Cdouble}(undef, 6))
 
 """
+    applygeotransform(geotransform::Vector{Cdouble}, pixel::Cdouble, line::Cdouble)
+
 Apply GeoTransform to x/y coordinate.
 
 Applies the following computation, converting a (pixel,line) coordinate into a
@@ -44,9 +48,11 @@ function applygeotransform(
     geo_y = geo_x + sizeof(Cdouble)
     GDAL.gdalapplygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
     geo_xy
-end 
+end
 
 """
+    composegeotransform!(gt1::Vector{Float64}, gt2::Vector{Float64}, gtout::Vector{Float64})
+
 Compose two geotransforms.
 
 The resulting geotransform is the equivelent to `padfGT1` and then `padfGT2`

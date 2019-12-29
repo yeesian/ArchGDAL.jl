@@ -1,4 +1,6 @@
 """
+    copywholeraster(source::AbstractDataset, dest::AbstractDataset; <keyword arguments>)
+
 Copy all dataset raster data.
 
 This function copies the complete raster contents of one dataset to another
@@ -30,6 +32,8 @@ function copywholeraster(
 end
 
 """
+    unsafe_copy(dataset::AbstractDataset; [filename, [driver, [<keyword arguments>]]])
+
 Create a copy of a dataset.
 
 This method will attempt to create a copy of a raster dataset with the
@@ -96,6 +100,8 @@ function unsafe_copy(
 end
 
 """
+    copy(dataset::AbstractDataset; [filename, [driver, [<keyword arguments>]]])
+
 Create a copy of a dataset.
 
 This method will attempt to create a copy of a raster dataset with the
@@ -151,6 +157,8 @@ function copy(
 end
 
 """
+    write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
+
 Writes the dataset to the designated filename.
 """
 function write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
@@ -158,6 +166,8 @@ function write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
 end
 
 """
+    unsafe_create(filename::AbstractString; driver, width, height, nbands, dtype, options)
+
 Create a new dataset.
 
 What argument values are legal for particular drivers is driver specific, and
@@ -207,6 +217,8 @@ function unsafe_create(
 end
 
 """
+    create(filename::AbstractString; driver, width, height, nbands, dtype, options)
+
 Create a new dataset.
 
 ### Parameters
@@ -263,6 +275,8 @@ function create(
 end
 
 """
+    unsafe_read(filename; flags=OF_ReadOnly, alloweddrivers, options, siblingfiles)
+
 Open a raster file as a GDALDataset.
 
 This function will try to open the passed file, or virtual dataset name by
@@ -289,6 +303,7 @@ driver on how to access a dataset. It should be in UTF-8 encoding.
                    returned, if GDALOpenEx() is called from the same thread.
     - Verbose error: GDAL_OF_VERBOSE_ERROR. If set, a failed attempt to open the
                    file will lead to an error message to be reported.
+* `options`: additional format dependent options.
 
 ### Additional Remarks
 Several recommendations:
@@ -329,6 +344,8 @@ function unsafe_read(
 end
 
 """
+    read(filename; flags=OF_ReadOnly, alloweddrivers, options, siblingfiles)
+
 Open a raster file
 
 ### Parameters
@@ -376,23 +393,45 @@ end
 unsafe_update(filename::AbstractString; flags = OF_Update, kwargs...) =
     unsafe_read(filename; flags = OF_Update | flags, kwargs...)
 
-"Fetch raster width in pixels."
+"""
+    width(dataset::AbstractDataset)
+
+Fetch raster width in pixels.
+"""
 width(dataset::AbstractDataset) = GDAL.gdalgetrasterxsize(dataset.ptr)
 
-"Fetch raster height in pixels."
+"""
+    height(dataset::AbstractDataset)
+
+Fetch raster height in pixels.
+"""
 height(dataset::AbstractDataset) = GDAL.gdalgetrasterysize(dataset.ptr)
 
-"Fetch the number of raster bands on this dataset."
+"""
+    nraster(dataset::AbstractDataset)
+
+Fetch the number of raster bands on this dataset.
+"""
 nraster(dataset::AbstractDataset) = GDAL.gdalgetrastercount(dataset.ptr)
 
-"Fetch the number of feature layers on this dataset."
+"""
+    nlayer(dataset::AbstractDataset)
+
+Fetch the number of feature layers on this dataset.
+"""
 nlayer(dataset::AbstractDataset) = GDAL.gdaldatasetgetlayercount(dataset.ptr)
 
-"Fetch the driver that the dataset was created with"
+"""
+    getdriver(dataset::AbstractDataset)
+
+Fetch the driver that the dataset was created with
+"""
 getdriver(dataset::AbstractDataset) =
     Driver(GDAL.gdalgetdatasetdriver(dataset.ptr))
 
 """
+    filelist(dataset::AbstractDataset)
+
 Fetch files forming dataset.
 
 Returns a list of files believed to be part of this dataset. If it returns an
@@ -406,6 +445,8 @@ the path used to originally open the dataset. The strings will be UTF-8 encoded
 filelist(dataset::AbstractDataset) = GDAL.gdalgetfilelist(dataset.ptr)
 
 """
+    getlayer(dataset::AbstractDataset, i::Integer)
+
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
 
 The returned layer remains owned by the GDALDataset and should not be deleted by
@@ -418,6 +459,8 @@ unsafe_getlayer(dataset::AbstractDataset, i::Integer) =
     FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i))
 
 """
+    getlayer(dataset::AbstractDataset, name::AbstractString)
+
 Fetch the feature layer corresponding to the given name.
 
 The returned layer remains owned by the GDALDataset and should not be deleted by
@@ -434,6 +477,8 @@ unsafe_getlayer(dataset::AbstractDataset, name::AbstractString) =
     FeatureLayer(GDAL.gdaldatasetgetlayerbyname(dataset.ptr, name))
 
 """
+    deletelayer!(dataset::AbstractDataset, i::Integer)
+
 Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
 
 ### Returns
@@ -447,6 +492,8 @@ function deletelayer!(dataset::AbstractDataset, i::Integer)
 end
 
 """
+    testcapability(dataset::AbstractDataset, capability::AbstractString)
+
 Test if capability is available. `true` if capability available otherwise `false`.
 
 One of the following dataset capability names can be passed into this function,
@@ -476,7 +523,7 @@ function listcapability(
         dataset::AbstractDataset,
         capabilities = (GDAL.ODsCCreateLayer,
                         GDAL.ODsCDeleteLayer,
-                        GDAL.ODsCCreateGeomFieldAfterCreateLayer, 
+                        GDAL.ODsCCreateGeomFieldAfterCreateLayer,
                         GDAL.ODsCCurveGeometries,
                         GDAL.ODsCTransactions,
                         GDAL.ODsCEmulatedTransactions)
@@ -487,6 +534,8 @@ function listcapability(
 end
 
 """
+    unsafe_executesql(dataset::AbstractDataset, query::AbstractString; dialect, spatialfilter)
+
 Execute an SQL statement against the data store.
 
 The result of an SQL query is either NULL for statements that are in error, or
@@ -529,6 +578,8 @@ function unsafe_executesql(
 end
 
 """
+    releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
+
 Release results of ExecuteSQL().
 
 This function should only be used to deallocate OGRLayers resulting from an
@@ -544,7 +595,11 @@ function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
     destroy(layer)
 end
 
-"Fetch a band object for a dataset from its index"
+"""
+    getband(dataset::AbstractDataset, i::Integer)
+
+Fetch a band object for a dataset from its index.
+"""
 getband(dataset::AbstractDataset, i::Integer) =
     IRasterBand(GDAL.gdalgetrasterband(dataset.ptr, i), ownedby = dataset)
 
@@ -552,6 +607,8 @@ unsafe_getband(dataset::AbstractDataset, i::Integer) =
     RasterBand(GDAL.gdalgetrasterband(dataset.ptr, i))
 
 """
+    getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
+
 Fetch the affine transformation coefficients.
 
 Fetches the coefficients for transforming between pixel/line (P,L) raster
@@ -586,7 +643,11 @@ end
 getgeotransform(dataset::AbstractDataset) =
     getgeotransform!(dataset, Array{Cdouble}(undef, 6))
 
-"Set the affine transformation coefficients."
+"""
+    setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
+
+Set the affine transformation coefficients.
+"""
 function setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     @assert length(transform) == 6
     result = GDAL.gdalsetgeotransform(dataset.ptr, pointer(transform))
@@ -594,10 +655,16 @@ function setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     return dataset
 end
 
-"Get number of GCPs for this dataset. Zero if there are none."
+"""
+    ngcp(dataset::AbstractDataset)
+
+Get number of GCPs for this dataset. Zero if there are none.
+"""
 ngcp(dataset::AbstractDataset) = GDAL.gdalgetgcpcount(dataset.ptr)
 
 """
+    getproj(dataset::AbstractDataset)
+
 Fetch the projection definition string for this dataset in OpenGIS WKT format.
 
 It should be suitable for use with the OGRSpatialReference class. When a
@@ -606,7 +673,11 @@ returned.
 """
 getproj(dataset::AbstractDataset) = GDAL.gdalgetprojectionref(dataset.ptr)
 
-"Set the projection reference string for this dataset."
+"""
+    setproj!(dataset::AbstractDataset, projstring::AbstractString)
+
+Set the projection reference string for this dataset.
+"""
 function setproj!(dataset::AbstractDataset, projstring::AbstractString)
     result = GDAL.gdalsetprojection(dataset.ptr, projstring)
     @cplerr result "Could not set projection"
@@ -614,7 +685,9 @@ function setproj!(dataset::AbstractDataset, projstring::AbstractString)
 end
 
 """
-Build raster overview(s).
+    buildoverviews!(dataset::AbstractDataset, overviewlist::Vector{Cint}; bandlist, resampling="NEAREST",
+        progressfunc, progressdata)
+        Build raster overview(s).
 
 If the operation is unsupported for the indicated dataset, then CE_Failure is
 returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.

@@ -12,15 +12,15 @@ function destroy(layer::IFeatureLayer)
 end
 
 """
+    createlayer(name, dataset, geom, spatialref, options)
+
 This function attempts to create a new layer on the dataset with the indicated
 `name`, `spatialref`, and geometry type.
 
-### Parameters
+### Keyword Arguments
 * `name`: the name for the new layer. This should ideally not match any
     existing layer on the datasource. Defaults to an empty string.
-
-### Keyword Arguments
-* `dataset`: the dataset
+* `dataset`: the dataset. Defaults to creating a new in memory dataset.
 * `geom`: the geometry type for the layer. Use wkbUnknown (default) if
     there are no constraints on the types geometry to be written.
 * `spatialref`: the coordinate system to use for the new layer.
@@ -53,6 +53,8 @@ function unsafe_createlayer(;
 end
 
 """
+    copy(layer, dataset, name, options)
+
 Copy an existing layer.
 
 This method creates a new layer, duplicate the field definitions of the source
@@ -88,13 +90,25 @@ function unsafe_copy(
         options))
 end
 
-"Return the layer name."
+"""
+    getname(layer::AbstractFeatureLayer)
+
+Return the layer name.
+"""
 getname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getname(layer.ptr)
 
-"Return the layer geometry type."
+"""
+    getgeomtype(layer::AbstractFeatureLayer)
+
+Return the layer geometry type.
+"""
 getgeomtype(layer::AbstractFeatureLayer) = GDAL.ogr_l_getgeomtype(layer.ptr)
 
-"Returns the current spatial filter for this layer."
+"""
+    getspatialfilter(layer::AbstractFeatureLayer)
+
+Returns the current spatial filter for this layer.
+"""
 function getspatialfilter(layer::AbstractFeatureLayer)
     result = GDALGeometry(GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr)))
     if result == C_NULL
@@ -106,7 +120,11 @@ function getspatialfilter(layer::AbstractFeatureLayer)
     end
 end
 
-"Returns a clone of the spatial reference system for this layer."
+"""
+    getspatialref(layer::AbstractFeatureLayer)
+
+Returns a clone of the spatial reference system for this layer.
+"""
 function getspatialref(layer::AbstractFeatureLayer)
     result = GDAL.ogr_l_getspatialref(layer.ptr)
     if result == C_NULL
@@ -130,6 +148,8 @@ function unsafe_getspatialref(layer::AbstractFeatureLayer)
 end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, geom::Geometry)
+
 Set a new spatial filter for the layer, using the geom.
 
 This method set the geometry to be used as a spatial filter when fetching
@@ -169,6 +189,8 @@ function clearspatialfilter!(layer::AbstractFeatureLayer)
 end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, xmin, ymin, xmax, ymax)
+
 Set a new rectangular spatial filter for the layer.
 
 This method set rectangle to be used as a spatial filter when fetching features
@@ -195,6 +217,8 @@ function setspatialfilter!(
 end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, geom::AbstractGeometry)
+
 Set a new spatial filter.
 
 This method set the geometry to be used as a spatial filter when fetching
@@ -235,6 +259,8 @@ function clearspatialfilter!(layer::AbstractFeatureLayer, i::Integer)
 end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, xmin, ymin, xmax, ymax)
+
 Set a new rectangular spatial filter.
 
 ### Parameters
@@ -258,6 +284,8 @@ function setspatialfilter!(
 end
 
 """
+    setattributefilter!(layer::AbstractFeatureLayer, query::AbstractString)
+
 Set a new attribute query.
 
 This method sets the attribute query string to be used when fetching features
@@ -294,6 +322,8 @@ function clearattributefilter!(layer::AbstractFeatureLayer)
 end
 
 """
+    resetreading!(layer::AbstractFeatureLayer)
+
 Reset feature reading to start on the first feature.
 
 This affects `nextfeature()`.
@@ -304,6 +334,8 @@ function resetreading!(layer::AbstractFeatureLayer)
 end
 
 """
+    unsafe_nextfeature(layer::AbstractFeatureLayer)
+
 Fetch the next available feature from this layer.
 
 ### Parameters
@@ -333,6 +365,8 @@ function unsafe_nextfeature(layer::AbstractFeatureLayer)
 end
 
 """
+    setnextbyindex!(layer::AbstractFeatureLayer, i::Integer)
+
 Move read cursor to the `i`-th feature in the current resultset.
 
 This method allows positioning of a layer such that the `nextfeature()` call
@@ -360,6 +394,8 @@ function setnextbyindex!(layer::AbstractFeatureLayer, i::Integer)
 end
 
 """
+    unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer)
+
 Return a feature (now owned by the caller) by its identifier or NULL on failure.
 
 ### Parameters
@@ -389,6 +425,8 @@ unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer) =
     Feature(GDALFeature(GDAL.ogr_l_getfeature(layer.ptr, i)))
 
 """
+    setfeature!(layer::AbstractFeatureLayer, feature::Feature)
+
 Rewrite an existing feature.
 
 This function will write a feature to the layer, based on the feature id within
@@ -407,6 +445,8 @@ function setfeature!(layer::AbstractFeatureLayer, feature::Feature)
 end
 
 """
+    addfeature!(layer::AbstractFeatureLayer, feature::Feature)
+
 Write a new feature within a layer.
 
 ### Remarks
@@ -433,6 +473,8 @@ function addfeature(f::Function, layer::AbstractFeatureLayer)
 end
 
 """
+    unsafe_createfeature(layer::AbstractFeatureLayer)
+
 Create and returns a new feature based on the layer definition.
 
 The newly feature is owned by the layer (it will increase the number of features
@@ -452,6 +494,8 @@ function createfeature(f::Function, layer::AbstractFeatureLayer)
 end
 
 """
+    deletefeature!(layer::AbstractFeatureLayer, i::Integer)
+
 Delete feature with fid `i` from layer.
 
 ### Remarks
@@ -469,6 +513,8 @@ function deletefeature!(layer::AbstractFeatureLayer, i::Integer)
 end
 
 """
+    layerdefn(layer::AbstractFeatureLayer)
+
 Returns a view of the schema information for this layer.
 
 ### Remarks
@@ -478,6 +524,8 @@ layerdefn(layer::AbstractFeatureLayer) =
     IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
 
 """
+    findfieldindex(layer::AbstractFeatureLayer, field::AbstractString, exactmatch::Bool)
+
 Find the index of the field in a layer, or -1 if the field doesn't exist.
 
 If `exactmatch` is set to `false` and the field doesn't exists in the given form
@@ -493,6 +541,8 @@ function findfieldindex(
 end
 
 """
+    nfeature(layer::AbstractFeatureLayer, force::Bool = false)
+
 Fetch the feature count in this layer, or `-1` if the count is not known.
 
 ### Parameters
@@ -503,13 +553,24 @@ Fetch the feature count in this layer, or `-1` if the count is not known.
 nfeature(layer::AbstractFeatureLayer, force::Bool = false) =
     GDAL.ogr_l_getfeaturecount(layer.ptr, force)
 
-"Fetch number of geometry fields on the feature layer."
+"""
+    ngeom(layer::AbstractFeatureLayer)
+
+Fetch number of geometry fields on the feature layer.
+"""
 ngeom(layer::AbstractFeatureLayer) = ngeom(layerdefn(layer))
 
-"Fetch number of fields on the feature layer."
+"""
+    nfield(layer::AbstractFeatureLayer)
+
+Fetch number of fields on the feature layer.
+"""
 nfield(layer::AbstractFeatureLayer) = nfield(layerdefn(layer))
 
 """
+    envelope(layer::AbstractFeatureLayer, force::Bool = false)
+    envelope(layer::AbstractFeatureLayer, i::Integer, force::Bool = false)
+
 Fetch the extent of this layer.
 
 Returns the extent (MBR) of the data in the layer. If `force` is `false`, and it
@@ -550,6 +611,8 @@ function envelope(layer::AbstractFeatureLayer, force::Bool = false)
 end
 
 """
+    testcapability(layer::AbstractFeatureLayer, capability::AbstractString)
+
 Test if this layer supported the named capability.
 
 ### Parameters
@@ -676,6 +739,8 @@ end
 # )
 
 """
+    addfielddefn!(layer::AbstractFeatureLayer, field::AbstractFieldDefn, approx = false)
+
 Create a new field on a layer.
 
 ### Parameters
@@ -713,6 +778,8 @@ function addfielddefn!(
 end
 
 """
+    addgeomdefn!(layer::AbstractFeatureLayer, field::AbstractGeomFieldDefn, approx = false)
+
 Create a new geometry field on a layer.
 
 ### Parameters
@@ -922,6 +989,8 @@ end
 # end
 
 """
+    reference(layer::AbstractFeatureLayer)
+
 Increment layer reference count.
 
 ### Returns
@@ -930,6 +999,8 @@ The reference count after incrementing.
 reference(layer::AbstractFeatureLayer) = GDAL.ogr_l_reference(layer.ptr)
 
 """
+    dereference(layer::AbstractFeatureLayer)
+
 Decrement layer reference count.
 
 ### Returns
@@ -937,7 +1008,11 @@ The reference count after decrementing.
 """
 dereference(layer::AbstractFeatureLayer) = GDAL.ogr_l_dereference(layer.ptr)
 
-"The current reference count for the layer object itself."
+"""
+    nreference(layer::AbstractFeatureLayer)
+
+The current reference count for the layer object itself.
+"""
 nreference(layer::AbstractFeatureLayer) = GDAL.ogr_l_getrefcount(layer.ptr)
 
 # """
@@ -971,14 +1046,24 @@ nreference(layer::AbstractFeatureLayer) = GDAL.ogr_l_getrefcount(layer.ptr)
 # getfeaturesread(layer::AbstractFeatureLayer) =
 #     GDAL.ogr_l_getfeaturesread(layer.ptr)
 
-"The name of the FID column in the database, or \"\" if not supported."
+"""
+    fidcolumnname(layer::AbstractFeatureLayer)
+
+The name of the FID column in the database, or \"\" if not supported.
+"""
 fidcolumnname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getfidcolumn(layer.ptr)
 
-"The name of the geometry column in the database, or \"\" if not supported."
+"""
+    geomcolumnname(layer::AbstractFeatureLayer)
+
+The name of the geometry column in the database, or \"\" if not supported.
+"""
 geomcolumnname(layer::AbstractFeatureLayer) =
     GDAL.ogr_l_getgeometrycolumn(layer.ptr)
 
 """
+    setignoredfields!(layer::AbstractFeatureLayer, fieldnames)
+
 Set which fields can be omitted when retrieving features from the layer.
 
 ### Parameters
