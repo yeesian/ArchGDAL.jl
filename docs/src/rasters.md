@@ -18,28 +18,28 @@ band = ArchGDAL.getband(dataset, 1)
 ```
 
 You can programmatically retrieve the information in the header using
-* `ArchGDAL.accessflag(band)`: the access flag for this band. (`GA_ReadOnly`)
-* `colorinterp = ArchGDAL.getcolorinterp(band)`: color interpretation of the values in the band (`GCI_RedBand`)
-* `ArchGDAL.getname(colorinterp)`: name (string) corresponding to color interpretation (`"Red"`)
-* `ArchGDAL.width(band)`: width (pixels) of the band (`2048`)
-* `ArchGDAL.height(band)`: height (pixels) of the band (`1024`)
-* `ArchGDAL.indexof(band)`: the index of the band (1+) within its dataset, or 0 if unknown. (`1`)
-* `ArchGDAL.pixeltype(band)`: pixel data type for this band. (`UInt8`)
+* [`ArchGDAL.accessflag(band)`](@ref): the access flag for this band. (`GA_ReadOnly`)
+* `colorinterp = `[`ArchGDAL.getcolorinterp(band)`](@ref): color interpretation of the values in the band (`GCI_RedBand`)
+* [`ArchGDAL.getname(colorinterp)`](@ref): name (string) corresponding to color interpretation (`"Red"`)
+* [`ArchGDAL.width(band)`](@ref): width (pixels) of the band (`2048`)
+* [`ArchGDAL.height(band)`](@ref): height (pixels) of the band (`1024`)
+* [`ArchGDAL.indexof(band)`](@ref): the index of the band (1+) within its dataset, or 0 if unknown. (`1`)
+* [`ArchGDAL.pixeltype(band)`](@ref): pixel data type for this band. (`UInt8`)
 
 You can get additional attribute information using
-* `ArchGDAL.getscale(band)`: the scale in `units = (px * scale) + offset` (`1.0`)
-* `ArchGDAL.getoffset(band)`: the offset in `units = (px * scale) + offset` (`0.0`)
-* `ArchGDAL.getunittype(band)`: name for the units, e.g. "m" (meters) or "ft" (feet). (`""`)
-* `ArchGDAL.getnodatavalue(band)`: a special marker value used to mark pixels that are not valid data. (`-1.0e10`)
-* `(x,y) = ArchGDAL.blocksize(band)`: the "natural" block size of this band (`(256,256)`)
+* [`ArchGDAL.getscale(band)`](@ref): the scale in `units = (px * scale) + offset` (`1.0`)
+* [`ArchGDAL.getoffset(band)`](@ref): the offset in `units = (px * scale) + offset` (`0.0`)
+* [`ArchGDAL.getunittype(band)`](@ref): name for the units, e.g. "m" (meters) or "ft" (feet). (`""`)
+* [`ArchGDAL.getnodatavalue(band)`](@ref): a special marker value used to mark pixels that are not valid data. (`-1.0e10`)
+* `(x,y) = `[`ArchGDAL.blocksize(band)`](@ref): the "natural" block size of this band (`(256,256)`)
 
 !!! note
 
     GDAL contains a concept of the natural block size of rasters so that applications can organized data access efficiently for some file formats. The natural block size is the block size that is most efficient for accessing the format. For many formats this is simple a whole scanline. However, for tiled images this will typically be the tile size.
 
 Finally, you can obtain overviews:
-* `ArchGDAL.noverview(band)`: the number of overview layers available, zero if none. (`7`)
-* `ArchGDAL.getoverview(band, i)`: returns the `i`-th overview in the raster band. Each overview is itself a raster band, e.g.
+* [`ArchGDAL.noverview(band)`](@ref): the number of overview layers available, zero if none. (`7`)
+* [`ArchGDAL.getoverview(band, i)`](@ref): returns the `i`-th overview in the raster band. Each overview is itself a raster band, e.g.
 
 ```@example rasters
 ArchGDAL.getoverview(band, 2)
@@ -61,7 +61,7 @@ The general operative method for reading in raster values from a `dataset` or `b
     
     To convert to a format used by the Images.jl ecosystem, you can either create a view using `PermutedDimsArray(A, (3,2,1))` or create a permuted copy using `permutedims(A, (3,2,1))`. The resulting arrays will have `(bands, rows, cols)` dimensions.
 
-You can also specify the subset of rows and columns (provided as `UnitRange`s) to read:
+You can also specify the subset of rows and columns (provided as `UnitRange`s like `2:9`) to read:
 
 * `ArchGDAL.read(dataset, indices, rows, cols)`
 * `ArchGDAL.read(dataset, i, rows, cols)`
