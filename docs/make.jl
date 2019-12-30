@@ -1,5 +1,6 @@
 using Documenter, ArchGDAL
 
+# make sure you have run the tests before such that the test files are present
 makedocs(
     modules = [ArchGDAL],
     format = Documenter.HTML(),
