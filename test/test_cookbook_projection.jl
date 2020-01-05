@@ -42,6 +42,7 @@ const GI = GeoFormatTypes
             @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [[47.348801, -122.598135]]
             coord = (1120351.57, 741921.42)
             @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
+        end
     end
 end
 
