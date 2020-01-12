@@ -32,6 +32,7 @@ module ArchGDAL
     include("base/display.jl")
     include("datastreams.jl")
     include("geointerface.jl")
+    include("convert.jl")
 
     mutable struct DriverManager
         function DriverManager()

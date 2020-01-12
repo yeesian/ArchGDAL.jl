@@ -98,25 +98,6 @@ end
     @test AG.toJSON(point) == "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0 ] }"
 end
 
-
-
-@testset "convert point format" begin
-    point = AG.createpoint(100, 70)
-    json = convert(GFT.GeoJSON, point)
-    kml = convert(GFT.KML, point)
-    gml = convert(GFT.GML, point)
-    wkb = convert(GFT.WellKnownBinary, point) 
-    wkt = convert(GFT.WellKnownText, point) 
-    @test GFT.val(json) == AG.toJSON(point)
-    @test GFT.val(kml) == AG.toKML(point)
-    @test GFT.val(gml) == AG.toGML(point) # This isn't actually tested above
-    @test GFT.val(wkb) == AG.toWKB(point)
-    @test GFT.val(wkt) == AG.toWKT(point)
-    @test convert(GFT.GeoJSON, json) == json
-    @test convert(GFT.GeoJSON, wkb) == convert(GFT.GeoJSON, wkt) == convert(GFT.GeoJSON, gml)
-    @test convert(GFT.KML, gml) == convert(GFT.KML, wkt)
-end
-
 @testset "Testing construction of complex geometries" begin
     @test AG.toWKT(AG.createlinestring([1.,2.,3.], [4.,5.,6.])) == "LINESTRING (1 4,2 5,3 6)"
     AG.createlinestring([1.,2.,3.], [4.,5.,6.]) do geom
