@@ -1,89 +1,90 @@
+import DiskArrays: eachchunk
+import DiskArrays
 const AllowedXY = Union{Integer,Colon,AbstractRange}
 const AllowedBand = Union{Integer,Colon,AbstractArray}
 
 
+# Define a RasterDataset type
+struct RasterDataset{T,DS} <: AbstractDiskArray{T,3}
+    ds::DS
+    size::Tuple{Int,Int,Int}
+end
+function RasterDataset(ds::AbstractDataset)
+    iszero(nraster(ds)) && throw(ArgumentError("The Dataset does not contain any raster bands"))
+    s = _common_size(ds)
+    RasterDataset{_dataset_type(ds), typeof(ds)}(ds,s)
+end
+function _dataset_type(ds::AbstractDataset)
+  alldatatypes = map(1:nraster(ds)) do i
+    b = getband(ds,i)
+    pixeltype(b)
+  end
+  reduce(promote_type,alldatatypes)
+end
+function _common_size(ds::AbstractDataset)
+  nr = nraster(ds)
+  allsizes = map(1:nr) do i
+    b = getband(ds,i)
+    size(b)
+  end
+  s = unique(allsizes)
+  length(s) == 1 || throw(DimensionMismatch("Can not coerce bands to single dataset, different sizes found"))
+  Int64.((s[1]...,nr))
+end
+getband(ds::RasterDataset,i) = getband(ds.ds,i)
+unsafe_readraster(args...;kwargs...)  = RasterDataset(unsafe_read(args...;kwargs...))
+destroy(ds::RasterDataset) = destroy(ds.ds)
+height(ds::RasterDataset) = height(ds.ds)
+width(ds::RasterDataset) = width(ds.ds)
+function eachchunk(ds::RasterDataset)
+  subchunks = eachchunk(getband(ds,1))
+  reshape([(s[1],s[2],i:i) for s in subchunks, i in 1:nraster(ds.ds)], Int.(size(subchunks))..., Int(nraster(ds.ds)))
+end
 # AbstractRasterBand indexing
 
 Base.size(band::AbstractRasterBand) = width(band), height(band)
-Base.firstindex(band::AbstractRasterBand, d) = 1
-Base.lastindex(band::AbstractRasterBand, d) = size(band)[d]
+# Don't know if we need these, commenting out for the moment
+#Base.firstindex(band::AbstractRasterBand, d) = 1
+#Base.lastindex(band::AbstractRasterBand, d) = size(band)[d]
 
-Base.getindex(band::AbstractRasterBand, x::AllowedXY, y::AllowedXY) = begin
-    I = Base.to_indices(band, (x, y))
-    buffer = Array{pixeltype(band),2}(undef, length.(I)...)
+eachchunk(band::AbstractRasterBand) = windows(band)
+
+DiskArrays.readblock!(band::AbstractRasterBand, buffer, x, y) = begin
     # Calculate `read!` args and read
-    xoffset, yoffset = first.(I) .- 1
-    xsize, ysize = length.(I)
+    xoffset, yoffset = first(x)-1, first(y)-1
+    xsize, ysize = length(x), length(y)
     read!(band, buffer, xoffset, yoffset, xsize, ysize)
-    # Drop dimensions of integer indices
-    dimsize = map(length, _dropint(I...))
-    if dimsize == ()
-        return buffer[1]
-    else
-        return reshape(buffer, dimsize...)
-    end
 end
 
-Base.setindex!(band::AbstractRasterBand, value, x::AllowedXY, y::AllowedXY) = begin
-    I = Base.to_indices(band, (x, y))
-    if value isa AbstractArray
-        Base.setindex_shape_check(value, length.(I)...)
-        value = reshape(value, length.(I))
-    else
-        value = reshape([value], 1, 1)
-    end
-    # Calculate `write!` args and write
-    xoffset, yoffset = first.(I) .- 1
-    xsize, ysize = length.(I)
+DiskArrays.writeblock!(band::AbstractRasterBand, value, x, y) = begin
+    # Calculate `read!` args and read
+    xoffset, yoffset = first(x)-1, first(y)-1
+    xsize, ysize = length(x), length(y)
     write!(band, value, xoffset, yoffset, xsize, ysize)
 end
 
 
 # AbstractDataset indexing
 
-Base.size(dataset::AbstractDataset) = (size(getband(dataset, 1))..., nraster(dataset))
-Base.firstindex(dataset::AbstractDataset, d) = 1
-Base.lastindex(dataset::AbstractDataset, d) = size(dataset)[d]
+Base.size(dataset::RasterDataset) = dataset.size
+# Base.firstindex(dataset::AbstractDataset, d) = 1
+# Base.lastindex(dataset::AbstractDataset, d) = size(dataset)[d]
 
-Base.getindex(dataset::AbstractDataset, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1) = begin
-    I = x, y, bands = Base.to_indices(dataset, (x, y, bands))
-    buffer = Array{pixeltype(getband(dataset, 1)),3}(undef, length.(I)...)
+DiskArrays.readblock!(dataset::RasterDataset, buffer, x, y, z) = begin
     # Calculate `read!` args and read
     xoffset, yoffset = first.((x, y)) .- 1
-    xsize, ysize = length.((x, y))
-    indices = _bandindices(bands)
-    read!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)
-    # Drop dimensions of integer indices
-    dimsize = map(length, _dropint(I...))
-    if dimsize == ()
-        return buffer[1]
-    else
-        return reshape(buffer, dimsize...)
-    end
+    xsize, ysize= length.((x, y))
+    indices  = [Cint(i) for i in z]
+    read!(dataset.ds, buffer, indices, xoffset, yoffset, xsize, ysize)
 end
 
-Base.setindex!(dataset::AbstractDataset, value, x::AllowedXY, y::AllowedXY, bands::AllowedBand=1) = begin
-    I = x, y, bands = Base.to_indices(dataset, (x, y, bands))
-    if value isa AbstractArray
-        Base.setindex_shape_check(value, length.((x, y, bands))...)
-        value = reshape(value, length.(I))
-    else
-        value = reshape([value], 1, 1, 1)
-    end
-    # Calculate `write!` args and write
+DiskArrays.writeblock!(dataset::RasterDataset, value, x, y, bands) = begin
     xoffset, yoffset = first.((x, y)) .- 1
-    xsize, ysize = length.((x, y))
-    indices = _bandindices(bands)
-    write!(dataset, value, indices, xoffset, yoffset, xsize, ysize)
+    xsize, ysize= length.((x, y))
+    indices  = [Cint(i) for i in bands]
+    write!(dataset.ds, value, indices, xoffset, yoffset, xsize, ysize)
 end
 
 # Index conversion utilities
 
-_dropint(x::Integer, args...) = _dropint(args...)
-_dropint(x::AbstractRange, args...) = (x, _dropint(args...)...)
-_dropint() = ()
-
-_bandindices(band::Integer) = Cint[band]
-_bandindices(bands::AbstractArray) = Cint[b for b in bands]
-
-Array(dataset::AbstractDataset) = read(dataset)
+Array(dataset::RasterDataset) = dataset[:,:,:]

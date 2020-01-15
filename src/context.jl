@@ -206,7 +206,8 @@ for gdalfunc in (
         :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
         :importURL, :lineargeom, :newspatialref, :nextfeature, :pointalongline,
         :pointonsurface, :polygonfromedges, :polygonize, :read, :sampleoverview,
-        :simplify, :simplifypreservetopology, :symdifference, :union, :update
+        :simplify, :simplifypreservetopology, :symdifference, :union, :update,
+        :readraster,
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
