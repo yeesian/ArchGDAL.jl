@@ -1,27 +1,27 @@
 mutable struct Source <: Data.Source
     schema::Data.Schema
-    featurelayer::FeatureLayer
+    featurelayer::AbstractFeatureLayer
     feature::ArchGDAL.Feature
     ngeom::Int
 end
 
-function Source(layer::FeatureLayer)
-    layerdefn = getlayerdefn(layer)
-    ngeom = ngeomfield(layerdefn)
-    nfld = nfield(layerdefn)
+function Source(layer::AbstractFeatureLayer)
+    featuredefn = layerdefn(layer)
+    ngeometries = ngeom(featuredefn)
+    nfld = nfield(featuredefn)
     header = [
-        ["geometry$(i-1)" for i in 1:ngeom];
-        [getname(getfielddefn(layerdefn,i-1)) for i in 1:nfld]
+        ["geometry$(i-1)" for i in 1:ngeometries];
+        [getname(getfielddefn(featuredefn,i-1)) for i in 1:nfld]
     ]
     types = [
-        [IGeometry for i in 1:ngeom];
-        [_FIELDTYPE[gettype(getfielddefn(layerdefn,i-1))] for i in 1:nfld]
+        [IGeometry for i in 1:ngeometries];
+        [_FIELDTYPE[gettype(getfielddefn(featuredefn,i-1))] for i in 1:nfld]
     ]
     ArchGDAL.Source(
         Data.Schema(types, header, nfeature(layer)),
         layer,
         unsafe_nextfeature(layer),
-        ngeom
+        ngeometries
     )
 end
 Data.schema(source::ArchGDAL.Source) = source.schema
@@ -38,13 +38,14 @@ function Data.streamfrom(
         col
     ) where T
     val = if col <= source.ngeom
-        T(getgeomfield(source.feature, col-1).ptr)
+        @assert T <: IGeometry
+        getgeom(source.feature, col-1)
     else
-        T(getfield(source.feature, col-source.ngeom-1))
+        T(getfield(source.feature, col - source.ngeom - 1))
     end
     if col == source.schema.cols
         destroy(source.feature)
-        source.feature.ptr = GDAL.getnextfeature(source.featurelayer.ptr)
+        source.feature.ptr = GDAL.ogr_l_getnextfeature(source.featurelayer.ptr)
         if row == source.schema.rows
             @assert source.feature.ptr == C_NULL
             resetreading!(source.featurelayer)

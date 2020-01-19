@@ -12,9 +12,7 @@ This package aims to be a complete solution for working with GDAL in Julia, simi
 ## Principles (The Arch Way)
 (adapted from: https://wiki.archlinux.org/index.php/Arch_Linux#Principles)
 
-- **simplicity**: without unnecessary additions or modifications.
-    (i) Preserves GDAL Data Model, and makes available GDAL/OGR methods without trying to mask them from the user.
-    (ii) minimal dependencies
+- **simplicity**: ArchGDAL tries to avoid unnecessary additions or modifications. It preserves the GDAL Data Model and requires minimal dependencies.
 - **modernity**: ArchGDAL strives to maintain the latest stable release versions of GDAL as long as systemic package breakage can be reasonably avoided.
 - **pragmatism**: The principles here are only useful guidelines. Ultimately, design decisions are made on a case-by-case basis through developer consensus. Evidence-based technical analysis and debate are what matter, not politics or popular opinion.
 - **user-centrality**: Whereas other libraries attempt to be more user-friendly, ArchGDAL shall be user-centric. It is intended to fill the needs of those contributing to it, rather than trying to appeal to as many users as possible.

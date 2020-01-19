@@ -55,8 +55,7 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Tests for Geom Field Defn" begin
-    GDAL.__init__()
-    AG.creategeomfielddefn("geomname", GDAL.wkbPolygon) do gfd
+    AG.creategeomdefn("geomname", GDAL.wkbPolygon) do gfd
         @test AG.getname(gfd) == "geomname"
         AG.setname!(gfd, "my name!")
         @test AG.getname(gfd) == "my name!"
@@ -65,8 +64,21 @@ end
         AG.settype!(gfd, GDAL.wkbPolyhedralSurface)
         @test AG.gettype(gfd) == GDAL.wkbPolyhedralSurface
 
+        @test sprint(print, AG.getspatialref(gfd)) == "NULL Spatial Reference System"
+        AG.getspatialref(gfd) do spref
+            @test sprint(print, spref) == "NULL Spatial Reference System"
+        end
         AG.setspatialref!(gfd, AG.importEPSG(4326))
-        @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+        @test sprint(print, AG.getspatialref(gfd)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
+        AG.getspatialref(gfd) do spref
+            if !Sys.iswindows()
+                @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
+                # NOTE(yeesian): we get the following error on x86 in Appveyor
+                # Expression: sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs "
+                #   GDALError (CE_Failure, code 6):
+                #     No translation for an empty SRS to PROJ.4 format is known.
+            end
+        end
 
         @test AG.isignored(gfd) == false
         AG.setignored!(gfd, true)
@@ -84,15 +96,15 @@ end
 
 @testset "Tests for Feature Defn" begin
     AG.createfeaturedefn("new_feature") do fd
-        AG.nreference(fd) == 0
+        @test AG.nreference(fd) == 0
         AG.reference(fd)
-        AG.nreference(fd) == 1
+        @test AG.nreference(fd) == 1
         AG.reference(fd)
-        AG.nreference(fd) == 2
+        @test AG.nreference(fd) == 2
         AG.release(fd)
-        AG.nreference(fd) == 1
+        @test AG.nreference(fd) == 1
         AG.dereference(fd)
-        AG.nreference(fd) == 0
+        @test AG.nreference(fd) == 0
         AG.createfielddefn("fieldname",GDAL.OFTInteger) do fielddef
             @test AG.nfield(fd) == 0
             AG.addfielddefn!(fd, fielddef)
@@ -109,22 +121,24 @@ end
                 AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
                 AG.getname(AG.getfielddefn(fd,3)) == "newfield"
             end
-            AG.deletefielddefn!(fd, 0)
-            @test AG.nfield(fd) == 3
-            AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd,2)) == "newfield"
-            AG.reorderfielddefns!(fd, Cint[2,1,0])
-            @test AG.nfield(fd) == 3
-            AG.getname(AG.getfielddefn(fd,0)) == "newfield"
-            AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
         end
-        @test AG.ngeomfield(fd) == 1
+        AG.deletefielddefn!(fd, 0)
+        @test AG.nfield(fd) == 3
+        AG.getname(AG.getfielddefn(fd,0)) == "fieldname"
+        AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+        AG.getname(AG.getfielddefn(fd,2)) == "newfield"
+        
+        AG.reorderfielddefns!(fd, Cint[2,1,0])
+        @test AG.nfield(fd) == 3
+        AG.getname(AG.getfielddefn(fd,0)) == "newfield"
+        AG.getname(AG.getfielddefn(fd,1)) == "fieldname"
+        AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
+
+        @test AG.ngeom(fd) == 1
         @test AG.getgeomtype(fd) == GDAL.wkbUnknown
         AG.setgeomtype!(fd, GDAL.wkbPolygon)
         @test AG.getgeomtype(fd) == GDAL.wkbPolygon
-        @test AG.ngeomfield(fd) == 1
+        @test AG.ngeom(fd) == 1
 
         @test AG.isgeomignored(fd) == false
         AG.setgeomignored!(fd, true)
@@ -138,22 +152,22 @@ end
         AG.setstyleignored!(fd, false)
         @test AG.isstyleignored(fd) == false
 
-        @test AG.getgeomfieldindex(fd) == 0
-        gfd0 = AG.getgeomfielddefn(fd, 0)
-        @test AG.ngeomfield(fd) == 1
-        AG.addgeomfielddefn!(fd, gfd0)
-        @test AG.ngeomfield(fd) == 2
-        gfd1 = AG.getgeomfielddefn(fd, 1)
+        @test AG.findgeomindex(fd) == 0
+        gfd0 = AG.getgeomdefn(fd, 0)
+        @test AG.ngeom(fd) == 1
+        AG.addgeomdefn!(fd, gfd0)
+        @test AG.ngeom(fd) == 2
+        gfd1 = AG.getgeomdefn(fd, 1)
         AG.setname!(gfd0, "name0")
         AG.setname!(gfd1, "name1")
-        @test AG.getgeomfieldindex(fd, "") == -1
-        @test AG.getgeomfieldindex(fd, "name0") == 0
-        @test AG.getgeomfieldindex(fd, "name1") == 1
-        AG.deletegeomfielddefn!(fd, 0)
-        @test AG.ngeomfield(fd) == 1
-        @test AG.getgeomfieldindex(fd, "") == -1
-        @test AG.getgeomfieldindex(fd, "name0") == -1
-        @test AG.getgeomfieldindex(fd, "name1") == 0
+        @test AG.findgeomindex(fd, "") == -1
+        @test AG.findgeomindex(fd, "name0") == 0
+        @test AG.findgeomindex(fd, "name1") == 1
+        AG.deletegeomdefn!(fd, 0)
+        @test AG.ngeom(fd) == 1
+        @test AG.findgeomindex(fd, "") == -1
+        @test AG.findgeomindex(fd, "name0") == -1
+        @test AG.findgeomindex(fd, "name1") == 0
         @test AG.nreference(fd) == 0
         AG.createfeature(fd) do f
             @test AG.nreference(fd) == 2 # artificially inflated

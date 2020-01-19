@@ -3,7 +3,7 @@ function Base.show(io::IO, drv::Driver)
     print(io, "Driver: $(shortname(drv))/$(longname(drv))")
 end
 
-function Base.show(io::IO, dataset::Dataset)
+function Base.show(io::IO, dataset::AbstractDataset)
     dataset.ptr == C_NULL && (return print(io, "NULL Dataset"))
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
     println(io, "File(s): ")
@@ -46,21 +46,21 @@ function Base.show(io::IO, dataset::Dataset)
     end
 end
 
-function summarize(io::IO, rasterband::RasterBand)
+function summarize(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
-    access = getaccess(rasterband)
+    access = accessflag(rasterband)
     color = getname(getcolorinterp(rasterband))
     xsize = width(rasterband)
     ysize = height(rasterband)
-    i = getnumber(rasterband)
-    pxtype = getdatatype(rasterband)
+    i = indexof(rasterband)
+    pxtype = pixeltype(rasterband)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
 end
 
-function Base.show(io::IO, rasterband::RasterBand)
+function Base.show(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     summarize(io, rasterband)
-    (x,y) = getblocksize(rasterband)
+    (x,y) = blocksize(rasterband)
     sc = getscale(rasterband)
     ofs = getoffset(rasterband)
     norvw = noverview(rasterband)
@@ -77,17 +77,17 @@ function Base.show(io::IO, rasterband::RasterBand)
 end
 
 # assumes that the layer is reset, and will reset it after display
-function Base.show(io::IO, layer::FeatureLayer)
+function Base.show(io::IO, layer::AbstractFeatureLayer)
     layer.ptr == C_NULL && (return println(io, "NULL Layer"))
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")
-    featuredefn = getlayerdefn(layer)
+    featuredefn = layerdefn(layer)
     
     # Print Geometries
-    n = ngeomfield(featuredefn)
+    n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
-        gfd = getgeomfielddefn(featuredefn, i-1)
+        gfd = getgeomdefn(featuredefn, i-1)
         display = "  Geometry $(i-1) ($(getname(gfd))): [$(gettype(gfd))]"
         if length(display) > 75
             println(io, "$display[1:70]...")
@@ -138,12 +138,12 @@ function Base.show(io::IO, layer::FeatureLayer)
     n > 5 && print(io, "...\n Number of Fields: $n")
 end
 
-function Base.show(io::IO, featuredefn::FeatureDefn)
+function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
     featuredefn.ptr == C_NULL && (return print(io, "NULL FeatureDefn"))
-    n = ngeomfield(featuredefn)
+    n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
-        gfd = getgeomfielddefn(featuredefn, i-1)
+        gfd = getgeomdefn(featuredefn, i-1)
         println(io, "  Geometry (index $(i-1)): $gfd")
     end
     n > 3 && println(io, "  ...\n  Number of Geometries: $n")
@@ -157,12 +157,12 @@ function Base.show(io::IO, featuredefn::FeatureDefn)
     n > 5 && print(io, "...\n Number of Fields: $n")
 end
 
-function Base.show(io::IO, fd::FieldDefn)
+function Base.show(io::IO, fd::AbstractFieldDefn)
     fd.ptr == C_NULL && (return print(io, "NULL FieldDefn"))
     print(io, "$(getname(fd)) ($(gettype(fd)))")
 end
 
-function Base.show(io::IO, gfd::GeomFieldDefn)
+function Base.show(io::IO, gfd::AbstractGeomFieldDefn)
     gfd.ptr == C_NULL && (return print(io, "NULL GeomFieldDefn"))
     print(io, "$(getname(gfd)) ($(gettype(gfd)))")
 end
@@ -170,9 +170,9 @@ end
 function Base.show(io::IO, feature::Feature)
     feature.ptr == C_NULL && (return println(io, "NULL Feature"))
     println(io, "Feature")
-    n = ngeomfield(feature)
+    n = ngeom(feature)
     for i in 1:min(n, 3)
-        displayname = getgeomname(getgeomfield(feature, i-1))
+        displayname = geomname(getgeom(feature, i-1))
         println(io, "  (index $(i-1)) geom => $displayname")
     end
     n > 3 && println(io, "...\n Number of geometries: $n")

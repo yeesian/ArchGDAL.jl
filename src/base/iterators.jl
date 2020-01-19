@@ -1,16 +1,18 @@
-function Base.iterate(layer::FeatureLayer, state::Int=0)
+function Base.iterate(layer::AbstractFeatureLayer, state::Int=0)
     layer.ptr == C_NULL && return nothing
-    ptr = GDAL.getnextfeature(layer.ptr)
+    state == 0 && resetreading!(layer)
+    ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
     if ptr == C_NULL
-        state > 0 && resetreading!(layer)
+        resetreading!(layer)
         return nothing
+    else
+        return (Feature(ptr), state+1)
     end
-    (Feature(ptr), state+1)
 end
 
-Base.eltype(layer::FeatureLayer) = Feature
+Base.eltype(layer::AbstractFeatureLayer) = Feature
 
-Base.length(layer::FeatureLayer) = nfeature(layer, true)
+Base.length(layer::AbstractFeatureLayer) = nfeature(layer, true)
 
 struct BlockIterator
     rows::Cint
@@ -22,8 +24,8 @@ struct BlockIterator
     ybsize::Cint
 end
 
-function blocks(raster::RasterBand)
-    (xbsize, ybsize) = getblocksize(raster)
+function blocks(raster::AbstractRasterBand)
+    (xbsize, ybsize) = blocksize(raster)
     rows = height(raster)
     cols = width(raster)
     ni = ceil(Cint, rows / ybsize)
@@ -52,7 +54,7 @@ struct WindowIterator
     blockiter::BlockIterator
 end
 
-windows(raster::RasterBand) = WindowIterator(blocks(raster))
+windows(raster::AbstractRasterBand) = WindowIterator(blocks(raster))
 
 function Base.iterate(obj::WindowIterator, iter::Int=0)
     handle = obj.blockiter
@@ -63,16 +65,16 @@ function Base.iterate(obj::WindowIterator, iter::Int=0)
 end
 
 mutable struct BufferIterator{T <: Real}
-    raster::RasterBand
+    raster::AbstractRasterBand
     w::WindowIterator
     buffer::Array{T, 2}
 end
 
-function bufferwindows(raster::RasterBand)
+function bufferwindows(raster::AbstractRasterBand)
     BufferIterator(
         raster,
         windows(raster),
-        Array{getdatatype(raster)}(undef, getblocksize(raster)...)
+        Array{pixeltype(raster)}(undef, blocksize(raster)...)
     )
 end
 
@@ -81,5 +83,5 @@ function Base.iterate(obj::BufferIterator, iter::Int=0)
     next == nothing && return nothing
     ((cols, rows), iter) = next
     rasterio!(obj.raster, obj.buffer, rows, cols)
-    (obj.buffer[1:length(cols), 1:length(rows)], iter)
+    return (obj.buffer[1:length(cols), 1:length(rows)], iter)
 end

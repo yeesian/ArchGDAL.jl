@@ -1,65 +1,112 @@
 """
+    unsafe_createfeaturedefn(name::AbstractString)
+
 Create a new feature definition object to hold field definitions.
 
-The OGRFeatureDefn maintains a reference count, but this starts at zero, and
+The `FeatureDefn` maintains a reference count, but this starts at zero, and
 should normally be incremented by the owner.
 """
 unsafe_createfeaturedefn(name::AbstractString) =
-    FeatureDefn(GDAL.fd_create(name))
+    FeatureDefn(GDAL.ogr_fd_create(name))
 
 """
-Increments the reference count by one.
+    reference(featuredefn::FeatureDefn)
 
-The reference count is used keep track of the number of OGRFeature objects
-referencing this definition.
+Increments the reference count in the FeatureDefn by one.
+
+The count is used to track the number of `Feature`s referencing this definition.
 
 ### Returns
-the updated reference count.
+The updated reference count.
 """
-reference(fd::FeatureDefn) = GDAL.reference(fd.ptr)
+reference(featuredefn::FeatureDefn) = GDAL.ogr_fd_reference(featuredefn.ptr)
 
-"Decrements the reference count by one, and returns the updated count."
-dereference(fd::FeatureDefn) = GDAL.dereference(fd.ptr)
+"""
+    dereference(featuredefn::FeatureDefn)
 
-"Fetch the current reference count."
-nreference(fd::FeatureDefn) = GDAL.getreferencecount(fd.ptr)
+Decrements the reference count by one, and returns the updated count.
+"""
+dereference(featuredefn::FeatureDefn) = GDAL.ogr_fd_dereference(featuredefn.ptr)
+
+"""
+    nreference(featuredefn::AbstractFeatureDefn)
+
+Fetch the current reference count.
+"""
+nreference(featuredefn::AbstractFeatureDefn) =
+    GDAL.ogr_fd_getreferencecount(featuredefn.ptr)
 
 "Destroy a feature definition object and release all memory associated with it"
-destroy(fd::FeatureDefn) = (GDAL.destroy(fd.ptr); fd.ptr = C_NULL)
+function destroy(featuredefn::FeatureDefn)
+    GDAL.ogr_fd_destroy(featuredefn.ptr)
+    featuredefn.ptr = C_NULL
+    return featuredefn
+end
 
-"Drop a reference, and destroy if unreferenced."
-release(fd::FeatureDefn) = GDAL.release(fd.ptr)
-
-"Get name of the OGRFeatureDefn passed as an argument."
-getname(fd::FeatureDefn) = GDAL.getname(fd.ptr)
-
-"Fetch number of fields on the passed feature definition."
-nfield(fd::FeatureDefn) = GDAL.getfieldcount(fd.ptr)
+"Destroy a feature definition view"
+function destroy(featuredefn::IFeatureDefnView)
+    featuredefn.ptr = C_NULL
+    return featuredefn
+end
 
 """
+    release(featuredefn::FeatureDefn)
+
+Drop a reference, and destroy if unreferenced.
+"""
+release(featuredefn::FeatureDefn) = GDAL.ogr_fd_release(featuredefn.ptr)
+
+"""
+    getname(featuredefn::AbstractFeatureDefn)
+
+Get name of the OGRFeatureDefn passed as an argument.
+"""
+getname(featuredefn::AbstractFeatureDefn) = GDAL.ogr_fd_getname(featuredefn.ptr)
+
+"""
+    nfield(featuredefn::AbstractFeatureDefn)
+
+Fetch number of fields on the passed feature definition.
+"""
+nfield(featuredefn::AbstractFeatureDefn) =
+    GDAL.ogr_fd_getfieldcount(featuredefn.ptr)
+
+"""
+    getfielddefn(featuredefn::FeatureDefn, i::Integer)
+
 Fetch field definition of the passed feature definition.
 
 ### Parameters
-* `fd` the feature definition to get the field definition from.
-* `i`           the field to fetch, between `0` and `nfield(fd)-1`.
+* `featuredefn`: the feature definition to get the field definition from.
+* `i`:  index of the field to fetch, between `0` and `nfield(featuredefn)-1`.
 
 ### Returns
 an handle to an internal field definition object or NULL if invalid index. This
 object should not be modified or freed by the application.
 """
-getfielddefn(fd::FeatureDefn, i::Integer) =
-    FieldDefn(GDAL.getfielddefn(fd.ptr, i))
+getfielddefn(featuredefn::FeatureDefn, i::Integer) =
+    FieldDefn(GDAL.ogr_fd_getfielddefn(featuredefn.ptr, i))
+
+getfielddefn(featuredefn::IFeatureDefnView, i::Integer) =
+    IFieldDefnView(GDAL.ogr_fd_getfielddefn(featuredefn.ptr, i))
 
 """
+    findfieldindex(featuredefn::AbstractFeatureDefn, name::AbstractString)
+
 Find field by name.
 
 ### Returns
 the field index, or -1 if no match found.
+
+### Remarks
+This uses the OGRFeatureDefn::GetFieldIndex() method.
 """
-getfieldindex(fd::FeatureDefn, name::AbstractString) =
-    GDAL.getfieldindex(fd.ptr, name)
+findfieldindex(featuredefn::AbstractFeatureDefn, name::AbstractString) =
+    GDAL.ogr_fd_getfieldindex(featuredefn.ptr, name)
 
 """
+    addfielddefn!(featuredefn::FeatureDefn, fielddefn::FieldDefn)
+
 Add a new field definition to the passed feature definition.
 
 To add a new field definition to a layer definition, do not use this function
@@ -69,10 +116,14 @@ This function should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRFieldDefn passed in is copied,
 and remains the responsibility of the caller.
 """
-addfielddefn!(fd::FeatureDefn, fielddefn::FieldDefn) =
-    (GDAL.addfielddefn(fd.ptr, fielddefn.ptr); fd)
+function addfielddefn!(featuredefn::FeatureDefn, fielddefn::FieldDefn)
+    GDAL.ogr_fd_addfielddefn(featuredefn.ptr, fielddefn.ptr)
+    return featuredefn
+end
 
 """
+    deletefielddefn!(featuredefn::FeatureDefn, i::Integer)
+
 Delete an existing field definition.
 
 To delete an existing field definition from a layer definition, do not use this
@@ -81,13 +132,15 @@ function directly, but use `OGR_L_DeleteField()` instead.
 This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn.
 """
-function deletefielddefn!(fd::FeatureDefn, i::Integer)
-    result = GDAL.deletefielddefn(fd.ptr, i)
+function deletefielddefn!(featuredefn::FeatureDefn, i::Integer)
+    result = GDAL.ogr_fd_deletefielddefn(featuredefn.ptr, i)
     @ogrerr result "Failed to delete field $i in the feature definition"
-    fd
+    return featuredefn
 end
 
 """
+    reorderfielddefns!(featuredefn::FeatureDefn, indices::Vector{Cint})
+
 Reorder the field definitions in the array of the feature definition.
 
 To reorder the field definitions in a layer definition, do not use this function
@@ -100,17 +153,19 @@ existence based on this OGRFeatureDefn.
 * **fd**: handle to the feature definition.
 * **indices**: an array of `GetFieldCount()` elements which is a permutation of
     `[0, GetFieldCount()-1]`. `indices` is such that, for each field definition
-    at position `i` after reordering, its position before reordering was 
+    at position `i` after reordering, its position before reordering was
     `indices[i]`.
 """
-function reorderfielddefns!(fd::FeatureDefn, indices::Vector{Cint})
-    result = GDAL.reorderfielddefns(fd.ptr, indices)
+function reorderfielddefns!(featuredefn::FeatureDefn, indices::Vector{Cint})
+    result = GDAL.ogr_fd_reorderfielddefns(featuredefn.ptr, indices)
     @ogrerr result "Failed to reorder $indices in the feature definition"
-    fd
+    return featuredefn
 end
-    
+
 
 """
+    getgeomtype(featuredefn::AbstractFeatureDefn)
+
 Fetch the geometry base type of the passed feature definition.
 
 For layers without any geometry field, this method returns `wkbNone`.
@@ -123,9 +178,12 @@ For layers with multiple geometry fields, this method only returns the geometry
 type of the first geometry column. For other columns, use
     `OGR_GFld_GetType(OGR_FD_GetGeomFieldDefn(OGR_L_GetLayerDefn(hLayer), i))`.
 """
-getgeomtype(fd::FeatureDefn) = GDAL.getgeomtype(fd.ptr)
+getgeomtype(featuredefn::AbstractFeatureDefn) =
+    GDAL.ogr_fd_getgeomtype(featuredefn.ptr)
 
 """
+    setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType)
+
 Assign the base geometry type for the passed layer (same as the fd).
 
 All geometry objects using this type must be of the defined type or a derived
@@ -133,29 +191,58 @@ type. The default upon creation is `wkbUnknown` which allows for any geometry
 type. The geometry type should generally not be changed after any OGRFeatures
 have been created against this definition.
 """
-function setgeomtype!(fd::FeatureDefn, etype::OGRwkbGeometryType)
-    GDAL.setgeomtype(fd.ptr, etype)
-    fd
+function setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType)
+    GDAL.ogr_fd_setgeomtype(featuredefn.ptr, etype)
+    return featuredefn
 end
 
-"Determine whether the geometry can be omitted when fetching features."
-isgeomignored(fd::FeatureDefn) = Bool(GDAL.isgeometryignored(fd.ptr))
+"""
+    isgeomignored(featuredefn::AbstractFeatureDefn)
 
-"Set whether the geometry can be omitted when fetching features."
-setgeomignored!(fd::FeatureDefn, ignore::Bool) =
-    (GDAL.setgeometryignored(fd.ptr, ignore); fd)
-
-"Determine whether the style can be omitted when fetching features."
-isstyleignored(fd::FeatureDefn) = Bool(GDAL.isstyleignored(fd.ptr))
-
-"Set whether the style can be omitted when fetching features."
-setstyleignored!(fd::FeatureDefn, ignore::Bool) =
-    (GDAL.setstyleignored(fd.ptr, ignore); fd)
-
-"Fetch number of geometry fields on the passed feature definition."
-ngeomfield(fd::FeatureDefn) = GDAL.getgeomfieldcount(fd.ptr)
+Determine whether the geometry can be omitted when fetching features.
+"""
+isgeomignored(featuredefn::AbstractFeatureDefn) =
+    Bool(GDAL.ogr_fd_isgeometryignored(featuredefn.ptr))
 
 """
+    setgeomignored!(featuredefn::FeatureDefn, ignore::Bool)
+
+Set whether the geometry can be omitted when fetching features.
+"""
+function setgeomignored!(featuredefn::FeatureDefn, ignore::Bool)
+    GDAL.ogr_fd_setgeometryignored(featuredefn.ptr, ignore)
+    return featuredefn
+end
+
+"""
+    isstyleignored(featuredefn::AbstractFeatureDefn)
+
+Determine whether the style can be omitted when fetching features.
+"""
+isstyleignored(featuredefn::AbstractFeatureDefn) =
+    Bool(GDAL.ogr_fd_isstyleignored(featuredefn.ptr))
+
+"""
+    setstyleignored!(featuredefn::FeatureDefn, ignore::Bool)
+
+Set whether the style can be omitted when fetching features.
+"""
+function setstyleignored!(featuredefn::FeatureDefn, ignore::Bool)
+    GDAL.ogr_fd_setstyleignored(featuredefn.ptr, ignore)
+    return featuredefn
+end
+
+"""
+    ngeom(featuredefn::AbstractFeatureDefn)
+
+Fetch number of geometry fields on the passed feature definition.
+"""
+ngeom(featuredefn::AbstractFeatureDefn) =
+    GDAL.ogr_fd_getgeomfieldcount(featuredefn.ptr)
+
+"""
+    getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0)
+
 Fetch geometry field definition of the passed feature definition.
 
 ### Parameters
@@ -165,10 +252,15 @@ Fetch geometry field definition of the passed feature definition.
 an internal field definition object or `NULL` if invalid index. This object
 should not be modified or freed by the application.
 """
-getgeomfielddefn(fd::FeatureDefn, i::Integer = 0) =
-    GeomFieldDefn(GDAL.getgeomfielddefn(fd.ptr, i))
+getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0) =
+    GeomFieldDefn(GDAL.ogr_fd_getgeomfielddefn(featuredefn.ptr, i))
+
+getgeomdefn(featuredefn::IFeatureDefnView, i::Integer = 0) =
+    IGeomFieldDefnView(GDAL.ogr_fd_getgeomfielddefn(featuredefn.ptr, i))
 
 """
+    findgeomindex(featuredefn::AbstractFeatureDefn, name::AbstractString = "")
+
 Find geometry field by name.
 
 The geometry field index of the first geometry field matching the passed field
@@ -177,27 +269,36 @@ name (case insensitively) is returned.
 ### Returns
 the geometry field index, or -1 if no match found.
 """
-getgeomfieldindex(fd::FeatureDefn, name::AbstractString = "") =
-    GDAL.getgeomfieldindex(fd.ptr, name)
+findgeomindex(featuredefn::AbstractFeatureDefn, name::AbstractString = "") =
+    GDAL.ogr_fd_getgeomfieldindex(featuredefn.ptr, name)
 
 """
+    addgeomdefn!(featuredefn::FeatureDefn, geomfielddefn::AbstractGeomFieldDefn)
+
 Add a new field definition to the passed feature definition.
 
 To add a new geometry field definition to a layer definition, do not use this
 function directly, but use OGRLayer::CreateGeomField() instead.
 
 This method does an internal copy of the passed geometry field definition,
-unless bCopy is set to FALSE (in which case it takes ownership of the field
+unless bCopy is set to `false` (in which case it takes ownership of the field
 definition.
 
 This method should only be called while there are no OGRFeature objects in
-existence based on this OGRFeatureDefn. The OGRGeomFieldDefn passed in is
-copied, and remains the responsibility of the caller.
+existence based on this OGRFeatureDefn.
 """
-addgeomfielddefn!(fd::FeatureDefn, geomfielddefn::GeomFieldDefn) =
-    (GDAL.addgeomfielddefn(fd.ptr, geomfielddefn.ptr); fd)
+function addgeomdefn!(
+        featuredefn::FeatureDefn,
+        geomfielddefn::AbstractGeomFieldDefn
+    )
+    # `geomfielddefn` is copied, and remains the responsibility of the caller.
+    GDAL.ogr_fd_addgeomfielddefn(featuredefn.ptr, geomfielddefn.ptr)
+    return featuredefn
+end
 
 """
+    deletegeomdefn!(featuredefn::FeatureDefn, i::Integer)
+
 Delete an existing geometry field definition.
 
 To delete an existing field definition from a layer definition, do not use this
@@ -206,16 +307,28 @@ function directly, but use OGRLayer::DeleteGeomField() instead.
 This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn.
 """
-function deletegeomfielddefn!(fd::FeatureDefn, i::Integer)
-    result = GDAL.deletegeomfielddefn(fd.ptr, i)
+function deletegeomdefn!(featuredefn::FeatureDefn, i::Integer)
+    result = GDAL.ogr_fd_deletegeomfielddefn(featuredefn.ptr, i)
     @ogrerr result "Failed to delete geom field $i in the feature definition"
-    fd
+    return featuredefn
 end
 
-"Test if the feature definition is identical to the other one."
-issame(fd1::FeatureDefn, fd2::FeatureDefn) = Bool(GDAL.issame(fd1.ptr, fd2.ptr))
+"""
+    issame(featuredefn1::AbstractFeatureDefn, featuredefn2::AbstractFeatureDefn)
 
-"""Returns the new feature object with null fields and no geometry
+Test if the feature definition is identical to the other one.
+"""
+function issame(
+        featuredefn1::AbstractFeatureDefn,
+        featuredefn2::AbstractFeatureDefn
+    )
+    return Bool(GDAL.ogr_fd_issame(featuredefn1.ptr, featuredefn2.ptr))
+end
+
+"""
+    unsafe_createfeature(featuredefn::AbstractFeatureDefn)
+
+Returns the new feature object with null fields and no geometry
 
 Note that the OGRFeature will increment the reference count of it's defining
 OGRFeatureDefn. Destruction of the OGRFeatureDefn before destruction of all
@@ -223,8 +336,14 @@ OGRFeatures that depend on it is likely to result in a crash.
 
 Starting with GDAL 2.1, returns NULL in case out of memory situation.
 """
-unsafe_createfeature(fd::FeatureDefn) =
-    Feature(GDAL.f_create(fd.ptr))
+function unsafe_createfeature(featuredefn::AbstractFeatureDefn)
+    return Feature(GDALFeature(GDAL.ogr_f_create(featuredefn.ptr)))
+end
 
-"Fetch feature definition."
-getfeaturedefn(feature::Feature) = FeatureDefn(GDAL.getdefnref(feature.ptr))
+"""
+    getfeaturedefn(feature::Feature)
+
+Fetch feature definition.
+"""
+getfeaturedefn(feature::Feature) =
+    IFeatureDefnView(GDAL.ogr_f_getdefnref(feature.ptr))

@@ -1,11 +1,16 @@
 # Geometric Operations
 
+```@setup geometries
+using ArchGDAL
+const AG = ArchGDAL
+```
+
 In this section, we consider some of the common kinds of geometries that arises in applications. These include `Point`, `LineString`, `Polygon`, `GeometryCollection`, `MultiPolygon`, `MultiPoint`, and `MultiLineString`. For brevity in the examples, we will use the prefix `const AG = ArchGDAL`.
 
 ## Geometry Creation
-To create geometries of different types.
+To create geometries of different types, 
 
-```julia
+```@example geometries
 point = AG.createpoint(1.0, 2.0)
 linestring = AG.createlinestring([(i,i+1) for i in 1.0:3.0])
 linearring = AG.createlinearring([(0.,0.), (0.,1.), (1.,1.)])
@@ -17,131 +22,133 @@ multipolygon = AG.createmultipolygon([[[(0.,0.), (0.,j), (j,j)]] for j in 1.0:-0
 ```
 
 Alternatively, they can be assembled from their components.
-```julia
+```@example geometries
 point = AG.createpoint()
-    AG.addpoint!(point, 1.0, 2.0)
+AG.addpoint!(point, 1.0, 2.0)
+
 linestring = AG.createlinestring()
-    for i in 1.0:3.0
-        AG.addpoint!(linestring, i, i+1)
-    end
+for i in 1.0:3.0
+    AG.addpoint!(linestring, i, i+1)
+end
+
 linearring = AG.createlinearring()
-    for i in 1.0:3.0
-        AG.addpoint!(linearring, i, i+1)
-    end
+for i in 1.0:3.0
+    AG.addpoint!(linearring, i, i+1)
+end
+
 polygon = AG.createpolygon()
-    for j in 1.0:-0.1:0.9
-        ring = AG.createlinearring([(0.,0.), (0.,j), (j,j)])
-        AG.addgeom!(polygon, ring)
-    end
+for j in 1.0:-0.1:0.9
+    ring = AG.createlinearring([(0.,0.), (0.,j), (j,j)])
+    AG.addgeom!(polygon, ring)
+end
+
 multipoint = AG.createmultipoint()
-    for i in 1.0:3.0
-        pt = AG.createpoint(i, i+1)
-        AG.addgeom!(multipoint, pt)
-    end
+for i in 1.0:3.0
+    pt = AG.createpoint(i, i+1)
+    AG.addgeom!(multipoint, pt)
+end
+
 multilinestring = AG.createmultilinestring()
-    for j in 1.0:5.0:6.0
-        line = AG.createlinestring([(i,i+1) for i in j:j+3])
-        AG.addgeom!(multilinestring, line)
-    end
+for j in 1.0:5.0:6.0
+    line = AG.createlinestring([(i,i+1) for i in j:j+3])
+    AG.addgeom!(multilinestring, line)
+end
+
 multipolygon = AG.createmultipolygon()
-    for j in 1.0:-0.1:0.9
-        poly = AG.createpolygon([(0.,0.), (0.,j), (j,j)])
-        AG.addgeom!(multipolygon, poly)
-    end
+for j in 1.0:-0.1:0.9
+    poly = AG.createpolygon([(0.,0.), (0.,j), (j,j)])
+    AG.addgeom!(multipolygon, poly)
+end
 ```
 
 They can also be constructed from other data formats such as:
-* Well-Known Binary (WKB): `AG.fromWKB([0x01,0x01,...,0x27,0x41])`
-* Well-Known Text (WKT): `AG.fromWKT("POINT (1 2)")`
-* JavaScript Object Notation (JSON): `AG.fromJSON("""{"type":"Point","coordinates":[1,2]}""")`
+* Well-Known Binary (WKB): [`ArchGDAL.fromWKB`](@ref)`([0x01,0x01,...,0x27,0x41])`
+* Well-Known Text (WKT): [`ArchGDAL.fromWKT("POINT (1 2)")`](@ref)
+* JavaScript Object Notation (JSON): [`ArchGDAL.fromJSON("""{"type":"Point","coordinates":[1,2]}""")`](@ref)
 
 ## Geometry Modification
 The following methods are commonly used for retrieving elements of a geometry.
 
-* `AG.getcoorddim(geom)`: dimension of the coordinates. Returns `0` for an empty point
-* `AG.getspatialref(geom)`
-* `AG.getx(geom, i)`
-* `AG.gety(geom, i)`
-* `AG.getz(geom, i)`
-* `AG.getpoint(geom, i)`
-* `AG.getgeom(geom, i)`
+* [`ArchGDAL.getcoorddim(geom)`](@ref): dimension of the coordinates. Returns `0` for an empty point
+* [`ArchGDAL.getspatialref(geom)`](@ref)
+* [`ArchGDAL.getx(geom, i)`](@ref)
+* [`ArchGDAL.gety(geom, i)`](@ref)
+* [`ArchGDAL.getz(geom, i)`](@ref)
+* [`ArchGDAL.getpoint(geom, i)`](@ref)
+* [`ArchGDAL.getgeom(geom, i)`](@ref)
 
 The following methods are commonly used for modifying or adding to a geometry.
-* `AG.setcoorddim!(geom, dim)`
-* `AG.setspatialref!(geom, spatialref)`
-* `AG.setpointcount!(geom, n)`
-* `AG.setpoint!(geom, i, x, y)`
-* `AG.setpoint!(geom, i, x, y, z)`
-* `AG.addpoint!(geom, x, y)`
-* `AG.addpoint!(geom, x, y, z)`
-* `AG.addgeom!(geom1, geom2)`
-* `AG.addgeomdirectly!(geom1, geom2)`
-* `AG.removegeom!(geom, i)`
-* `AG.removeallgeoms!(geom)`
+* [`ArchGDAL.setcoorddim!(geom, dim)`](@ref)
+* [`ArchGDAL.setpointcount!(geom, n)`](@ref)
+* [`ArchGDAL.setpoint!(geom, i, x, y)`](@ref)
+* [`ArchGDAL.setpoint!(geom, i, x, y, z)`](@ref)
+* [`ArchGDAL.addpoint!(geom, x, y)`](@ref)
+* [`ArchGDAL.addpoint!(geom, x, y, z)`](@ref)
+* [`ArchGDAL.addgeom!(geom1, geom2)`](@ref)
+* [`ArchGDAL.removegeom!(geom, i)`](@ref)
+* [`ArchGDAL.removeallgeoms!(geom)`](@ref)
 
 ## Unary Operations
 The following is an non-exhaustive list of unary operations available for geometries.
 
 ### Attributes
 
-* `AG.getdim(geom)`: `0` for points, `1` for lines and `2` for surfaces
-* `AG.getcoorddim(geom)`: dimension of the coordinates. Returns `0` for an empty point
-* `AG.getenvelope(geom)`: the bounding envelope for this geometry
-* `AG.getenvelope3d(geom)`: the bounding envelope for this geometry
-* `AG.wkbsize(geom)`: size (in bytes) of related binary representation
-* `AG.getgeomtype(geom)`: geometry type code (in `OGRwkbGeometryType`)
-* `AG.getgeomname(geom)`: WKT name for geometry type
-* `AG.getspatialref(geom)`: spatial reference system. May be `NULL`
-* `AG.geomlength(geom)`: the length of the geometry, or `0.0` for unsupported types
-* `AG.geomarea(geom)`: the area of the geometry, or `0.0` for unsupported types
+* [`ArchGDAL.geomdim(geom)`](@ref): `0` for points, `1` for lines and `2` for surfaces
+* [`ArchGDAL.getcoorddim(geom)`](@ref): dimension of the coordinates. Returns `0` for an empty point
+* [`ArchGDAL.envelope(geom)`](@ref): the bounding envelope for this geometry
+* [`ArchGDAL.envelope3d(geom)`](@ref): the bounding envelope for this geometry
+* [`ArchGDAL.wkbsize(geom)`](@ref): size (in bytes) of related binary representation
+* [`ArchGDAL.getgeomtype(geom)`](@ref): geometry type code (in `OGRwkbGeometryType`)
+* [`ArchGDAL.geomname(geom)`](@ref): WKT name for geometry type
+* [`ArchGDAL.getspatialref(geom)`](@ref): spatial reference system. May be `NULL`
+* [`ArchGDAL.geomlength(geom)`](@ref): the length of the geometry, or `0.0` for unsupported types
+* [`ArchGDAL.geomarea(geom)`](@ref): the area of the geometry, or `0.0` for unsupported types
 
 ### Predicates
 The following predicates return a `Bool`.
 
-* `AG.isempty(geom)`
-* `AG.isvalid(geom)`
-* `AG.issimple(geom)`
-* `AG.isring(geom)`
-* `AG.hascurvegeom(geom, nonlinear::Bool)`
+* [`ArchGDAL.isempty(geom)`](@ref)
+* [`ArchGDAL.isvalid(geom)`](@ref)
+* [`ArchGDAL.issimple(geom)`](@ref)
+* [`ArchGDAL.isring(geom)`](@ref)
+* [`ArchGDAL.hascurvegeom(geom, nonlinear::Bool)`](@ref)
 
 ### Immutable Operations
 The following methods do not modify `geom`.
 
-* `AG.clone(geom)`: a copy of the geometry with the original spatial reference system.
-* `AG.forceto(geom, targettype)`: force the provided geometry to the specified geometry type.
-* `AG.simplify(geom, tol)`: Compute a simplified geometry.
-* `AG.simplifypreservetopology(geom, tol)`: Simplify the geometry while preserving topology.
-* `AG.delaunaytriangulation(geom, tol, onlyedges)`: a delaunay triangulation of the vertices of the geometry.
-* `AG.boundary(geom)`: the boundary of the geometry
-* `AG.convexhull(geom)`: the convex hull of the geometry.
-* `AG.buffer(geom, dist, quadsegs)`: a polygon containing the region within the buffer distance of the original geometry.
-* `AG.union(geom)`: the union of the geometry using cascading
-* `AG.pointonsurface(geom)`: Returns a point guaranteed to lie on the surface.
-* `AG.centroid(geom)`: Compute the geometry centroid. It is not necessarily within the geometry.
-* `AG.pointalongline(geom, distance)`: Fetch point at given distance along curve.
-* `AG.polygonize(geom)`: Polygonizes a set of sparse edges.
+* [`ArchGDAL.clone(geom)`](@ref): a copy of the geometry with the original spatial reference system.
+* [`ArchGDAL.forceto(geom, targettype)`](@ref): force the provided geometry to the specified geometry type.
+* [`ArchGDAL.simplify(geom, tol)`](@ref): Compute a simplified geometry.
+* [`ArchGDAL.simplifypreservetopology(geom, tol)`](@ref): Simplify the geometry while preserving topology.
+* [`ArchGDAL.delaunaytriangulation(geom, tol, onlyedges)`](@ref): a delaunay triangulation of the vertices of the geometry.
+* [`ArchGDAL.boundary(geom)`](@ref): the boundary of the geometry
+* [`ArchGDAL.convexhull(geom)`](@ref): the convex hull of the geometry.
+* [`ArchGDAL.buffer(geom, dist, quadsegs)`](@ref): a polygon containing the region within the buffer distance of the original geometry.
+* [`ArchGDAL.union(geom)`](@ref): the union of the geometry using cascading
+* [`ArchGDAL.pointonsurface(geom)`](@ref): Returns a point guaranteed to lie on the surface.
+* [`ArchGDAL.centroid(geom)`](@ref): Compute the geometry centroid. It is not necessarily within the geometry.
+* [`ArchGDAL.pointalongline(geom, distance)`](@ref): Fetch point at given distance along curve.
+* [`ArchGDAL.polygonize(geom)`](@ref): Polygonizes a set of sparse edges.
 
 ### Mutable Operations
 The following methods modifies the first argument `geom`.
 
-* `AG.setcoorddim!(geom, dim)`: sets the explicit coordinate dimension.
-* `AG.flattento2d!(geom)`: Convert geometry to strictly 2D.
-* `AG.closerings!(geom)`: Force rings to be closed by adding the start point to the end.
-* `AG.setspatialref!(geom, spatialref)`: Assign spatial reference to this object.
-* `AG.transform!(geom, coordtransform)`: Apply coordinate transformation to geometry.
-* `AG.transform!(geom, spatialref)`: Transform geometry to new spatial reference system.
-* `AG.segmentize!(geom, maxlength)`: Modify the geometry such it has no segment longer than the given distance.
-* `AG.empty!(geom)`: Clear geometry information.
+* [`ArchGDAL.setcoorddim!(geom, dim)`](@ref): sets the explicit coordinate dimension.
+* [`ArchGDAL.flattento2d!(geom)`](@ref): Convert geometry to strictly 2D.
+* [`ArchGDAL.closerings!(geom)`](@ref): Force rings to be closed by adding the start point to the end.
+* [`ArchGDAL.transform!(geom, coordtransform)`](@ref): Apply coordinate transformation to geometry.
+* [`ArchGDAL.segmentize!(geom, maxlength)`](@ref): Modify the geometry such it has no segment longer than the given distance.
+* [`ArchGDAL.empty!(geom)`](@ref): Clear geometry information.
 
 ### Export Formats
 
-* `AG.toWKB(geom)`
-* `AG.toISOWKB(geom)`
-* `AG.toWKT(geom)`
-* `AG.toISOWKT(geom)`
-* `AG.toGML(geom)`
-* `AG.toKML(geom)`
-* `AG.toJSON(geom)`
+* [`ArchGDAL.toWKB(geom)`](@ref)
+* [`ArchGDAL.toISOWKB(geom)`](@ref)
+* [`ArchGDAL.toWKT(geom)`](@ref)
+* [`ArchGDAL.toISOWKT(geom)`](@ref)
+* [`ArchGDAL.toGML(geom)`](@ref)
+* [`ArchGDAL.toKML(geom)`](@ref)
+* [`ArchGDAL.toJSON(geom)`](@ref)
 
 ## Binary Operations
 The following is an non-exhaustive list of binary operations available for geometries.
@@ -149,26 +156,25 @@ The following is an non-exhaustive list of binary operations available for geome
 ### Predicates
 The following predicates return a `Bool`.
 
-* `AG.intersects(g1, g2)`
-* `AG.equals(g1, g2)`
-* `AG.disjoint(g1, g2)`
-* `AG.touches(g1, g2)`
-* `AG.crosses(g1, g2)`
-* `AG.within(g1, g2)`
-* `AG.contains(g1, g2)`
-* `AG.overlaps(g1, g2)`
+* [`ArchGDAL.intersects(g1, g2)`](@ref)
+* [`ArchGDAL.equals(g1, g2)`](@ref)
+* [`ArchGDAL.disjoint(g1, g2)`](@ref)
+* [`ArchGDAL.touches(g1, g2)`](@ref)
+* [`ArchGDAL.crosses(g1, g2)`](@ref)
+* [`ArchGDAL.within(g1, g2)`](@ref)
+* [`ArchGDAL.contains(g1, g2)`](@ref)
+* [`ArchGDAL.overlaps(g1, g2)`](@ref)
 
 ### Immutable Operations
 The following methods do not mutate the input geomteries `g1` and `g2`.
 
-* `AG.intersection(g1, g2)`
-* `AG.union(g1, g2)`
-* `AG.difference(g1, g2)`
-* `AG.symdifference(g1, g2)`
+* [`ArchGDAL.intersection(g1, g2)`](@ref)
+* [`ArchGDAL.union(g1, g2)`](@ref)
+* [`ArchGDAL.difference(g1, g2)`](@ref)
+* [`ArchGDAL.symdifference(g1, g2)`](@ref)
 
 ### Mutable Operations
-The following methods modifies the first argument `g1`.
+The following method modifies the first argument `g1`.
 
-* `AG.addgeom!(g1, g2)`
-* `AG.addgeomdirectly!(g1, g2)`
+* [`ArchGDAL.addgeom!(g1, g2)`](@ref)
 

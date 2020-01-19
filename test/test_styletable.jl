@@ -9,7 +9,7 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.initialize!(sm, "PEN(w:2px,c:#000000,id:\"mapinfo-pen-2,ogr-pen-0\")") == true
         AG.getpart(sm, 0) do st
             @test AG.getstylestring(st) == "PEN(w:2px,c:#000000,id:\"mapinfo-pen-2,ogr-pen-0\")"
-            @test AG.getrgba(st, "#123456") == (18, 52, 86, 255)
+            @test AG.toRGBA(st, "#123456") == (18, 52, 86, 255)
         end
         @test AG.npart(sm) == 1
         @test AG.addstyle!(sm, "name1", "style1") == false
@@ -47,7 +47,7 @@ import ArchGDAL; const AG = ArchGDAL
             AG.addstyle!(stbl, "name2", "style2")
             AG.addstyle!(stbl, "name3", "style3")
             AG.addstyle!(stbl, "name4", "style4")
-            @test AG.find(stbl, "name3") == "style3"
+            @test AG.findstylestring(stbl, "name3") == "style3"
             @test AG.laststyle(stbl) == ""
             @test AG.nextstyle(stbl) == "style1"
             @test AG.nextstyle(stbl) == "style2"
@@ -57,7 +57,7 @@ import ArchGDAL; const AG = ArchGDAL
         end
         AG.createstyletable() do stbl
             AG.loadstyletable!(stbl, "tmp/styletable.txt")
-            @test AG.find(stbl, "name3") == "style3"
+            @test AG.findstylestring(stbl, "name3") == "style3"
             @test AG.laststyle(stbl) == ""
             @test AG.nextstyle(stbl) == "style1"
             @test AG.nextstyle(stbl) == "style2"

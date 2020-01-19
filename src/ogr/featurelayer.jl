@@ -1,37 +1,160 @@
 
-"Return the layer name."
-getname(layer::FeatureLayer) = GDAL.getname(layer.ptr)
+function destroy(layer::AbstractFeatureLayer)
+    layer.ptr = GDALFeatureLayer(C_NULL)
+    return layer
+end
 
-"Return the layer geometry type."
-getgeomtype(layer::FeatureLayer) = GDAL.getgeomtype(layer.ptr)
-
-"Returns the current spatial filter for this layer."
-getspatialfilter(layer::FeatureLayer) =
-    Geometry(GDAL.C.OGR_L_GetSpatialFilter(Ptr{Cvoid}(layer.ptr)))
-
-"""
-Fetch the spatial reference system for this layer.
-
-The returned object is owned by the OGRLayer and should not be modified or
-freed by the application.
-"""
-unsafe_getspatialref(layer::FeatureLayer) = SpatialRef(GDAL.getspatialref(layer.ptr))
-getspatialref(layer::FeatureLayer) = ISpatialRef(GDAL.getspatialref(layer.ptr))
+function destroy(layer::IFeatureLayer)
+    layer.ptr = GDALFeatureLayer(C_NULL)
+    layer.ownedby = Dataset()
+    layer.spatialref = SpatialRef()
+    return layer
+end
 
 """
+    createlayer(name, dataset, geom, spatialref, options)
+
+This function attempts to create a new layer on the dataset with the indicated
+`name`, `spatialref`, and geometry type.
+
+### Keyword Arguments
+* `name`: the name for the new layer. This should ideally not match any
+    existing layer on the datasource. Defaults to an empty string.
+* `dataset`: the dataset. Defaults to creating a new in memory dataset.
+* `geom`: the geometry type for the layer. Use wkbUnknown (default) if
+    there are no constraints on the types geometry to be written.
+* `spatialref`: the coordinate system to use for the new layer.
+* `options`: a StringList of name=value (driver-specific) options.
+"""
+function createlayer(;
+        name::AbstractString            = "",
+        dataset::AbstractDataset        = create(getdriver("Memory")),
+        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
+        spatialref::AbstractSpatialRef  = SpatialRef(),
+        options                         = StringList(C_NULL)
+    )
+    return IFeatureLayer(
+        GDAL.gdaldatasetcreatelayer(dataset.ptr, name, spatialref.ptr, geom,
+            options),
+        ownedby = dataset,
+        spatialref = spatialref
+    )
+end
+
+function unsafe_createlayer(;
+        name::AbstractString            = "",
+        dataset::AbstractDataset        = create(getdriver("Memory")),
+        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
+        spatialref::AbstractSpatialRef  = SpatialRef(),
+        options                         = StringList(C_NULL)
+    )
+    return FeatureLayer(GDAL.gdaldatasetcreatelayer(dataset.ptr, name,
+        spatialref.ptr, geom, options))
+end
+
+"""
+    copy(layer, dataset, name, options)
+
+Copy an existing layer.
+
+This method creates a new layer, duplicate the field definitions of the source
+layer, and then duplicates each feature of the source layer.
+
+### Parameters
+* `layer`: source layer to be copied.
+
+### Keyword Arguments
+* `dataset`: the dataset handle. (Creates a new dataset in memory by default.)
+* `name`: the name of the layer to create on the dataset.
+* `options`: a StringList of name=value (driver-specific) options.
+"""
+function copy(
+        layer::AbstractFeatureLayer;
+        dataset::AbstractDataset = create(getdriver("Memory")),
+        name::AbstractString = "copy($(getname(layer)))",
+        options = StringList(C_NULL)
+    )
+    return IFeatureLayer(
+        GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name, options),
+        ownedby = dataset
+    )
+end
+
+function unsafe_copy(
+        layer::AbstractFeatureLayer;
+        dataset::AbstractDataset = create(getdriver("Memory")),
+        name::AbstractString = "copy($(getname(layer)))",
+        options = StringList(C_NULL)
+    )
+    FeatureLayer(GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name,
+        options))
+end
+
+"""
+    getname(layer::AbstractFeatureLayer)
+
+Return the layer name.
+"""
+getname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getname(layer.ptr)
+
+"""
+    getgeomtype(layer::AbstractFeatureLayer)
+
+Return the layer geometry type.
+"""
+getgeomtype(layer::AbstractFeatureLayer) = GDAL.ogr_l_getgeomtype(layer.ptr)
+
+"""
+    getspatialfilter(layer::AbstractFeatureLayer)
+
+Returns the current spatial filter for this layer.
+"""
+function getspatialfilter(layer::AbstractFeatureLayer)
+    result = GDALGeometry(GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr)))
+    if result == C_NULL
+        return IGeometry(result)
+    else
+        # NOTE(yeesian): we make a clone here so that the geometry does not
+        # depend on the FeatureLayer.
+        return IGeometry(GDALGeometry(GDAL.ogr_g_clone(result)))
+    end
+end
+
+"""
+    getspatialref(layer::AbstractFeatureLayer)
+
+Returns a clone of the spatial reference system for this layer.
+"""
+function getspatialref(layer::AbstractFeatureLayer)
+    result = GDAL.ogr_l_getspatialref(layer.ptr)
+    if result == C_NULL
+        return ISpatialRef()
+    else
+        # NOTE(yeesian): we make a clone here so that the spatialref does not
+        # depend on the FeatureLayer/Dataset.
+        return ISpatialRef(GDAL.osrclone(result))
+    end
+end
+
+function unsafe_getspatialref(layer::AbstractFeatureLayer)
+    result = GDAL.ogr_l_getspatialref(layer.ptr)
+    if result == C_NULL
+        return SpatialRef()
+    else
+        # NOTE(yeesian): we make a clone here so that the spatialref does not
+        # depend on the FeatureLayer/Dataset.
+        return SpatialRef(GDAL.osrclone(result))
+    end
+end
+
+"""
+    setspatialfilter!(layer::AbstractFeatureLayer, geom::Geometry)
+
 Set a new spatial filter for the layer, using the geom.
 
 This method set the geometry to be used as a spatial filter when fetching
-features via the GetNextFeature() method. Only features that geometrically
+features via the `nextfeature()` method. Only features that geometrically
 intersect the filter geometry will be returned.
-
-Currently this test may be inaccurately implemented, but it is guaranteed
-that all features who's envelope (as returned by OGRGeometry::getEnvelope())
-overlaps the envelope of the spatial filter will be returned. This can result
-in more shapes being returned that should strictly be the case.
-
-This method makes an internal copy of the passed geometry. The passed geometry
-remains the responsibility of the caller, and may be safely destroyed.
 
 ### Parameters
 * `layer`  handle to the layer on which to set the spatial filter.
@@ -39,7 +162,12 @@ remains the responsibility of the caller, and may be safely destroyed.
            passed indicating that the current spatial filter should be cleared,
            but no new one instituted.
 
-### Additional Remarks
+### Remarks
+Currently this test may be inaccurately implemented, but it is guaranteed
+that all features whose envelope (as returned by OGRGeometry::getEnvelope())
+overlaps the envelope of the spatial filter will be returned. This can result
+in more shapes being returned that should strictly be the case.
+
 For the time being the passed filter geometry should be in the same SRS as the
 geometry field definition it corresponds to (as returned by
 `GetLayerDefn()->OGRFeatureDefn::GetGeomFieldDefn(i)->GetSpatialRef()`).
@@ -48,17 +176,25 @@ In the future this may be generalized.
 Note that only the last spatial filter set is applied, even if several
 successive calls are done with different iGeomField values.
 """
-setspatialfilter!(layer::FeatureLayer, geom::Geometry) =
-    (GDAL.setspatialfilter(layer.ptr, geom.ptr); layer)
+function setspatialfilter!(layer::AbstractFeatureLayer, geom::Geometry)
+    # This method makes an internal copy of `geom`. The input `geom` remains
+    # the responsibility of the caller, and may be safely destroyed.
+    GDAL.ogr_l_setspatialfilter(layer.ptr, geom.ptr)
+    return layer
+end
 
-clearspatialfilter!(layer::FeatureLayer) =
-    (GDAL.setspatialfilter(layer.ptr, GDALGeometry(C_NULL)); layer)
+function clearspatialfilter!(layer::AbstractFeatureLayer)
+    GDAL.ogr_l_setspatialfilter(layer.ptr, GDALGeometry(C_NULL))
+    return layer
+end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, xmin, ymin, xmax, ymax)
+
 Set a new rectangular spatial filter for the layer.
 
 This method set rectangle to be used as a spatial filter when fetching features
-via the GetNextFeature() method. Only features that geometrically intersect the
+via the `nextfeature()` method. Only features that geometrically intersect the
 given rectangle will be returned.
 
 The x/y values should be in the same coordinate system as the layer as a whole
@@ -70,34 +206,24 @@ The only way to clear a spatial filter set with this method is to call
 `OGRLayer::SetSpatialFilter(NULL)`.
 """
 function setspatialfilter!(
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         xmin::Real,
         ymin::Real,
         xmax::Real,
         ymax::Real
     )
-    GDAL.setspatialfilterrect(layer.ptr, xmin, ymin, xmax, ymax)
-    layer
+    GDAL.ogr_l_setspatialfilterrect(layer.ptr, xmin, ymin, xmax, ymax)
+    return layer
 end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, geom::AbstractGeometry)
+
 Set a new spatial filter.
 
 This method set the geometry to be used as a spatial filter when fetching
-features via the GetNextFeature() method. Only features that geometrically
+features via the `nextfeature()` method. Only features that geometrically
 intersect the filter geometry will be returned.
-
-Currently this test is may be inaccurately implemented, but it is guaranteed
-that all features who's envelope (as returned by OGRGeometry::getEnvelope())
-overlaps the envelope of the spatial filter will be returned. This can result
-in more shapes being returned that should strictly be the case.
-
-This method makes an internal copy of the passed geometry. The passed geometry
-remains the responsibility of the caller, and may be safely destroyed.
-
-For the time being the passed filter geometry should be in the same SRS as the
-layer (as returned by OGRLayer::GetSpatialRef()). In the future this may be
-generalized.
 
 ### Parameters
 * `layer`: the layer on which to set the spatial filter.
@@ -105,17 +231,40 @@ generalized.
 * `geom`: the geometry to use as a filtering region. NULL may be passed
     indicating that the current spatial filter should be cleared, but
     no new one instituted.
-"""
-setspatialfilter!(layer::FeatureLayer, i::Integer, geom::Geometry) =
-    (GDAL.setspatialfilterex(layer.ptr, i, geom.ptr); layer)
 
-clearspatialfilter!(layer::FeatureLayer, i::Integer) =
-    (GDAL.setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL)); layer)
+### Remarks
+Currently this test is may be inaccurately implemented, but it is guaranteed
+that all features who's envelope (as returned by OGRGeometry::getEnvelope())
+overlaps the envelope of the spatial filter will be returned. This can result
+in more shapes being returned that should strictly be the case.
+
+For the time being the passed filter geometry should be in the same SRS as the
+layer (as returned by OGRLayer::GetSpatialRef()). In the future this may be
+generalized.
+"""
+function setspatialfilter!(
+        layer::AbstractFeatureLayer,
+        i::Integer,
+        geom::AbstractGeometry
+    )
+    # This method makes an internal copy of `geom`. The input `geom` remains
+    # the responsibility of the caller, and may be safely destroyed.
+    GDAL.ogr_l_setspatialfilterex(layer.ptr, i, geom.ptr)
+    return layer
+end
+
+function clearspatialfilter!(layer::AbstractFeatureLayer, i::Integer)
+    GDAL.ogr_l_setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL))
+    return layer
+end
 
 """
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, xmin, ymin, xmax, ymax)
+
 Set a new rectangular spatial filter.
+
 ### Parameters
-* `layer`: handle to the layer on which to set the spatial filter.
+* `layer`: the feature layer on which to set the spatial filter.
 * `i`: index of the geometry field on which the spatial filter operates.
 * `xmin`: the minimum X coordinate for the rectangular region.
 * `ymin`: the minimum Y coordinate for the rectangular region.
@@ -123,24 +272,31 @@ Set a new rectangular spatial filter.
 * `ymax`: the maximum Y coordinate for the rectangular region.
 """
 function setspatialfilter!(
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         i::Integer,
         xmin::Real,
         ymin::Real,
         xmax::Real,
         ymax::Real
     )
-    GDAL.setspatialfilterrectex(layer.ptr, i, xmin, ymin, xmax, ymax)
-    layer
+    GDAL.ogr_l_setspatialfilterrectex(layer.ptr, i, xmin, ymin, xmax, ymax)
+    return layer
 end
 
 """
+    setattributefilter!(layer::AbstractFeatureLayer, query::AbstractString)
+
 Set a new attribute query.
 
 This method sets the attribute query string to be used when fetching features
-via the GetNextFeature() method. Only features for which the query evaluates as
-true will be returned.
+via the `nextfeature()` method. Only features for which the query evaluates as
+`true` will be returned.
 
+### Parameters
+* `layer`: handle to the layer on which attribute query will be executed.
+* `query`: query in restricted SQL WHERE format.
+
+### Remarks
 The query string should be in the format of an SQL WHERE clause. For instance
 `"population > 1000000 and population < 5000000"` where population is an
 attribute in the layer. The query format is normally a restricted form of
@@ -150,88 +306,103 @@ be used to interpret the WHERE clause in which case the capabilities will be
 broader than those of OGR SQL.
 
 Note that installing a query string will generally result in resetting the
-current reading position (ala ResetReading()).
-
-### Parameters
-* `layer`: handle to the layer on which attribute query will be executed.
-* `query`: query in restricted SQL WHERE format, or NULL to clear the
-    current query.
+current reading position (ala `resetreading!()`).
 """
-function setattributefilter!(layer::FeatureLayer, query::AbstractString)
-    result = GDAL.setattributefilter(layer.ptr, query)
+function setattributefilter!(layer::AbstractFeatureLayer, query::AbstractString)
+    result = GDAL.ogr_l_setattributefilter(layer.ptr, query)
     @ogrerr result """Failed to set a new attribute query. The query expression
     might be in error."""
-    layer
+    return layer
 end
 
-function clearattributefilter!(layer::FeatureLayer)
-    result = GDAL.setattributefilter(layer.ptr, C_NULL)
-    @ogrerr result """OGRErr $result: Failed to clear attribute query."""
-    layer
+function clearattributefilter!(layer::AbstractFeatureLayer)
+    result = GDAL.ogr_l_setattributefilter(layer.ptr, C_NULL)
+    @ogrerr result "OGRErr $result: Failed to clear attribute query."
+    return layer
 end
 
 """
+    resetreading!(layer::AbstractFeatureLayer)
+
 Reset feature reading to start on the first feature.
 
-This affects `GetNextFeature()`.
+This affects `nextfeature()`.
 """
-resetreading!(layer::FeatureLayer) = (GDAL.resetreading(layer.ptr); layer)
+function resetreading!(layer::AbstractFeatureLayer)
+    GDAL.ogr_l_resetreading(layer.ptr)
+    return layer
+end
 
 """
+    unsafe_nextfeature(layer::AbstractFeatureLayer)
+
 Fetch the next available feature from this layer.
 
-The returned feature becomes the responsibility of the caller to delete with
-`DestroyFeature()`. It is critical that all features associated with an OGRLayer
-(more specifically an OGRFeatureDefn) be deleted before that layer/datasource is
-deleted.
+### Parameters
+* `layer`: the feature layer to be read from.
 
-Only features matching the current spatial filter (set with SetSpatialFilter())
+### Remarks
+This method implements sequential access to the features of a layer. The
+`resetreading!()` method can be used to start at the beginning again. Only
+features matching the current spatial filter (set with `setspatialfilter!()`)
 will be returned.
 
-This method implements sequential access to the features of a layer. The
-`ResetReading()` method can be used to start at the beginning again.
+The returned feature becomes the responsibility of the caller to delete with
+`destroy()`. It is critical that all features associated with a `FeatureLayer`
+(more specifically a `FeatureDefn`) be destroyed before that layer is destroyed.
 
-Features returned by `GetNextFeature()` may or may not be affected by concurrent
+Features returned by `nextfeature()` may or may not be affected by concurrent
 modifications depending on drivers. A guaranteed way of seeing modifications in
-effect is to call ResetReading() on layers where `GetNextFeature()` has been
+effect is to call `resetreading!()` on layers where `nextfeature()` has been
 called, before reading again. Structural changes in layers (field addition,
 deletion, ...) when a read is in progress may or may not be possible depending
 on drivers. If a transaction is committed/aborted, the current sequential
 reading may or may not be valid after that operation and a call to
-`ResetReading()` might be needed.
+`resetreading!()` might be needed.
 """
-unsafe_nextfeature(layer::FeatureLayer) =
-    Feature(GDAL.getnextfeature(layer.ptr))
+function unsafe_nextfeature(layer::AbstractFeatureLayer)
+    return Feature(GDALFeature(GDAL.ogr_l_getnextfeature(layer.ptr)))
+end
 
 """
+    setnextbyindex!(layer::AbstractFeatureLayer, i::Integer)
+
 Move read cursor to the `i`-th feature in the current resultset.
 
-This method allows positioning of a layer such that the GetNextFeature() call
+This method allows positioning of a layer such that the `nextfeature()` call
 will read the requested feature, where `i` is an absolute index into the
-current result set. So, setting it to 3 would mean the next feature read with
-`GetNextFeature()` would have been the 4th feature to have been read if
+current result set. So, setting it to `3` would mean the next feature read with
+`nextfeature()` would have been the fourth feature to have been read if
 sequential reading took place from the beginning of the layer, including
 accounting for spatial and attribute filters.
-
-Only in rare circumstances is `SetNextByIndex()` efficiently implemented. In all
-other cases the default implementation which calls `ResetReading()` and then
-calls `GetNextFeature()` `i` times is used. To determine if fast seeking is
-available on the current layer use the `TestCapability()` method with a value of
-`OLCFastSetNextByIndex`.
 
 ### Parameters
 * `layer`: handle to the layer
 * `i`: the index indicating how many steps into the result set to seek.
+
+### Remarks
+Only in rare circumstances is `setnextbyindex!()` efficiently implemented. In
+all other cases the default implementation which calls `resetreading!()` and
+then calls `nextfeature()` `i` times is used. To determine if fast seeking is
+available on the layer, use the `testcapability()` method with a value of
+`OLCFastSetNextByIndex`.
 """
-function setnextbyindex!(layer::FeatureLayer, i::Integer)
-    result = GDAL.setnextbyindex(layer.ptr, i)
+function setnextbyindex!(layer::AbstractFeatureLayer, i::Integer)
+    result = GDAL.ogr_l_setnextbyindex(layer.ptr, i)
     @ogrerr result "Failed to move the cursor to index $i"
-    layer
+    return layer
 end
 
 """
+    unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer)
+
 Return a feature (now owned by the caller) by its identifier or NULL on failure.
 
+### Parameters
+* `layer`: the feature layer to be read from.
+* `i`: the index of the feature to be returned.
+
+### Remarks
 This function will attempt to read the identified feature. The nFID value cannot
 be OGRNullFID. Success or failure of this operation is unaffected by the spatial
 or attribute filters (and specialized implementations in drivers should make
@@ -248,103 +419,158 @@ the features in the layer looking for the desired feature.
 Sequential reads (with OGR_L_GetNextFeature()) are generally considered
 interrupted by a OGR_L_GetFeature() call.
 
-The returned feature should be free with OGR_F_Destroy().
+The returned feature is now owned by the caller, and should be freed with `destroy()`.
 """
-unsafe_getfeature(layer::FeatureLayer, i::Integer) =
-    Feature(GDAL.getfeature(layer.ptr, i))
+unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer) =
+    Feature(GDALFeature(GDAL.ogr_l_getfeature(layer.ptr, i)))
 
 """
+    setfeature!(layer::AbstractFeatureLayer, feature::Feature)
+
 Rewrite an existing feature.
 
 This function will write a feature to the layer, based on the feature id within
 the OGRFeature.
 
+### Remarks
 Use OGR_L_TestCapability(OLCRandomWrite) to establish if this layer supports
 random access writing via OGR_L_SetFeature().
-
-### Returns
-OGRERR_NONE if the operation works, otherwise an appropriate error code
-(e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
 """
-function setfeature!(layer::FeatureLayer, feature::Feature)
-    result = GDAL.setfeature(layer.ptr, feature.ptr)
+function setfeature!(layer::AbstractFeatureLayer, feature::Feature)
+    result = GDAL.ogr_l_setfeature(layer.ptr, feature.ptr)
+    # OGRERR_NONE if the operation works, otherwise an appropriate error code
+    # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
     @ogrerr result "Failed to set feature."
-    layer
+    return layer
 end
 
 """
-Create and write a new feature within a layer.
+    addfeature!(layer::AbstractFeatureLayer, feature::Feature)
 
+Write a new feature within a layer.
+
+### Remarks
 The passed feature is written to the layer as a new feature, rather than
 overwriting an existing one. If the feature has a feature id other than
 OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function createfeature!(layer::FeatureLayer, feature::Feature)
-    result = GDAL.createfeature(layer.ptr, feature.ptr)
+function addfeature!(layer::AbstractFeatureLayer, feature::Feature)
+    result = GDAL.ogr_l_createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
-    layer
+    return layer
 end
 
-unsafe_createfeature(layer::FeatureLayer) =
-    unsafe_createfeature(getlayerdefn(layer))
+function addfeature(f::Function, layer::AbstractFeatureLayer)
+    feature = unsafe_createfeature(layer)
+    try
+        f(feature)
+        addfeature!(layer, feature)
+    finally
+        destroy(feature)
+    end
+end
 
 """
+    unsafe_createfeature(layer::AbstractFeatureLayer)
+
+Create and returns a new feature based on the layer definition.
+
+The newly feature is owned by the layer (it will increase the number of features
+the layer by one), but the feature has not been written to the layer yet.
+"""
+unsafe_createfeature(layer::AbstractFeatureLayer) =
+    unsafe_createfeature(layerdefn(layer))
+
+function createfeature(f::Function, layer::AbstractFeatureLayer)
+    feature = unsafe_createfeature(layer)
+    try
+        f(feature)
+        setfeature!(layer, feature)
+    finally
+        destroy(feature)
+    end
+end
+
+"""
+    deletefeature!(layer::AbstractFeatureLayer, i::Integer)
+
 Delete feature with fid `i` from layer.
 
+### Remarks
 The feature with the indicated feature id is deleted from the layer if supported
 by the driver. Most drivers do not support feature deletion, and will return
 OGRERR_UNSUPPORTED_OPERATION. The OGR_L_TestCapability() function may be called
 with OLCDeleteFeature to check if the driver supports feature deletion.
-
-### Returns
-OGRERR_NONE if the operation works, otherwise an appropriate error code
-(e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
 """
-function deletefeature!(layer::FeatureLayer, i::Integer)
-    result = GDAL.deletefeature(layer.ptr, i)
+function deletefeature!(layer::AbstractFeatureLayer, i::Integer)
+    result = GDAL.ogr_l_deletefeature(layer.ptr, i)
+    # OGRERR_NONE if the operation works, otherwise an appropriate error code
+    # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
     @ogrerr result "OGRErr $result: Failed to delete feature $i"
-    layer
+    return layer
 end
 
 """
-Fetch the schema information for this layer.
+    layerdefn(layer::AbstractFeatureLayer)
 
-The returned handle to the OGRFeatureDefn is owned by the OGRLayer, and should
-not be modified or freed by the application. It encapsulates the attribute
-schema of the features of the layer.
+Returns a view of the schema information for this layer.
+
+### Remarks
+The `featuredefn` is owned by the `layer` and should not be modified.
 """
-getlayerdefn(layer::FeatureLayer) = FeatureDefn(GDAL.getlayerdefn(layer.ptr))
+layerdefn(layer::AbstractFeatureLayer) =
+    IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
 
 """
-Find the index of field in a layer.
+    findfieldindex(layer::AbstractFeatureLayer, field::AbstractString, exactmatch::Bool)
 
-If `exactMatch` is set to `false` and the field doesn't exists in the given form
+Find the index of the field in a layer, or -1 if the field doesn't exist.
+
+If `exactmatch` is set to `false` and the field doesn't exists in the given form
 the driver might apply some changes to make it match, like those it might do if
 the layer was created (eg. like `LAUNDER` in the OCI driver).
-
-### Returns
-field index, or -1 if the field doesn't exist
 """
-findfieldindex(layer::FeatureLayer, field::AbstractString, exactmatch::Bool) =
-    GDAL.findfieldindex(layer.ptr, field, exactmatch)
+function findfieldindex(
+        layer::AbstractFeatureLayer,
+        field::AbstractString,
+        exactmatch::Bool
+    )
+    return GDAL.ogr_l_findfieldindex(layer.ptr, field, exactmatch)
+end
 
 """
-Fetch the feature count in this layer.
+    nfeature(layer::AbstractFeatureLayer, force::Bool = false)
+
+Fetch the feature count in this layer, or `-1` if the count is not known.
 
 ### Parameters
 * `layer`: handle to the layer that owned the features.
-* `force`: Flag indicating whether the count should be computed even if it
-    is expensive.
-
-### Returns
-feature count, -1 if count not known.
+* `force`: flag indicating whether the count should be computed even if it is
+    expensive. (`false` by default.)
 """
-nfeature(layer::FeatureLayer, force::Bool = false) =
-    GDAL.getfeaturecount(layer.ptr, force)
+nfeature(layer::AbstractFeatureLayer, force::Bool = false) =
+    GDAL.ogr_l_getfeaturecount(layer.ptr, force)
 
 """
+    ngeom(layer::AbstractFeatureLayer)
+
+Fetch number of geometry fields on the feature layer.
+"""
+ngeom(layer::AbstractFeatureLayer) = ngeom(layerdefn(layer))
+
+"""
+    nfield(layer::AbstractFeatureLayer)
+
+Fetch number of fields on the feature layer.
+"""
+nfield(layer::AbstractFeatureLayer) = nfield(layerdefn(layer))
+
+"""
+    envelope(layer::AbstractFeatureLayer, force::Bool = false)
+    envelope(layer::AbstractFeatureLayer, i::Integer, force::Bool = false)
+
 Fetch the extent of this layer.
 
 Returns the extent (MBR) of the data in the layer. If `force` is `false`, and it
@@ -370,29 +596,31 @@ meaningful extents could be collected.
 Note that some implementations of this method may alter the read cursor of the
 layer.
 """
-function getextent(layer::FeatureLayer, i::Integer, force::Bool = false)
+function envelope(layer::AbstractFeatureLayer, i::Integer, force::Bool = false)
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
-    result = GDAL.getextentex(layer.ptr, i, envelope, force)
+    result = GDAL.ogr_l_getextentex(layer.ptr, i, envelope, force)
     @ogrerr result "Extent not known"
-    envelope[]
+    return envelope[]
 end
 
-function getextent(layer::FeatureLayer, force::Bool = false)
+function envelope(layer::AbstractFeatureLayer, force::Bool = false)
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
-    result = GDAL.getextent(layer.ptr, envelope, force)
+    result = GDAL.ogr_l_getextent(layer.ptr, envelope, force)
     @ogrerr result "Extent not known"
-    envelope[]
+    return envelope[]
 end
 
 """
+    testcapability(layer::AbstractFeatureLayer, capability::AbstractString)
+
 Test if this layer supported the named capability.
 
 ### Parameters
 * `capability`  the name of the capability to test.
 
 ### Returns
-TRUE if the layer has the requested capability, or FALSE otherwise.
-OGRLayers will return FALSE for any unrecognized capabilities.
+`true` if the layer has the requested capability, `false` otherwise. It will
+return `false` for any unrecognized capabilities.
 
 ### Additional Remarks
 The capability codes that can be tested are represented as strings, but
@@ -400,80 +628,80 @@ The capability codes that can be tested are represented as strings, but
 implement class specific capabilities, but this can't generally be discovered by
 the caller.
 
-* `OLCRandomRead` / \"RandomRead\": TRUE if the GetFeature() method is
+* `OLCRandomRead` / \"RandomRead\": `true` if the GetFeature() method is
     implemented in an optimized way for this layer, as opposed to the default
-    implementation using ResetReading() and GetNextFeature() to find the
+    implementation using `resetreading!()` and `nextfeature()` to find the
     requested feature id.
 
-* `OLCSequentialWrite` / \"SequentialWrite\": TRUE if the CreateFeature() method
+* `OLCSequentialWrite` / \"SequentialWrite\": `true` if the CreateFeature() method
     works for this layer. Note this means that this particular layer is
-    writable. The same OGRLayer class may returned FALSE for other layer
+    writable. The same OGRLayer class may returned `false` for other layer
     instances that are effectively read-only.
 
-* `OLCRandomWrite` / \"RandomWrite\": TRUE if the SetFeature() method is
+* `OLCRandomWrite` / \"RandomWrite\": `true` if the SetFeature() method is
     operational on this layer. Note this means that this particular layer is
-    writable. The same OGRLayer class may returned FALSE for other layer
+    writable. The same OGRLayer class may returned `false` for other layer
     instances that are effectively read-only.
 
-* `OLCFastSpatialFilter` / \"FastSpatialFilter\": TRUE if this layer implements
+* `OLCFastSpatialFilter` / \"FastSpatialFilter\": `true` if this layer implements
     spatial filtering efficiently. Layers that effectively read all features,
-    and test them with the OGRFeature intersection methods should return FALSE.
+    and test them with the OGRFeature intersection methods should return `false`.
     This can be used as a clue by the application whether it should build and
     maintain its own spatial index for features in this layer.
 
-* `OLCFastFeatureCount` / \"FastFeatureCount\": TRUE if this layer can return a
+* `OLCFastFeatureCount` / \"FastFeatureCount\": `true` if this layer can return a
     feature count (via GetFeatureCount()) efficiently. i.e. without counting the
-    features. In some cases this will return TRUE until a spatial filter is
-    installed after which it will return FALSE.
+    features. In some cases this will return `true` until a spatial filter is
+    installed after which it will return `false`.
 
-* `OLCFastGetExtent` / \"FastGetExtent\": TRUE if this layer can return its data
+* `OLCFastGetExtent` / \"FastGetExtent\": `true` if this layer can return its data
     extent (via GetExtent()) efficiently, i.e. without scanning all the
-    features. In some cases this will return TRUE until a spatial filter is
-    installed after which it will return FALSE.
+    features. In some cases this will return `true` until a spatial filter is
+    installed after which it will return `false`.
 
-* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": TRUE if this layer can
-    perform the SetNextByIndex() call efficiently, otherwise FALSE.
+* `OLCFastSetNextByIndex` / \"FastSetNextByIndex\": `true` if this layer can
+    perform the SetNextByIndex() call efficiently, otherwise `false`.
 
-* `OLCCreateField` / \"CreateField\": TRUE if this layer can create new fields
-    on the current layer using CreateField(), otherwise FALSE.
+* `OLCCreateField` / \"CreateField\": `true` if this layer can create new fields
+    on the current layer using CreateField(), otherwise `false`.
 
-* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) TRUE if this layer
+* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) `true` if this layer
     can create new geometry fields on the current layer using CreateGeomField(),
-    otherwise FALSE.
+    otherwise `false`.
 
-* `OLCDeleteField` / \"DeleteField\": TRUE if this layer can delete existing
-    fields on the current layer using DeleteField(), otherwise FALSE.
+* `OLCDeleteField` / \"DeleteField\": `true` if this layer can delete existing
+    fields on the current layer using DeleteField(), otherwise `false`.
 
-* `OLCReorderFields` / \"ReorderFields\": TRUE if this layer can reorder
+* `OLCReorderFields` / \"ReorderFields\": `true` if this layer can reorder
     existing fields on the current layer using ReorderField() or
-    ReorderFields(), otherwise FALSE.
+    ReorderFields(), otherwise `false`.
 
-* `OLCAlterFieldDefn` / \"AlterFieldDefn\": TRUE if this layer can alter the
+* `OLCAlterFieldDefn` / \"AlterFieldDefn\": `true` if this layer can alter the
     definition of an existing field on the current layer using AlterFieldDefn(),
-    otherwise FALSE.
+    otherwise `false`.
 
-* `OLCDeleteFeature` / \"DeleteFeature\": TRUE if the DeleteFeature() method is
-    supported on this layer, otherwise FALSE.
+* `OLCDeleteFeature` / \"DeleteFeature\": `true` if the DeleteFeature() method is
+    supported on this layer, otherwise `false`.
 
-* `OLCStringsAsUTF8` / \"StringsAsUTF8\": TRUE if values of OFTString fields are
-    assured to be in UTF-8 format. If FALSE the encoding of fields is uncertain,
+* `OLCStringsAsUTF8` / \"StringsAsUTF8\": `true` if values of OFTString fields are
+    assured to be in UTF-8 format. If `false` the encoding of fields is uncertain,
     though it might still be UTF-8.
 
-* `OLCTransactions` / \"Transactions\": TRUE if the StartTransaction(),
+* `OLCTransactions` / \"Transactions\": `true` if the StartTransaction(),
     CommitTransaction() and RollbackTransaction() methods work in a meaningful
-    way, otherwise FALSE.
+    way, otherwise `false`.
 
-* `OLCIgnoreFields` / \"IgnoreFields\": TRUE if fields, geometry and style will
+* `OLCIgnoreFields` / \"IgnoreFields\": `true` if fields, geometry and style will
     be omitted when fetching features as set by SetIgnoredFields() method.
 
-* `OLCCurveGeometries` / \"CurveGeometries\": TRUE if this layer supports
+* `OLCCurveGeometries` / \"CurveGeometries\": `true` if this layer supports
     writing curve geometries or may return such geometries. (GDAL 2.0).
 """
-testcapability(layer::FeatureLayer, capability::AbstractString) =
-    Bool(GDAL.testcapability(layer.ptr, capability))
+testcapability(layer::AbstractFeatureLayer, capability::AbstractString) =
+    Bool(GDAL.ogr_l_testcapability(layer.ptr, capability))
 
 function listcapability(
-        layer::FeatureLayer,
+        layer::AbstractFeatureLayer,
         capabilities = (GDAL.OLCRandomRead,
                         GDAL.OLCSequentialWrite,
                         GDAL.OLCRandomWrite,
@@ -499,7 +727,7 @@ function listcapability(
 end
 
 # TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
-# listcapability(layer::FeatureLayer) = Dict(
+# listcapability(layer::AbstractFeatureLayer) = Dict(
 #     c => testcapability(layer,c) for c in
 #     (GDAL.OLCRandomRead,        GDAL.OLCSequentialWrite, GDAL.OLCRandomWrite,
 #      GDAL.OLCFastSpatialFilter, GDAL.OLCFastFeatureCount,GDAL.OLCFastGetExtent,
@@ -511,8 +739,17 @@ end
 # )
 
 """
+    addfielddefn!(layer::AbstractFeatureLayer, field::AbstractFieldDefn, approx = false)
+
 Create a new field on a layer.
 
+### Parameters
+* `layer`:  the layer to write the field definition.
+* `field`:  the field definition to write to disk.
+* `approx`: If `true`, the field may be created in a slightly different form
+            depending on the limitations of the format driver.
+
+### Remarks
 You must use this to create new fields on a real layer. Internally the
 OGRFeatureDefn for the layer will be updated to reflect the new field.
 Applications should never modify the OGRFeatureDefn used by a layer directly.
@@ -521,34 +758,37 @@ This function should not be called while there are feature objects in existence
 that were obtained or created with the previous layer definition.
 
 Not all drivers support this function. You can query a layer to check if it
-supports it with the OLCCreateField capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
+supports it with the `GDAL.OLCCreateField` capability. Some drivers may only
+support this method while there are still no features in the layer. When it is
 supported, the existing features of the backing file/database should be updated
 accordingly.
 
 Drivers may or may not support not-null constraints. If they support creating
 fields with not-null constraints, this is generally before creating any feature
 to the layer.
-
-### Parameters
-* `layer`:  the layer to write the field definition.
-* `field`:  the field definition to write to disk.
-* `approx`: If TRUE, the field may be created in a slightly different form
-            depending on the limitations of the format driver.
 """
-function createfield!(
-        layer::FeatureLayer,
-        field::FieldDefn,
+function addfielddefn!(
+        layer::AbstractFeatureLayer,
+        field::AbstractFieldDefn,
         approx::Bool = false
     )
-    result = GDAL.createfield(layer.ptr, field.ptr, approx)
+    result = GDAL.ogr_l_createfield(layer.ptr, field.ptr, approx)
     @ogrerr result "Failed to create new field"
-    layer
+    return layer
 end
 
 """
+    addgeomdefn!(layer::AbstractFeatureLayer, field::AbstractGeomFieldDefn, approx = false)
+
 Create a new geometry field on a layer.
 
+### Parameters
+* `layer`:  the layer to write the field definition.
+* `field`:  the geometry field definition to write to disk.
+* `approx`: If `true`, the field may be created in a slightly different form
+            depending on the limitations of the format driver.
+
+### Remarks
 You must use this to create new geometry fields on a real layer. Internally the
 OGRFeatureDefn for the layer will be updated to reflect the new field.
 Applications should never modify the OGRFeatureDefn used by a layer directly.
@@ -557,696 +797,710 @@ This function should not be called while there are feature objects in existence
 that were obtained or created with the previous layer definition.
 
 Not all drivers support this function. You can query a layer to check if it
-supports it with the OLCCreateField capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
+supports it with the `GDAL.OLCCreateGeomField` capability. Some drivers may only
+support this method while there are still no features in the layer. When it is
 supported, the existing features of the backing file/database should be updated
 accordingly.
 
 Drivers may or may not support not-null constraints. If they support creating
 fields with not-null constraints, this is generally before creating any feature
 to the layer.
-
-### Parameters
-* `layer`:  the layer to write the field definition.
-* `field`:  the geometry field definition to write to disk.
-* `approx`: If TRUE, the field may be created in a slightly different form
-            depending on the limitations of the format driver.
-
-### Returns
-OGRERR_NONE on success.
 """
-function creategeomfield!(
-        layer::FeatureLayer,
-        field::GeomFieldDefn,
+function addgeomdefn!(
+        layer::AbstractFeatureLayer,
+        field::AbstractGeomFieldDefn,
         approx::Bool = false
     )
-    result = GDAL.creategeomfield(layer.ptr, field.ptr, approx)
-    @ogrerr result "Failed to create new field"
-    layer
+    result = GDAL.ogr_l_creategeomfield(layer.ptr, field.ptr, approx)
+    # OGRERR_NONE on success.
+    @ogrerr result "Failed to create new geometry field"
+    return layer
 end
 
+# """
+# Delete the field at index `i` on a layer.
+
+# You must use this to delete existing fields on a real layer. Internally the
+# OGRFeatureDefn for the layer will be updated to reflect the deleted field.
+# Applications should never modify the OGRFeatureDefn used by a layer directly.
+
+# This function should not be called while there are feature objects in existence
+# that were obtained or created with the previous layer definition.
+
+# Not all drivers support this function. You can query a layer to check if it
+# supports it with the OLCDeleteField capability. Some drivers may only support
+# this method while there are still no features in the layer. When it is
+# supported, the existing features of the backing file/database should be updated
+# accordingly.
+
+# ### Parameters
+# * `layer`: handle to the layer.
+# * `i`: index of the field to delete.
+# """
+# function deletefield!(layer::AbstractFeatureLayer, i::Integer)
+#     result = GDAL.ogr_l_deletefield(layer.ptr, i)
+#     @ogrerr result "Failed to delete field $i"
+#     layer
+# end
+
+# # function deletegeomdefn!(layer::AbstractFeatureLayer, i::Integer)
+# #     error("OGR_L_DeleteGeomField() is not implemented in GDAL yet.")
+# # end
+
+# """
+# Reorder all the fields of a layer.
+
+# You must use this to reorder existing fields on a real layer. Internally the
+# OGRFeatureDefn for the layer will be updated to reflect the reordering of the
+# fields. Applications should never modify the OGRFeatureDefn used by a layer
+# directly.
+
+# This method should not be called while there are feature objects in existence
+# that were obtained or created with the previous layer definition.
+
+# panMap is such that,for each field definition at position i after reordering,
+# its position before reordering was panMap[i].
+
+# For example, let suppose the fields were "0","1","2","3","4" initially.
+# ReorderFields([0,2,3,1,4]) will reorder them as "0","2","3","1","4".
+
+# Not all drivers support this method. You can query a layer to check if it
+# supports it with the OLCReorderFields capability. Some drivers may only support
+# this method while there are still no features in the layer. When it is
+# supported, the existing features of the backing file/database should be updated
+# accordingly.
+
+# ### Parameters
+# * `layer`: handle to the layer.
+# * `indices`: an array of GetLayerDefn()->OGRFeatureDefn::GetFieldCount()
+#             elements which is a permutation of
+#                 `[0, GetLayerDefn()->OGRFeatureDefn::GetFieldCount()-1]`.
+# """
+# function reorderfields!(layer::AbstractFeatureLayer, indices::Vector{Cint})
+#     result = GDAL.ogr_l_reorderfields(layer.ptr, indices)
+#     @ogrerr result "Failed to reorder the fields of layer according to $indices"
+#     layer
+# end
+
+# """
+# Reorder an existing field on a layer.
+
+# This method is a convenience wrapper of ReorderFields() dedicated to move a
+# single field. It is a non-virtual method, so drivers should implement
+# ReorderFields() instead.
+
+# You must use this to reorder existing fields on a real layer. Internally the
+# OGRFeatureDefn for the layer will be updated to reflect the reordering of the
+# fields. Applications should never modify the OGRFeatureDefn used by a layer
+# directly.
+
+# This method should not be called while there are feature objects in existence
+# that were obtained or created with the previous layer definition.
+
+# The field definition that was at initial position iOldFieldPos will be moved at
+# position iNewFieldPos, and elements between will be shuffled accordingly.
+
+# For example, let suppose the fields were "0","1","2","3","4" initially.
+# ReorderField(1, 3) will reorder them as "0","2","3","1","4".
+
+# Not all drivers support this method. You can query a layer to check if it
+# supports it with the OLCReorderFields capability. Some drivers may only support
+# this method while there are still no features in the layer. When it is
+# supported, the existing features of the backing file/database should be updated
+# accordingly.
+
+# ### Parameters
+# * `layer`: handle to the layer.
+# * `oldpos`: previous position of the field to move. Must be in the range
+#             [0,GetFieldCount()-1].
+# * `newpos`: new position of the field to move. Must be in the range
+#             [0,GetFieldCount()-1].
+# """
+# function reorderfield!(
+#         layer::AbstractFeatureLayer,
+#         oldpos::Integer,
+#         newpos::Integer
+#     )
+#     result = GDAL.ogr_l_reorderfield(layer.ptr, oldpos, newpos)
+#     @ogrerr result "Failed to reorder field from $oldpos to $newpos."
+#     layer
+# end
+
+# """
+# Alter the definition of an existing field on a layer.
+
+# You must use this to alter the definition of an existing field of a real layer.
+# Internally the OGRFeatureDefn for the layer will be updated to reflect the
+# altered field. Applications should never modify the OGRFeatureDefn used by a
+# layer directly.
+
+# This method should not be called while there are feature objects in existence
+# that were obtained or created with the previous layer definition.
+
+# Not all drivers support this method. You can query a layer to check if it
+# supports it with the OLCAlterFieldDefn capability. Some drivers may only
+# support this method while there are still no features in the layer. When it is
+# supported, the existing features of the backing file/database should be updated
+# accordingly. Some drivers might also not support all update flags.
+
+# ### Parameters
+# * `layer`:        handle to the layer.
+# * `i`:            index of the field whose definition must be altered.
+# * `newfielddefn`: new field definition
+# * `flags`: combination of ALTER_NAME_FLAG, ALTER_TYPE_FLAG,
+#             ALTER_WIDTH_PRECISION_FLAG, ALTER_NULLABLE_FLAG and
+#             ALTER_DEFAULT_FLAG to indicate which of the name and/or type and/or
+#             width and precision fields and/or nullability from the new field
+#             definition must be taken into account.
+# """
+# function alterfielddefn!(
+#         layer::AbstractFeatureLayer,
+#         i::Integer,
+#         newfielddefn::FieldDefn,
+#         flags::UInt8
+#     )
+#     result = OGR.alterfielddefn(layer.ptr, i, newfielddefn.ptr, flags)
+#     @ogrerr result "Failed to alter fielddefn of field $i."
+#     layer
+# end
+
+# "For datasources which support transactions, creates a transaction."
+# function starttransaction(layer::AbstractFeatureLayer)
+#     result = GDAL.ogr_l_starttransaction(layer.ptr)
+#     @ogrerr result "Failed to start transaction."
+#     layer
+# end
+
+# "For datasources which support transactions, commits a transaction."
+# function committransaction(layer::AbstractFeatureLayer)
+#     result = GDAL.ogr_l_committransaction(layer.ptr)
+#     @ogrerr result "Failed to commit transaction."
+#     layer
+# end
+
+# """
+# For datasources which support transactions, RollbackTransaction will roll back
+# a datasource to its state before the start of the current transaction.
+# """
+# function rollbacktransaction(layer::AbstractFeatureLayer)
+#     result = GDAL.ogr_l_rollbacktransaction(layer.ptr)
+#     @ogrerr result "Failed to rollback transaction."
+#     layer
+# end
+
 """
-Delete the field at index `i` on a layer.
+    reference(layer::AbstractFeatureLayer)
 
-You must use this to delete existing fields on a real layer. Internally the
-OGRFeatureDefn for the layer will be updated to reflect the deleted field.
-Applications should never modify the OGRFeatureDefn used by a layer directly.
-
-This function should not be called while there are feature objects in existence
-that were obtained or created with the previous layer definition.
-
-Not all drivers support this function. You can query a layer to check if it
-supports it with the OLCDeleteField capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
-supported, the existing features of the backing file/database should be updated
-accordingly.
-
-### Parameters
-* `layer`: handle to the layer.
-* `i`: index of the field to delete.
-"""
-function deletefield!(layer::FeatureLayer, i::Integer)
-    result = GDAL.deletefield(layer.ptr, i)
-    @ogrerr result "Failed to delete field $i"
-    layer
-end
-
-"""
-Reorder all the fields of a layer.
-
-You must use this to reorder existing fields on a real layer. Internally the
-OGRFeatureDefn for the layer will be updated to reflect the reordering of the
-fields. Applications should never modify the OGRFeatureDefn used by a layer
-directly.
-
-This method should not be called while there are feature objects in existence
-that were obtained or created with the previous layer definition.
-
-panMap is such that,for each field definition at position i after reordering,
-its position before reordering was panMap[i].
-
-For example, let suppose the fields were "0","1","2","3","4" initially.
-ReorderFields([0,2,3,1,4]) will reorder them as "0","2","3","1","4".
-
-Not all drivers support this method. You can query a layer to check if it
-supports it with the OLCReorderFields capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
-supported, the existing features of the backing file/database should be updated
-accordingly.
-
-### Parameters
-* `layer`: handle to the layer.
-* `indices`: an array of GetLayerDefn()->OGRFeatureDefn::GetFieldCount()
-            elements which is a permutation of
-                `[0, GetLayerDefn()->OGRFeatureDefn::GetFieldCount()-1]`.
-"""
-function reorderfields!(layer::FeatureLayer, indices::Vector{Cint})
-    result = GDAL.reorderfields(layer.ptr, indices)
-    @ogrerr result "Failed to reorder the fields of layer according to $indices"
-    layer
-end
-
-"""
-Reorder an existing field on a layer.
-
-This method is a convenience wrapper of ReorderFields() dedicated to move a
-single field. It is a non-virtual method, so drivers should implement
-ReorderFields() instead.
-
-You must use this to reorder existing fields on a real layer. Internally the
-OGRFeatureDefn for the layer will be updated to reflect the reordering of the
-fields. Applications should never modify the OGRFeatureDefn used by a layer
-directly.
-
-This method should not be called while there are feature objects in existence
-that were obtained or created with the previous layer definition.
-
-The field definition that was at initial position iOldFieldPos will be moved at
-position iNewFieldPos, and elements between will be shuffled accordingly.
-
-For example, let suppose the fields were "0","1","2","3","4" initially.
-ReorderField(1, 3) will reorder them as "0","2","3","1","4".
-
-Not all drivers support this method. You can query a layer to check if it
-supports it with the OLCReorderFields capability. Some drivers may only support
-this method while there are still no features in the layer. When it is
-supported, the existing features of the backing file/database should be updated
-accordingly.
-
-### Parameters
-* `layer`: handle to the layer.
-* `oldpos`: previous position of the field to move. Must be in the range
-            [0,GetFieldCount()-1].
-* `newpos`: new position of the field to move. Must be in the range
-            [0,GetFieldCount()-1].
-"""
-function reorderfield!(layer::FeatureLayer, oldpos::Integer, newpos::Integer)
-    result = GDAL.reorderfield(layer.ptr, oldpos, newpos)
-    @ogrerr result "Failed to reorder field from $oldpos to $newpos."
-    layer
-end
-
-"""
-Alter the definition of an existing field on a layer.
-
-You must use this to alter the definition of an existing field of a real layer.
-Internally the OGRFeatureDefn for the layer will be updated to reflect the
-altered field. Applications should never modify the OGRFeatureDefn used by a
-layer directly.
-
-This method should not be called while there are feature objects in existence
-that were obtained or created with the previous layer definition.
-
-Not all drivers support this method. You can query a layer to check if it
-supports it with the OLCAlterFieldDefn capability. Some drivers may only
-support this method while there are still no features in the layer. When it is
-supported, the existing features of the backing file/database should be updated
-accordingly. Some drivers might also not support all update flags.
-
-### Parameters
-* `layer`:        handle to the layer.
-* `i`:            index of the field whose definition must be altered.
-* `newfielddefn`: new field definition
-* `flags`: combination of ALTER_NAME_FLAG, ALTER_TYPE_FLAG,
-            ALTER_WIDTH_PRECISION_FLAG, ALTER_NULLABLE_FLAG and
-            ALTER_DEFAULT_FLAG to indicate which of the name and/or type and/or
-            width and precision fields and/or nullability from the new field
-            definition must be taken into account.
-"""
-function alterfielddefn!(
-        layer::FeatureLayer,
-        i::Integer,
-        newfielddefn::FieldDefn,
-        flags::UInt8
-    )
-    result = OGR.alterfielddefn(layer.ptr, i, newfielddefn.ptr, flags)
-    @ogrerr result "Failed to alter fielddefn of field $i."
-    layer
-end
-
-"For datasources which support transactions, creates a transaction."
-function starttransaction(layer::FeatureLayer)
-    result = GDAL.starttransaction(layer.ptr)
-    @ogrerr result "Failed to start transaction."
-    layer
-end
-
-"For datasources which support transactions, commits a transaction."
-function committransaction(layer::FeatureLayer)
-    result = GDAL.committransaction(layer.ptr)
-    @ogrerr result "Failed to commit transaction."
-    layer
-end
-
-"""
-For datasources which support transactions, RollbackTransaction will roll back
-a datasource to its state before the start of the current transaction.
-"""
-function rollbacktransaction(layer::FeatureLayer)
-    result = GDAL.rollbacktransaction(layer.ptr)
-    @ogrerr result "Failed to rollback transaction."
-    layer
-end
-
-"""
 Increment layer reference count.
 
 ### Returns
-the reference count after incrementing.
+The reference count after incrementing.
 """
-reference(layer::FeatureLayer) = GDAL.reference(layer.ptr)
+reference(layer::AbstractFeatureLayer) = GDAL.ogr_l_reference(layer.ptr)
 
 """
+    dereference(layer::AbstractFeatureLayer)
+
 Decrement layer reference count.
 
 ### Returns
-the reference count after decrementing.
+The reference count after decrementing.
 """
-dereference(layer::FeatureLayer) = GDAL.dereference(layer.ptr)
-
-"the current reference count for the layer object itself."
-nreference(layer::FeatureLayer) = GDAL.getrefcount(layer.ptr)
+dereference(layer::AbstractFeatureLayer) = GDAL.ogr_l_dereference(layer.ptr)
 
 """
-Flush pending changes to disk.
+    nreference(layer::AbstractFeatureLayer)
 
-This call is intended to force the layer to flush any pending writes to disk,
-and leave the disk file in a consistent state. It would not normally have any
-effect on read-only datasources.
-
-Some layers do not implement this method, and will still return OGRERR_NONE.
-The default implementation just returns OGRERR_NONE. An error is only returned
-if an error occurs while attempting to flush to disk.
-
-In any event, you should always close any opened datasource with
-DestroyDataSource() that will ensure all data is correctly flushed.
-
-### Returns
-OGRERR_NONE if no error occurs (even if nothing is done) or an error code.
+The current reference count for the layer object itself.
 """
-function synctodisk!(layer::FeatureLayer)
-    result = GDAL.synctodisk(layer.ptr)
-    @ogrerr result "Failed to flush pending changes to disk"
-    layer
-end
+nreference(layer::AbstractFeatureLayer) = GDAL.ogr_l_getrefcount(layer.ptr)
 
-"""
-Return the total number of features read.
+# """
+# Flush pending changes to disk.
 
-Warning: not all drivers seem to update this count properly.
-"""
-getfeaturesread(layer::FeatureLayer) = GDAL.getfeaturesread(layer.ptr)
+# This call is intended to force the layer to flush any pending writes to disk,
+# and leave the disk file in a consistent state. It would not normally have any
+# effect on read-only datasources.
 
-"""This method returns the name of the underlying database column being used as
-the FID column, or \"\" if not supported.
-"""
-getfidcolname(layer::FeatureLayer) = GDAL.getfidcolumn(layer.ptr)
+# Some layers do not implement this method, and will still return OGRERR_NONE.
+# The default implementation just returns OGRERR_NONE. An error is only returned
+# if an error occurs while attempting to flush to disk.
 
-"""
-This method returns the name of the underlying database column being used as
-the geometry column, or \"\" if not supported.
-"""
-getgeomcolname(layer::FeatureLayer) = GDAL.getgeometrycolumn(layer.ptr)
+# In any event, you should always close any opened datasource with
+# DestroyDataSource() that will ensure all data is correctly flushed.
+
+# ### Returns
+# OGRERR_NONE if no error occurs (even if nothing is done) or an error code.
+# """
+# function synctodisk!(layer::AbstractFeatureLayer)
+#     result = GDAL.ogr_l_synctodisk(layer.ptr)
+#     @ogrerr result "Failed to flush pending changes to disk"
+#     layer.ptr = GDALFeatureLayer(C_NULL)
+# end
+
+# """
+# Return the total number of features read.
+
+# Warning: not all drivers seem to update this count properly.
+# """
+# getfeaturesread(layer::AbstractFeatureLayer) =
+#     GDAL.ogr_l_getfeaturesread(layer.ptr)
 
 """
+    fidcolumnname(layer::AbstractFeatureLayer)
+
+The name of the FID column in the database, or \"\" if not supported.
+"""
+fidcolumnname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getfidcolumn(layer.ptr)
+
+"""
+    geomcolumnname(layer::AbstractFeatureLayer)
+
+The name of the geometry column in the database, or \"\" if not supported.
+"""
+geomcolumnname(layer::AbstractFeatureLayer) =
+    GDAL.ogr_l_getgeometrycolumn(layer.ptr)
+
+"""
+    setignoredfields!(layer::AbstractFeatureLayer, fieldnames)
+
 Set which fields can be omitted when retrieving features from the layer.
 
+### Parameters
+* `fieldnames`: an array of field names terminated by NULL item. If NULL is
+passed, the ignored list is cleared.
+
+### Remarks
 If the driver supports this functionality (testable using `OLCIgnoreFields`
 capability), it will not fetch the specified fields in subsequent calls to
-`GetFeature()`/`GetNextFeature()` and thus save some processing time and/or
+`GetFeature()`/`nextfeature()` and thus save some processing time and/or
 bandwidth.
 
 Besides field names of the layers, the following special fields can be passed:
 `"OGR_GEOMETRY"` to ignore geometry and `"OGR_STYLE"` to ignore layer style.
 
 By default, no fields are ignored.
-
-### Parameters
-* `fieldnames`: an array of field names terminated by NULL item. If NULL is
-passed, the ignored list is cleared.
-
-### Returns
-OGRERR_NONE if all field names have been resolved (even if the driver does not
-support this method)
 """
-function setignoredfields!(layer::FeatureLayer, fieldnames)
-    result = GDAL.setignoredfields(layer.ptr, fieldnames)
+function setignoredfields!(layer::AbstractFeatureLayer, fieldnames)
+    result = GDAL.ogr_l_setignoredfields(layer.ptr, fieldnames)
+    # OGRERR_NONE if all field names have been resolved (even if the driver
+    # does not support this method)
     @ogrerr result "Failed to set ignored fields $fieldnames."
-    layer
+    return layer
 end
 
 
-"""
-Intersection of two layers.
+# """
+# Intersection of two layers.
 
-The result layer contains features whose geometries represent areas that are
-common between features in the input layer and in the method layer. The features
-in the result layer have attributes from both input and method layers. The
-schema of the result layer can be set by the user or, if it is empty, is
-initialized to contain all fields in the input and method layers.
+# The result layer contains features whose geometries represent areas that are
+# common between features in the input layer and in the method layer. The features
+# in the result layer have attributes from both input and method layers. The
+# schema of the result layer can be set by the user or, if it is empty, is
+# initialized to contain all fields in the input and method layers.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `output`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
 
-### Keyword Arguments
-* `options`: NULL terminated list of options (may be NULL).
-* `progressfunc`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `progressdata`: argument to be passed to pfnProgress. May be NULL.
+# ### Keyword Arguments
+# * `options`: NULL terminated list of options (may be NULL).
+# * `progressfunc`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `progressdata`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is:
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is:
 
-* `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-* `USE_PREPARED_GEOMETRIES=YES/NO`. Set to NO to not use prepared geometries to
-    pretest intersection of features of method layer with features of this layer
-* `PRETEST_CONTAINMENT=YES/NO`. Set to YES to pretest the containment of
-    features of method layer within the features of this layer. This will speed
-    up the method significantly in some cases. Requires that the prepared
-    geometries are in effect.
-* `KEEP_LOWER_DIMENSION_GEOMETRIES=YES/NO`. Set to NO to skip result features
-    with lower dimension geometry that would otherwise be added to the result
-    layer. The default is to add but only if the result layer has an unknown
-    geometry type.
-"""
-function intersection(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
-    )
-    result = GDAL.intersection(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to compute the intersection of the two layers"
-    output
-end
+# * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# * `USE_PREPARED_GEOMETRIES=YES/NO`. Set to NO to not use prepared geometries to
+#     pretest intersection of features of method layer with features of this layer
+# * `PRETEST_CONTAINMENT=YES/NO`. Set to YES to pretest the containment of
+#     features of method layer within the features of this layer. This will speed
+#     up the method significantly in some cases. Requires that the prepared
+#     geometries are in effect.
+# * `KEEP_LOWER_DIMENSION_GEOMETRIES=YES/NO`. Set to NO to skip result features
+#     with lower dimension geometry that would otherwise be added to the result
+#     layer. The default is to add but only if the result layer has an unknown
+#     geometry type.
+# """
+# function intersection(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options                 = StringList(C_NULL),
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
+#         progressdata            = C_NULL
+#     )
+#     result = GDAL.ogr_l_intersection(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to compute the intersection of the two layers"
+#     output
+# end
 
-"""
-Union of two layers.
+# """
+# Union of two layers.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
-* `papszOptions`: NULL terminated list of options (may be NULL).
-* `pfnProgress`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `result`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
+# * `papszOptions`: NULL terminated list of options (may be NULL).
+# * `pfnProgress`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is:
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is:
 
-* `SKIP_FAILURES=YES/NO. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-* `USE_PREPARED_GEOMETRIES=YES/NO. Set to NO to not use prepared geometries to
-    pretest intersection of features of method layer with features of this layer
-* `KEEP_LOWER_DIMENSION_GEOMETRIES=YES/NO. Set to NO to skip result features
-    with lower dimension geometry that would otherwise be added to the result
-    layer. The default is to add but only if the result layer has an unknown
-    geometry type.
-"""
-function union(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
-    )
-    result = GDAL.union(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to compute the union of the two layers"
-    output
-end
+# * `SKIP_FAILURES=YES/NO. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# * `USE_PREPARED_GEOMETRIES=YES/NO. Set to NO to not use prepared geometries to
+#     pretest intersection of features of method layer with features of this layer
+# * `KEEP_LOWER_DIMENSION_GEOMETRIES=YES/NO. Set to NO to skip result features
+#     with lower dimension geometry that would otherwise be added to the result
+#     layer. The default is to add but only if the result layer has an unknown
+#     geometry type.
+# """
+# function union(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options                 = StringList(C_NULL),
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
+#         progressdata            = C_NULL
+#     )
+#     result = GDAL.ogr_l_union(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to compute the union of the two layers"
+#     output
+# end
 
-"""
-Symmetrical difference of two layers.
+# """
+# Symmetrical difference of two layers.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
-* `papszOptions`: NULL terminated list of options (may be NULL).
-* `pfnProgress`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `result`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
+# * `papszOptions`: NULL terminated list of options (may be NULL).
+# * `pfnProgress`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is :
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is :
 
-* `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-"""
-function symdifference(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
-    )
-    result = GDAL.symdifference(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to compute the sym difference of the two layers"
-    output
-end
+# * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# """
+# function symdifference(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options                 = StringList(C_NULL),
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
+#         progressdata            = C_NULL
+#     )
+#     result = GDAL.ogr_l_symdifference(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to compute the sym difference of the two layers"
+#     output
+# end
 
-"""
-Identify the features of this layer with the ones from the identity layer.
+# """
+# Identify the features of this layer with the ones from the identity layer.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
-* `papszOptions`: NULL terminated list of options (may be NULL).
-* `pfnProgress`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `result`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
+# * `papszOptions`: NULL terminated list of options (may be NULL).
+# * `pfnProgress`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is :
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is :
 
-* `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-* `USE_PREPARED_GEOMETRIES=YES/NO`. Set to NO to not use prepared geometries to
-    pretest intersection of features of method layer with features of this layer
-* `KEEP_LOWER_DIMENSION_GEOMETRIES=YES/NO`. Set to NO to skip result features
-    with lower dimension geometry that would otherwise be added to the result
-    layer. The default is to add but only if the result layer has an unknown
-    geometry type.
-"""
-function identity(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
-    )
-    result = GDAL.identity(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to compute the identity of the two layers"
-    output
-end
+# * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# * `USE_PREPARED_GEOMETRIES=YES/NO`. Set to NO to not use prepared geometries to
+#     pretest intersection of features of method layer with features of this layer
+# * `KEEP_LOWER_DIMENSION_GEOMETRIES=YES/NO`. Set to NO to skip result features
+#     with lower dimension geometry that would otherwise be added to the result
+#     layer. The default is to add but only if the result layer has an unknown
+#     geometry type.
+# """
+# function identity(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options                 = StringList(C_NULL),
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
+#         progressdata            = C_NULL
+#     )
+#     result = GDAL.ogr_l_identity(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to compute the identity of the two layers"
+#     output
+# end
 
-"""
-Update this layer with features from the update layer.
+# """
+# Update this layer with features from the update layer.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
-* `papszOptions`: NULL terminated list of options (may be NULL).
-* `pfnProgress`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `result`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
+# * `papszOptions`: NULL terminated list of options (may be NULL).
+# * `pfnProgress`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is :
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is :
 
-* `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-"""
-function update(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
-    )
-    result = GDAL.update(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to update the layer"
-    output
-end
+# * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# """
+# function update(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options                 = StringList(C_NULL),
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
+#         progressdata            = C_NULL
+#     )
+#     result = GDAL.ogr_l_update(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to update the layer"
+#     output
+# end
 
-"""
-Clip off areas that are not covered by the method layer.
+# """
+# Clip off areas that are not covered by the method layer.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
-* `papszOptions`: NULL terminated list of options (may be NULL).
-* `pfnProgress`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `result`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
+# * `papszOptions`: NULL terminated list of options (may be NULL).
+# * `pfnProgress`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is :
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is :
 
-* `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-"""
-function clip(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
-    )
-    result = GDAL.clip(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to clip the input layer"
-    output
-end
+# * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# """
+# function clip(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options                 = StringList(C_NULL),
+#         progressfunc::Function  = GDAL.gdaldummyprogress,
+#         progressdata            = C_NULL
+#     )
+#     result = GDAL.ogr_l_clip(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to clip the input layer"
+#     output
+# end
 
-"""
-Remove areas that are covered by the method layer.
+# """
+# Remove areas that are covered by the method layer.
 
-### Parameters
-* `input`: the input layer. Should not be NULL.
-* `method`: the method layer. Should not be NULL.
-* `result`: the layer where the features resulting from the operation
-    are inserted. Should not be NULL. See the note about the schema.
-* `papszOptions`: NULL terminated list of options (may be NULL).
-* `pfnProgress`: a GDALProgressFunc() compatible callback function for
-    reporting progress or NULL.
-* `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
+# ### Parameters
+# * `input`: the input layer. Should not be NULL.
+# * `method`: the method layer. Should not be NULL.
+# * `result`: the layer where the features resulting from the operation
+#     are inserted. Should not be NULL. See the note about the schema.
+# * `papszOptions`: NULL terminated list of options (may be NULL).
+# * `pfnProgress`: a GDALProgressFunc() compatible callback function for
+#     reporting progress or NULL.
+# * `pProgressArg`: argument to be passed to pfnProgress. May be NULL.
 
-### Returns
-an error code if there was an error or the execution was interrupted,
-OGRERR_NONE otherwise.
+# ### Returns
+# an error code if there was an error or the execution was interrupted,
+# OGRERR_NONE otherwise.
 
-### Additional Remarks
-If the schema of the result is set by user and contains fields that have the
-same name as a field in input and in method layer, then the attribute in the
-result feature will get the value from the feature of the method layer.
+# ### Additional Remarks
+# If the schema of the result is set by user and contains fields that have the
+# same name as a field in input and in method layer, then the attribute in the
+# result feature will get the value from the feature of the method layer.
 
-For best performance use the minimum amount of features in the method layer and
-copy it into a memory layer. This method relies on GEOS support. Do not use
-unless the GEOS support is compiled in. The recognized list of options is :
+# For best performance use the minimum amount of features in the method layer and
+# copy it into a memory layer. This method relies on GEOS support. Do not use
+# unless the GEOS support is compiled in. The recognized list of options is :
 
-* `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
-    be inserted or a GEOS call failed.
-* `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
-    MultiPolygons, or LineStrings to MultiLineStrings.
-* `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the input layer.
-* `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
-    from the fields of the method layer.
-"""
-function erase(
-        input::FeatureLayer,
-        method::FeatureLayer,
-        output::FeatureLayer;
-        options = StringList(C_NULL),
-        progressfunc::Function = GDAL.C.GDALDummyProgress,
-        progressdata = C_NULL
-    )
-    result = GDAL.erase(
-        input.ptr,
-        method.ptr,
-        output.ptr,
-        options,
-        @cplprogress(progressfunc),
-        progressdata
-    )
-    @ogrerr result "Failed to remove areas covered by the method layer."
-    output
-end
+# * `SKIP_FAILURES=YES/NO`. Set it to YES to go on, even when a feature could not
+#     be inserted or a GEOS call failed.
+# * `PROMOTE_TO_MULTI=YES/NO`. Set it to YES to convert Polygons into
+#     MultiPolygons, or LineStrings to MultiLineStrings.
+# * `INPUT_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the input layer.
+# * `METHOD_PREFIX=string`. Set a prefix for the field names that will be created
+#     from the fields of the method layer.
+# """
+# function erase(
+#         input::AbstractFeatureLayer,
+#         method::AbstractFeatureLayer,
+#         output::AbstractFeatureLayer;
+#         options = StringList(C_NULL),
+#         progressfunc::Function = GDAL.gdaldummyprogress,
+#         progressdata = C_NULL
+#     )
+#     result = GDAL.ogr_l_erase(
+#         input.ptr,
+#         method.ptr,
+#         output.ptr,
+#         options,
+#         @cplprogress(progressfunc),
+#         progressdata
+#     )
+#     @ogrerr result "Failed to remove areas covered by the method layer."
+#     output
+# end

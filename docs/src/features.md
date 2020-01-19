@@ -1,29 +1,20 @@
 # Feature Data
 
-In this section, we revisit the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset.
-
-```@setup feature
-import ArchGDAL
-filepath = download("https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson", "point.geojson")
+```@setup features
+using ArchGDAL
 ```
 
-```@example feature
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        print(dataset)
-    end
-end
+In this section, we revisit the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset.
+
+```@example features
+dataset = ArchGDAL.read("data/point.geojson")
 ```
 
 ## Feature Layers
 
-```@example feature
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        layer = ArchGDAL.getlayer(dataset, 0)
-        print(layer)
-    end
-end
+Retrieve a layer from a dataset using [`ArchGDAL.getlayer`](@ref)
+```@example features
+layer = ArchGDAL.getlayer(dataset, 0)
 ```
 
 The display provides
@@ -32,41 +23,36 @@ The display provides
 * the **fields** in the dataset, and their brief summary.
 
 You can also programmatically retrieve them using
-* `ArchGDAL.getname(layer)`: the name of the feature layer
-* `ArchGDAL.nfeature(layer)`: the number of features in the layer
-* `featuredefn = ArchGDAL.getlayerdefn(layer)`: the schema of the layer features
-* `ArchGDAL.nfield(featuredefn)`: the number of fields
-* `ArchGDAL.ngeomfield(featuredefn)`: the number of geometries
-* `fielddefn = ArchGDAL.getfielddefn(featuredefn, i)`: the definition for field `i`
-* `geomfielddefn = ArchGDAL.getgeomfielddefn(featuredefn, i)`: the definition for geometry `i`
+* [`ArchGDAL.getname(layer)`](@ref): the **name** of the feature layer
+* [`ArchGDAL.nfeature(layer)`](@ref): the **number of features** in the layer
+* `featuredefn = `[`ArchGDAL.layerdefn(layer)`](@ref): the **schema** of the layer features
+* [`ArchGDAL.nfield(featuredefn)`](@ref): the **number of fields**
+* [`ArchGDAL.ngeom(featuredefn)`](@ref): the **number of geometries**
+* [`ArchGDAL.getfielddefn(featuredefn, i)`](@ref): the definition for the `i`-th field
+* [`ArchGDAL.getgeomdefn(featuredefn, i)`](@ref): the definition for the `i`-th geometry
 
 ### Field Definitions
 
 Each `fielddefn` defines an attribute of a feature, and supports the following:
-* `ArchGDAL.getname(fielddefn)`: the name of the field (`FID` or `pointname`)
-* `ArchGDAL.gettype(fielddefn)`: the type of the field (`OFTReal` or `OFTString`)
+* [`ArchGDAL.getname(fielddefn)`](@ref): the name of the field (`"FID"` or `"pointname"`)
+* [`ArchGDAL.gettype(fielddefn)`](@ref): the type of the field (`OFTReal` or `OFTString`)
 
-Each `geomfielddefn` defines an attribute of a geometry, and supports the following:
-* `ArchGDAL.getgeomname(geomfielddefn)`: the name of the geometry (empty in this case)
-* `ArchGDAL.gettype(geomfielddefn)`: the type of the geometry (`wkbPoint`)
+Each `geomdefn` defines an attribute of a geometry, and supports the following:
+* [`ArchGDAL.getname(geomdefn)`](@ref): the name of the geometry (`""` in this case)
+* [`ArchGDAL.gettype(geomdefn)`](@ref): the type of the geometry (`wkbPoint`)
 
 ## Individual Features
 We can examine an individual feature
-```@example feature
-ArchGDAL.registerdrivers() do
-    ArchGDAL.read(filepath) do dataset
-        layer = ArchGDAL.getlayer(dataset, 0)
-        ArchGDAL.getfeature(layer, 2) do feature
-            print(feature)
-        end
-    end
+```@example features
+ArchGDAL.getfeature(layer, 2) do feature
+    print(feature)
 end
 ```
 
 You can programmatically retrieve the information using
-* `ArchGDAL.nfield(feature)`: the number of fields (`2`)
-* `ArchGDAL.ngeomfield(feature)`: the number of geometries (`1`)
+* [`ArchGDAL.nfield(feature)`](@ref): the **number of fields** (`2`)
+* [`ArchGDAL.ngeom(feature)`](@ref): the **number of geometries** (`1`)
 * `ArchGDAL.getfield(feature, i)`: the `i`-th field (`0.0` and `"a"`)
-* `ArchGDAL.getgeomfield(feature, i)`: the `i`-th geometry (the WKT display `POINT`)
+* [`ArchGDAL.getgeom(feature, i)`](@ref): the `i`-th geometry (the WKT display `POINT`)
 
-More information on geometries can be found in `Geometric Operations`.
+More information on geometries can be found in [Geometric Operations](@ref).

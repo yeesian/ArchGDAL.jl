@@ -1,4 +1,6 @@
 """
+    copywholeraster(source::AbstractDataset, dest::AbstractDataset; <keyword arguments>)
+
 Copy all dataset raster data.
 
 This function copies the complete raster contents of one dataset to another
@@ -18,18 +20,20 @@ particular \"chunking\" the copy in substantial blocks and, if appropriate,
 performing the transfer in a pixel interleaved fashion.
 """
 function copywholeraster(
-        source::Dataset,
-        dest::Dataset,
-        options                 = StringList(C_NULL);
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
+        source::AbstractDataset,
+        dest::AbstractDataset;
+        options                 = StringList(C_NULL),
+        progressfunc::Function  = GDAL.gdaldummyprogress,
         progressdata::Any       = C_NULL
     )
-    result = GDAL.datasetcopywholeraster(source.ptr, dest.ptr, options,
+    result = GDAL.gdaldatasetcopywholeraster(source.ptr, dest.ptr, options,
         @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to copy whole raster"
 end
 
 """
+    unsafe_copy(dataset::AbstractDataset; [filename, [driver, [<keyword arguments>]]])
+
 Create a copy of a dataset.
 
 This method will attempt to create a copy of a raster dataset with the
@@ -39,9 +43,12 @@ provided template dataset.
 
 ### Parameters
 * `dataset`       the dataset being duplicated.
-* `filename`      the name for the new dataset. UTF-8 encoded.
-* `strict`        `TRUE` if the copy must be strictly equivelent, or more
-normally `FALSE` if the copy may adapt as needed for the output format.
+
+### Keyword Arguments
+* `filename`      the filename for the new dataset. UTF-8 encoded.
+* `driver`        the driver to use for creating the new dataset
+* `strict`        ``true`` if the copy must be strictly equivalent, or more
+normally ``false`` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
 of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
 avoid prior destruction of existing dataset.
@@ -72,53 +79,96 @@ ensures that all the data and metadata has been written to the dataset
 In some situations, the new dataset can be created in another process through
 the GDAL API Proxy mechanism.
 """
-function unsafe_createcopy(
-        dataset::Dataset,
-        filename::AbstractString,
-        driver::Driver;
-        strict::Bool            = false,
-        options                 = StringList(C_NULL),
-        progressfunc::Function  = GDAL.C.GDALDummyProgress,
-        progressdata            = C_NULL
+function unsafe_copy(
+        dataset::AbstractDataset;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        driver::Driver              = getdriver(dataset),
+        strict::Bool                = false,
+        options                     = StringList(C_NULL),
+        progressfunc::Function      = GDAL.gdaldummyprogress,
+        progressdata                = C_NULL
     )
-    
-    Dataset(GDAL.createcopy(driver.ptr, filename, GDAL.failsafe(dataset.ptr),
-        strict, options, @cplprogress(progressfunc), progressdata))
-end
-
-function unsafe_createcopy(
-        dataset::Dataset,
-        filename::AbstractString,
-        drivername::AbstractString;
-        kwargs...
-    )
-    unsafe_createcopy(
-        dataset,
+    return Dataset(GDAL.gdalcreatecopy(
+        driver.ptr,
         filename,
-        getdriver(drivername);
-        kwargs...
-    )
-end
-
-function unsafe_createcopy(
-        dataset::Dataset,
-        filename::AbstractString;
-        kwargs...
-    )
-    unsafe_createcopy(
-        dataset,
-        filename,
-        getdriver(dataset);
-        kwargs...
-    )
-end
-
-function write(args...; kwargs...)
-    destroy(unsafe_createcopy(args...; kwargs...))
+        dataset.ptr,
+        strict,
+        options,
+        @cplprogress(progressfunc),
+        progressdata
+    ))
 end
 
 """
-Create a new dataset with this driver.
+    copy(dataset::AbstractDataset; [filename, [driver, [<keyword arguments>]]])
+
+Create a copy of a dataset.
+
+This method will attempt to create a copy of a raster dataset with the
+indicated filename, and in this drivers format. Band number, size, type,
+projection, geotransform and so forth are all to be copied from the
+provided template dataset.
+
+### Parameters
+* `dataset`       the dataset being duplicated.
+
+### Keyword Arguments
+* `filename`      the filename for the new dataset. UTF-8 encoded.
+* `driver`        the driver to use for creating the new dataset
+* `strict`        ``true`` if the copy must be strictly equivalent, or more
+    normally ``false`` if the copy may adapt as needed for the output format.
+* `options`       additional format dependent options controlling creation
+of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+avoid prior destruction of existing dataset.
+
+### Example
+```
+dataset = ArchGDAL.copy(originaldataset)
+# work with dataset from here
+```
+or
+```
+ArchGDAL.copy(originaldataset) do dataset
+    # work with dataset from here
+end
+```
+
+### Returns
+The newly created dataset.
+"""
+function copy(
+        dataset::AbstractDataset;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        driver::Driver              = getdriver(dataset),
+        strict::Bool                = false,
+        options                     = StringList(C_NULL),
+        progressfunc::Function      = GDAL.gdaldummyprogress,
+        progressdata                = C_NULL
+    )
+    return IDataset(GDAL.gdalcreatecopy(
+        driver.ptr,
+        filename,
+        dataset.ptr,
+        strict,
+        options,
+        @cplprogress(progressfunc),
+        progressdata
+    ))
+end
+
+"""
+    write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
+
+Writes the dataset to the designated filename.
+"""
+function write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
+    return destroy(unsafe_copy(dataset, filename = filename; kwargs...))
+end
+
+"""
+    unsafe_create(filename::AbstractString; driver, width, height, nbands, dtype, options)
+
+Create a new dataset.
 
 What argument values are legal for particular drivers is driver specific, and
 there is no way to query in advance to establish legal values.
@@ -139,32 +189,94 @@ In GDAL 2, the arguments nXSize, nYSize and nBands can be passed to 0 when
 creating a vector-only dataset for a compatible driver.
 """
 function unsafe_create(
-        filename::AbstractString,
-        driver::Driver;
-        width::Integer  = 0,
-        height::Integer = 0,
-        nbands::Integer = 0,
-        dtype::DataType = Any,
-        options = StringList(C_NULL)
+        filename::AbstractString;
+        driver::Driver              = identifydriver(filename),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
     )
-    result = GDAL.create(driver.ptr, filename, width, height, nbands,
+    result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
         _GDALTYPE[dtype], options)
-    Dataset(result)
+    return Dataset(result)
 end
 
 function unsafe_create(
-        filename::AbstractString,
-        drivername::AbstractString;
-        kwargs...
+        driver::Driver;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
     )
-    unsafe_create(
-        filename,
-        getdriver(drivername);
-        kwargs...
-    )
+    result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
+    return Dataset(result)
 end
 
 """
+    create(filename::AbstractString; driver, width, height, nbands, dtype, options)
+
+Create a new dataset.
+
+### Parameters
+* `filename`       the filename for the dataset being created.
+
+### Keyword Arguments
+* `driver`        the driver to use for creating the new dataset
+* `options`       additional format dependent options controlling creation
+of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+avoid prior destruction of existing dataset.
+* `width`, `height`, `nbands`, `dtype`: only for raster datasets.
+
+### Example
+```
+dataset = ArchGDAL.create(AG.getdriver("MEM"))
+# work with raster dataset from here
+```
+or
+```
+ArchGDAL.create(AG.getdriver("Memory")) do dataset
+    # work with vector dataset from here
+end
+```
+
+### Returns
+The newly created dataset.
+"""
+function create(
+        filename::AbstractString;
+        driver::Driver              = identifydriver(filename),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
+    )
+    result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
+    return IDataset(result)
+end
+
+function create(
+        driver::Driver;
+        filename::AbstractString    = string("/vsimem/$(gensym())"),
+        width::Integer              = 0,
+        height::Integer             = 0,
+        nbands::Integer             = 0,
+        dtype::DataType             = Any,
+        options                     = StringList(C_NULL)
+    )
+    result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
+        _GDALTYPE[dtype], options)
+    return IDataset(result)
+end
+
+"""
+    unsafe_read(filename; flags=OF_ReadOnly, alloweddrivers, options, siblingfiles)
+
 Open a raster file as a GDALDataset.
 
 This function will try to open the passed file, or virtual dataset name by
@@ -181,7 +293,7 @@ driver on how to access a dataset. It should be in UTF-8 encoding.
 
     - Driver kind: GDAL_OF_RASTER for raster drivers, GDAL_OF_VECTOR for vector
                    drivers. If none of the value is specified, both are implied.
-    - Access mode: `GDAL_OF_READONLY` (exclusive) or `GDAL_OF_UPDATE`.
+    - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
     - Shared mode: `GDAL_OF_SHARED`. If set, it allows the sharing of
                    GDALDataset handles for a dataset with other callers that
                    have set GDAL_OF_SHARED. In particular, GDALOpenEx() will
@@ -191,6 +303,7 @@ driver on how to access a dataset. It should be in UTF-8 encoding.
                    returned, if GDALOpenEx() is called from the same thread.
     - Verbose error: GDAL_OF_VERBOSE_ERROR. If set, a failed attempt to open the
                    file will lead to an error message to be reported.
+* `options`: additional format dependent options.
 
 ### Additional Remarks
 Several recommendations:
@@ -202,13 +315,13 @@ it from different threads, you must add all necessary code (mutexes, etc.) to
 avoid concurrent use of the object. (Some drivers, such as GeoTIFF, maintain
 internal state variables that are updated each time a new block is read,
 preventing concurrent use.)
-* # In order to reduce the need for searches through the operating system file
-# system machinery, it is possible to give an optional list of files with the
-# papszSiblingFiles parameter. This is the list of all files at the same level in
-# the file system as the target file, including the target file. The filenames
-# must not include any path components, are essentially just the output of
-# VSIReadDir() on the parent directory. If the target object does not have
-# filesystem semantics then the file list should be NULL.
+* In order to reduce the need for searches through the operating system file
+system machinery, it is possible to give an optional list of files with the
+papszSiblingFiles parameter. This is the list of all files at the same level in
+the file system as the target file, including the target file. The filenames
+must not include any path components, are essentially just the output of
+VSIReadDir() on the parent directory. If the target object does not have
+filesystem semantics then the file list should be NULL.
 
 In some situations (dealing with unverified data), the datasets can be opened
 in another process through the GDAL API Proxy mechanism.
@@ -225,30 +338,100 @@ function unsafe_read(
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)
     )
-    result = GDAL.openex(filename, Int(flags), alloweddrivers, options,
+    result = GDAL.gdalopenex(filename, Int(flags), alloweddrivers, options,
         siblingfiles)
-    Dataset(result)
+    return Dataset(result)
+end
+
+"""
+    read(filename; flags=OF_ReadOnly, alloweddrivers, options, siblingfiles)
+
+Open a raster file
+
+### Parameters
+* `filename`: the filename of the dataset to be read.
+
+### Keyword Arguments
+* `flags`: a combination of `OF_*` flags (listed below) that may be
+    combined through the logical `|` operator. It defaults to `OF_ReadOnly`.
+    - Driver kind: `OF_Raster` for raster drivers, `OF_Vector` for vector
+        drivers. If none of the value is specified, both are implied.
+    - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
+    - Shared mode: `OF_Shared`. If set, it allows the sharing of handles for a
+        dataset with other callers that have set `OF_Shared`.
+    - Verbose error: `OF_Verbose_Error`. If set, a failed attempt to open the
+        file will lead to an error message to be reported.
+* `options`: additional format dependent options.
+
+### Example
+```
+dataset = ArchGDAL.read("point.shp")
+# work with dataset from here
+```
+or
+```
+ArchGDAL.read("point.shp") do dataset
+    # work with dataset from here
+end
+```
+
+### Returns
+The corresponding dataset.
+"""
+function read(
+        filename::AbstractString;
+        flags           = OF_ReadOnly | OF_Verbose_Error,
+        alloweddrivers  = StringList(C_NULL),
+        options         = StringList(C_NULL),
+        siblingfiles    = StringList(C_NULL)
+    )
+    result = GDAL.gdalopenex(filename, Int(flags), alloweddrivers, options,
+        siblingfiles)
+    return IDataset(result)
 end
 
 unsafe_update(filename::AbstractString; flags = OF_Update, kwargs...) =
     unsafe_read(filename; flags = OF_Update | flags, kwargs...)
 
-"Fetch raster width in pixels."
-width(dataset::Dataset) = GDAL.getrasterxsize(dataset.ptr)
+"""
+    width(dataset::AbstractDataset)
 
-"Fetch raster height in pixels."
-height(dataset::Dataset) = GDAL.getrasterysize(dataset.ptr)
-
-"Fetch the number of raster bands on this dataset."
-nraster(dataset::Dataset) = GDAL.getrastercount(dataset.ptr)
-
-"Fetch the number of feature layers on this dataset."
-nlayer(dataset::Dataset) = GDAL.datasetgetlayercount(dataset.ptr)
-
-"Fetch the driver that the dataset was created with"
-getdriver(dataset::Dataset) = Driver(GDAL.getdatasetdriver(dataset.ptr))
+Fetch raster width in pixels.
+"""
+width(dataset::AbstractDataset) = GDAL.gdalgetrasterxsize(dataset.ptr)
 
 """
+    height(dataset::AbstractDataset)
+
+Fetch raster height in pixels.
+"""
+height(dataset::AbstractDataset) = GDAL.gdalgetrasterysize(dataset.ptr)
+
+"""
+    nraster(dataset::AbstractDataset)
+
+Fetch the number of raster bands on this dataset.
+"""
+nraster(dataset::AbstractDataset) = GDAL.gdalgetrastercount(dataset.ptr)
+
+"""
+    nlayer(dataset::AbstractDataset)
+
+Fetch the number of feature layers on this dataset.
+"""
+nlayer(dataset::AbstractDataset) = GDAL.gdaldatasetgetlayercount(dataset.ptr)
+
+"""
+    getdriver(dataset::AbstractDataset)
+
+Fetch the driver that the dataset was created with
+"""
+getdriver(dataset::AbstractDataset) =
+    Driver(GDAL.gdalgetdatasetdriver(dataset.ptr))
+
+"""
+    filelist(dataset::AbstractDataset)
+
 Fetch files forming dataset.
 
 Returns a list of files believed to be part of this dataset. If it returns an
@@ -259,93 +442,62 @@ list is owned by the caller and should be deallocated with `CSLDestroy()`.
 The returned filenames will normally be relative or absolute paths depending on
 the path used to originally open the dataset. The strings will be UTF-8 encoded
 """
-filelist(dataset::Dataset) = GDAL.getfilelist(dataset.ptr)
+filelist(dataset::AbstractDataset) = GDAL.gdalgetfilelist(dataset.ptr)
 
 """
+    getlayer(dataset::AbstractDataset, i::Integer)
+
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
 
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-getlayer(dataset::Dataset, i::Integer) =
-    FeatureLayer(GDAL.datasetgetlayer(dataset.ptr, i))
+getlayer(dataset::AbstractDataset, i::Integer) =
+    IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i), ownedby = dataset)
+
+unsafe_getlayer(dataset::AbstractDataset, i::Integer) =
+    FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i))
 
 """
+    getlayer(dataset::AbstractDataset, name::AbstractString)
+
 Fetch the feature layer corresponding to the given name.
 
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
 """
-getlayer(dataset::Dataset, name::AbstractString) =
-    FeatureLayer(GDAL.datasetgetlayerbyname(dataset.ptr, name))
+function getlayer(dataset::AbstractDataset, name::AbstractString)
+    return IFeatureLayer(
+        GDAL.gdaldatasetgetlayerbyname(dataset.ptr, name),
+        ownedby = dataset
+    )
+end
+
+unsafe_getlayer(dataset::AbstractDataset, name::AbstractString) =
+    FeatureLayer(GDAL.gdaldatasetgetlayerbyname(dataset.ptr, name))
 
 """
+    deletelayer!(dataset::AbstractDataset, i::Integer)
+
 Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
 
 ### Returns
 `OGRERR_NONE` on success, or `OGRERR_UNSUPPORTED_OPERATION` if deleting layers
 is not supported for this dataset.
 """
-function deletelayer!(dataset::Dataset, i::Integer)
-    result = GDAL.datasetdeletelayer(dataset.ptr, i)
+function deletelayer!(dataset::AbstractDataset, i::Integer)
+    result = GDAL.gdaldatasetdeletelayer(dataset.ptr, i)
     @ogrerr result "Failed to delete layer"
-    dataset
+    return dataset
 end
 
 """
-This function attempts to create a new layer on the dataset with the indicated
-name, coordinate system, geometry type.
+    testcapability(dataset::AbstractDataset, capability::AbstractString)
 
-The papszOptions argument can be used to control driver specific creation
-options. These options are normally documented in the format specific
-documentation.
-
-### Parameters
-* `dataset`: the dataset
-* `name`: the name for the new layer. This should ideally not match any
-    existing layer on the datasource.
-
-### Optional Parameters
-* `spatialref`: the coordinate system to use for the new layer, or `NULL`
-    (default) if no coordinate system is available.
-* `geom`: the geometry type for the layer. Use wkbUnknown (default) if
-    there are no constraints on the types geometry to be written.
-* `options`: a StringList of name=value (driver-specific) options.
-"""
-function createlayer(
-        dataset::Dataset,
-        name::AbstractString;
-        spatialref::AbstractSpatialRef  = SpatialRef(C_NULL),
-        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
-        options                         = StringList(C_NULL)
-    )
-    FeatureLayer(GDAL.datasetcreatelayer(dataset.ptr, name, spatialref.ptr,
-        geom, options))
-end
-
-"""
-Duplicate an existing layer.
-
-### Parameters
-* `dataset`: the dataset handle.
-* `layer`: source layer.
-* `name`: the name of the layer to create.
-* `papszOptions`: a StringList of name=value (driver-specific) options.
-"""
-function copylayer(
-        dataset::Dataset,
-        layer::FeatureLayer,
-        name::AbstractString;
-        options = StringList(C_NULL)
-    )
-    FeatureLayer(GDAL.datasetcopylayer(dataset.ptr, layer.ptr, name, options))
-end
-
-"""
-Test if capability is available. TRUE if capability available otherwise FALSE.
+Test if capability is available. `true` if capability available otherwise `false`.
 
 One of the following dataset capability names can be passed into this function,
-and a TRUE or FALSE value will be returned indicating whether or not the
+and a `true` or `false` value will be returned indicating whether or not the
 capability is available for this object.
 
 * `ODsCCreateLayer`: True if this datasource can create new layers.
@@ -364,34 +516,26 @@ the strings themselves to avoid misspelling.
 * `dataset`: the dataset handle.
 * `capability`: the capability to test.
 """
-testcapability(dataset::Dataset, capability::AbstractString) =
-    Bool(GDAL.datasettestcapability(dataset.ptr, capability))
-
+testcapability(dataset::AbstractDataset, capability::AbstractString) =
+    Bool(GDAL.gdaldatasettestcapability(dataset.ptr, capability))
 
 function listcapability(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         capabilities = (GDAL.ODsCCreateLayer,
                         GDAL.ODsCDeleteLayer,
-                        GDAL.ODsCCreateGeomFieldAfterCreateLayer, 
+                        GDAL.ODsCCreateGeomFieldAfterCreateLayer,
                         GDAL.ODsCCurveGeometries,
                         GDAL.ODsCTransactions,
                         GDAL.ODsCEmulatedTransactions)
     )
-    Dict{String, Bool}([
+    return Dict{String, Bool}(
         c => testcapability(dataset, c) for c in capabilities
-    ])
+    )
 end
 
-# TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
-# listcapability(dataset::Dataset) = Dict(
-#     c => testcapability(dataset,c) for c in
-#     (GDAL.ODsCCreateLayer, GDAL.ODsCDeleteLayer,
-#      GDAL.ODsCCreateGeomFieldAfterCreateLayer, GDAL.ODsCCurveGeometries,
-#      GDAL.ODsCTransactions, GDAL.ODsCEmulatedTransactions)
-# )
-
-
 """
+    unsafe_executesql(dataset::AbstractDataset, query::AbstractString; dialect, spatialfilter)
+
 Execute an SQL statement against the data store.
 
 The result of an SQL query is either NULL for statements that are in error, or
@@ -420,17 +564,22 @@ an OGRLayer containing the results of the query.
 Deallocate with ReleaseResultSet().
 """
 function unsafe_executesql(
-        dataset::Dataset,
+        dataset::AbstractDataset,
         query::AbstractString;
         dialect::AbstractString = "",
-        spatialfilter::Geometry = Geometry(C_NULL)
+        spatialfilter::Geometry = Geometry(GDALGeometry(C_NULL))
     )
-    FeatureLayer(GDAL.datasetexecutesql(dataset.ptr, query, spatialfilter.ptr,
-        dialect))
+    return FeatureLayer(GDALFeatureLayer(GDAL.gdaldatasetexecutesql(
+        dataset.ptr,
+        query,
+        spatialfilter.ptr,
+        dialect
+    )))
 end
 
-
 """
+    releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
+
 Release results of ExecuteSQL().
 
 This function should only be used to deallocate OGRLayers resulting from an
@@ -441,14 +590,25 @@ before destroying the GDALDataset may cause errors.
 * `dataset`: the dataset handle.
 * `layer`: the result of a previous ExecuteSQL() call.
 """
-releaseresultset(dataset::Dataset, layer::FeatureLayer) =
-    (GDAL.datasetreleaseresultset(dataset.ptr, layer.ptr); layer.ptr = C_NULL)
-
-"Fetch a band object for a dataset from its index"
-getband(dataset::Dataset, i::Integer) =
-    RasterBand(GDAL.getrasterband(dataset.ptr, i))
+function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
+    GDAL.gdaldatasetreleaseresultset(dataset.ptr, layer.ptr)
+    destroy(layer)
+end
 
 """
+    getband(dataset::AbstractDataset, i::Integer)
+
+Fetch a band object for a dataset from its index.
+"""
+getband(dataset::AbstractDataset, i::Integer) =
+    IRasterBand(GDAL.gdalgetrasterband(dataset.ptr, i), ownedby = dataset)
+
+unsafe_getband(dataset::AbstractDataset, i::Integer) =
+    RasterBand(GDAL.gdalgetrasterband(dataset.ptr, i))
+
+"""
+    getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
+
 Fetch the affine transformation coefficients.
 
 Fetches the coefficients for transforming between pixel/line (P,L) raster
@@ -473,44 +633,61 @@ transformation to projection coordinates.
 ### Returns
 `CE_None` on success, or `CE_Failure` if no transform can be fetched.
 """
-function getgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
+function getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
     @assert length(transform) == 6
-    result = GDAL.getgeotransform(dataset.ptr, pointer(transform))
+    result = GDAL.gdalgetgeotransform(dataset.ptr, pointer(transform))
     @cplerr result "Failed to get geotransform"
-    transform
+    return transform
 end
 
-getgeotransform(dataset::Dataset) = getgeotransform!(dataset, Array{Cdouble}(undef, 6))
-
-"Set the affine transformation coefficients."
-function setgeotransform!(dataset::Dataset, transform::Vector{Cdouble})
-    @assert length(transform) == 6
-    result = GDAL.setgeotransform(dataset.ptr, pointer(transform))
-    @cplerr result "Failed to transform raster dataset"
-    dataset
-end
-
-"Get number of GCPs for this dataset. Zero if there are none."
-ngcp(dataset::Dataset) = GDAL.getgcpcount(dataset.ptr)
+getgeotransform(dataset::AbstractDataset) =
+    getgeotransform!(dataset, Array{Cdouble}(undef, 6))
 
 """
+    setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
+
+Set the affine transformation coefficients.
+"""
+function setgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
+    @assert length(transform) == 6
+    result = GDAL.gdalsetgeotransform(dataset.ptr, pointer(transform))
+    @cplerr result "Failed to transform raster dataset"
+    return dataset
+end
+
+"""
+    ngcp(dataset::AbstractDataset)
+
+Get number of GCPs for this dataset. Zero if there are none.
+"""
+ngcp(dataset::AbstractDataset) = GDAL.gdalgetgcpcount(dataset.ptr)
+
+"""
+    getproj(dataset::AbstractDataset)
+
 Fetch the projection definition string for this dataset in OpenGIS WKT format.
 
 It should be suitable for use with the OGRSpatialReference class. When a
 projection definition is not available an empty (but not `NULL`) string is
 returned.
 """
-getproj(dataset::Dataset) = GDAL.getprojectionref(dataset.ptr)
+getproj(dataset::AbstractDataset) = GDAL.gdalgetprojectionref(dataset.ptr)
 
-"Set the projection reference string for this dataset."
-function setproj!(dataset::Dataset, projstring::AbstractString)
-    result = GDAL.setprojection(dataset.ptr, projstring)
+"""
+    setproj!(dataset::AbstractDataset, projstring::AbstractString)
+
+Set the projection reference string for this dataset.
+"""
+function setproj!(dataset::AbstractDataset, projstring::AbstractString)
+    result = GDAL.gdalsetprojection(dataset.ptr, projstring)
     @cplerr result "Could not set projection"
-    dataset
+    return dataset
 end
 
 """
-Build raster overview(s).
+    buildoverviews!(dataset::AbstractDataset, overviewlist::Vector{Cint}; bandlist, resampling="NEAREST",
+        progressfunc, progressdata)
+        Build raster overview(s).
 
 If the operation is unsupported for the indicated dataset, then CE_Failure is
 returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
@@ -526,17 +703,29 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `progressfunc` a function to call to report progress, or `NULL`.
 * `progressdata` application data to pass to the progress function.
 """
-function buildoverviews!(dataset::Dataset,
-                         overviewlist::Vector{Cint};
-                         bandlist::Vector{Cint}     = Cint[],
-                         resampling::AbstractString = "NEAREST",
-                         progressfunc::Function     = GDAL.C.GDALDummyProgress,
-                         progressdata               = C_NULL)
-    result = GDAL.buildoverviews(dataset.ptr, resampling, length(overviewlist),
-        overviewlist, length(bandlist), bandlist, @cplprogress(progressfunc),
-        progressdata)
+function buildoverviews!(
+        dataset::AbstractDataset,
+        overviewlist::Vector{Cint};
+        bandlist::Vector{Cint}     = Cint[],
+        resampling::AbstractString = "NEAREST",
+        progressfunc::Function     = GDAL.gdaldummyprogress,
+        progressdata               = C_NULL
+    )
+    result = GDAL.gdalbuildoverviews(
+        dataset.ptr,
+        resampling,
+        length(overviewlist),
+        overviewlist,
+        length(bandlist),
+        bandlist,
+        @cplprogress(progressfunc),
+        progressdata
+    )
     @cplerr result "Failed to build overviews"
-    dataset
+    return dataset
 end
 
-destroy(dataset::Dataset) = (GDAL.close(dataset.ptr); dataset.ptr = C_NULL)
+function destroy(dataset::AbstractDataset)
+    GDAL.gdalclose(dataset.ptr)
+    dataset.ptr = C_NULL
+end

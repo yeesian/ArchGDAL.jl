@@ -1,29 +1,46 @@
 """
+    unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType)
+
 Create a new field definition.
 
 By default, fields have no width, precision, are nullable and not ignored.
 """
 unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType) =
-    FieldDefn(GDAL.fld_create(name, etype))
+    FieldDefn(GDAL.ogr_fld_create(name, etype))
 
 "Destroy a field definition."
-destroy(fd::FieldDefn) = (GDAL.destroy(fd.ptr); fd.ptr = C_NULL)
+function destroy(fielddefn::FieldDefn)
+    GDAL.ogr_fld_destroy(fielddefn.ptr)
+    fielddefn.ptr = C_NULL
+    return fielddefn
+end
+
+function destroy(fielddefn::IFieldDefnView)
+    fielddefn.ptr = C_NULL
+    return fielddefn
+end
 
 "Set the name of this field."
-setname!(fielddefn::FieldDefn, name::AbstractString) =
-    (GDAL.setname(fielddefn.ptr, name); fielddefn)
+function setname!(fielddefn::FieldDefn, name::AbstractString)
+    GDAL.ogr_fld_setname(fielddefn.ptr, name)
+    return fielddefn
+end
 
 "Fetch the name of this field."
-getname(fielddefn::FieldDefn) = GDAL.getnameref(fielddefn.ptr)
+getname(fielddefn::AbstractFieldDefn) = GDAL.ogr_fld_getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
-gettype(fielddefn::FieldDefn) = GDAL.gettype(fielddefn.ptr)
+gettype(fielddefn::AbstractFieldDefn) = GDAL.ogr_fld_gettype(fielddefn.ptr)
 
 "Set the type of this field."
-settype!(fielddefn::FieldDefn, etype::OGRFieldType) =
-    (GDAL.settype(fielddefn.ptr, etype); fielddefn)
+function settype!(fielddefn::FieldDefn, etype::OGRFieldType)
+    GDAL.ogr_fld_settype(fielddefn.ptr, etype)
+    return fielddefn
+end
 
 """
+    getsubtype(fielddefn::AbstractFieldDefn)
+
 Fetch subtype of this field.
 
 ### Parameters
@@ -32,9 +49,12 @@ Fetch subtype of this field.
 ### Returns
 field subtype.
 """
-getsubtype(fielddefn::FieldDefn) = GDAL.getsubtype(fielddefn.ptr)
+getsubtype(fielddefn::AbstractFieldDefn) =
+    GDAL.ogr_fld_getsubtype(fielddefn.ptr)
 
 """
+    setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)
+
 Set the subtype of this field.
 
 This should never be done to an OGRFieldDefn that is already part of an
@@ -44,56 +64,81 @@ OGRFeatureDefn.
 * `fielddefn`: handle to the field definition to set type to.
 * `subtype`: the new field subtype.
 """
-setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType) =
-    (GDAL.setsubtype(fielddefn.ptr, subtype); fielddefn)
+function setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)
+    GDAL.ogr_fld_setsubtype(fielddefn.ptr, subtype)
+    return fielddefn
+end
 
 """
+    getjustify(fielddefn::AbstractFieldDefn)
+
 Get the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-getjustify(fielddefn::FieldDefn) = GDAL.getjustify(fielddefn.ptr)
+getjustify(fielddefn::AbstractFieldDefn) =
+    GDAL.ogr_fld_getjustify(fielddefn.ptr)
 
 """
+    setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification)
+
 Set the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification) =
-    (GDAL.setjustify(fielddefn.ptr, ejustify); fielddefn)
+function setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification)
+    GDAL.ogr_fld_setjustify(fielddefn.ptr, ejustify)
+    return fielddefn
+end
 
-"""Get the formatting width for this field.
+"""
+    getwidth(fielddefn::AbstractFieldDefn)
+
+Get the formatting width for this field.
 
 ### Returns
 the width, zero means no specified width.
 """
-getwidth(fielddefn::FieldDefn) = GDAL.getwidth(fielddefn.ptr)
+getwidth(fielddefn::AbstractFieldDefn) = GDAL.ogr_fld_getwidth(fielddefn.ptr)
 
 """
+    setwidth!(fielddefn::FieldDefn, width::Integer)
+
 Set the formatting width for this field in characters.
 
 This should never be done to an OGRFieldDefn that is already part of an
 OGRFeatureDefn.
 """
-setwidth!(fielddefn::FieldDefn, width::Integer) =
-    (GDAL.setwidth(fielddefn.ptr, width); fielddefn)
+function setwidth!(fielddefn::FieldDefn, width::Integer)
+    GDAL.ogr_fld_setwidth(fielddefn.ptr, width)
+    return fielddefn
+end
 
 """
+    getprecision(fielddefn::AbstractFieldDefn)
+
 Get the formatting precision for this field.
 
 This should normally be zero for fields of types other than OFTReal.
 """
-getprecision(fielddefn::FieldDefn) = GDAL.getprecision(fielddefn.ptr)
+getprecision(fielddefn::AbstractFieldDefn) =
+    GDAL.ogr_fld_getprecision(fielddefn.ptr)
 
 """
+    setprecision!(fielddefn::FieldDefn, precision::Integer)
+
 Set the formatting precision for this field in characters.
 
 This should normally be zero for fields of types other than OFTReal.
 """
-setprecision!(fielddefn::FieldDefn, precision::Integer) =
-    (GDAL.setprecision(fielddefn.ptr, precision); fielddefn)
+function setprecision!(fielddefn::FieldDefn, precision::Integer)
+    GDAL.ogr_fld_setprecision(fielddefn.ptr, precision)
+    return fielddefn
+end
 
 """
+    setparams!(fielddefn, name, etype, [nwidth, [nprecision, [justify]]])
+
 Set defining parameters for a field in one call.
 
 ### Parameters
@@ -102,7 +147,6 @@ Set defining parameters for a field in one call.
 * `etype`:      the new type (one of the OFT values like OFTInteger).
 * `nwidth`:     the preferred formatting width. 0 (default) indicates undefined.
 * `nprecision`: number of decimals for formatting. 0 (default) for undefined.
-                indicating undefined.
 * `justify`:    the formatting justification ([OJUndefined], OJLeft or OJRight)
 """
 function setparams!(
@@ -111,56 +155,78 @@ function setparams!(
         etype::OGRFieldType;
         nwidth::Integer             = 0,
         nprecision::Integer         = 0,
-        justify::OGRJustification   = OJUndefined
+        justify::OGRJustification   = GDAL.OJUndefined
     )
-    GDAL.set(fielddefn.ptr,
-        name,
-        etype,
-        nwidth,
-        nprecision,
-        justify
-    )
-    fielddefn
+    GDAL.ogr_fld_set(fielddefn.ptr, name, etype, nwidth, nprecision, justify)
+    return fielddefn
 end
 
-"Return whether this field should be omitted when fetching features."
-isignored(fielddefn::FieldDefn) = Bool(GDAL.isignored(fielddefn.ptr))
+"""
+    isignored(fielddefn::AbstractFieldDefn)
 
-"Set whether this field should be omitted when fetching features."
-setignored!(fielddefn::FieldDefn, ignore::Bool) =
-    (GDAL.setignored(fielddefn.ptr, ignore); fielddefn)
+Return whether this field should be omitted when fetching features.
+"""
+isignored(fielddefn::AbstractFieldDefn) =
+    Bool(GDAL.ogr_fld_isignored(fielddefn.ptr))
 
 """
+    setignored!(fielddefn::FieldDefn, ignore::Bool)
+
+Set whether this field should be omitted when fetching features.
+"""
+function setignored!(fielddefn::FieldDefn, ignore::Bool)
+    GDAL.ogr_fld_setignored(fielddefn.ptr, ignore)
+    return fielddefn
+end
+
+"""
+    isnullable(fielddefn::AbstractFieldDefn)
+
 Return whether this field can receive null values.
 
 By default, fields are nullable.
 
-Even if this method returns FALSE (i.e not-nullable field), it doesn't mean that
-OGRFeature::IsFieldSet() will necessary return TRUE, as fields can be temporary
+Even if this method returns `false` (i.e not-nullable field), it doesn't mean that
+OGRFeature::IsFieldSet() will necessary return `true`, as fields can be temporary
 unset and null/not-null validation is usually done when
 OGRLayer::CreateFeature()/SetFeature() is called.
 """
-isnullable(fielddefn::FieldDefn) = Bool(GDAL.isnullable(fielddefn.ptr))
+isnullable(fielddefn::AbstractFieldDefn) =
+    Bool(GDAL.ogr_fld_isnullable(fielddefn.ptr))
 
 """
+    setnullable!(fielddefn::FieldDefn, nullable::Bool)
+
 Set whether this field can receive null values.
 
-By default, fields are nullable, so this method is generally called with FALSE
+By default, fields are nullable, so this method is generally called with `false`
 to set a not-null constraint.
 
 Drivers that support writing not-null constraint will advertize the
 GDAL_DCAP_NOTNULL_FIELDS driver metadata item.
 """
-setnullable!(fielddefn::FieldDefn, nullable::Bool) =
-    (GDAL.setnullable(fielddefn.ptr, nullable); fielddefn)
-
-"Get default field value"
-function getdefault(fielddefn::FieldDefn)
-    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
-    return result == C_NULL ? "" : unsafe_string(result)
+function setnullable!(fielddefn::FieldDefn, nullable::Bool)
+    GDAL.ogr_fld_setnullable(fielddefn.ptr, nullable)
+    return fielddefn
 end
 
 """
+    getdefault(fielddefn::AbstractFieldDefn)
+
+Get default field value
+"""
+function getdefault(fielddefn::AbstractFieldDefn)
+    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
+    if result == C_NULL
+        return ""
+    else
+        return unsafe_string(result)
+    end
+end
+
+"""
+    setdefault!(fielddefn::AbstractFieldDefn, default)
+
 Set default field value.
 
 The default field value is taken into account by drivers (generally those with
@@ -180,91 +246,156 @@ datetime literal value, format should be 'YYYY/MM/DD HH:MM:SS[.sss]'
 Drivers that support writing DEFAULT clauses will advertize the
 GDAL_DCAP_DEFAULT_FIELDS driver metadata item.
 """
-setdefault!(fielddefn::FieldDefn, default) =
-    (GDAL.setdefault(fielddefn.ptr, default); fielddefn)
+function setdefault!(fielddefn::AbstractFieldDefn, default)
+    GDAL.ogr_fld_setdefault(fielddefn.ptr, default)
+    return fielddefn
+end
 
 """
+    isdefaultdriverspecific(fielddefn::AbstractFieldDefn)
+
 Returns whether the default value is driver specific.
 
 Driver specific default values are those that are not NULL, a numeric value, a
 literal value enclosed between single quote characters, CURRENT_TIMESTAMP,
 CURRENT_TIME, CURRENT_DATE or datetime literal value.
 """
-isdefaultdriverspecific(fielddefn::FieldDefn) =
-    Bool(GDAL.isdefaultdriverspecific(fielddefn.ptr))
+isdefaultdriverspecific(fielddefn::AbstractFieldDefn) =
+    Bool(GDAL.ogr_fld_isdefaultdriverspecific(fielddefn.ptr))
 
-"Create a new field geometry definition."
-unsafe_creategeomfielddefn(name::AbstractString, etype::OGRwkbGeometryType) =
-    GeomFieldDefn(GDAL.gfld_create(name, etype))
+"""
+    unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType)
+
+Create a new field geometry definition.
+"""
+unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType) =
+    GeomFieldDefn(GDAL.ogr_gfld_create(name, etype))
 
 "Destroy a geometry field definition."
-function destroy(gfd::GeomFieldDefn)
-    GDAL.destroy(gfd.ptr)
-    gfd.ptr = C_NULL
+function destroy(geomdefn::GeomFieldDefn)
+    GDAL.ogr_gfld_destroy(geomdefn.ptr)
+    geomdefn.ptr = C_NULL
+    geomdefn.spatialref = SpatialRef()
+    return geomdefn
+end
+
+"Destroy a geometry field definition."
+function destroy(geomdefn::IGeomFieldDefnView)
+    geomdefn.ptr = C_NULL
+    return geomdefn
 end
 
 "Set the name of this field."
-setname!(gfd::GeomFieldDefn, name::AbstractString) =
-    (GDAL.setname(gfd.ptr, name); gfd)
-
-"Fetch name of this field."
-getname(gfd::GeomFieldDefn) = GDAL.getnameref(gfd.ptr)
-
-"Fetch geometry type of this field."
-gettype(gfd::GeomFieldDefn) = GDAL.gettype(gfd.ptr)
-
-"Set the geometry type of this field."
-function settype!(gfd::GeomFieldDefn, etype::OGRwkbGeometryType)
-    GDAL.settype(gfd.ptr, etype)
-    gfd
+function setname!(geomdefn::GeomFieldDefn, name::AbstractString)
+    GDAL.ogr_gfld_setname(geomdefn.ptr, name)
+    return geomdefn
 end
 
-"Fetch spatial reference system of this field. May return NULL"
-unsafe_getspatialref(::Type{S}, gfd::GeomFieldDefn) where S <: AbstractSpatialRef =
-    S(GDAL.getspatialref(gfd.ptr))
-unsafe_getspatialref(gfd::GeomFieldDefn) = unsafe_getspatialref(SpatialRef, gfd)
-getspatialref(gfd::GeomFieldDefn) = unsafe_getspatialref(ISpatialRef, gfd)
+"Fetch name of this field."
+getname(geomdefn::AbstractGeomFieldDefn) =
+    GDAL.ogr_gfld_getnameref(geomdefn.ptr)
+
+"Fetch geometry type of this field."
+gettype(geomdefn::AbstractGeomFieldDefn) = GDAL.ogr_gfld_gettype(geomdefn.ptr)
+
+"Set the geometry type of this field."
+function settype!(geomdefn::GeomFieldDefn, etype::OGRwkbGeometryType)
+    GDAL.ogr_gfld_settype(geomdefn.ptr, etype)
+    return geomdefn
+end
 
 """
+    getspatialref(geomdefn::AbstractGeomFieldDefn)
+
+Returns a clone of the spatial reference system for this field. May be NULL.
+"""
+function getspatialref(geomdefn::AbstractGeomFieldDefn)
+    result = GDAL.ogr_gfld_getspatialref(geomdefn.ptr)
+    if result == C_NULL
+        return ISpatialRef()
+    else
+        # NOTE(yeesian): we make a clone here so that the spatialref does not
+        # depend on the GeomFieldDefn/Dataset.
+        return ISpatialRef(GDAL.osrclone(result))
+    end
+end
+
+function unsafe_getspatialref(geomdefn::AbstractGeomFieldDefn)
+    result = GDAL.ogr_gfld_getspatialref(geomdefn.ptr)
+    if result == C_NULL
+        return SpatialRef()
+    else
+        # NOTE(yeesian): we make a clone here so that the spatialref does not
+        # depend on the GeomFieldDefn/Dataset.
+        return SpatialRef(GDAL.osrclone(result))
+    end
+end
+
+"""
+    setspatialref!(geomdefn::GeomFieldDefn, spatialref::AbstractSpatialRef)
+
 Set the spatial reference of this field.
 
 This function drops the reference of the previously set SRS object and acquires
 a new reference on the passed object (if non-NULL).
 """
-setspatialref!(gfd::GeomFieldDefn, spatialref::AbstractSpatialRef) =
-    (GDAL.setspatialref(gfd.ptr, spatialref.ptr); gfd)
+function setspatialref!(
+        geomdefn::GeomFieldDefn,
+        spatialref::AbstractSpatialRef
+    )
+    clonespatialref = clone(spatialref)
+    GDAL.ogr_gfld_setspatialref(geomdefn.ptr, clonespatialref.ptr)
+    geomdefn.spatialref = clonespatialref
+    return geomdefn
+end
 
 """
+    isnullable(geomdefn::AbstractGeomFieldDefn)
+
 Return whether this geometry field can receive null values.
 
 By default, fields are nullable.
 
-Even if this method returns FALSE (i.e not-nullable field), it doesn't mean that
-OGRFeature::IsFieldSet() will necessary return TRUE, as fields can be temporary
+Even if this method returns `false` (i.e not-nullable field), it doesn't mean that
+OGRFeature::IsFieldSet() will necessary return `true`, as fields can be temporary
 unset and null/not-null validation is usually done when
 OGRLayer::CreateFeature()/SetFeature() is called.
 
 Note that not-nullable geometry fields might also contain 'empty' geometries.
 """
-isnullable(gfd::GeomFieldDefn) = Bool(GDAL.isnullable(gfd.ptr))
+isnullable(geomdefn::AbstractGeomFieldDefn) =
+    Bool(GDAL.ogr_gfld_isnullable(geomdefn.ptr))
 
 """
+    setnullable!(geomdefn::GeomFieldDefn, nullable::Bool)
+
 Set whether this geometry field can receive null values.
 
-By default, fields are nullable, so this method is generally called with FALSE
+By default, fields are nullable, so this method is generally called with `false`
 to set a not-null constraint.
 
 Drivers that support writing not-null constraint will advertize the
 GDAL_DCAP_NOTNULL_GEOMFIELDS driver metadata item.
 """
-setnullable!(gfd::GeomFieldDefn, nullable::Bool) = 
-    (GDAL.setnullable(gfd.ptr, nullable), gfd)
+function setnullable!(geomdefn::GeomFieldDefn, nullable::Bool)
+    GDAL.ogr_gfld_setnullable(geomdefn.ptr, nullable)
+    return geomdefn
+end
 
-"Return whether this field should be omitted when fetching features."
-isignored(gfd::GeomFieldDefn) = Bool(GDAL.isignored(gfd.ptr))
+"""
+    isignored(geomdefn::AbstractGeomFieldDefn)
 
-"Set whether this field should be omitted when fetching features."
-function setignored!(gfd::GeomFieldDefn, ignore::Bool)
-    GDAL.setignored(gfd.ptr, ignore)
-    gfd
+Return whether this field should be omitted when fetching features.
+"""
+isignored(geomdefn::AbstractGeomFieldDefn) =
+    Bool(GDAL.ogr_gfld_isignored(geomdefn.ptr))
+
+"""
+    setignored!(geomdefn::GeomFieldDefn, ignore::Bool)
+
+Set whether this field should be omitted when fetching features.
+"""
+function setignored!(geomdefn::GeomFieldDefn, ignore::Bool)
+    GDAL.ogr_gfld_setignored(geomdefn.ptr, ignore)
+    return geomdefn
 end
