@@ -59,96 +59,137 @@ import ArchGDAL; const AG = ArchGDAL
                 #  = 27.741398446170923
                 @test total / (AG.height(ds) * AG.width(ds)) ≈ 27.741398446170923
             end
-            # @testset "int indexing" begin
+            @testset "int indexing" begin
 
-            #     # Question -> What is the intent behind checking this exact point (755, 2107, 1) 
-            #     #               Rasterio reports correct value of (255) at this indices (0, 2106, 754)
-                
-            #     @test ds[755, 2107, 1] == 0xff
-            # end
+                # Works
+                # Question -> What is the intent behind checking this exact point (755, 2107, 1) 
+                #               Rasterio reports correct value of (255) at this indices (0, 2106, 754)
+                # https://github.com/yeesian/ArchGDAL.jl/issues/104#issuecomment-576031287 (Choosing a unique value)
+                #   [python] band_1[35, 32] -> 130 (only one instance of 130)
+                #       35, 32 in Python = 33, 36 in Julia
+                #       130 = 0x82 in hex
+                @test ds[33, 36, 1] == 0x82
+            end
         end
-        # @testset "RasterBand indexing" begin
-        #     band = AG.getband(ds, 1)
-        #     @testset "dims dropped correctly" begin
-        #         @test typeof(band[:, :]) <: Array{UInt8,2}
-        #         @test typeof(band[:, 1]) <: Array{UInt8,1}
-        #         @test typeof(band[1, 1]) <: UInt8
-        #     end
-        #     @testset "range indexing" begin
-        #         buffer = band[1:AG.width(band), 1:AG.height(band)]
-        #         @test typeof(buffer) <: Array{UInt8,2}
-        #         total = sum(buffer)
-        #         count = sum(buffer .> 0)
-        #         @test total / count ≈ 76.33891347095299
-        #         @test total / (AG.height(band) * AG.width(band)) ≈ 47.55674749653172
-        #     end
-        #     @testset "colon indexing" begin
-        #         buffer = band[:, :]
-        #         total = sum(buffer)
-        #         count = sum(buffer .> 0)
-        #         @test total / count ≈ 76.33891347095299
-        #         @test total / (AG.height(band) * AG.width(band)) ≈ 47.55674749653172
-        #     end
-        #     @testset "int indexing" begin
-        #         @test band[755, 2107] == 0xff
-        #     end
-        # end
+
+        @testset "RasterBand indexing" begin
+            band = AG.getband(ds, 1)
+            @testset "dims dropped correctly" begin
+                # Works
+                @test typeof(band[:, :]) <: Array{UInt8,2}
+                @test typeof(band[:, 1]) <: Array{UInt8,1}
+                @test typeof(band[1, 1]) <: UInt8
+            end
+            @testset "range indexing" begin
+                buffer = band[1:AG.width(band), 1:AG.height(band)]
+                
+                # Works
+                @test typeof(buffer) <: Array{UInt8,2}
+                total = sum(buffer)
+                count = sum(buffer .> 0)
+                
+                # Works (Same as testset(Dataset Indexing -> range indexing))
+                @test total / count ≈ 86.88876013904982 
+                
+                # Works (Same as testset(Dataset Indexing -> range indexing))
+                @test total / (AG.height(band) * AG.width(band)) ≈ 27.741398446170923
+            end
+            @testset "colon indexing" begin
+                buffer = band[:, :]
+                total = sum(buffer)
+                count = sum(buffer .> 0)
+
+                # Works (Same as testset(Dataset Indexing -> range indexing))
+                @test total / count ≈ 86.88876013904982 
+                
+                # Works (Same as testset(Dataset Indexing -> range indexing))
+                @test total / (AG.height(band) * AG.width(band)) ≈ 27.741398446170923
+            end
+            @testset "int indexing" begin
+                # Works (Same as testset(Dataset Indexing -> int indexing))
+                @test band[33, 36] == 0x82
+            end
+        end
     end
 end
 
-# cp("ospy/data4/cropped_aster.img", "ospy/data4/aster_write.img"; force=true)
+cp("ospy/data4/cropped_aster.img", "ospy/data4/cropped_aster_write.img"; force=true)
 
-# @testset "Test Array setindex" begin
-#     AG.read("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
-#         @testset "Dataset setindex" begin
-#             @test ds[755, 2107, 1] == 0xff
-#             ds[755, 2107, 1] = 0x00
-#             @test ds[755, 2107, 1] == 0x00
-#             ds[755:755, 2107:2107, 1:1] = reshape([0x01], 1, 1, 1)
-#             @test ds[755, 2107, 1] == 0x01
-#             ds[755:755, 2107:2107, 1] = reshape([0x02], 1, 1)
-#             @test ds[755, 2107, 1] == 0x02
-#             ds[755:755, 2107, 1] = [0x03]
-#             @test ds[755, 2107, 1] == 0x03
-#             ds[755, 2107] = 0x04
-#             @test ds[755, 2107] == 0x04
-#             ds[755:755, 2107:2107] = reshape([0xff], 1, 1)
-#             @test ds[755, 2107] == 0xff
-#             buffer = ds[:, :]
-#             ds[:, :] = buffer .* 0x00 
-#             @test sum(ds[:, :]) == 0x00
-#             ds[:, 1:500] = buffer[:, 1:500]
-#             ds[:, 501:end] = buffer[:, 501:end]
-#             @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-#             @test_throws DimensionMismatch ds[:, 501:end] = [1, 2, 3]  
-#         end
-#         @testset "RasterBand setindex" begin
-#             band = AG.getband(ds, 1)
-#             @test band[755, 2107] == 0xff
-#             band[755:755, 2107] = [0x00]
-#             @test band[755, 2107] == 0x00
-#             band[755, 2107] = 0x01
-#             @test band[755, 2107] == 0x01
-#             band[755:755, 2107:2107] = reshape([0xff], 1, 1)
-#             @test band[755, 2107] == 0xff
-#             buffer = band[:, :]
-#             band[:, :] = buffer .* 0x00 
-#             @test sum(band[:, :]) == 0x00
-#             band[:, 1:500] = buffer[:, 1:500]
-#             band[:, 501:end] = buffer[:, 501:end]
-#             @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-#             @test_throws DimensionMismatch band[:, 501:end] = [1, 2, 3]  
-#         end
-#     end
-# end
+@testset "Test Array setindex" begin
+    AG.read("ospy/data4/cropped_aster_write.img"; flags=AG.OF_Update) do ds
+        @testset "Dataset setindex" begin
+            # Testset Works
 
-# @testset "Test Array constructor" begin
-#     AG.read("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
-#         buffer = Array(ds)
-#         typeof(buffer) <: Array{UInt8,3}
-#         total = sum(buffer[:, :, 1:1])
-#         count = sum(buffer[:, :, 1:1] .> 0)
-#         @test total / count ≈ 76.33891347095299
-#         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-#     end
-# end
+            @test ds[33, 36, 1] == 0x82
+            
+            ds[33, 36, 1] = 0x00
+            @test ds[33, 36, 1] == 0x00
+
+            ds[33:33, 36:36, 1:1] = reshape([0x01], 1, 1, 1)
+            @test ds[33, 36, 1] == 0x01
+            
+            ds[33:33, 36:36, 1] = reshape([0x02], 1, 1)
+            @test ds[33, 36, 1] == 0x02
+            
+            ds[33:33, 36, 1] = [0x03]
+            @test ds[33, 36, 1] == 0x03
+            
+            ds[33, 36] = 0x04
+            @test ds[33, 36] == 0x04
+
+            ds[33:33, 36:36] = reshape([0x82], 1, 1)
+            @test ds[33, 36] == 0x82
+            
+            buffer = ds[:, :]
+            ds[:, :] = buffer .* 0x00 
+            
+            @test sum(ds[:, :]) == 0x00
+            ds[:, 1:35] = buffer[:, 1:35]
+            ds[:, 36:end] = buffer[:, 36:end]
+            
+            # Reference to self: sum(buffer .> 0) is equal to summing 
+            #   the number of values which are not zero, basically counting non zero elements
+            @test sum(buffer) / sum(buffer .> 0) ≈ 86.88876013904982
+            
+            @test_throws DimensionMismatch ds[:, 501:end] = [1, 2, 3]  
+        end
+
+        @testset "RasterBand setindex" begin
+            band = AG.getband(ds, 1)
+            @test band[33, 36] == 0x82
+            
+            band[33:33, 36] = [0x00]
+            @test band[33, 36] == 0x00
+
+            band[33, 36] = 0x01
+            @test band[33, 36] == 0x01
+
+            band[33:33, 36:36] = reshape([0x82], 1, 1)
+            @test band[33, 36] == 0x82
+
+            buffer = band[:, :]
+            band[:, :] = buffer .* 0x00 
+            
+            @test sum(band[:, :]) == 0x00
+                ds[:, 1:35] = buffer[:, 1:35]
+                ds[:, 36:end] = buffer[:, 36:end]
+            
+            @test sum(buffer) / sum(buffer .> 0) ≈ 86.88876013904982
+            
+            @test_throws DimensionMismatch band[:, 501:end] = [1, 2, 3]  
+        end
+    end
+end
+
+@testset "Test Array constructor" begin
+    AG.read("ospy/data4/cropped_aster_write.img"; flags=AG.OF_Update) do ds
+        buffer = Array(ds)
+        @test typeof(buffer) <: Array{UInt8,3}
+
+        total = sum(buffer[:, :, 1:1])
+        count = sum(buffer[:, :, 1:1] .> 0)
+        @test total / count ≈ 86.88876013904982
+        
+        @test total / (AG.height(ds) * AG.width(ds)) ≈ 27.741398446170923
+    end
+end
