@@ -22,7 +22,8 @@ function copyfields(fromlayer, tolayer)
             fwidth = AG.getwidth(fd)
             if fwidth != 0
                 AG.setwidth!(fd, fwidth+1)
-        end end
+            end 
+        end
         AG.createfield!(tolayer, fd)
     end
 end
@@ -75,150 +76,153 @@ end
 #     end
 # end
 
-@testset "Homework 1" begin
-AG.read("ospy/data1/sites.shp") do input
-    #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
-    for (i,feature) in enumerate(AG.getlayer(input, 0))
-        id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
-        (x,y) = AG.getpoint(AG.getgeom(feature, 0), 0)
-        @test id == i
-        @test 4e5 <= x <= 5e5
-        @test 4.5e6 <= y <= 5e6
-        @test cover in ("shrubs", "trees", "rocks", "grass", "bare", "water")
-    end
+# @testset "Homework 1" begin
+#     AG.read("ospy/data1/sites.shp") do input
+#         #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
+#         for (i,feature) in enumerate(AG.getlayer(input, 0))
+#             id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
+#             (x,y) = AG.getpoint(AG.getgeom(feature, 0), 0)
+#             @test id == i
+#             @test 4e5 <= x <= 5e5
+#             @test 4.5e6 <= y <= 5e6
+#             @test cover in ("shrubs", "trees", "rocks", "grass", "bare", "water")
+#         end
 
-    #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
-    # version 1
-    AG.create(AG.getdriver("MEMORY")) do output
-        inlayer = AG.getlayer(input, 0)
-        outlayer = AG.createlayer(
-            name = "hw1b",
-            dataset = output,
-            geom = GDAL.wkbPoint
-        )
-        inlayerdefn = AG.layerdefn(inlayer)
-        AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
-        AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
-        for infeature in inlayer
-            id = AG.getfield(infeature, 0)
-            @test AG.asint64(infeature, 0) == id
-            cover = AG.getfield(infeature, 1)
-            if cover == "trees"
-                AG.createfeature(outlayer) do outfeature
-                    AG.setgeom!(outfeature, AG.getgeom(infeature))
-                    AG.setfield!(outfeature, 0, id)
-                    AG.setfield!(outfeature, 1, cover)
-        end end end
-        @test sprint(print, output) == """
-        GDAL Dataset (Driver: Memory/Memory)
-        File(s): 
+#         #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
+#         # version 1
+#         AG.create(AG.getdriver("MEMORY")) do output
+#             inlayer = AG.getlayer(input, 0)
+#             outlayer = AG.createlayer(
+#                 name = "hw1b",
+#                 dataset = output,
+#                 geom = GDAL.wkbPoint
+#             )
+#             inlayerdefn = AG.layerdefn(inlayer)
+#             AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
+#             AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
+#             for infeature in inlayer
+#                 id = AG.getfield(infeature, 0)
+#                 @test AG.asint64(infeature, 0) == id
+#                 cover = AG.getfield(infeature, 1)
+#                 if cover == "trees"
+#                     AG.createfeature(outlayer) do outfeature
+#                         AG.setgeom!(outfeature, AG.getgeom(infeature))
+#                         AG.setfield!(outfeature, 0, id)
+#                         AG.setfield!(outfeature, 1, cover)
+#             end end end
+#             @test sprint(print, output) == """
+#             GDAL Dataset (Driver: Memory/Memory)
+#             File(s): 
 
-        Number of feature layers: 1
-          Layer 0: hw1b (wkbPoint)
-        """
-    end
+#             Number of feature layers: 1
+#             Layer 0: hw1b (wkbPoint)
+#             """
+#         end
 
-    # version 2
-    AG.create(AG.getdriver("MEMORY")) do output
-        AG.executesql(input, """SELECT * FROM sites
-                                WHERE cover = 'trees' """) do results
-            @test sprint(print, results) == """
-            Layer: sites
-              Geometry 0 (_ogr_geometry_): [wkbPoint], POINT (449959.840851...), ...
-                 Field 0 (ID): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
-                 Field 1 (COVER): [OFTString], trees, trees, trees, trees, trees, trees, ...
-            """
-            AG.copy(results, name = "hw1b", dataset = output)
-        end
-        @test sprint(print, output) == """
-        GDAL Dataset (Driver: Memory/Memory)
-        File(s): 
+#         # version 2
+#         AG.create(AG.getdriver("MEMORY")) do output
+#             AG.executesql(input, """SELECT * FROM sites
+#                                     WHERE cover = 'trees' """) do results
+#                 @test sprint(print, results) == """
+#                 Layer: sites
+#                 Geometry 0 (_ogr_geometry_): [wkbPoint], POINT (449959.840851...), ...
+#                     Field 0 (ID): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
+#                     Field 1 (COVER): [OFTString], trees, trees, trees, trees, trees, trees, ...
+#                 """
+#                 AG.copy(results, name = "hw1b", dataset = output)
+#             end
+#             @test sprint(print, output) == """
+#             GDAL Dataset (Driver: Memory/Memory)
+#             File(s): 
 
-        Number of feature layers: 1
-          Layer 0: hw1b (wkbPoint)
-        """
-    end
-end
-end
+#             Number of feature layers: 1
+#             Layer 0: hw1b (wkbPoint)
+#             """
+#         end
+#     end
+# end
     
-@testset "Homework 2" begin
-    # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
-    open("ospy/data2/ut_counties.txt", "r") do file
-    AG.create(AG.getdriver("MEMORY")) do output
-        layer = AG.createlayer(
-            name = "hw2a",
-            dataset = output,
-            geom = GDAL.wkbPolygon
-        )
-        @test sprint(print, layer) == """
-        Layer: hw2a
-          Geometry 0 (): [wkbPolygon]
-        """
-        AG.createfielddefn("name", GDAL.OFTString) do fielddefn
-            AG.setwidth!(fielddefn, 30)
-            AG.addfielddefn!(layer, fielddefn)
-        end
-        @test sprint(print, layer) == """
-        Layer: hw2a
-          Geometry 0 (): [wkbPolygon]
-             Field 0 (name): [OFTString]
-        """
-        for line in readlines(file)
-            (name, coords) = split(line, ":")
-            coordlist = split(coords, ",")
-            AG.createfeature(layer) do feature
-                AG.setfield!(feature, 0, name)
-                AG.createpolygon() do poly
-                    ring = AG.createlinearring()
-                    for xy in map(split, coordlist)
-                        AG.addpoint!(ring, parse(Float64, xy[1]),
-                                           parse(Float64, xy[2]))
-                    end
-                    AG.addgeom!(poly, ring)
-                    AG.setgeom!(feature, poly)    
-        end end end
-        @test sprint(print, layer) == """
-        Layer: hw2a
-          Geometry 0 (): [wkbPolygon], POLYGON ((-111.50278...), ...
-             Field 0 (name): [OFTString], Cache, Box Elder, Rich, Weber, Morgan, ...
-        """
+# @testset "Homework 2" begin
+#     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
+#     open("ospy/data2/ut_counties.txt", "r") do file
+#         AG.create(AG.getdriver("MEMORY")) do output
+#             layer = AG.createlayer(
+#                 name = "hw2a",
+#                 dataset = output,
+#                 geom = GDAL.wkbPolygon
+#             )
+#             @test sprint(print, layer) == """
+#             Layer: hw2a
+#             Geometry 0 (): [wkbPolygon]
+#             """
+#             AG.createfielddefn("name", GDAL.OFTString) do fielddefn
+#                 AG.setwidth!(fielddefn, 30)
+#                 AG.addfielddefn!(layer, fielddefn)
+#             end
+#             @test sprint(print, layer) == """
+#             Layer: hw2a
+#             Geometry 0 (): [wkbPolygon]
+#                 Field 0 (name): [OFTString]
+#             """
+#             for line in readlines(file)
+#                 (name, coords) = split(line, ":")
+#                 coordlist = split(coords, ",")
+#                 AG.createfeature(layer) do feature
+#                     AG.setfield!(feature, 0, name)
+#                     AG.createpolygon() do poly
+#                         ring = AG.createlinearring()
+#                         for xy in map(split, coordlist)
+#                             AG.addpoint!(ring, parse(Float64, xy[1]),
+#                                             parse(Float64, xy[2]))
+#                         end
+#                         AG.addgeom!(poly, ring)
+#                         AG.setgeom!(feature, poly)    
+#                     end 
+#                 end 
+#             end
+            
+#             @test sprint(print, layer) == """
+#             Layer: hw2a
+#             Geometry 0 (): [wkbPolygon], POLYGON ((-111.50278...), ...
+#                 Field 0 (name): [OFTString], Cache, Box Elder, Rich, Weber, Morgan, ...
+#             """
 
-        # input = output
-        # # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2b.py
-        # AG.fromEPSG(4269) do inspatialref
-        # AG.fromEPSG(26912) do outspatialref
-        # AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
-        # AG.create("", "MEMORY") do output
-        #     inlayer = AG.getlayer(input, 0)
-        #     outlayer = AG.createlayer(
-        #         name = "hw2b",
-        #         dataset = output,
-        #         geom = GDAL.wkbPolygon
-        #     )
-        #     infeaturedefn = AG.layerdefn(inlayer)
-        #     nameindex = AG.findfieldindex(infeaturedefn, "name")
-        #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)
-        #     AG.createfield!(outlayer, fielddefn)
-        #     for infeature in inlayer
-        #         AG.createfeature(outlayer) do outfeature
-        #             geom = AG.getgeom(infeature)
-        #             AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
-        #             AG.setfield!(outfeature,0,AG.getfield(infeature, nameindex))
-        #             println(outfeature)
-        #     end end
-        #     println(layer)
-        # end
-        # end
-        # println(AG.toWKT(AG.morphtoESRI!(outspatialref)))
-        # end
-        # end
-    end
-    end
-end
+#             # input = output
+#             # # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2b.py
+#             # AG.fromEPSG(4269) do inspatialref
+#             # AG.fromEPSG(26912) do outspatialref
+#             # AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
+#             # AG.create("", "MEMORY") do output
+#             #     inlayer = AG.getlayer(input, 0)
+#             #     outlayer = AG.createlayer(
+#             #         name = "hw2b",
+#             #         dataset = output,
+#             #         geom = GDAL.wkbPolygon
+#             #     )
+#             #     infeaturedefn = AG.layerdefn(inlayer)
+#             #     nameindex = AG.findfieldindex(infeaturedefn, "name")
+#             #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)
+#             #     AG.createfield!(outlayer, fielddefn)
+#             #     for infeature in inlayer
+#             #         AG.createfeature(outlayer) do outfeature
+#             #             geom = AG.getgeom(infeature)
+#             #             AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
+#             #             AG.setfield!(outfeature,0,AG.getfield(infeature, nameindex))
+#             #             println(outfeature)
+#             #     end end
+#             #     println(layer)
+#             # end
+#             # end
+#             # println(AG.toWKT(AG.morphtoESRI!(outspatialref)))
+#             # end
+#             # end
+#         end
+#     end
+# end
 
 @testset "Homework 3" begin
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
-    AG.read("ospy/data3/sites.shp") do sitesDS
+    AG.read("ospy/data1/sites.shp") do sitesDS
         AG.read("ospy/data3/cache_towns.shp") do townsDS
             siteslayer = AG.getlayer(sitesDS, 0)
             townslayer = AG.getlayer(townsDS, 0)
@@ -227,8 +231,11 @@ end
                 AG.buffer(AG.getgeom(nibleyFeature), 1500) do bufferGeom
                     AG.setspatialfilter!(siteslayer, bufferGeom)
                     @test [AG.getfield(f, "ID") for f in siteslayer] == [26]
-    end end end end
-    
+                end 
+            end 
+        end
+    end
+
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3b.py
     # commented out until https://github.com/visr/GDAL.jl/issues/30 is resolved
     # for inFN in readdir("./ospy/data3/")
@@ -237,143 +244,146 @@ end
     # end end
 end
 
-AG.read("ospy/data4/aster.img") do ds
+AG.read("ospy/data4/cropped_aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
-    @testset "Homework 4a" begin
-        AG.read("ospy/data4/sites.shp") do shp
-            shplayer = AG.getlayer(shp, 0)
-            id = AG.findfieldindex(AG.layerdefn(shplayer), "ID")
+    # @testset "Homework 4a" begin
+    #     AG.read("ospy/data1/sites.shp") do shp
+    #         shplayer = AG.getlayer(shp, 0)
+    #         id = AG.findfieldindex(AG.layerdefn(shplayer), "ID")
 
-            transform = AG.getgeotransform(ds)
-            xOrigin = transform[1]; yOrigin = transform[4]
-            pixelWidth = transform[2]; pixelHeight = transform[6]
+    #         transform = AG.getgeotransform(ds)
+    #         xOrigin = transform[1]; yOrigin = transform[4]
+    #         pixelWidth = transform[2]; pixelHeight = transform[6]
 
-            results = fill(0, 42, 3)
-            for (i,feature) in enumerate(shplayer)
-                geom = AG.getgeom(feature)
-                x = AG.getx(geom, 0); y = AG.gety(geom, 0)
-                # compute pixel offset
-                xOffset = round(Int, (x - xOrigin) / pixelWidth)
-                yOffset = round(Int, (y - yOrigin) / pixelHeight)
-                # create a string to print out
-                @test AG.getfield(feature, id) == i
-                for j in 1:AG.nraster(ds)
-                    data = AG.read(ds, j, xOffset, yOffset, 1, 1)
-                    results[i,j] = data[1,1]
-                end
-            end
-            @test maximum(results) == 100
-            @test minimum(results) == 0
-            @test mean(results) ≈ 64.98412698412699
-            @test std(results) ≈ 22.327734905980627
-        end
-    end
+    #         results = fill(0, 42, 3)
+    #         for (i,feature) in enumerate(shplayer)
+    #             geom = AG.getgeom(feature)
+    #             x = AG.getx(geom, 0); y = AG.gety(geom, 0)
+    #             # compute pixel offset
+    #             xOffset = round(Int, (x - xOrigin) / pixelWidth)
+    #             yOffset = round(Int, (y - yOrigin) / pixelHeight)
+    #             # create a string to print out
+    #             @test AG.getfield(feature, id) == i
+    #             for j in 1:AG.nraster(ds)
+    #                 data = AG.read(ds, j, xOffset, yOffset, 1, 1)
+    #                 results[i,j] = data[1,1]
+    #             end
+    #         end
+    #         @test maximum(results) == 100
+    #         @test minimum(results) == 0
+    #         @test mean(results) ≈ 64.98412698412699
+    #         @test std(results) ≈ 22.327734905980627
+    #     end
+    # end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4b.py
-    @testset "Homework 4b" begin
-        @testset "version 1" begin
-            count = 0
-            total = 0
-            data = AG.read(ds, 1)
-            for (cols,rows) in AG.windows(AG.getband(ds, 1))
-                window = data[cols, rows]
-                count = count + sum(window .> 0)
-                total = total + sum(window)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    # @testset "Homework 4b" begin
+    #     @testset "version 1" begin
+    #         count = 0
+    #         total = 0
+    #         data = AG.read(ds, 1)
+    #         for (cols,rows) in AG.windows(AG.getband(ds, 1))
+    #             window = data[cols, rows]
+    #             count = count + sum(window .> 0)
+    #             total = total + sum(window)
+    #         end
+    #         @test total / count ≈ 76.33891347095299
+    #         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    #     end
 
-        @testset "version 2" begin
-            band = AG.getband(ds, 1)
-            count = 0
-            total = 0
-            buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
-            for (cols,rows) in AG.windows(band)
-                AG.rasterio!(band, buffer, rows, cols)
-                data = buffer[1:length(cols),1:length(rows)]
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
+    #     @testset "version 2" begin
+    #         band = AG.getband(ds, 1)
+    #         count = 0
+    #         total = 0
+    #         buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
+    #         for (cols,rows) in AG.windows(band)
+    #             AG.rasterio!(band, buffer, rows, cols)
+    #             data = buffer[1:length(cols),1:length(rows)]
+    #             count += sum(data .> 0)
+    #             total += sum(data)
+    #         end
+    #         @test total / count ≈ 76.33891347095299
+    #         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    #     end
 
-        @testset "version 3" begin
-            count = 0
-            total = 0
-            # BufferIterator uses a single buffer, so this loop cannot be parallelized
-            for data in AG.bufferwindows(AG.getband(ds, 1))
-                count += sum(data .> 0)
-                total += sum(data)
-            end
-            @test total / count ≈ 76.33891347095299
-            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-        end
-    end
+    #     @testset "version 3" begin
+    #         count = 0
+    #         total = 0
+    #         # BufferIterator uses a single buffer, so this loop cannot be parallelized
+    #         for data in AG.bufferwindows(AG.getband(ds, 1))
+    #             count += sum(data .> 0)
+    #             total += sum(data)
+    #         end
+    #         @test total / count ≈ 76.33891347095299
+    #         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+    #     end
+    # end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5a.py
-    @testset "Homework 5a" begin
-        @time begin
-            rows = AG.height(ds); cols = AG.width(ds); bands = AG.nraster(ds)
+    # @testset "Homework 5a" begin
+    #     @time begin
+    #         rows = AG.height(ds); cols = AG.width(ds); bands = AG.nraster(ds)
 
-            # get the band and block sizes
-            inband2 = AG.getband(ds, 2); inband3 = AG.getband(ds, 3)
-            (xbsize, ybsize) = AG.blocksize(inband2)
+    #         # get the band and block sizes
+    #         inband2 = AG.getband(ds, 2); inband3 = AG.getband(ds, 3)
+    #         (xbsize, ybsize) = AG.blocksize(inband2)
 
-            buffer2 = Array{Float32}(undef, ybsize, xbsize)
-            buffer3 = Array{Float32}(undef, ybsize, xbsize)
-            ndvi    = Array{Float32}(undef, ybsize, xbsize)
-            AG.create(
-                    AG.getdriver("MEM"),
-                    width   = cols,
-                    height  = rows,
-                    nbands  = 1,
-                    dtype   = Float32
-                ) do outDS
-                for ((i,j),(nrows,ncols)) in AG.blocks(inband2)
-                    AG.rasterio!(inband2, buffer2, j, i, ncols, nrows)
-                    AG.rasterio!(inband3, buffer3, j, i, ncols, nrows)
-                    data2 = buffer2[1:nrows,1:ncols]
-                    data3 = buffer3[1:nrows,1:ncols]
-                    for row in 1:nrows, col in 1:ncols
-                        denominator = data2[row, col] + data3[row, col]
-                        if denominator > 0
-                            numerator = data3[row, col] - data2[row, col]
-                            ndvi[row, col] = numerator / denominator
-                        else
-                            ndvi[row, col] = -99
-                        end
-                    end
-                    # write the data
-                    AG.write!(outDS, ndvi, 1, j, i, ncols, nrows)
-                end
-                @test sprint(print, outDS) == """
-                GDAL Dataset (Driver: MEM/In Memory Raster)
-                File(s): 
+    #         buffer2 = Array{Float32}(undef, ybsize, xbsize)
+    #         buffer3 = Array{Float32}(undef, ybsize, xbsize)
+    #         ndvi    = Array{Float32}(undef, ybsize, xbsize)
+    #         AG.create(
+    #                 AG.getdriver("MEM"),
+    #                 width   = cols,
+    #                 height  = rows,
+    #                 nbands  = 1,
+    #                 dtype   = Float32
+    #             ) do outDS
+    #             for ((i,j),(nrows,ncols)) in AG.blocks(inband2)
+    #                 AG.rasterio!(inband2, buffer2, j, i, ncols, nrows)
+    #                 AG.rasterio!(inband3, buffer3, j, i, ncols, nrows)
+    #                 data2 = buffer2[1:nrows,1:ncols]
+    #                 data3 = buffer3[1:nrows,1:ncols]
+    #                 for row in 1:nrows, col in 1:ncols
+    #                     denominator = data2[row, col] + data3[row, col]
+    #                     if denominator > 0
+    #                         numerator = data3[row, col] - data2[row, col]
+    #                         ndvi[row, col] = numerator / denominator
+    #                     else
+    #                         ndvi[row, col] = -99
+    #                     end
+    #                 end
+    #                 # write the data
+    #                 AG.write!(outDS, ndvi, 1, j, i, ncols, nrows)
+    #             end
+    #             @test sprint(print, outDS) == """
+    #             GDAL Dataset (Driver: MEM/In Memory Raster)
+    #             File(s): 
 
-                Dataset (width x height): 5665 x 5033 (pixels)
-                Number of raster bands: 1
-                  [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
-                """
-                # flush data to disk, set the NoData value and calculate stats
-                outband = AG.getband(outDS, 1)
-                @test sprint(print, outband) == """
-                [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
-                    blocksize: 5665×1, nodata: 0.0, units: 1.0px + 0.0
-                    overviews: """
-                AG.setnodatavalue!(outband, -99)
-                # georeference the image and set the projection
-                AG.setgeotransform!(outDS, AG.getgeotransform(ds))
-                AG.setproj!(outDS, AG.getproj(ds))
+    #             Dataset (width x height): 5665 x 5033 (pixels)
+    #             Number of raster bands: 1
+    #               [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
+    #             """
+    #             # flush data to disk, set the NoData value and calculate stats
+    #             outband = AG.getband(outDS, 1)
+    #             @test sprint(print, outband) == """
+    #             [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
+    #                 blocksize: 5665×1, nodata: 0.0, units: 1.0px + 0.0
+    #                 overviews: """
+    #             AG.setnodatavalue!(outband, -99)
+    #             # georeference the image and set the projection
+    #             AG.setgeotransform!(outDS, AG.getgeotransform(ds))
+    #             AG.setproj!(outDS, AG.getproj(ds))
 
-                # build pyramids
-                # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
-                # AG.buildoverviews!(outDS,
-                #                   Cint[2,4,8,16,32,64,128], # overview list
-                #                   # bandlist (omit to include all bands)
-                #                   resampling="NEAREST")     # resampling method
-end end end end
+    #             # build pyramids
+    #             # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
+    #             # AG.buildoverviews!(outDS,
+    #             #                   Cint[2,4,8,16,32,64,128], # overview list
+    #             #                   # bandlist (omit to include all bands)
+    #             #                   resampling="NEAREST")     # resampling method
+    #         end 
+    #     end 
+    # end 
+end
 
 #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
 @testset "Homework 5b" begin
