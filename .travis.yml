@@ -12,7 +12,7 @@ matrix:
     - julia: nightly
 notifications:
   email: false
-coveralls: true
+# coveralls: true
 codecov: true
 jobs:
   include:
