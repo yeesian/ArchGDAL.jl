@@ -13,6 +13,7 @@ matrix:
 notifications:
   email: false
 coveralls: true
+codecov: true
 jobs:
   include:
     - stage: "Documentation"
@@ -21,6 +22,6 @@ jobs:
       script:
         - julia --project=docs/ -e 'using Pkg; Pkg.develop(PackageSpec(path=pwd()));
                                                Pkg.instantiate()'
-        - julia --project=docs/ test/remotefiles.jl
+        # - julia --project=docs/ test/remotefiles.jl
         - julia --project=docs/ docs/make.jl
       after_success: skip
