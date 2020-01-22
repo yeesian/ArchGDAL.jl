@@ -1,4 +1,4 @@
-import DiskArrays: eachchunk
+import DiskArrays: eachchunk, GridChunks
 import DiskArrays
 const AllowedXY = Union{Integer,Colon,AbstractRange}
 const AllowedBand = Union{Integer,Colon,AbstractArray}
@@ -38,8 +38,10 @@ height(ds::RasterDataset) = height(ds.ds)
 width(ds::RasterDataset) = width(ds.ds)
 function eachchunk(ds::RasterDataset)
   subchunks = eachchunk(getband(ds,1))
-  reshape([(s[1],s[2],i:i) for s in subchunks, i in 1:nraster(ds.ds)], Int.(size(subchunks))..., Int(nraster(ds.ds)))
+  GridChunks(ds,(subchunks.chunksize...,1))
 end
+DiskArrays.haschunks(::RasterDataset) = DiskArrays.Chunked()
+DiskArrays.haschunks(::AbstractRasterBand) = DiskArrays.Chunked()
 # AbstractRasterBand indexing
 
 Base.size(band::AbstractRasterBand) = width(band), height(band)
@@ -47,7 +49,11 @@ Base.size(band::AbstractRasterBand) = width(band), height(band)
 #Base.firstindex(band::AbstractRasterBand, d) = 1
 #Base.lastindex(band::AbstractRasterBand, d) = size(band)[d]
 
-eachchunk(band::AbstractRasterBand) = windows(band)
+function eachchunk(band::AbstractRasterBand)
+  wI = windows(band)
+  cs = wI.blockiter.xbsize,wI.blockiter.ybsize
+  GridChunks(band,cs)
+end
 
 DiskArrays.readblock!(band::AbstractRasterBand, buffer, x, y) = begin
     # Calculate `read!` args and read
