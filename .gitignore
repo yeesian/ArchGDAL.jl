@@ -7,9 +7,9 @@
 docs/build/
 docs/site/
 
-# # Commenting out these lines for testing and coverage
-# test/data/
-# test/gdalworkshop/
-# test/ospy/
-# test/pyrasterio/
-# test/spatialite/
+# Commenting out these lines for testing and coverage
+test/data/
+test/gdalworkshop/
+test/ospy/
+test/pyrasterio/
+test/spatialite/
