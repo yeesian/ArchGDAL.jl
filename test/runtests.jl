@@ -3,7 +3,7 @@ using Dates
 using BinaryProvider
 
 # ensure all testing files are present
-# include("remotefiles.jl")
+include("remotefiles.jl")
 
 @testset "ArchGDAL" begin
     cd(dirname(@__FILE__)) do
