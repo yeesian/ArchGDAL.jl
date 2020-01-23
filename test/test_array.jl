@@ -10,10 +10,6 @@ import ArchGDAL; const AG = ArchGDAL
                 @test typeof(ds[:, :, 1]) <: Array{UInt8,2}
                 @test typeof(ds[:, 1, 1]) <: Array{UInt8,1}
                 @test typeof(ds[1, 1, 1]) <: UInt8
-                # Why are these supposed to work, even in case there
-                @test_broken typeof(ds[:, :]) <: Array{UInt8,2}
-                @test_broken typeof(ds[:, 1]) <: Array{UInt8,1}
-                @test_broken typeof(ds[1, 1]) <: UInt8
             end
             @testset "range indexing" begin
                 buffer = ds[1:AG.width(ds), 1:AG.height(ds), 1:1]
@@ -25,7 +21,6 @@ import ArchGDAL; const AG = ArchGDAL
             end
             @testset "colon indexing" begin
                 buffer = ds[:, :, 1]
-                @test_broken buffer == ds[:, :]
                 total = sum(buffer)
                 count = sum(buffer .> 0)
                 @test total / count ≈ 76.33891347095299
@@ -78,25 +73,9 @@ cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
             @test ds[755, 2107, 1] == 0x02
             ds[755:755, 2107, 1] = [0x03]
             @test ds[755, 2107, 1] == 0x03
-            #Again, the next lines won't work if we treat a Dataset as a 3D array
-            #where the last dim has length 3
-            @test_broken begin
-            ds[755, 2107] = 0x04
-            @test ds[755, 2107] == 0x04
-            ds[755:755, 2107:2107] = reshape([0xff], 1, 1)
-            @test ds[755, 2107] == 0xff
-            buffer = ds[:, :]
-            ds[:, :] = buffer .* 0x00
-            @test sum(ds[:, :]) == 0x00
-            ds[:, 1:500] = buffer[:, 1:500]
-            ds[:, 501:end] = buffer[:, 501:end]
-            @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-            @test_throws DimensionMismatch ds[:, 501:end] = [1, 2, 3]
-            end
         end
         @testset "RasterBand setindex" begin
             band = AG.getband(ds, 1)
-            @test_broken band[755, 2107] == 0xff
             band[755:755, 2107] = [0x00]
             @test band[755, 2107] == 0x00
             band[755, 2107] = 0x01
