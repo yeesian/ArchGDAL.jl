@@ -3,7 +3,7 @@ uuid = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"
 keywords = ["GDAL", "IO"]
 license = "MIT"
 desc = "A high level API for GDAL - Geospatial Data Abstraction Library"
-version = "0.3.0"
+version = "0.3.1"
 
 [deps]
 DataStreams = "9a8bc11e-79be-5b39-94d7-1ccc349a1a85"
@@ -14,7 +14,7 @@ GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
 [compat]
 DataStreams = "0.4.2"
 GDAL = "1.0.2"
-GeoInterface = "0.4"
+GeoInterface = "0.4, 0.5"
 julia = "1"
 
 [extras]
