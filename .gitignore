@@ -13,3 +13,5 @@ test/gdalworkshop/
 test/ospy/
 test/pyrasterio/
 test/spatialite/
+
+.vscode/

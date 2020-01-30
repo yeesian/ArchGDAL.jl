@@ -44,7 +44,9 @@ function copyattributes(fromfeature, tofeature)
                 println(fromfeature)
                 println(tofeature)
                 println("$i: $(AG.getfield(fromfeature, i))")
-    end end end
+            end 
+        end 
+    end
 end
 
 # function reproject(inFN, inEPSG, outEPSG)
@@ -76,150 +78,181 @@ end
 #     end
 # end
 
-# @testset "Homework 1" begin
-#     AG.read("ospy/data1/sites.shp") do input
-#         #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
-#         for (i,feature) in enumerate(AG.getlayer(input, 0))
-#             id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
-#             (x,y) = AG.getpoint(AG.getgeom(feature, 0), 0)
-#             @test id == i
-#             @test 4e5 <= x <= 5e5
-#             @test 4.5e6 <= y <= 5e6
-#             @test cover in ("shrubs", "trees", "rocks", "grass", "bare", "water")
-#         end
+@testset "Homework 1" begin
+    # These tests only work with vector files. Minor changes in tests [weird][review]
+    # Nothing breaks due to `cropped_aster`
+    AG.read("ospy/data1/sites.shp") do input
+        #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
+        
+        # Doesn't break with modified tests; 
+        # These only check respective values.
+        for (i, feature) in enumerate(AG.getlayer(input, 0))
+            id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
+            (x,y) = AG.getpoint(AG.getgeom(feature, 0), 0)
+            @test id == i
+            @test 4e5 <= x <= 5e5
+            @test 4.5e6 <= y <= 5e6
+            @test cover in ("shrubs", "trees", "rocks", "grass", "bare", "water")
+        end
 
-#         #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
-#         # version 1
-#         AG.create(AG.getdriver("MEMORY")) do output
-#             inlayer = AG.getlayer(input, 0)
-#             outlayer = AG.createlayer(
-#                 name = "hw1b",
-#                 dataset = output,
-#                 geom = GDAL.wkbPoint
-#             )
-#             inlayerdefn = AG.layerdefn(inlayer)
-#             AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
-#             AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
-#             for infeature in inlayer
-#                 id = AG.getfield(infeature, 0)
-#                 @test AG.asint64(infeature, 0) == id
-#                 cover = AG.getfield(infeature, 1)
-#                 if cover == "trees"
-#                     AG.createfeature(outlayer) do outfeature
-#                         AG.setgeom!(outfeature, AG.getgeom(infeature))
-#                         AG.setfield!(outfeature, 0, id)
-#                         AG.setfield!(outfeature, 1, cover)
-#             end end end
-#             @test sprint(print, output) == """
-#             GDAL Dataset (Driver: Memory/Memory)
-#             File(s): 
+        #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
+        # version 1
+        AG.create(AG.getdriver("MEMORY")) do output
+            inlayer = AG.getlayer(input, 0)
+            outlayer = AG.createlayer(
+                name = "hw1b",
+                dataset = output,
+                geom = GDAL.wkbPoint
+            )
+            inlayerdefn = AG.layerdefn(inlayer)
+            AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
+            AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
+            for infeature in inlayer
+                id = AG.getfield(infeature, 0)
+                @test AG.asint64(infeature, 0) == id
+                cover = AG.getfield(infeature, 1)
+                if cover == "trees"
+                    AG.createfeature(outlayer) do outfeature
+                        AG.setgeom!(outfeature, AG.getgeom(infeature))
+                        AG.setfield!(outfeature, 0, id)
+                        AG.setfield!(outfeature, 1, cover)
+                    end 
+                end 
+            end
 
-#             Number of feature layers: 1
-#             Layer 0: hw1b (wkbPoint)
-#             """
-#         end
+            # Tests passing; Weird error fix though - The `output`
+            # is supposed to be
+            # ```[julia]
+            #     """
+            #     GDAL Dataset (Driver: Memory/Memory)
+            #     File(s): 
+            #
+            #     Number of feature layers: 1
+            #       Layer 0: hw1b (wkbPoint)
+            #     """
+            # ```
+            # instead of
+            # ```[julia]
+            #     """
+            #     GDAL Dataset (Driver: Memory/Memory)
+            #     File(s): 
+            #
+            #     Number of feature layers: 1
+            #     Layer 0: hw1b (wkbPoint)
+            #     """
+            # ```
+            # =================================================
+            # Notice the added (2) spaces before `Layer 0: hw1b (wkbPoint)`
+            # =================================================
+            @test sprint(print, output) == """
+            GDAL Dataset (Driver: Memory/Memory)
+            File(s): 
 
-#         # version 2
-#         AG.create(AG.getdriver("MEMORY")) do output
-#             AG.executesql(input, """SELECT * FROM sites
-#                                     WHERE cover = 'trees' """) do results
-#                 @test sprint(print, results) == """
-#                 Layer: sites
-#                 Geometry 0 (_ogr_geometry_): [wkbPoint], POINT (449959.840851...), ...
-#                     Field 0 (ID): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
-#                     Field 1 (COVER): [OFTString], trees, trees, trees, trees, trees, trees, ...
-#                 """
-#                 AG.copy(results, name = "hw1b", dataset = output)
-#             end
-#             @test sprint(print, output) == """
-#             GDAL Dataset (Driver: Memory/Memory)
-#             File(s): 
+            Number of feature layers: 1
+              Layer 0: hw1b (wkbPoint)
+            """
+        end
 
-#             Number of feature layers: 1
-#             Layer 0: hw1b (wkbPoint)
-#             """
-#         end
-#     end
-# end
-    
-# @testset "Homework 2" begin
-#     # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
-#     open("ospy/data2/ut_counties.txt", "r") do file
-#         AG.create(AG.getdriver("MEMORY")) do output
-#             layer = AG.createlayer(
-#                 name = "hw2a",
-#                 dataset = output,
-#                 geom = GDAL.wkbPolygon
-#             )
-#             @test sprint(print, layer) == """
-#             Layer: hw2a
-#             Geometry 0 (): [wkbPolygon]
-#             """
-#             AG.createfielddefn("name", GDAL.OFTString) do fielddefn
-#                 AG.setwidth!(fielddefn, 30)
-#                 AG.addfielddefn!(layer, fielddefn)
-#             end
-#             @test sprint(print, layer) == """
-#             Layer: hw2a
-#             Geometry 0 (): [wkbPolygon]
-#                 Field 0 (name): [OFTString]
-#             """
-#             for line in readlines(file)
-#                 (name, coords) = split(line, ":")
-#                 coordlist = split(coords, ",")
-#                 AG.createfeature(layer) do feature
-#                     AG.setfield!(feature, 0, name)
-#                     AG.createpolygon() do poly
-#                         ring = AG.createlinearring()
-#                         for xy in map(split, coordlist)
-#                             AG.addpoint!(ring, parse(Float64, xy[1]),
-#                                             parse(Float64, xy[2]))
-#                         end
-#                         AG.addgeom!(poly, ring)
-#                         AG.setgeom!(feature, poly)    
-#                     end 
-#                 end 
-#             end
+        # version 2
+        AG.create(AG.getdriver("MEMORY")) do output
+            AG.executesql(input, """SELECT * FROM sites
+                                    WHERE cover = 'trees' """) do results
+                @test sprint(print, results) == """
+                Layer: sites
+                  Geometry 0 (_ogr_geometry_): [wkbPoint], POINT (449959.840851...), ...
+                     Field 0 (ID): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
+                     Field 1 (COVER): [OFTString], trees, trees, trees, trees, trees, trees, ...
+                """
+                AG.copy(results, name = "hw1b", dataset = output)
+            end
+
+            # Similar Change; Even weirder. There is a trailing [space] after `File(s):`
+            # Changed to 
+            # ```[julia]
+            # """
+            # GDAL Dataset (Driver: Memory/Memory)
+            # File(s): 
+
+            # Number of feature layers: 1
+            #   Layer 0: hw1b (wkbPoint)
+            # """
+            # ```
+            @test sprint(print, output) == """
+            GDAL Dataset (Driver: Memory/Memory)
+            File(s): 
+
+            Number of feature layers: 1
+              Layer 0: hw1b (wkbPoint)
+            """
+        end
+    end
+end
+
+
+@testset "Homework 2" begin
+    # Similar behavior. This seems to be a problem of tabs being
+    # replaced by spaces? [suggestions][review]
+    # Added appropriate number of spaces so that tests pass.
+    # If it is indeed a problem of tabs being converted to spaces,
+    # the solution might be to change the tabs to spaces altogether
+    # in the package. 
+
+    # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
+    open("ospy/data2/ut_counties.txt", "r") do file
+        AG.create(AG.getdriver("MEMORY")) do output
             
-#             @test sprint(print, layer) == """
-#             Layer: hw2a
-#             Geometry 0 (): [wkbPolygon], POLYGON ((-111.50278...), ...
-#                 Field 0 (name): [OFTString], Cache, Box Elder, Rich, Weber, Morgan, ...
-#             """
+            layer = AG.createlayer(
+                name = "hw2a",
+                dataset = output,
+                geom = GDAL.wkbPolygon
+            )
+            @test sprint(print, layer) == """
+            Layer: hw2a
+              Geometry 0 (): [wkbPolygon]
+            """
 
-#             # input = output
-#             # # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2b.py
-#             # AG.fromEPSG(4269) do inspatialref
-#             # AG.fromEPSG(26912) do outspatialref
-#             # AG.createcoordtrans(inspatialref, outspatialref) do coordtrans
-#             # AG.create("", "MEMORY") do output
-#             #     inlayer = AG.getlayer(input, 0)
-#             #     outlayer = AG.createlayer(
-#             #         name = "hw2b",
-#             #         dataset = output,
-#             #         geom = GDAL.wkbPolygon
-#             #     )
-#             #     infeaturedefn = AG.layerdefn(inlayer)
-#             #     nameindex = AG.findfieldindex(infeaturedefn, "name")
-#             #     fielddefn = AG.getfielddefn(infeaturedefn, nameindex)
-#             #     AG.createfield!(outlayer, fielddefn)
-#             #     for infeature in inlayer
-#             #         AG.createfeature(outlayer) do outfeature
-#             #             geom = AG.getgeom(infeature)
-#             #             AG.setgeom!(outfeature, AG.transform!(geom, coordtrans))
-#             #             AG.setfield!(outfeature,0,AG.getfield(infeature, nameindex))
-#             #             println(outfeature)
-#             #     end end
-#             #     println(layer)
-#             # end
-#             # end
-#             # println(AG.toWKT(AG.morphtoESRI!(outspatialref)))
-#             # end
-#             # end
-#         end
-#     end
-# end
+            AG.createfielddefn("name", GDAL.OFTString) do fielddefn
+                AG.setwidth!(fielddefn, 30)
+                AG.addfielddefn!(layer, fielddefn)
+            end
+            @test sprint(print, layer) == """
+            Layer: hw2a
+              Geometry 0 (): [wkbPolygon]
+                 Field 0 (name): [OFTString]
+            """
 
+            for line in readlines(file)
+                (name, coords) = split(line, ":")
+                coordlist = split(coords, ",")
+                AG.createfeature(layer) do feature
+                    AG.setfield!(feature, 0, name)
+                    AG.createpolygon() do poly
+                        ring = AG.createlinearring()
+                        for xy in map(split, coordlist)
+                            AG.addpoint!(ring, parse(Float64, xy[1]),
+                                            parse(Float64, xy[2]))
+                        end
+                        AG.addgeom!(poly, ring)
+                        AG.setgeom!(feature, poly)    
+                    end 
+                end 
+            end
+            @test sprint(print, layer) == """
+            Layer: hw2a
+              Geometry 0 (): [wkbPolygon], POLYGON ((-111.50278...), ...
+                 Field 0 (name): [OFTString], Cache, Box Elder, Rich, Weber, Morgan, ...
+            """
+            # Deleted the commented out test
+            # started with 
+            # ```[julia]
+            # input = output
+            # ...
+            # ```
+        end
+    end
+end
+
+# Works with new datasets
 @testset "Homework 3" begin
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
     AG.read("ospy/data1/sites.shp") do sitesDS
@@ -246,6 +279,10 @@ end
 
 AG.read("ospy/data4/cropped_aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
+
+    # These are scary - these mix the usage of feature layers and raster. 
+    # Ignore for now, work on these later.
+
     # @testset "Homework 4a" begin
     #     AG.read("ospy/data1/sites.shp") do shp
     #         shplayer = AG.getlayer(shp, 0)
@@ -385,7 +422,7 @@ AG.read("ospy/data4/cropped_aster.img") do ds
     # end 
 end
 
-#reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
+# reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5b.py
 @testset "Homework 5b" begin
     AG.read("ospy/data5/doq1.img") do ds1
         AG.read("ospy/data5/doq2.img") do ds2
