@@ -14,4 +14,4 @@ test/ospy/
 test/pyrasterio/
 test/spatialite/
 
-.vscode/
+./Manifest.toml
