@@ -279,39 +279,35 @@ end
 
 AG.read("ospy/data4/cropped_aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
+    @testset "Homework 4a" begin
+        AG.read("ospy/data4/cropped_sites.shp") do shp
+            shplayer = AG.getlayer(shp, 0)
+            id = AG.findfieldindex(AG.layerdefn(shplayer), "ID")
 
-    # These are scary - these mix the usage of feature layers and raster. 
-    # Ignore for now, work on these later.
+            transform = AG.getgeotransform(ds)
+            xOrigin = transform[1]; yOrigin = transform[4]
+            pixelWidth = transform[2]; pixelHeight = transform[6]
 
-    # @testset "Homework 4a" begin
-    #     AG.read("ospy/data1/sites.shp") do shp
-    #         shplayer = AG.getlayer(shp, 0)
-    #         id = AG.findfieldindex(AG.layerdefn(shplayer), "ID")
-
-    #         transform = AG.getgeotransform(ds)
-    #         xOrigin = transform[1]; yOrigin = transform[4]
-    #         pixelWidth = transform[2]; pixelHeight = transform[6]
-
-    #         results = fill(0, 42, 3)
-    #         for (i,feature) in enumerate(shplayer)
-    #             geom = AG.getgeom(feature)
-    #             x = AG.getx(geom, 0); y = AG.gety(geom, 0)
-    #             # compute pixel offset
-    #             xOffset = round(Int, (x - xOrigin) / pixelWidth)
-    #             yOffset = round(Int, (y - yOrigin) / pixelHeight)
-    #             # create a string to print out
-    #             @test AG.getfield(feature, id) == i
-    #             for j in 1:AG.nraster(ds)
-    #                 data = AG.read(ds, j, xOffset, yOffset, 1, 1)
-    #                 results[i,j] = data[1,1]
-    #             end
-    #         end
-    #         @test maximum(results) == 100
-    #         @test minimum(results) == 0
-    #         @test mean(results) ≈ 64.98412698412699
-    #         @test std(results) ≈ 22.327734905980627
-    #     end
-    # end
+            results = fill(0, 17, 3)
+            for (i,feature) in enumerate(shplayer)
+                geom = AG.getgeom(feature)
+                x = AG.getx(geom, 0); y = AG.gety(geom, 0)
+                # compute pixel offset
+                xOffset = round(Int, (x - xOrigin) / pixelWidth)
+                yOffset = round(Int, (y - yOrigin) / pixelHeight)
+                # create a string to print out
+                @test AG.getfield(feature, id) == i
+                for j in 1:AG.nraster(ds)
+                    data = AG.read(ds, j, xOffset, yOffset, 1, 1)
+                    results[i,j] = data[1,1]
+                end
+            end
+            @test maximum(results) == 120
+            @test minimum(results) == 0
+            @test mean(results) ≈ 66.86274509803921
+            @test std(results) ≈ 37.359346679428505
+        end
+    end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4b.py
     # @testset "Homework 4b" begin
