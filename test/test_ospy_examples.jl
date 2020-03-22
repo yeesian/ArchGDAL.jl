@@ -310,47 +310,47 @@ AG.read("ospy/data4/cropped_aster.img") do ds
     end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4b.py
-    # @testset "Homework 4b" begin
-    #     @testset "version 1" begin
-    #         count = 0
-    #         total = 0
-    #         data = AG.read(ds, 1)
-    #         for (cols,rows) in AG.windows(AG.getband(ds, 1))
-    #             window = data[cols, rows]
-    #             count = count + sum(window .> 0)
-    #             total = total + sum(window)
-    #         end
-    #         @test total / count ≈ 76.33891347095299
-    #         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-    #     end
+    @testset "Homework 4b" begin
+        @testset "version 1" begin
+            count = 0
+            total = 0
+            data = AG.read(ds, 1)
+            for (cols,rows) in AG.windows(AG.getband(ds, 1))
+                window = data[cols, rows]
+                count = count + sum(window .> 0)
+                total = total + sum(window)
+            end
+            @test total / count ≈ 86.88876013904982
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 27.741398446170923
+        end
 
-    #     @testset "version 2" begin
-    #         band = AG.getband(ds, 1)
-    #         count = 0
-    #         total = 0
-    #         buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
-    #         for (cols,rows) in AG.windows(band)
-    #             AG.rasterio!(band, buffer, rows, cols)
-    #             data = buffer[1:length(cols),1:length(rows)]
-    #             count += sum(data .> 0)
-    #             total += sum(data)
-    #         end
-    #         @test total / count ≈ 76.33891347095299
-    #         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-    #     end
+        @testset "version 2" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            buffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
+            for (cols,rows) in AG.windows(band)
+                AG.rasterio!(band, buffer, rows, cols)
+                data = buffer[1:length(cols),1:length(rows)]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 86.88876013904982
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 27.741398446170923
+        end
 
-    #     @testset "version 3" begin
-    #         count = 0
-    #         total = 0
-    #         # BufferIterator uses a single buffer, so this loop cannot be parallelized
-    #         for data in AG.bufferwindows(AG.getband(ds, 1))
-    #             count += sum(data .> 0)
-    #             total += sum(data)
-    #         end
-    #         @test total / count ≈ 76.33891347095299
-    #         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
-    #     end
-    # end
+        @testset "version 3" begin
+            count = 0
+            total = 0
+            # BufferIterator uses a single buffer, so this loop cannot be parallelized
+            for data in AG.bufferwindows(AG.getband(ds, 1))
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 86.88876013904982
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 27.741398446170923
+        end
+    end
 
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5a.py
     # @testset "Homework 5a" begin
