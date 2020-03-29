@@ -1,7 +1,8 @@
 module ArchGDAL
 
     import GDAL, GeoInterface
-    import DataStreams: Data
+    import Tables
+    #import DataStreams: Data
     import GeoInterface: coordinates, geotype
     using Dates
 
@@ -26,7 +27,8 @@ module ArchGDAL
     include("context.jl")
     include("base/iterators.jl")
     include("base/display.jl")
-    include("datastreams.jl")
+    include("tables.jl")
+    #include("datastreams.jl")
     include("geointerface.jl")
 
     mutable struct DriverManager
