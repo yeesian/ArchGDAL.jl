@@ -1,10 +1,10 @@
 module ArchGDAL
 
     import GDAL, GeoInterface
-    import Tables
-    #import DataStreams: Data
+    import DataStreams: Data
     import GeoInterface: coordinates, geotype
     using Dates
+    using NamedTupleTools
 
     include("utils.jl")
     include("types.jl")
@@ -27,9 +27,9 @@ module ArchGDAL
     include("context.jl")
     include("base/iterators.jl")
     include("base/display.jl")
-    include("tables.jl")
-    #include("datastreams.jl")
+    include("datastreams.jl")
     include("geointerface.jl")
+    include("tables.jl")
 
     mutable struct DriverManager
         function DriverManager()
@@ -47,3 +47,4 @@ module ArchGDAL
     end
 
 end # module
+
