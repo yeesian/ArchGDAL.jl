@@ -108,7 +108,6 @@ end
         @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
         AG.setpoint!(geom, 1, 10, 10)
         @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
-        # Test using convert
         @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)  
     end
     AG.createlinestring([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom

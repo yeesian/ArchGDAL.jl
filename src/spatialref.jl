@@ -42,14 +42,17 @@ reproject(geom::GFT.GeoFormat, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
     convert(typeof(geom), reproject(convert(Geometry, geom), crs, targetcrs))
 
 # Geometries
-reproject(geom::AbstractGeometry, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+function reproject(geom::AbstractGeometry, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
     crs2transform(crs, targetcrs) do transform
         transform!(geom, transform)
     end
-reproject(geoms::AbstractArray{<:AbstractGeometry}, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+end
+function reproject(geoms::AbstractArray{<:AbstractGeometry}, crs::GFT.GeoFormat, 
+                   targetcrs::GFT.GeoFormat)
     crs2transform(crs, targetcrs) do transform
         transform!.(geoms, Ref(transform))
     end
+end
 
 """
     crs2transform(f, crs::GeoFormat, targetcrs::GeoFormat)
@@ -58,7 +61,7 @@ Run the function on a coord transform generated from
 two crs definitions. These can be in any GeoFormatTypes format
 that holds a coordinate reference system.
 """
-crs2transform(f, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+function crs2transform(f::Function, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
     importCRS(crs) do crs_ref
         importCRS(targetcrs) do targetcrs_ref
             createcoordtrans(crs_ref, targetcrs_ref) do transform
@@ -66,6 +69,7 @@ crs2transform(f, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
             end
         end
     end
+end
 
 """
     newspatialref(wkt::AbstractString = "")
