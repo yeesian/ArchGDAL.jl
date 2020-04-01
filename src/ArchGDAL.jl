@@ -4,7 +4,7 @@ module ArchGDAL
     import DataStreams: Data
     import GeoInterface: coordinates, geotype
     using Dates
-    using NamedTupleTools
+
 
     include("utils.jl")
     include("types.jl")

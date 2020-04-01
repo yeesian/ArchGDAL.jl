@@ -15,12 +15,9 @@ function geotable(dataset::ArchGDAL.IDataset)
         typ = _FIELDTYPE[gettype(field)]
         d[name] = typ[]
     end
-    # key = String[]
-    # vals = []
-
+    
     d["geometry"] = IGeometry[]
-    # push!(key, "Geometry")
-
+    
     for fid in 0:nfeat-1
         getfeature(layer, fid) do feature
             for (k, v) in pairs(d)
@@ -33,28 +30,17 @@ function geotable(dataset::ArchGDAL.IDataset)
             end
         end
     end
-
-    # Named_Tuple = namedtuple(Symbol.(keys(d)), values(d))
-    return namedtuple(Symbol.(keys(d)), values(d))
+    keys_tup = ()
+    for _key in keys(d)
+        keys_tup = (keys_tup..., Symbol(_key))
+    end
+    
+    vals_tup = Tuple(values(d))
+    
+    return NamedTuple{keys_tup}(vals_tup)
 end
 
-    # names = [
-    #     ["geometry$(i-1)" for i in 1:ngeometries]; #in case there are more than one geometries
-    #     [AG.getname(AG.getfielddefn(featuredefn,i-1)) for i in 1:nfld]
-    # ]
     
-    
-    # types = [
-    #     [AG.IGeometry for i in 1:ngeometries];
-    #     [AG._FIELDTYPE[AG.gettype(AG.getfielddefn(featuredefn,i-1))] for i in 1:nfld]
-    # ]
-    
-    #   val = if nfld <= ngeom
-    #             getgeom(feature, col-1)
-    #         else
-    #             T(getfield(feature, col - ngeom - 1))
-    #         end
-
     # Tables.istable(::Type{<:GeoTable}) = true
     # # getter methods to avoid getproperty clash
     # names(g::GeoTable) = getfield(g, :names)
