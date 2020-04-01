@@ -5,11 +5,10 @@
 
 Convert a GeoFromat object to Geometry, then to the target format.
 The Geom trait is needed to separate out convert for CRS for WellKnownText
-and GML, which may contain both. It is handled in GeoFormatTypes.
+and GML, which may contain both.
 """
-Base.convert(target::Type{<:GFT.GeoFormat}, mode::Type{GFT.Geom}, source::GFT.GeoFormat) =
-    convert(target, convert(AbstractGeometry, source))
-Base.convert(target::Type{<:GFT.GeoFormat}, mode::GFT.Geom, source::GFT.GeoFormat) =
+Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.FormatMode,Type{GFT.FormatMode}}, 
+             source::GFT.GeoFormat) =
     convert(target, convert(AbstractGeometry, source))
 
 """
@@ -48,9 +47,8 @@ Base.convert(::Type{<:GFT.KML}, source::AbstractGeometry) =
 
 Convert any GeoFormat crs data to another another GeoFormat type.
 """
-Base.convert(target::Type{<:GFT.GeoFormat}, mode::Type{GFT.CRS}, source::GFT.GeoFormat) =
-    unsafe_convertcrs(target, importCRS(source))
-Base.convert(target::Type{<:GFT.GeoFormat}, mode::GFT.CRS, source::GFT.GeoFormat) =
+Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.CRS,Type{GFT.CRS}}, 
+             source::GFT.GeoFormat) =
     unsafe_convertcrs(target, importCRS(source))
 
 unsafe_convertcrs(::Type{<:GFT.CoordSys}, crsref) = 

@@ -1,16 +1,21 @@
 """
 Import format and run function `f` on the result.
 """
-importCRS(f::Function, sourceformat::GFT.GeoFormat) = begin
-    obj = importCRS(sourceformat)
-    try f(obj) finally destroy(obj) end
-end
-importCRS(x::GFT.EPSG) = importEPSG(GFT.val(x))
-importCRS(x::GFT.AbstractWellKnownText) = importWKT(GFT.val(x))
-importCRS(x::GFT.ESRIWellKnownText) = importESRI(GFT.val(x))
-importCRS(x::GFT.ProjString) = importPROJ4(GFT.val(x))
-importCRS(x::GFT.GML) = importXML(GFT.val(x))
-importCRS(x::GFT.KML) = importCRS(EPSG(4326))
+importCRS(x::GFT.GeoFormat) = importCRS!(newspatialref(), x)
+unsafe_importCRS(x::GFT.GeoFormat) = importCRS!(unsafe_newspatialref(), x)
+
+importCRS!(spref::AbstractSpatialRef, x::GFT.EPSG) =
+    importEPSG!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.AbstractWellKnownText) =
+    importWKT!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.ESRIWellKnownText) =
+    importESRI!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.ProjString) =
+    importPROJ4!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.GML) =
+    importXML!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.KML) =
+    importCRS!(spref, GFT.EPSG(4326))
 
 """
     reproject(points, sourceproj::GeoFormat, destproj::GeoFormat)
@@ -47,7 +52,7 @@ function reproject(geom::AbstractGeometry, crs::GFT.GeoFormat, targetcrs::GFT.Ge
         transform!(geom, transform)
     end
 end
-function reproject(geoms::AbstractArray{<:AbstractGeometry}, crs::GFT.GeoFormat, 
+function reproject(geoms::AbstractArray{<:AbstractGeometry}, crs::GFT.GeoFormat,
                    targetcrs::GFT.GeoFormat)
     crs2transform(crs, targetcrs) do transform
         transform!.(geoms, Ref(transform))
