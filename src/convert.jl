@@ -14,7 +14,7 @@ Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.FormatMode,Type{GFT.
 """
     convert(::Type{<:AbstractGeometry}, source::GeoFormat)
 
-Convert any GeoFormat geometry data to an ArchGDAL Gemoetry type
+Convert `GeoFormat` geometry data to an ArchGDAL `Geometry` type
 """
 Base.convert(::Type{<:AbstractGeometry}, source::GFT.AbstractWellKnownText) = 
     fromWKT(GFT.val(source))
@@ -28,7 +28,7 @@ Base.convert(::Type{<:AbstractGeometry}, source::GFT.GML) =
 """
     convert(::Type{<:AbstractGeometry}, source::GeoFormat)
 
-Convert AbstractGeometry data to any gemoetry GeoFormat 
+Convert `AbstractGeometry` data to any gemoetry `GeoFormat` 
 """
 Base.convert(::Type{<:GFT.AbstractWellKnownText}, source::AbstractGeometry) = 
     GFT.WellKnownText(GFT.Geom(), toWKT(source))
@@ -45,7 +45,7 @@ Base.convert(::Type{<:GFT.KML}, source::AbstractGeometry) =
 """
     convert(target::Type{GeoFormat}, mode::CRS, source::GeoFormat)
 
-Convert any GeoFormat crs data to another another GeoFormat type.
+Convert `GeoFormat` crs data to another another `GeoFormat` crs type.
 """
 Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.CRS,Type{GFT.CRS}}, 
              source::GFT.GeoFormat) =

@@ -1,8 +1,19 @@
 """
-Import format and run function `f` on the result.
+    importCRS(x::GeoFormatTypes.GeoFormat)
+
+Import a coordinate reference system from a `GeoFormat` into GDAL,
+returning an [`AbstractSpatialRef`](@ref).
 """
 importCRS(x::GFT.GeoFormat) = importCRS!(newspatialref(), x)
+
 unsafe_importCRS(x::GFT.GeoFormat) = importCRS!(unsafe_newspatialref(), x)
+
+"""
+    importCRS!(spref::AbstractSpatialRef, x::GeoFormatTypes.GeoFormat)
+
+Import a coordinate reference system from a `GeoFormat` into the spatial ref.
+"""
+function importCRS! end
 
 importCRS!(spref::AbstractSpatialRef, x::GFT.EPSG) =
     importEPSG!(spref, GFT.val(x))
@@ -23,53 +34,60 @@ importCRS!(spref::AbstractSpatialRef, x::GFT.KML) =
 Reproject points to a different coordinate reference system and/or format.
 
 ## Arguments
--`points`: Vector of Geometry points
--`crs`: The current coordinate reference system, using any GeoFormat
--`targetcrs`: The coordinate reference system to transform to, using any CRS capable GeoFormat
+-`coord`: Vector of Geometry points
+-`sourcecrs`: The current coordinate reference system, as a `GeoFormat`
+-`targetcrs`: The coordinate reference system to transform to, using any CRS capable `GeoFormat`
 
 ## Example
 
-reproject([(118, 34), (119, 35)], EPSG(2025), EPSG(4326))
+```julia-repl
+julia> using ArchGDAL, GeoFormatTypes
+
+julia> ArchGDAL.reproject([[118, 34], [119, 35]], ProjString("+proj=longlat +datum=WGS84 +no_defs"), EPSG(2025))
+2-element Array{Array{Float64,1},1}:
+ [-2.60813482878655e6, 1.5770429674905164e7]
+ [-2.663928675953517e6, 1.56208905951487e7] 
+```
 """
-reproject(x, crs::GFT.GeoFormat, targetcrs::Nothing) = x
+reproject(coord, sourcecrs::GFT.GeoFormat, targetcrs::Nothing) = coord
 
 # These should be better integrated with geometry packages or follow some standard
 const ReprojectCoord = Union{<:NTuple{2,<:Number},<:NTuple{3,<:Number},AbstractVector{<:Number}}
 
 # Vector/Tuple coordinate(s)
-reproject(coord::ReprojectCoord, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
-    GeoInterface.coordinates(reproject(createpoint(coord...), crs, targetcrs))
-reproject(coords::AbstractArray{<:ReprojectCoord}, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
-    GeoInterface.coordinates.(reproject([createpoint(c...) for c in coords], crs, targetcrs))
+reproject(coord::ReprojectCoord, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    GeoInterface.coordinates(reproject(createpoint(coord...), sourcecrs, targetcrs))
+reproject(coords::AbstractArray{<:ReprojectCoord}, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    GeoInterface.coordinates.(reproject([createpoint(c...) for c in coords], sourcecrs, targetcrs))
 
 # GeoFormat
-reproject(geom::GFT.GeoFormat, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
-    convert(typeof(geom), reproject(convert(Geometry, geom), crs, targetcrs))
+reproject(geom::GFT.GeoFormat, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+    convert(typeof(geom), reproject(convert(Geometry, geom), sourcecrs, targetcrs))
 
 # Geometries
-function reproject(geom::AbstractGeometry, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
-    crs2transform(crs, targetcrs) do transform
+function reproject(geom::AbstractGeometry, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
+    crs2transform(sourcecrs, targetcrs) do transform
         transform!(geom, transform)
     end
 end
-function reproject(geoms::AbstractArray{<:AbstractGeometry}, crs::GFT.GeoFormat,
+function reproject(geoms::AbstractArray{<:AbstractGeometry}, sourcecrs::GFT.GeoFormat,
                    targetcrs::GFT.GeoFormat)
-    crs2transform(crs, targetcrs) do transform
+    crs2transform(sourcecrs, targetcrs) do transform
         transform!.(geoms, Ref(transform))
     end
 end
 
 """
-    crs2transform(f, crs::GeoFormat, targetcrs::GeoFormat)
+    crs2transform(f::Function, sourcecrs::GeoFormat, targetcrs::GeoFormat)
 
-Run the function on a coord transform generated from
-two crs definitions. These can be in any GeoFormatTypes format
-that holds a coordinate reference system.
+Run the function `f` on a coord transform generated from the source and target 
+crs definitions. These can be any `GeoFormat` (from GeoFormatTypes) that holds 
+a coordinate reference system.
 """
-function crs2transform(f::Function, crs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
-    importCRS(crs) do crs_ref
+function crs2transform(f::Function, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
+    importCRS(sourcecrs) do sourcecrs_ref
         importCRS(targetcrs) do targetcrs_ref
-            createcoordtrans(crs_ref, targetcrs_ref) do transform
+            createcoordtrans(sourcecrs_ref, targetcrs_ref) do transform
                 f(transform)
             end
         end

@@ -3,7 +3,6 @@ import GeoInterface, GeoFormatTypes, GDAL, ArchGDAL;
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
 
-
 @testset "Incomplete GeoInterface geometries" begin
     @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCircularString))
     @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCompoundCurve))
