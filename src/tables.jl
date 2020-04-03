@@ -1,8 +1,7 @@
-function geotable(dataset::ArchGDAL.IDataset)
-    layer = getlayer(dataset, 0)
+function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int)
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
-    nfield = ArchGDAL.nfield(featuredefn)
+    nfield = nfield(featuredefn)
     featuredefn = layerdefn(layer)
     nfeat = nfeature(layer)
 
@@ -34,17 +33,35 @@ function geotable(dataset::ArchGDAL.IDataset)
     for _key in keys(d)
         keys_tup = (keys_tup..., Symbol(_key))
     end
-    
     vals_tup = Tuple(values(d))
     
-    return NamedTuple{keys_tup}(vals_tup)
+    #Using the tables interface
+    RowTable = rowtable(NamedTuple{keys_tup}(vals_tup))
+    return reshape(RowTable, (1,length(RowTable)))
 end
 
+# Base.eltype(#type) where {T} = GeoTableRow{T}
+# Base.iterate(#type, st=1) = st > length(m) ? nothing : (#logic)
+# Base.length(#type) = length(geotable(#type))
+
+
+
+# Base.IteratorSize(::Type{<:#type}) = Base.HasLength()
+# Base.IteratorEltype(::Type{<:#type}) = Base.HasEltype()
+
+# function Base.iterate(t::Table, st = 1)
+#     st > length(t) && return nothing
+#     geom = @inbounds getshp(t).shapes[st]
+#     record = DBFTables.Row(getdbf(t), st)
+#     return Row(geom, record), st + 1
+# end
+
+# #Implementing the tables interface
+
+# Tables.istable(::Type{<:geotable}) = true
+# Tables.rowaccess(::Type{<:geotable}) = true
+# Tables.rows(g::geotable) = g
+
+# Tables.schema(g::geotable) = Tables.Schema()
     
-    # Tables.istable(::Type{<:GeoTable}) = true
-    # # getter methods to avoid getproperty clash
-    # names(g::GeoTable) = getfield(g, :names)
-    
-    # geometry(g::GeoTable) = getfield(g, :geometry)
-    # # schema is column names and types
-    # Tables.schema(g::GeoTable{T}) where {T} = Tables.Schema(names(g), )
+
