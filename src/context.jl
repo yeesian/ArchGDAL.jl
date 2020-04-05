@@ -202,7 +202,7 @@ for gdalfunc in (
         :gdalbuildvrt, :gdaldem, :gdalgrid, :gdalnearblack, :gdalrasterize,
         :gdaltranslate, :gdalvectortranslate, :gdalwarp, :getband,
         :getcolortable, :getfeature, :getgeom, :getlayer, :getmaskband,
-        :getoverview, :getpart, :getspatialref, :intersection, :importEPSG,
+        :getoverview, :getpart, :getspatialref, :importCRS, :intersection, :importEPSG,
         :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
         :importURL, :lineargeom, :newspatialref, :nextfeature, :pointalongline,
         :pointonsurface, :polygonfromedges, :polygonize, :read, :sampleoverview,
