@@ -1,10 +1,13 @@
-function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int)
+struct GeoTable{T <: NamedTuple} <:AbstractVector{T}
+        parsed_shapefile::T
+end
+
+function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int) 
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
-    nfield = nfield(featuredefn)
+    nfield = ArchGDAL.nfield(featuredefn)
     featuredefn = layerdefn(layer)
     nfeat = nfeature(layer)
-
 
     d = Dict{String, Vector}()
 
@@ -37,30 +40,28 @@ function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int)
     
     #Using the tables interface
     RowTable = rowtable(NamedTuple{keys_tup}(vals_tup))
-    return reshape(RowTable, (1,length(RowTable)))
+    return GeoTable(reshape(RowTable, (1,length(RowTable))))
 end
 
-# Base.eltype(#type) where {T} = GeoTableRow{T}
-# Base.iterate(#type, st=1) = st > length(m) ? nothing : (#logic)
-# Base.length(#type) = length(geotable(#type))
-
-
-
-# Base.IteratorSize(::Type{<:#type}) = Base.HasLength()
-# Base.IteratorEltype(::Type{<:#type}) = Base.HasEltype()
-
-# function Base.iterate(t::Table, st = 1)
-#     st > length(t) && return nothing
-#     geom = @inbounds getshp(t).shapes[st]
-#     record = DBFTables.Row(getdbf(t), st)
-#     return Row(geom, record), st + 1
+# "Struct representing a singe record in a shapefile"
+# struct Row{T}
+#      ######
 # end
 
-# #Implementing the tables interface
+Tables.istable(::Type{<:GeoTable}) = true
+Tables.rowaccess(::Type{<:GeoTable}) = true
+Tables.rows(g::GeoTable) = g  
 
-# Tables.istable(::Type{<:geotable}) = true
-# Tables.rowaccess(::Type{<:geotable}) = true
-# Tables.rows(g::geotable) = g
+# Base.IteratorSize(::Type{<:GeoTable}) = Base.HasLength()
+# Base.length(fc::GeoTable) = length(geotable(g))
+# Base.IteratorEltype(::Type{<:GeoTable}) = Base.HasEltype()
+
+
+# "Iterate over the rows of a Shapefile.Table, yielding a Shapefile.Row for each row"
+# Base.iterate(g::GeoTable, st=1) = st > length(g) ? nothing : (Row(st, g), st + 1
+
+
+
 
 # Tables.schema(g::geotable) = Tables.Schema()
     
