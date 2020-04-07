@@ -9,6 +9,12 @@ struct RasterDataset{T,DS} <: AbstractDiskArray{T,3}
     ds::DS
     size::Tuple{Int,Int,Int}
 end
+#Forward a few functions
+for f in (:getgeotransform, :nraster, :getband, :getproj,
+  :width, :height, :destroy)
+
+  eval(:($(f)(x::RasterDataset) = $(f)(x.ds)))
+end
 function RasterDataset(ds::AbstractDataset)
     iszero(nraster(ds)) && throw(ArgumentError("The Dataset does not contain any raster bands"))
     s = _common_size(ds)
@@ -33,9 +39,7 @@ function _common_size(ds::AbstractDataset)
 end
 getband(ds::RasterDataset,i) = getband(ds.ds,i)
 unsafe_readraster(args...;kwargs...)  = RasterDataset(unsafe_read(args...;kwargs...))
-destroy(ds::RasterDataset) = destroy(ds.ds)
-height(ds::RasterDataset) = height(ds.ds)
-width(ds::RasterDataset) = width(ds.ds)
+readraster(s::String;kwargs...) = RasterDataset(read(s;kwargs...))
 function eachchunk(ds::RasterDataset)
   subchunks = eachchunk(getband(ds,1))
   GridChunks(ds,(subchunks.chunksize...,1))
@@ -55,14 +59,14 @@ function eachchunk(band::AbstractRasterBand)
   GridChunks(band,cs)
 end
 
-DiskArrays.readblock!(band::AbstractRasterBand, buffer, x, y) = begin
+DiskArrays.readblock!(band::AbstractRasterBand, buffer, x::AbstractUnitRange, y::AbstractUnitRange) = begin
     # Calculate `read!` args and read
     xoffset, yoffset = first(x)-1, first(y)-1
     xsize, ysize = length(x), length(y)
     read!(band, buffer, xoffset, yoffset, xsize, ysize)
 end
 
-DiskArrays.writeblock!(band::AbstractRasterBand, value, x, y) = begin
+DiskArrays.writeblock!(band::AbstractRasterBand, value, x::AbstractUnitRange, y::AbstractUnitRange) = begin
     # Calculate `read!` args and read
     xoffset, yoffset = first(x)-1, first(y)-1
     xsize, ysize = length(x), length(y)
