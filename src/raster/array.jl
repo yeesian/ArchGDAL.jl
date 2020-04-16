@@ -79,8 +79,14 @@ end
 Base.size(dataset::RasterDataset) = dataset.size
 # Base.firstindex(dataset::AbstractDataset, d) = 1
 # Base.lastindex(dataset::AbstractDataset, d) = size(dataset)[d]
+function DiskArrays.readblock!(dataset::RasterDataset, buffer::Array, x::AbstractUnitRange, y::AbstractUnitRange, z::AbstractUnitRange)
+  buffer2 = Array(buffer)
+  DiskArrays.readblock!(dataset::RasterDataset, buffer2, x, y, z)
+  buffer .= buffer2
+end
 
-DiskArrays.readblock!(dataset::RasterDataset, buffer, x, y, z) = begin
+
+DiskArrays.readblock!(dataset::RasterDataset, buffer::Array, x::AbstractUnitRange, y::AbstractUnitRange, z::AbstractUnitRange) = begin
     # Calculate `read!` args and read
     xoffset, yoffset = first.((x, y)) .- 1
     xsize, ysize= length.((x, y))
@@ -88,7 +94,7 @@ DiskArrays.readblock!(dataset::RasterDataset, buffer, x, y, z) = begin
     read!(dataset.ds, buffer, indices, xoffset, yoffset, xsize, ysize)
 end
 
-DiskArrays.writeblock!(dataset::RasterDataset, value, x, y, bands) = begin
+DiskArrays.writeblock!(dataset::RasterDataset, value, x::AbstractUnitRange, y::AbstractUnitRange, bands::AbstractUnitRange) = begin
     xoffset, yoffset = first.((x, y)) .- 1
     xsize, ysize= length.((x, y))
     indices  = [Cint(i) for i in bands]
