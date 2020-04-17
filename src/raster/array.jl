@@ -79,7 +79,7 @@ end
 Base.size(dataset::RasterDataset) = dataset.size
 # Base.firstindex(dataset::AbstractDataset, d) = 1
 # Base.lastindex(dataset::AbstractDataset, d) = size(dataset)[d]
-function DiskArrays.readblock!(dataset::RasterDataset, buffer::Array, x::AbstractUnitRange, y::AbstractUnitRange, z::AbstractUnitRange)
+function DiskArrays.readblock!(dataset::RasterDataset, buffer, x::AbstractUnitRange, y::AbstractUnitRange, z::AbstractUnitRange)
   buffer2 = Array(buffer)
   DiskArrays.readblock!(dataset::RasterDataset, buffer2, x, y, z)
   buffer .= buffer2
