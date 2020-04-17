@@ -1,68 +1,142 @@
-struct GeoTable{T <: NamedTuple} <:AbstractVector{T}
-        parsed_shapefile::T
+const AG = ArchGDAL
+# struct GeoTable
+#     rows::Array{NamedTuple{}, 1}
+# end
+
+# function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int) 
+#     featuredefn = layerdefn(layer)
+#     ngeometries = ngeom(featuredefn)
+#     nfield = ArchGDAL.nfield(featuredefn)
+#     featuredefn = layerdefn(layer)
+#     nfeat = nfeature(layer)
+
+#     d = Dict{String, Vector}()
+
+#     for field_no in 0:nfield-1
+#         field = getfielddefn(featuredefn, field_no)
+#         name = getname(field)
+#         typ = _FIELDTYPE[gettype(field)]
+#         d[name] = typ[]
+#     end
+    
+#     d["geometry"] = IGeometry[]
+    
+#     for fid in 0:nfeat-1
+#         getfeature(layer, fid) do feature
+#             for (k, v) in pairs(d)
+#                 if k == "geometry"
+#                     val = getgeom(feature, 0)
+#                 else
+#                     val = getfield(feature, k)
+#                 end
+#                 push!(v, val)
+#             end
+#         end
+#     end
+#     keys_tup = ()
+#     for _key in keys(d)
+#         keys_tup = (keys_tup..., Symbol(_key))
+#     end
+#     vals_tup = Tuple(values(d))
+    
+#     #Using the tables interface
+#     Rows = Tables.rowtable(NamedTuple{keys_tup}(vals_tup))
+#     return Rows
+# end
+
+struct GeoTable{T<:Union{IFeatureLayer, FeatureLayer}} 
+    layer::T
+    
 end
 
-function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int) 
+function GeoTable(layer)
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
-    nfield = ArchGDAL.nfield(featuredefn)
-    featuredefn = layerdefn(layer)
-    nfeat = nfeature(layer)
 
-    d = Dict{String, Vector}()
-
-    for field_no in 0:nfield-1
-        field = getfielddefn(featuredefn, field_no)
-        name = getname(field)
-        typ = _FIELDTYPE[gettype(field)]
-        d[name] = typ[]
+    if(ngeometries == 0 )
+        error("Layer in not a valid ArchGDAL layer")
     end
-    
-    d["geometry"] = IGeometry[]
-    
-    for fid in 0:nfeat-1
-        getfeature(layer, fid) do feature
-            for (k, v) in pairs(d)
-                if k == "geometry"
-                    val = getgeom(feature, 0)
-                else
-                    val = getfield(feature, k)
-                end
-                push!(v, val)
-            end
-        end
-    end
-    keys_tup = ()
-    for _key in keys(d)
-        keys_tup = (keys_tup..., Symbol(_key))
-    end
-    vals_tup = Tuple(values(d))
-    
-    #Using the tables interface
-    RowTable = rowtable(NamedTuple{keys_tup}(vals_tup))
-    return GeoTable(reshape(RowTable, (1,length(RowTable))))
+    GeoTable(layer)
 end
 
-# "Struct representing a singe record in a shapefile"
-# struct Row{T}
-#      ######
-# end
+
+function Base.show(io::IO, gt::GeoTable)
+    println(io, "GeoTable with $(ArchGDAL.nfeature(gt.layer)) Features")
+end
+
 
 Tables.istable(::Type{<:GeoTable}) = true
 Tables.rowaccess(::Type{<:GeoTable}) = true
-Tables.rows(g::GeoTable) = g  
+Tables.rows(gt::GeoTable) = gt
 
 # Base.IteratorSize(::Type{<:GeoTable}) = Base.HasLength()
-# Base.length(fc::GeoTable) = length(geotable(g))
+# Base.length(gt::GeoTable) = length(json(gt))
 # Base.IteratorEltype(::Type{<:GeoTable}) = Base.HasEltype()
 
+# # read only AbstractVector
+# Base.size(gt::GeoTable) = size(json(gt))
+# Base.getindex(gt::GeoTable, i) = Feature(json(gt)[i])
+# Base.IndexStyle(::Type{<:GeoTable}) = IndexLinear()
 
-# "Iterate over the rows of a Shapefile.Table, yielding a Shapefile.Row for each row"
-# Base.iterate(g::GeoTable, st=1) = st > length(g) ? nothing : (Row(st, g), st + 1
+# miss(x) = ifelse(x === nothing, missing, x)
+
+struct FeatureRow{T}
+    feature::T
+end
+
+# # these features always have type="Feature", so exclude that
+# # the keys in properties are added here for direct access
+
+function Tables.schema(layer::AG.AbstractFeatureLayer)
+    # TODO include names and types of geometry columns
+    featuredefn = AG.layerdefn(layer)
+    fielddefns = (AG.getfielddefn(featuredefn, i) for i in 0:AG.nfield-1)
+    names = Tuple(AG.getname(fielddefn) for fielddefn in fielddefns)
+    types = Tuple(AG._FIELDTYPE[AG.gettype(fielddefn)] for fielddefn in fielddefns)
+    Tables.Schema(names, types)
+end
 
 
+Base.propertynames(f::FeatureRow) = (Tables.schema(layer)).names
 
+# "Access the properties JSON3.Object of a Feature"
+# properties(f::Feature) = json(f).properties
+# "Access the JSON3.Object that represents the Feature"
+# json(f::Feature) = getfield(f, :js    on)
+# "Access the JSON3.Array that represents the FeatureCollection"
+# json(f::FeatureCollection) = getfield(f, :json)
+# "Access the JSON3.Object that represents the Feature's geometry"
+# geometry(f::Feature) = json(f).geometry
 
-# Tables.schema(g::geotable) = Tables.Schema()
-    
+# """
+# Get a specific property of the Feature
+# Returns missing for null/nothing or not present, to work nicely with
+# properties that are not defined for every feature. If it is a table,
+# it should in some sense be defined.
+# """
+# function Base.getproperty(f::Feature, nm::Symbol)
+#     props = properties(f)
+#     val = get(props, nm, missing)
+#     miss(val)
+# end
 
+# @inline function Base.iterate(fc::FeatureCollection)
+#     st = iterate(json(fc))
+#     st === nothing && return nothing
+#     val, state = st
+#     return Feature(val), state
+# end
+
+# @inline function Base.iterate(fc::FeatureCollection, st)
+#     st = iterate(json(fc), st)
+#     st === nothing && return nothing
+#     val, state = st
+#     return Feature(val), state
+# end
+
+# Base.show(io::IO, gt::GeoTable) = println(io, "Layer with $(length(gt)) Features")
+# function Base.show(io::IO, f::Feature)
+#     println(io, "Feature with geometry type $(geometry(f).type) and properties $(propertynames(f))")
+# end
+# Base.show(io::IO, ::MIME"text/plain", gt::GeoTable) = show(io, gt)
+# Base.show(io::IO, ::MIME"text/plain", f::Feature) = show(io, f)
