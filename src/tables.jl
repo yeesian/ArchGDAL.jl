@@ -106,15 +106,6 @@ end
 #     miss(val)
 # end
 
-# @inline function Base.iterate(gt::GeoTable)
-#     st = iterate(layer(gt))
-#     st === nothing && return nothing
-#     val, state = st
-#     return FeatureRow(val), state
-# end
-
-
-
 # function geotable(layer::Union{IFeatureLayer, FeatureLayer}, i::Int) 
 #     featuredefn = layerdefn(layer)
 #     ngeometries = ngeom(featuredefn)
