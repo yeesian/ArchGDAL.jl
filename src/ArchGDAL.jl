@@ -5,8 +5,6 @@ module ArchGDAL
     import GeoInterface: coordinates, geotype
     using Dates
    
-    const GFT = GeoFormatTypes
-
     include("utils.jl")
     include("types.jl")
     include("driver.jl")
