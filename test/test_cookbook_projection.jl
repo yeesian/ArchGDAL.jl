@@ -1,6 +1,8 @@
 using Test
-import GeoInterface
-import ArchGDAL; const AG = ArchGDAL
+import GeoInterface, GeoFormatTypes, ArchGDAL 
+const AG = ArchGDAL
+const GFT = GeoFormatTypes
+const GI = GeoFormatTypes
 
 @testset "Reproject a Geometry" begin
     @testset "Method 1" begin
@@ -24,6 +26,23 @@ import ArchGDAL; const AG = ArchGDAL
                 @test ys ≈ [-126.863475, -126.863475]
                 @test zs ≈ [0.0, 0.0]
         end end end
+    end
+
+    @testset "Use reproject" begin
+        @testset "reciprocal reprojection of wkt" begin
+            wktpoint = GFT.WellKnownText(GFT.Geom(), "POINT (1120351.57 741921.42)")
+            result = GFT.WellKnownText(GFT.Geom(), "POINT (47.3488013802885 -122.598135130878)")
+            @test AG.reproject(wktpoint, GFT.EPSG(2927), GFT.EPSG(4326)) == result
+            @test convert(AG.Geometry, AG.reproject(result, GFT.EPSG(4326), GFT.EPSG(2927))) |> 
+                GeoInterface.coordinates ≈ [1120351.57, 741921.42]
+        end
+        @testset "reproject vector, vector of vector, or tuple" begin
+            coord = [1120351.57, 741921.42]
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
+            @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [[47.348801, -122.598135]]
+            coord = (1120351.57, 741921.42)
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
+        end
     end
 end
 

@@ -1,5 +1,7 @@
 using Test
-import GeoInterface, GDAL, ArchGDAL; const AG = ArchGDAL
+import GeoInterface, GeoFormatTypes, GDAL, ArchGDAL;
+const AG = ArchGDAL
+const GFT = GeoFormatTypes
 
 @testset "Incomplete GeoInterface geometries" begin
     @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCircularString))
@@ -105,6 +107,7 @@ end
         @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
         AG.setpoint!(geom, 1, 10, 10)
         @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
+        @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)  
     end
     AG.createlinestring([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
         @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
