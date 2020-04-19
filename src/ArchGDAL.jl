@@ -1,10 +1,10 @@
 module ArchGDAL
-    
+
     import GDAL, GeoInterface
     using Tables: Tables
     import GeoInterface: coordinates, geotype
     using Dates
-   
+
     include("utils.jl")
     include("types.jl")
     include("driver.jl")
@@ -28,7 +28,6 @@ module ArchGDAL
     include("base/display.jl")
     include("tables.jl")
     include("geointerface.jl")
-    include("convert.jl")
 
     mutable struct DriverManager
         function DriverManager()
