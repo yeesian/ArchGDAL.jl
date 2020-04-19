@@ -233,12 +233,12 @@ avoid prior destruction of existing dataset.
 
 ### Example
 ```
-dataset = ArchGDAL.create(AG.getdriver("MEM"))
+dataset = ArchGDAL.create(filename; ...)
 # work with raster dataset from here
 ```
 or
 ```
-ArchGDAL.create(AG.getdriver("Memory")) do dataset
+ArchGDAL.create(filename; ...) do dataset
     # work with vector dataset from here
 end
 ```
