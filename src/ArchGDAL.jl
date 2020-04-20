@@ -30,7 +30,7 @@ module ArchGDAL
     include("context.jl")
     include("base/iterators.jl")
     include("base/display.jl")
-    include("datastreams.jl")
+    include("tables.jl")
     include("geointerface.jl")
     include("convert.jl")
 

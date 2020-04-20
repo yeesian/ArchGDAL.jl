@@ -6,14 +6,14 @@ desc = "A high level API for GDAL - Geospatial Data Abstraction Library"
 version = "0.3.2"
 
 [deps]
-DataStreams = "9a8bc11e-79be-5b39-94d7-1ccc349a1a85"
+Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 Dates = "ade2ca70-3891-5945-98fb-dc099432e06a"
 GDAL = "add2ef01-049f-52c4-9ee2-e494f65e021a"
 GeoFormatTypes = "68eda718-8dee-11e9-39e7-89f7f65f511f"
 GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
 
 [compat]
-DataStreams = "0.4.2"
+Tables = "1"
 GDAL = "1.0.2"
 GeoInterface = "0.4, 0.5"
 GeoFormatTypes = "0.3"
