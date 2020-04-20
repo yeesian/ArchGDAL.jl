@@ -1,7 +1,7 @@
 module ArchGDAL
 
     import GDAL, GeoInterface, GeoFormatTypes
-    import DataStreams: Data
+    import Tables: Tables
     import GeoInterface: coordinates, geotype
     import Base: convert
 
