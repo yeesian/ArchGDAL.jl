@@ -15,7 +15,7 @@ function GeoTable(layer)
 end
 
 struct FeatureRow
-    Row
+    Row::Array
     feature_number::Int
 end
 
@@ -35,8 +35,6 @@ function Tables.schema(layer::AG.AbstractFeatureLayer)
     geom_types = Tuple(ArchGDAL.gettype(geomdefn) for geomdefn in geomdefns)
     types = (types_fields..., geom_types...)
     
-    
-
     Tables.Schema(names, types)
 end
 
@@ -91,3 +89,15 @@ Tables.rows(gt::GeoTable) = gt
 function Base.show(io::IO, gt::GeoTable)
     println(io, "GeoTable with $(ArchGDAL.nfeature(gt.layer)) Features")
 end
+Base.show(io::IO, ::MIME"text/plain", gt::GeoTable) = show(io, gt)
+
+
+
+
+
+
+
+# function Base.show(io::IO, fr::FeatureRow)
+#     println(io, "Feature with properties $(propertynames(fr,gt))")
+# end
+# Base.show(io::IO, ::MIME"text/plain", fr::FeatureRow) = show(io, fr)
