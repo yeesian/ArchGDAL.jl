@@ -1,4 +1,3 @@
-import DiskArrays: eachchunk, GridChunks
 import DiskArrays
 const AllowedXY = Union{Integer,Colon,AbstractRange}
 const AllowedBand = Union{Integer,Colon,AbstractArray}
@@ -12,6 +11,15 @@ is a wrapper for a GDAL dataset. This wrapper is to signal the
 user that the dataset should be treated as a 3D AbstractArray
 where the first to dimensions correspond to latitude and longitude
 and the third dimension correpsonds to different raster bands.
+
+As it is a wrapper around a GDAL Dataset, it supports the usual
+raster methods for a GDAL Dataset such as `getgeotransform`,
+`nraster`, `getband`, `getproj`, `width`, and `height`. As it
+is also a subtype of `AbstractDiskArray{T,3}`, it supports the
+following additional methods: `readblock!`, `writeblock!`,
+`eachchunk`, `haschunks`, etc.
+This satisfies the DiskArray interface, allowing us to 
+be able to index into it like we would an array.
 
 Constructing a RasterDataset will error if the raster bands do not
 have all the same size and a common element data type.
@@ -73,9 +81,9 @@ so that users can operate on the array using direct indexing.
 """
 readraster(s::String;kwargs...) = RasterDataset(read(s;kwargs...))
 
-function eachchunk(ds::RasterDataset)
-  subchunks = eachchunk(getband(ds,1))
-  GridChunks(ds,(subchunks.chunksize...,1))
+function DiskArrays.eachchunk(ds::RasterDataset)
+  subchunks = DiskArrays.eachchunk(getband(ds,1))
+  DiskArrays.GridChunks(ds,(subchunks.chunksize...,1))
 end
 DiskArrays.haschunks(::RasterDataset) = DiskArrays.Chunked()
 DiskArrays.haschunks(::AbstractRasterBand) = DiskArrays.Chunked()
@@ -85,10 +93,10 @@ Base.size(band::AbstractRasterBand) = width(band), height(band)
 #Base.firstindex(band::AbstractRasterBand, d) = 1
 #Base.lastindex(band::AbstractRasterBand, d) = size(band)[d]
 
-function eachchunk(band::AbstractRasterBand)
+function DiskArrays.eachchunk(band::AbstractRasterBand)
   wI = windows(band)
   cs = wI.blockiter.xbsize,wI.blockiter.ybsize
-  GridChunks(band,cs)
+  DiskArrays.GridChunks(band,cs)
 end
 
 DiskArrays.readblock!(band::AbstractRasterBand, buffer, x::AbstractUnitRange, y::AbstractUnitRange) = begin
