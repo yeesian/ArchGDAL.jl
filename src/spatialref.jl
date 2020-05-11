@@ -4,9 +4,11 @@
 Import a coordinate reference system from a `GeoFormat` into GDAL,
 returning an [`AbstractSpatialRef`](@ref).
 """
-importCRS(x::GFT.GeoFormat) = importCRS!(newspatialref(), x)
+importCRS(x::GFT.GeoFormat; kwargs...) =
+    importCRS!(newspatialref(; kwargs...), x)
 
-unsafe_importCRS(x::GFT.GeoFormat) = importCRS!(unsafe_newspatialref(), x)
+unsafe_importCRS(x::GFT.GeoFormat; kwargs...) =
+    importCRS!(unsafe_newspatialref(; kwargs...), x)
 
 """
     importCRS!(spref::AbstractSpatialRef, x::GeoFormatTypes.GeoFormat)
@@ -15,18 +17,18 @@ Import a coordinate reference system from a `GeoFormat` into the spatial ref.
 """
 function importCRS! end
 
-importCRS!(spref::AbstractSpatialRef, x::GFT.EPSG) =
-    importEPSG!(spref, GFT.val(x))
-importCRS!(spref::AbstractSpatialRef, x::GFT.AbstractWellKnownText) =
-    importWKT!(spref, GFT.val(x))
-importCRS!(spref::AbstractSpatialRef, x::GFT.ESRIWellKnownText) =
-    importESRI!(spref, GFT.val(x))
-importCRS!(spref::AbstractSpatialRef, x::GFT.ProjString) =
-    importPROJ4!(spref, GFT.val(x))
-importCRS!(spref::AbstractSpatialRef, x::GFT.GML) =
-    importXML!(spref, GFT.val(x))
-importCRS!(spref::AbstractSpatialRef, x::GFT.KML) =
-    importCRS!(spref, GFT.EPSG(4326))
+importCRS!(spref::AbstractSpatialRef, x::GFT.EPSG; kwargs...) =
+    importEPSG!(spref, GFT.val(x); kwargs...)
+importCRS!(spref::AbstractSpatialRef, x::GFT.AbstractWellKnownText; kwargs...) =
+    importWKT!(spref, GFT.val(x); kwargs...)
+importCRS!(spref::AbstractSpatialRef, x::GFT.ESRIWellKnownText; kwargs...) =
+    importESRI!(spref, GFT.val(x); kwargs...)
+importCRS!(spref::AbstractSpatialRef, x::GFT.ProjString; kwargs...) =
+    importPROJ4!(spref, GFT.val(x); kwargs...)
+importCRS!(spref::AbstractSpatialRef, x::GFT.GML; kwargs...) =
+    importXML!(spref, GFT.val(x); kwargs...)
+importCRS!(spref::AbstractSpatialRef, x::GFT.KML; kwargs...) =
+    importCRS!(spref, GFT.EPSG(4326); kwargs...)
 
 """
     reproject(points, sourceproj::GeoFormat, destproj::GeoFormat)
@@ -46,33 +48,34 @@ julia> using ArchGDAL, GeoFormatTypes
 julia> ArchGDAL.reproject([[118, 34], [119, 35]], ProjString("+proj=longlat +datum=WGS84 +no_defs"), EPSG(2025))
 2-element Array{Array{Float64,1},1}:
  [-2.60813482878655e6, 1.5770429674905164e7]
- [-2.663928675953517e6, 1.56208905951487e7] 
+ [-2.663928675953517e6, 1.56208905951487e7]
 ```
 """
-reproject(coord, sourcecrs::GFT.GeoFormat, targetcrs::Nothing) = coord
+reproject(coord, sourcecrs::GFT.GeoFormat, targetcrs::Nothing; kwargs...) = coord
 
 # These should be better integrated with geometry packages or follow some standard
 const ReprojectCoord = Union{<:NTuple{2,<:Number},<:NTuple{3,<:Number},AbstractVector{<:Number}}
 
 # Vector/Tuple coordinate(s)
-reproject(coord::ReprojectCoord, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
-    GeoInterface.coordinates(reproject(createpoint(coord...), sourcecrs, targetcrs))
-reproject(coords::AbstractArray{<:ReprojectCoord}, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+reproject(coord::ReprojectCoord, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...) =
+    GeoInterface.coordinates(reproject(createpoint(coord...), sourcecrs, targetcrs; kwargs...))
+reproject(coords::AbstractArray{<:ReprojectCoord}, sourcecrs::GFT.GeoFormat, 
+          targetcrs::GFT.GeoFormat; kwargs...) =
     GeoInterface.coordinates.(reproject([createpoint(c...) for c in coords], sourcecrs, targetcrs))
 
 # GeoFormat
-reproject(geom::GFT.GeoFormat, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat) =
+reproject(geom::GFT.GeoFormat, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...) =
     convert(typeof(geom), reproject(convert(Geometry, geom), sourcecrs, targetcrs))
 
 # Geometries
-function reproject(geom::AbstractGeometry, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
-    crs2transform(sourcecrs, targetcrs) do transform
+function reproject(geom::AbstractGeometry, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...)
+    crs2transform(sourcecrs, targetcrs; kwargs...) do transform
         transform!(geom, transform)
     end
 end
 function reproject(geoms::AbstractArray{<:AbstractGeometry}, sourcecrs::GFT.GeoFormat,
-                   targetcrs::GFT.GeoFormat)
-    crs2transform(sourcecrs, targetcrs) do transform
+                   targetcrs::GFT.GeoFormat; kwargs...)
+    crs2transform(sourcecrs, targetcrs; kwargs...) do transform
         transform!.(geoms, Ref(transform))
     end
 end
@@ -80,13 +83,13 @@ end
 """
     crs2transform(f::Function, sourcecrs::GeoFormat, targetcrs::GeoFormat)
 
-Run the function `f` on a coord transform generated from the source and target 
-crs definitions. These can be any `GeoFormat` (from GeoFormatTypes) that holds 
+Run the function `f` on a coord transform generated from the source and target
+crs definitions. These can be any `GeoFormat` (from GeoFormatTypes) that holds
 a coordinate reference system.
 """
-function crs2transform(f::Function, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat)
-    importCRS(sourcecrs) do sourcecrs_ref
-        importCRS(targetcrs) do targetcrs_ref
+function crs2transform(f::Function, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...)
+    importCRS(sourcecrs; kwargs...) do sourcecrs_ref
+        importCRS(targetcrs; kwargs...) do targetcrs_ref
             createcoordtrans(sourcecrs_ref, targetcrs_ref) do transform
                 f(transform)
             end
@@ -98,12 +101,24 @@ end
     newspatialref(wkt::AbstractString = "")
 
 Construct a Spatial Reference System from its WKT.
-"""
-newspatialref(wkt::AbstractString = "") =
-    ISpatialRef(GDAL.osrnewspatialreference(wkt))
 
-unsafe_newspatialref(wkt::AbstractString = "") =
-    SpatialRef(GDAL.osrnewspatialreference(wkt))
+`order` keyword argument can be `:trad` for traditional lon/lat order (the default),
+or `:compliant` for the authority specified order. `:custom` is not yet supported.
+"""
+newspatialref(wkt::AbstractString = ""; order=:trad) =
+    maybesetaxisorder!(ISpatialRef(GDAL.osrnewspatialreference(wkt)), order)
+
+unsafe_newspatialref(wkt::AbstractString = ""; order=:trad) =
+    maybesetaxisorder!(SpatialRef(GDAL.osrnewspatialreference(wkt)), order)
+
+function maybesetaxisorder!(sr::AbstractSpatialRef, order)
+    if order == :trad
+        GDAL.osrsetaxismappingstrategy(sr.ptr, GDAL.OAMS_TRADITIONAL_GIS_ORDER)
+    elseif order != :compliant
+        throw(ArgumentError("order $order is not supported. Use :trad or :compliant"))
+    end
+    sr
+end
 
 function destroy(spref::AbstractSpatialRef)
     GDAL.osrdestroyspatialreference(spref.ptr)
@@ -167,9 +182,11 @@ end
 
 Construct a Spatial Reference System from its EPSG GCS or PCS code.
 """
-importEPSG(code::Integer) = importEPSG!(newspatialref(), code)
+importEPSG(code::Integer; kwargs...) =
+    importEPSG!(newspatialref(; kwargs...), code)
 
-unsafe_importEPSG(code::Integer) = importEPSG!(unsafe_newspatialref(), code)
+unsafe_importEPSG(code::Integer; kwargs...) =
+    importEPSG!(unsafe_newspatialref(; kwargs...), code)
 
 """
     importEPSGA!(spref::AbstractSpatialRef, code::Integer)
@@ -201,9 +218,11 @@ are also a few projected coordinate systems that use northing/easting order
 contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
 """
-importEPSGA(code::Integer) = importEPSGA!(newspatialref(), code)
+importEPSGA(code::Integer; kwargs...) =
+    importEPSGA!(newspatialref(; kwargs...), code)
 
-unsafe_importEPSGA(code::Integer) = importEPSGA!(unsafe_newspatialref(), code)
+unsafe_importEPSGA(code::Integer; kwargs...) =
+    importEPSGA!(unsafe_newspatialref(; kwargs...), code)
 
 """
     importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
@@ -226,9 +245,11 @@ end
 
 Create SRS from its WKT string.
 """
-importWKT(wktstr::AbstractString) = newspatialref(wktstr)
+importWKT(wktstr::AbstractString; kwargs...) =
+    newspatialref(wktstr; kwargs...)
 
-unsafe_importWKT(wktstr::AbstractString) = unsafe_newspatialref(wktstr)
+unsafe_importWKT(wktstr::AbstractString; kwargs...) = 
+    unsafe_newspatialref(wktstr; kwargs...)
 
 """
     importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
@@ -263,11 +284,11 @@ end
 
 Create SRS from its PROJ.4 string.
 """
-importPROJ4(projstr::AbstractString) =
-    importPROJ4!(newspatialref(), projstr)
+importPROJ4(projstr::AbstractString; kwargs...) =
+    importPROJ4!(newspatialref(; kwargs...), projstr)
 
-unsafe_importPROJ4(projstr::AbstractString) =
-    importPROJ4!(unsafe_newspatialref(), projstr)
+unsafe_importPROJ4(projstr::AbstractString; kwargs...) =
+    importPROJ4!(unsafe_newspatialref(; kwargs...), projstr)
 
 """
     importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
@@ -302,11 +323,11 @@ end
 
 Create SRS from its ESRI .prj format(s).
 """
-importESRI(esristr::AbstractString) =
-    importESRI!(newspatialref(), esristr)
+importESRI(esristr::AbstractString; kwargs...) =
+    importESRI!(newspatialref(; kwargs...), esristr)
 
-unsafe_importESRI(esristr::AbstractString) =
-    importESRI!(unsafe_newspatialref(), esristr)
+unsafe_importESRI(esristr::AbstractString; kwargs...) =
+    importESRI!(unsafe_newspatialref(; kwargs...), esristr)
 
 """
     importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
@@ -324,11 +345,11 @@ end
 
 Construct SRS from XML format (GML only currently).
 """
-importXML(xmlstr::AbstractString) =
-    importXML!(newspatialref(), xmlstr)
+importXML(xmlstr::AbstractString; kwargs...) =
+    importXML!(newspatialref(; kwargs...), xmlstr)
 
-unsafe_importXML(xmlstr::AbstractString) =
-    importXML!(unsafe_newspatialref(), xmlstr)
+unsafe_importXML(xmlstr::AbstractString; kwargs...) =
+    importXML!(unsafe_newspatialref(; kwargs...), xmlstr)
 
 """
     importURL!(spref::AbstractSpatialRef, url::AbstractString)
@@ -352,9 +373,11 @@ Construct SRS from a URL.
 This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
 """
-importURL(url::AbstractString) = importURL!(newspatialref(), url)
+importURL(url::AbstractString; kwargs...) = 
+    importURL!(newspatialref(; kwargs...), url)
 
-unsafe_importURL(url::AbstractString) = importURL!(unsafe_newspatialref(), url)
+unsafe_importURL(url::AbstractString; kwargs...) = 
+    importURL!(unsafe_newspatialref(; kwargs...), url)
 
 """
     toWKT(spref::AbstractSpatialRef)
