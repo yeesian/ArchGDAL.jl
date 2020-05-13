@@ -105,10 +105,10 @@ Construct a Spatial Reference System from its WKT.
 `order` keyword argument can be `:trad` for traditional lon/lat order (the default),
 or `:compliant` for the authority specified order. `:custom` is not yet supported.
 """
-newspatialref(wkt::AbstractString = ""; order=:trad) =
+newspatialref(wkt::AbstractString = ""; order=:compliant) =
     maybesetaxisorder!(ISpatialRef(GDAL.osrnewspatialreference(wkt)), order)
 
-unsafe_newspatialref(wkt::AbstractString = ""; order=:trad) =
+unsafe_newspatialref(wkt::AbstractString = ""; order=:compliant) =
     maybesetaxisorder!(SpatialRef(GDAL.osrnewspatialreference(wkt)), order)
 
 function maybesetaxisorder!(sr::AbstractSpatialRef, order)
