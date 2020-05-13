@@ -3,6 +3,10 @@
 
 Import a coordinate reference system from a `GeoFormat` into GDAL,
 returning an [`AbstractSpatialRef`](@ref).
+
+The `order` keyword argument can be passed in. `:trad` will use traditional
+lon/lat axis ordering in any actions done with the crs. `:compliant`, the default
+will use axis ordering compliant with the relevent CRS authority.
 """
 importCRS(x::GFT.GeoFormat; kwargs...) =
     importCRS!(newspatialref(; kwargs...), x)
@@ -36,9 +40,15 @@ importCRS!(spref::AbstractSpatialRef, x::GFT.KML; kwargs...) =
 Reproject points to a different coordinate reference system and/or format.
 
 ## Arguments
--`coord`: Vector of Geometry points
--`sourcecrs`: The current coordinate reference system, as a `GeoFormat`
--`targetcrs`: The coordinate reference system to transform to, using any CRS capable `GeoFormat`
+- `coord`: Vector of Geometry points
+- `sourcecrs`: The current coordinate reference system, as a `GeoFormat`
+- `targetcrs`: The coordinate reference system to transform to, using any CRS capable `GeoFormat`
+
+
+## Keyword Argument
+- `order`: `:trad` will use traditional lon/lat axis ordering in any actions done 
+  with the crs. `:compliant`, the default will use axis ordering compliant with 
+  the relevent CRS authority.
 
 ## Example
 
@@ -81,7 +91,7 @@ function reproject(geoms::AbstractArray{<:AbstractGeometry}, sourcecrs::GFT.GeoF
 end
 
 """
-    crs2transform(f::Function, sourcecrs::GeoFormat, targetcrs::GeoFormat)
+    crs2transform(f::Function, sourcecrs::GeoFormat, targetcrs::GeoFormat; kwargs...)
 
 Run the function `f` on a coord transform generated from the source and target
 crs definitions. These can be any `GeoFormat` (from GeoFormatTypes) that holds
@@ -102,8 +112,8 @@ end
 
 Construct a Spatial Reference System from its WKT.
 
-`order` keyword argument can be `:trad` for traditional lon/lat order (the default),
-or `:compliant` for the authority specified order. `:custom` is not yet supported.
+`order` keyword argument can be `:trad` for traditional lon/lat order, or `:compliant` 
+(the default) for the authority-specified order. `:custom` is not yet supported.
 """
 newspatialref(wkt::AbstractString = ""; order=:compliant) =
     maybesetaxisorder!(ISpatialRef(GDAL.osrnewspatialreference(wkt)), order)
