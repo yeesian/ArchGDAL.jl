@@ -218,7 +218,7 @@ end
 
 @testset "Homework 3" begin
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw3a.py
-    AG.read("ospy/data3/sites.shp") do sitesDS
+    AG.read("ospy/data1/sites.shp") do sitesDS
         AG.read("ospy/data3/cache_towns.shp") do townsDS
             siteslayer = AG.getlayer(sitesDS, 0)
             townslayer = AG.getlayer(townsDS, 0)
@@ -240,7 +240,7 @@ end
 AG.read("ospy/data4/aster.img") do ds
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw4a.py
     @testset "Homework 4a" begin
-        AG.read("ospy/data4/sites.shp") do shp
+        AG.read("ospy/data1/sites.shp") do shp
             shplayer = AG.getlayer(shp, 0)
             id = AG.findfieldindex(AG.layerdefn(shplayer), "ID")
 
