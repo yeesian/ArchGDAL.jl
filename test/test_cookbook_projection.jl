@@ -2,7 +2,6 @@ using Test
 import GeoInterface, GeoFormatTypes, ArchGDAL 
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
-const GI = GeoFormatTypes
 
 @testset "Reproject a Geometry" begin
     @testset "Method 1" begin
@@ -66,13 +65,13 @@ end
             @test AG.toPROJ4(AG.getspatialref(AG.getgeom(feature))) == "+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs"
         end
     end
+
     AG.importEPSG(26912) do spatialref
         if VERSION >= v"1.3"  # GDAL.jl v1.1 which uses PROJ 6.3
             proj4str = "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs"
         else  # GDAL.jl v1.0 which uses PROJ 6.1
             proj4str = "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
         end
-
         @test AG.toPROJ4(spatialref) == proj4str
         @test AG.toWKT(spatialref)[1:6] == "PROJCS"
         AG.morphtoESRI!(spatialref)

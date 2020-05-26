@@ -1,12 +1,13 @@
 """
-    importCRS(x::GeoFormatTypes.GeoFormat)
+    importCRS(x::GeoFormatTypes.GeoFormat; [order=:compliant])
 
 Import a coordinate reference system from a `GeoFormat` into GDAL,
 returning an [`AbstractSpatialRef`](@ref).
 
-The `order` keyword argument can be passed in. `:trad` will use traditional
-lon/lat axis ordering in any actions done with the crs. `:compliant`, the default
-will use axis ordering compliant with the relevent CRS authority.
+## Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, the default will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importCRS(x::GFT.GeoFormat; kwargs...) =
     importCRS!(newspatialref(; kwargs...), x)
@@ -21,21 +22,21 @@ Import a coordinate reference system from a `GeoFormat` into the spatial ref.
 """
 function importCRS! end
 
-importCRS!(spref::AbstractSpatialRef, x::GFT.EPSG; kwargs...) =
-    importEPSG!(spref, GFT.val(x); kwargs...)
-importCRS!(spref::AbstractSpatialRef, x::GFT.AbstractWellKnownText; kwargs...) =
-    importWKT!(spref, GFT.val(x); kwargs...)
-importCRS!(spref::AbstractSpatialRef, x::GFT.ESRIWellKnownText; kwargs...) =
-    importESRI!(spref, GFT.val(x); kwargs...)
-importCRS!(spref::AbstractSpatialRef, x::GFT.ProjString; kwargs...) =
-    importPROJ4!(spref, GFT.val(x); kwargs...)
-importCRS!(spref::AbstractSpatialRef, x::GFT.GML; kwargs...) =
-    importXML!(spref, GFT.val(x); kwargs...)
-importCRS!(spref::AbstractSpatialRef, x::GFT.KML; kwargs...) =
-    importCRS!(spref, GFT.EPSG(4326); kwargs...)
+importCRS!(spref::AbstractSpatialRef, x::GFT.EPSG) =
+    importEPSG!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.AbstractWellKnownText) =
+    importWKT!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.ESRIWellKnownText) =
+    importESRI!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.ProjString) =
+    importPROJ4!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.GML) =
+    importXML!(spref, GFT.val(x))
+importCRS!(spref::AbstractSpatialRef, x::GFT.KML) =
+    importCRS!(spref, GFT.EPSG(4326))
 
 """
-    reproject(points, sourceproj::GeoFormat, destproj::GeoFormat)
+    reproject(points, sourceproj::GeoFormat, destproj::GeoFormat; [order=:compliant])
 
 Reproject points to a different coordinate reference system and/or format.
 
@@ -44,14 +45,12 @@ Reproject points to a different coordinate reference system and/or format.
 - `sourcecrs`: The current coordinate reference system, as a `GeoFormat`
 - `targetcrs`: The coordinate reference system to transform to, using any CRS capable `GeoFormat`
 
-
-## Keyword Argument
-- `order`: `:trad` will use traditional lon/lat axis ordering in any actions done 
-  with the crs. `:compliant`, the default will use axis ordering compliant with 
-  the relevent CRS authority.
+## Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, the default will use axis 
+  ordering compliant with the relevant CRS authority.
 
 ## Example
-
 ```julia-repl
 julia> using ArchGDAL, GeoFormatTypes
 
@@ -96,6 +95,8 @@ end
 Run the function `f` on a coord transform generated from the source and target
 crs definitions. These can be any `GeoFormat` (from GeoFormatTypes) that holds
 a coordinate reference system.
+
+`kwargs` are passed through to `importCRS`.
 """
 function crs2transform(f::Function, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...)
     importCRS(sourcecrs; kwargs...) do sourcecrs_ref
@@ -108,12 +109,14 @@ function crs2transform(f::Function, sourcecrs::GFT.GeoFormat, targetcrs::GFT.Geo
 end
 
 """
-    newspatialref(wkt::AbstractString = "")
+    newspatialref(wkt::AbstractString = ""; order=:compliant)
 
 Construct a Spatial Reference System from its WKT.
 
-`order` keyword argument can be `:trad` for traditional lon/lat order, or `:compliant` 
-(the default) for the authority-specified order. `:custom` is not yet supported.
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 newspatialref(wkt::AbstractString = ""; order=:compliant) =
     maybesetaxisorder!(ISpatialRef(GDAL.osrnewspatialreference(wkt)), order)
@@ -188,9 +191,14 @@ function importEPSG!(spref::AbstractSpatialRef, code::Integer)
 end
 
 """
-    importEPSG(code::Integer)
+    importEPSG(code::Integer; [order=:compliant])
 
 Construct a Spatial Reference System from its EPSG GCS or PCS code.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importEPSG(code::Integer; kwargs...) =
     importEPSG!(newspatialref(; kwargs...), code)
@@ -217,7 +225,7 @@ function importEPSGA!(spref::AbstractSpatialRef, code::Integer)
 end
 
 """
-    importEPSGA(code::Integer)
+    importEPSGA(code::Integer; [order=:compliant])
 
 Construct a Spatial Reference System from its EPSG CRS code.
 
@@ -227,6 +235,11 @@ normally defines geographic coordinate systems to use lat/long, and also there
 are also a few projected coordinate systems that use northing/easting order
 contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importEPSGA(code::Integer; kwargs...) =
     importEPSGA!(newspatialref(; kwargs...), code)
@@ -251,9 +264,14 @@ function importWKT!(spref::AbstractSpatialRef, wktstr::AbstractString)
 end
 
 """
-    importWKT(wktstr::AbstractString)
+    importWKT(wktstr::AbstractString; [order=:compliant])
 
 Create SRS from its WKT string.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importWKT(wktstr::AbstractString; kwargs...) =
     newspatialref(wktstr; kwargs...)
@@ -290,9 +308,14 @@ function importPROJ4!(spref::AbstractSpatialRef, projstr::AbstractString)
 end
 
 """
-    importPROJ4(projstr::AbstractString)
+    importPROJ4(projstr::AbstractString; [order=:compliant])
 
 Create SRS from its PROJ.4 string.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importPROJ4(projstr::AbstractString; kwargs...) =
     importPROJ4!(newspatialref(; kwargs...), projstr)
@@ -329,9 +352,12 @@ function importESRI!(spref::AbstractSpatialRef, esristr::AbstractString)
 end
 
 """
-    importESRI(esristr::AbstractString)
+    importESRI(esristr::AbstractString; kwargs...)
 
 Create SRS from its ESRI .prj format(s).
+
+Passing the keyword argument `order=:compliant` or `order=:trad` will set the 
+mapping strategy to return compliant axis order or traditional lon/lat order.
 """
 importESRI(esristr::AbstractString; kwargs...) =
     importESRI!(newspatialref(; kwargs...), esristr)
@@ -351,9 +377,17 @@ function importXML!(spref::AbstractSpatialRef, xmlstr::AbstractString)
 end
 
 """
-    importXML(xmlstr::AbstractString)
+    importXML(xmlstr::AbstractString; [order=:compliant])
 
 Construct SRS from XML format (GML only currently).
+
+Passing the keyword argument `order=:compliant` or `order=:trad` will set the 
+mapping strategy to return compliant axis order or traditional lon/lat order.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importXML(xmlstr::AbstractString; kwargs...) =
     importXML!(newspatialref(; kwargs...), xmlstr)
@@ -376,12 +410,17 @@ function importURL!(spref::AbstractSpatialRef, url::AbstractString)
 end
 
 """
-    importURL(url::AbstractString)
+    importURL(url::AbstractString; [order=:compliant])
 
 Construct SRS from a URL.
 
 This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 
+  ordering in any actions done with the crs. `:compliant`, will use axis 
+  ordering compliant with the relevant CRS authority.
 """
 importURL(url::AbstractString; kwargs...) = 
     importURL!(newspatialref(; kwargs...), url)

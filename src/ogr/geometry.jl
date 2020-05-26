@@ -8,7 +8,7 @@ binary (WKB) representation.
 ### Parameters
 * `data`: pointer to the input BLOB data.
 """
-function fromWKB(data; kwargs...)
+function fromWKB(data)
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
@@ -20,7 +20,7 @@ function fromWKB(data; kwargs...)
     return IGeometry(geom[])
 end
 
-function unsafe_fromWKB(data; kwargs...)
+function unsafe_fromWKB(data)
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
@@ -43,7 +43,7 @@ Create a geometry object of the appropriate type from its well known text
     geometry to be created. The pointer is updated to point just beyond that
     last character consumed.
 """
-function fromWKT(data::Vector{String}; kwargs...)
+function fromWKT(data::Vector{String})
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
@@ -54,7 +54,7 @@ function fromWKT(data::Vector{String}; kwargs...)
     return IGeometry(geom[])
 end
 
-function unsafe_fromWKT(data::Vector{String}; kwargs...)
+function unsafe_fromWKT(data::Vector{String})
     geom = Ref{GDALGeometry}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
@@ -65,11 +65,9 @@ function unsafe_fromWKT(data::Vector{String}; kwargs...)
     return Geometry(geom[])
 end
 
-fromWKT(data::String, args...; kwargs...) = 
-    fromWKT([data], args...; kwargs...)
+fromWKT(data::String, args...) = fromWKT([data], args...)
 
-unsafe_fromWKT(data::String, args...; kwargs...) = 
-    unsafe_fromWKT([data], args...; kwargs...)
+unsafe_fromWKT(data::String, args...) = unsafe_fromWKT([data], args...)
 
 """
 Destroy geometry object.
@@ -260,7 +258,7 @@ wkbsize(geom::AbstractGeometry) = GDAL.ogr_g_wkbsize(geom.ptr)
 
 Convert a geometry into well known text format.
 """
-function toWKT(geom::AbstractGeometry; kwargs...)
+function toWKT(geom::AbstractGeometry)
     wkt_ptr = Ref(Cstring(C_NULL))
     result = GDAL.ogr_g_exporttowkt(geom.ptr, wkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to WKT"
@@ -274,7 +272,7 @@ end
 
 Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known text format.
 """
-function toISOWKT(geom::AbstractGeometry; kwargs...)
+function toISOWKT(geom::AbstractGeometry)
     isowkt_ptr = Ref(Cstring(C_NULL))
     result = GDAL.ogr_g_exporttoisowkt(geom.ptr, isowkt_ptr)
     @ogrerr result "OGRErr $result: failed to export geometry to ISOWKT"
