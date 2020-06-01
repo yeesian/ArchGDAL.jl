@@ -40,13 +40,19 @@ const GFT = GeoFormatTypes
             @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
             @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [[47.348801, -122.598135]]
             coord = (1120351.57, 741921.42)
-            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:compliant) ≈ [47.348801, -122.598135]
-            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:trad) ≈ [-122.598135, 47.348801]
-            @test AG.reproject(coord, GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:compliant) ≈ [47.348801, -122.598135]
-            @test AG.reproject(coord, GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:trad) ≈ [-122.598135, 47.348801]
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:compliant) ≈ 
+                [47.348801, -122.598135]
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:trad) ≈ 
+                [-122.598135, 47.348801]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:compliant) ≈ 
+                [[47.348801, -122.598135]]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:trad) ≈ 
+                [[-122.598135, 47.348801]]
             # :compliant doesn't work on PROJ axis order, it loses authority information
-            @test AG.reproject(coord, GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:compliant) ≈ [-122.598135, 47.348801]
-            @test AG.reproject(coord, GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:trad) ≈ [-122.598135, 47.348801]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:compliant) ≈ 
+                [[-122.598135, 47.348801]]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:trad) ≈ 
+                [[-122.598135, 47.348801]]
         end
     end
 

@@ -70,11 +70,11 @@ reproject(coord::ReprojectCoord, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFor
     GeoInterface.coordinates(reproject(createpoint(coord...), sourcecrs, targetcrs; kwargs...))
 reproject(coords::AbstractArray{<:ReprojectCoord}, sourcecrs::GFT.GeoFormat, 
           targetcrs::GFT.GeoFormat; kwargs...) =
-    GeoInterface.coordinates.(reproject([createpoint(c...) for c in coords], sourcecrs, targetcrs))
+    GeoInterface.coordinates.(reproject([createpoint(c...) for c in coords], sourcecrs, targetcrs; kwargs...))
 
 # GeoFormat
 reproject(geom::GFT.GeoFormat, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...) =
-    convert(typeof(geom), reproject(convert(Geometry, geom), sourcecrs, targetcrs))
+    convert(typeof(geom), reproject(convert(Geometry, geom), sourcecrs, targetcrs; kwargs...))
 
 # Geometries
 function reproject(geom::AbstractGeometry, sourcecrs::GFT.GeoFormat, targetcrs::GFT.GeoFormat; kwargs...)
