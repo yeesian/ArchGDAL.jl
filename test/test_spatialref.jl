@@ -1,6 +1,7 @@
 using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
+import GeoFormatTypes; const GFT = GeoFormatTypes
 
 @testset "Test Formats for Spatial Reference Systems" begin
     proj4326 = "+proj=longlat +datum=WGS84 +no_defs"

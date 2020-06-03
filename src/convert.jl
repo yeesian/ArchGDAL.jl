@@ -6,6 +6,9 @@
 Convert a GeoFromat object to Geometry, then to the target format.
 The Geom trait is needed to separate out convert for CRS for WellKnownText
 and GML, which may contain both.
+
+Both `Geom` and `Mixed` formats are converted to Geometries by default. 
+To convert a `Mixed` format to crs, `CRS` must be explicitly passed for `mode`.
 """
 Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.FormatMode,Type{GFT.FormatMode}}, 
              source::GFT.GeoFormat) =
