@@ -1,7 +1,7 @@
 
 """
-    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands::Vector{<:Integer}; <keyword arguments>)
-    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands::Vector{<:Integer}, rows, cols; <keyword arguments>)
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands; <keyword arguments>)
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands, rows, cols; <keyword arguments>)
     rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}; <keyword arguments>)
     rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}, rows, cols; <keyword arguments>)
 
@@ -64,7 +64,7 @@ function rasterio! end
 function rasterio!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        bands::Vector{<:Integer},
+        bands,
         access::GDALRWFlag  = GDAL.GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
@@ -78,7 +78,7 @@ end
 function rasterio!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        bands::Vector{<:Integer},
+        bands,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer},
         access::GDALRWFlag  = GDAL.GF_Read,
@@ -206,7 +206,7 @@ end
 function read!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        indices::Vector{<:Integer}
+        indices
     )
     rasterio!(dataset, buffer, indices, GDAL.GF_Read)
     return buffer
@@ -235,7 +235,7 @@ end
 function read!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        indices::Vector{<:Integer},
+        indices,
         xoffset::Integer,
         yoffset::Integer,
         xsize::Integer,
@@ -259,7 +259,7 @@ end
 function read!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        indices::Vector{<:Integer},
+        indices,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
@@ -271,7 +271,7 @@ read(dataset::AbstractDataset, i::Integer) = read(getband(dataset, i))
 
 function read(
         dataset::AbstractDataset,
-        indices::Vector{<:Integer}
+        indices
     )
     buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
         width(dataset), height(dataset), length(indices))
@@ -300,7 +300,7 @@ end
 
 function read(
         dataset::AbstractDataset,
-        indices::Vector{<:Integer},
+        indices,
         xoffset::Integer,
         yoffset::Integer,
         xsize::Integer,
@@ -324,7 +324,7 @@ end
 
 function read(
         dataset::AbstractDataset,
-        indices::Vector{<:Integer},
+        indices,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
@@ -342,7 +342,7 @@ end
 function write!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        indices::Vector{<:Integer}
+        indices
     )
     rasterio!(dataset, buffer, indices, GDAL.GF_Write)
     return dataset
@@ -364,7 +364,7 @@ end
 function write!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        indices::Vector{<:Integer},
+        indices,
         xoffset::Integer,
         yoffset::Integer,
         xsize::Integer,
@@ -389,7 +389,7 @@ end
 function write!(
         dataset::AbstractDataset,
         buffer::Array{<:Real, 3},
-        indices::Vector{<:Integer},
+        indices,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )
@@ -402,7 +402,7 @@ for (T,GT) in _GDALTYPE
         function rasterio!(
                 dataset::AbstractDataset,
                 buffer::Array{$T, 3},
-                bands::Vector{<:Integer},
+                bands,
                 xoffset::Integer,
                 yoffset::Integer,
                 xsize::Integer,
@@ -422,7 +422,7 @@ for (T,GT) in _GDALTYPE
             (dataset == C_NULL) && error("Can't read invalid rasterband")
             xbsize, ybsize, zbsize = size(buffer)
             nband = length(bands)
-            bands = Cint.(bands)
+            bands = Cint.(collect(bands))
             @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),
                            GDAL.CPLErr,  # return type
