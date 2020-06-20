@@ -422,7 +422,7 @@ for (T,GT) in _GDALTYPE
             (dataset == C_NULL) && error("Can't read invalid rasterband")
             xbsize, ybsize, zbsize = size(buffer)
             nband = length(bands)
-            bands = Cint.(collect(bands))
+            bands = isa(bands, Vector{Cint}) ? bands : Cint.(collect(bands))
             @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),
                            GDAL.CPLErr,  # return type
