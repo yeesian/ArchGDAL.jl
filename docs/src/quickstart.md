@@ -129,4 +129,17 @@ ag.indexof(band)
 ```
 The no-data value of the band can be obtained using the `getnodatavalue(...)` function, which in our case is -1.0e10. 
 
-## Creating Data
+## Writing into Dataset
+Creating dummy data to be written as raster dataset.
+```Julia
+using Plots
+x = range(-4.0, 4.0, length=240)
+y = range(-3.0, 3.0, length=180)
+X = repeat(collect(x)', size(y)[1])
+Y = repeat(collect(y), 1, size(x)[1])
+Z1 = exp.(-2*log(2) .*((X.-0.5).^2 + (Y.-0.5).^2)./(1^2))
+Z2 = exp.(-3*log(2) .*((X.+0.5).^2 + (Y.+0.5).^2)./(2.5^2))
+Z = 10.0 .* (Z2 .- Z1)
+```
+The fictional field for this example consists of the difference of two Gaussian distributions and is represented by the array `Z`. Its contours are shown below.
+![creating-dataset](https://user-images.githubusercontent.com/7526346/87633084-5bd5a900-c758-11ea-8fd3-548d039f1a43.png)
