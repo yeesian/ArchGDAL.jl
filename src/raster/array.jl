@@ -4,13 +4,13 @@ const AllowedBand = Union{Integer,Colon,AbstractArray}
 
 
 """
-    struct RasterDataset{T} <: AbstractDiskArray{T,3}
+struct RasterDataset{T} <: AbstractDiskArray{T,3}
 
 This data structure is returned by the `readraster` function and
 is a wrapper for a GDAL dataset. This wrapper is to signal the
 user that the dataset should be treated as a 3D AbstractArray
-where the first to dimensions correspond to latitude and longitude
-and the third dimension correpsonds to different raster bands.
+where the first two dimensions correspond to latitude and longitude
+and the third dimension corresponds to different raster bands.
 
 As it is a wrapper around a GDAL Dataset, it supports the usual
 raster methods for a GDAL Dataset such as `getgeotransform`,
@@ -18,7 +18,7 @@ raster methods for a GDAL Dataset such as `getgeotransform`,
 is also a subtype of `AbstractDiskArray{T,3}`, it supports the
 following additional methods: `readblock!`, `writeblock!`,
 `eachchunk`, `haschunks`, etc.
-This satisfies the DiskArray interface, allowing us to 
+This satisfies the DiskArray interface, allowing us to
 be able to index into it like we would an array.
 
 Constructing a RasterDataset will error if the raster bands do not
@@ -32,10 +32,16 @@ end
 #Here we try to include all functions that are relevant
 #for raster-like datasets.
 for f in (:getgeotransform, :nraster, :getband, :getproj,
-  :width, :height, :destroy)
-
-  eval(:($(f)(x::RasterDataset) = $(f)(x.ds)))
+    :width, :height, :destroy, :getdriver, :filelist, :listcapability, 
+    :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews)
+    eval(:($(f)(x::RasterDataset, args...; kwargs...) = $(f)(x.ds, args...;kwargs...)))
 end
+#Here we need to special-case, because source and dest might be rasters
+copywholeraster(x::RasterDataset,y::AbstractDataset;kwargs...) = copywholeraster(x.ds,y;kwargs...)
+copywholeraster(x::RasterDataset,y::RasterDataset;kwargs...) = copywholeraster(x.ds,y.ds;kwargs...)
+copywholeraster(x::AbstractDataset,y::RasterDataset;kwargs...) = copywholeraster(x.ds,y.ds;kwargs...)
+
+
 function RasterDataset(ds::AbstractDataset)
     iszero(nraster(ds)) && throw(ArgumentError("The Dataset does not contain any raster bands"))
     s = _common_size(ds)
@@ -48,11 +54,11 @@ Tries to determine a common dataset type for all the bands
 in a raster dataset.
 """
 function _dataset_type(ds::AbstractDataset)
-  alldatatypes = map(1:nraster(ds)) do i
-    b = getband(ds,i)
-    pixeltype(b)
-  end
-  reduce(promote_type,alldatatypes)
+    alldatatypes = map(1:nraster(ds)) do i
+        b = getband(ds,i)
+        pixeltype(b)
+    end
+    reduce(promote_type,alldatatypes)
 end
 """
     _common_size(ds::AbstractDataset)
@@ -61,14 +67,14 @@ Determines the size of the raster bands in a dataset and errors
 if the sizes are not unique.
 """
 function _common_size(ds::AbstractDataset)
-  nr = nraster(ds)
-  allsizes = map(1:nr) do i
-    b = getband(ds,i)
-    size(b)
-  end
-  s = unique(allsizes)
-  length(s) == 1 || throw(DimensionMismatch("Can not coerce bands to single dataset, different sizes found"))
-  Int64.((s[1]...,nr))
+    nr = nraster(ds)
+    allsizes = map(1:nr) do i
+        b = getband(ds,i)
+        size(b)
+    end
+    s = unique(allsizes)
+    length(s) == 1 || throw(DimensionMismatch("Can not coerce bands to single dataset, different sizes found"))
+    Int.((s[1]...,nr))
 end
 getband(ds::RasterDataset,i) = getband(ds.ds,i)
 unsafe_readraster(args...;kwargs...)  = RasterDataset(unsafe_read(args...;kwargs...))
