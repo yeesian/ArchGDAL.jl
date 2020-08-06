@@ -1,24 +1,43 @@
 using Test
 import GDAL
+using DiskArrays: eachchunk, haschunks, Chunked, GridChunks, readblock!
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "RasterDataset Type" begin
     AG.readraster("ospy/data4/aster.img") do ds
-        @test ds isa AG.RasterDataset{UInt8}
-        @test AG.getgeotransform(ds) == [419976.5, 15.0, 0.0, 4.6624225e6, 0.0, -15.0]
-        @test AG.nraster(ds) == 3
-        @test AG.getband(ds,1) isa AG.AbstractRasterBand
-        @test startswith(AG.getproj(ds),"PROJCS")
-        @test AG.width(ds)==5665
-        @test AG.height(ds)==5033
-        @test AG.getdriver(ds) isa AG.Driver
-        @test AG.filelist(ds)==["ospy/data4/aster.img", "ospy/data4/aster.rrd"]
-        @test AG.listcapability(ds) isa Dict
-        @test AG.ngcp(ds)==0
-        @test AG.write(ds,tempname()) == C_NULL
-        @test AG.testcapability(ds,"ODsCCreateLayer") == false
+        @testset "Test forwarded methods" begin 
+            @test ds isa AG.RasterDataset{UInt8}
+            @test AG.getgeotransform(ds) == [419976.5, 15.0, 0.0, 4.6624225e6, 0.0, -15.0]
+            @test AG.nraster(ds) == 3
+            @test AG.getband(ds,1) isa AG.AbstractRasterBand
+            @test startswith(AG.getproj(ds),"PROJCS")
+            @test AG.width(ds)==5665
+            @test AG.height(ds)==5033
+            @test AG.getdriver(ds) isa AG.Driver
+            @test AG.filelist(ds)==["ospy/data4/aster.img", "ospy/data4/aster.rrd"]
+            @test AG.listcapability(ds) isa Dict
+            @test AG.ngcp(ds)==0
+            @test AG.write(ds,tempname()) == C_NULL
+            @test AG.testcapability(ds,"ODsCCreateLayer") == false
+        end
+        @testset "DiskArray chunk interface" begin
+            b = AG.getband(ds,1)
+            @test eachchunk(ds) == GridChunks(size(ds),(64,64,1))
+            @test eachchunk(b) == GridChunks(size(b),(64,64))
+            @test haschunks(ds) == Chunked()
+            @test haschunks(b) == Chunked()
+        end
+        @testset "Reading into non-arrays" begin
+            data1 = view(zeros(3,3,3), 1:3, 1:3, 1:3)
+            readblock!(ds, data1, 1:3, 1:3, 1:3)
+            @test data1 == ds[1:3,1:3,1:3]
+        end
     end
 end
+
+
+
+
 
 @testset "Test Array getindex" begin
     AG.readraster("ospy/data4/aster.img") do ds
