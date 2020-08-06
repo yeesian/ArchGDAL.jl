@@ -118,3 +118,43 @@ end
 !!! note
 
     These methods are often used for reading/writing a block of image data efficiently, as it accesses "natural" blocks from the raster band without resampling, or data type conversion.
+
+# Using the DiskArray interface
+
+## Raster bands as 2D Disk Arrays
+
+As of ArchGDAL version 1.4.2 and higher a `RasterBand` is a subtype of `AbstractDiskArray` from the DiskArrays.jl package. This means that a `RasterBand` is also an `AbstractArray` and can therefore be treated like any Julia array. This means that square bracket indexing works in addition to the `read` methods described above.  
+
+````@example rasters
+band[1000:1010,300:310]
+````
+
+Also, windowed reading of the data can alternatively be done through the DiskArrays interface:
+
+````@example rasters
+using DiskArrays: eachchunk
+for (rows, cols) in take(eachchunk(band), 5)
+    @info "Window" rows, cols
+end
+````
+
+This code is equivalent to the window function mentioned in [Windowed Reads and Writes](@ref) but more portable because the raster band can be exchanged with any other type implementing the DiskArrays interface. Also, for many operations it will not be necessary anymore to implement the window loop, since the `DiskArrays` package provides efficient implementations for reductions and lazy broadcasting, so that for example operations like: 
+
+````@example rasters
+sum(sqrt.(band), dims=1)
+````
+
+will read the data block by block allocating only the amount of memory in the order of the size of a single raster block. See https://github.com/meggart/DiskArrays.jl/blob/master/README.md for more information on DiskArrays.jl
+
+## The RasterDataset type
+
+Many raster datasets that contain multiple bands of the same size and data type can also be abstracted as a 3D array where the last dimension represents the band index. In order to open a raster dataset in a way that it is represented as a 3D `AbstractArray` there is the `readraster` funtion. It returns a `RasterDataset` which is a thin wrapper around a `Dataset` but it is a subtype of `AbstractDiskArray{T,3}` and therefore part of the array hierarchy. 
+
+This means that data can be accessed with the square-bracket syntax
+
+````@example rasters
+dataset = AG.readraster("gdalworkshop/world.tif")
+dataset[1000,300,:]
+````
+
+and broadcasting, views and reductions are provided by the DiskArrays package. In addition, many ArchGDAL functions like (`getband`, `nraster`, `getgeotransform`, etc) are delegated to the wrapped Dataset and work for RasterDatasets as well. 
