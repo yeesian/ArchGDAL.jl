@@ -33,7 +33,7 @@ end
 #for raster-like datasets.
 for f in (:getgeotransform, :nraster, :getband, :getproj,
     :width, :height, :destroy, :getdriver, :filelist, :listcapability, 
-    :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews)
+    :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews!)
     eval(:($(f)(x::RasterDataset, args...; kwargs...) = $(f)(x.ds, args...;kwargs...)))
 end
 #Here we need to special-case, because source and dest might be rasters

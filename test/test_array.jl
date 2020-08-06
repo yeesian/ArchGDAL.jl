@@ -2,6 +2,24 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "RasterDataset Type" begin
+    AG.readraster("ospy/data4/aster.img") do ds
+        @test ds isa AG.RasterDataset{UInt8}
+        @test AG.getgeotransform(ds) == [419976.5, 15.0, 0.0, 4.6624225e6, 0.0, -15.0]
+        @test AG.nraster(ds) == 3
+        @test AG.getband(ds,1) isa AG.AbstractRasterBand
+        @test startswith(AG.getproj(ds),"PROJCS")
+        @test AG.width(ds)==5665
+        @test AG.height(ds)==5033
+        @test AG.getdriver(ds) isa AG.Driver
+        @test AG.filelist(ds)==["ospy/data4/aster.img", "ospy/data4/aster.rrd"]
+        @test AG.listcapability(ds) isa Dict
+        @test AG.ngcp(ds)==0
+        @test AG.write(ds,tempname()) == C_NULL
+        @test AG.testcapability(ds,"ODsCCreateLayer") == false
+    end
+end
+
 @testset "Test Array getindex" begin
     AG.readraster("ospy/data4/aster.img") do ds
         @testset "Dataset indexing" begin
