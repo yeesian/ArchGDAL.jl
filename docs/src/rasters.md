@@ -123,7 +123,7 @@ end
 
 ## Raster bands as 2D Disk Arrays
 
-As of ArchGDAL version 1.4.2 and higher a `RasterBand` is a subtype of `AbstractDiskArray` from the DiskArrays.jl package. This means that a `RasterBand` is also an `AbstractArray` and can therefore be treated like any Julia array. This means that square bracket indexing works in addition to the `read` methods described above.  
+As of ArchGDAL version 1.4.2 and higher a `RasterBand` is a subtype of `AbstractDiskArray` from the [DiskArrays.jl package](https://github.com/meggart/DiskArrays.jl). This means that a `RasterBand` is also an `AbstractArray` and can therefore be treated like any Julia array. This means that square bracket indexing works in addition to the `read` methods described above.  
 
 ````@example rasters
 band[1000:1010,300:310]
