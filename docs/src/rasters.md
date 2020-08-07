@@ -138,7 +138,7 @@ for (rows, cols) in take(eachchunk(band), 5)
 end
 ````
 
-This code is equivalent to the window function mentioned in [Windowed Reads and Writes](@ref) but more portable because the raster band can be exchanged with any other type implementing the DiskArrays interface. Also, for many operations it will not be necessary anymore to implement the window loop, since the `DiskArrays` package provides efficient implementations for reductions and lazy broadcasting, so that for example operations like: 
+This code is similar to the window function mentioned in [Windowed Reads and Writes](@ref) but more portable because the raster band can be exchanged with any other type implementing the DiskArrays interface. Also, for many operations it will not be necessary anymore to implement the window loop, since the `DiskArrays` package provides efficient implementations for reductions and lazy broadcasting, so that for example operations like: 
 
 ````@example rasters
 sum(sqrt.(band), dims=1)
