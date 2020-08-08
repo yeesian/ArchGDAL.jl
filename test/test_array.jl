@@ -14,7 +14,8 @@ import ArchGDAL; const AG = ArchGDAL
             @test AG.width(ds)==5665
             @test AG.height(ds)==5033
             @test AG.getdriver(ds) isa AG.Driver
-            @test AG.filelist(ds)==["ospy/data4/aster.img", "ospy/data4/aster.rrd"]
+            @test splitpath(AG.filelist(ds)[1]) == ["ospy", "data4", "aster.img"]
+            @test splitpath(AG.filelist(ds)[2]) == ["ospy", "data4", "aster.rrd"]
             @test AG.listcapability(ds) isa Dict
             @test AG.ngcp(ds)==0
             @test AG.write(ds,tempname()) == C_NULL
