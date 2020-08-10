@@ -2,7 +2,6 @@ using Test
 import GeoInterface, GeoFormatTypes, ArchGDAL 
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
-const GI = GeoFormatTypes
 
 @testset "Reproject a Geometry" begin
     @testset "Method 1" begin
@@ -41,9 +40,22 @@ const GI = GeoFormatTypes
             @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
             @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [[47.348801, -122.598135]]
             coord = (1120351.57, 741921.42)
-            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:compliant) ≈ 
+                [47.348801, -122.598135]
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:trad) ≈ 
+                [-122.598135, 47.348801]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:compliant) ≈ 
+                [[47.348801, -122.598135]]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:trad) ≈ 
+                [[-122.598135, 47.348801]]
+            # :compliant doesn't work on PROJ axis order, it loses authority information
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:compliant) ≈ 
+                [[-122.598135, 47.348801]]
+            @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:trad) ≈ 
+                [[-122.598135, 47.348801]]
         end
     end
+
 end
 
 @testset "Get Projection" begin
@@ -59,13 +71,9 @@ end
             @test AG.toPROJ4(AG.getspatialref(AG.getgeom(feature))) == "+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs"
         end
     end
-    AG.importEPSG(26912) do spatialref
-        if VERSION >= v"1.3"  # GDAL.jl v1.1 which uses PROJ 6.3
-            proj4str = "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs"
-        else  # GDAL.jl v1.0 which uses PROJ 6.1
-            proj4str = "+proj=utm +zone=12 +ellps=GRS80 +towgs84=0,0,0,0,0,0,0 +units=m +no_defs"
-        end
 
+    AG.importEPSG(26912) do spatialref
+        proj4str = "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs"
         @test AG.toPROJ4(spatialref) == proj4str
         @test AG.toWKT(spatialref)[1:6] == "PROJCS"
         AG.morphtoESRI!(spatialref)
