@@ -15,7 +15,7 @@ function GeoTable(layer)
 end
 
 struct FeatureRow
-    Row::Array
+    Geometry::Array
     feature_number::Int
 end
 
@@ -76,7 +76,7 @@ function Base.iterate(gt::GeoTable, st = 0)
     
     #Using the tables interface
     Row = Tables.rowtable(NamedTuple{keys_tup}(vals_tup))
-
+    println(Row)
     return FeatureRow(Row, st), st + 1
 end
 
@@ -91,18 +91,18 @@ Base.length(gt::GeoTable) = (Base.size(gt::GeoTable)) * (nfield(gt.layer) + ngeo
 Base.IteratorEltype(::Type{<:GeoTable}) = Base.HasEltype()
 
 Base.propertynames(fr::FeatureRow, gt::GeoTable) = (Tables.schema(gt.layer)).names
-#geometry
-# geometry(fr::FeatureRow) = (fr.Row)
-
+geometry(fr::FeatureRow) = (fr.Row)
 
 function Base.show(io::IO, gt::GeoTable)
     println(io, "GeoTable with $(ArchGDAL.nfeature(gt.layer)) Features")
 end
+
 # function Base.show(io::IO, fr::FeatureRow)
-#     println(io, "Feature with properties $(propertynames(fr,gt))")
+#     println(io, "Feature with properties $(propertynames(fr))")
 # end
+
 Base.show(io::IO, ::MIME"text/plain", gt::GeoTable) = show(io, gt)
-Base.show(io::IO, ::MIME"text/plain", fr::FeatureRow) = show(io, fr)
+# Base.show(io::IO, ::MIME"text/plain", fr::FeatureRow) = show(io, fr)
 
 
 
