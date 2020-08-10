@@ -96,13 +96,7 @@ geometry(fr::FeatureRow) = (fr.Row)
 function Base.show(io::IO, gt::GeoTable)
     println(io, "GeoTable with $(ArchGDAL.nfeature(gt.layer)) Features")
 end
-
-# function Base.show(io::IO, fr::FeatureRow)
-#     println(io, "Feature with properties $(propertynames(fr))")
-# end
-
 Base.show(io::IO, ::MIME"text/plain", gt::GeoTable) = show(io, gt)
-# Base.show(io::IO, ::MIME"text/plain", fr::FeatureRow) = show(io, fr)
 
 
 
