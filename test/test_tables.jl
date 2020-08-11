@@ -1,6 +1,5 @@
 using Test
 import ArchGDAL; const AG = ArchGDAL
-using Tables
 
 @testset "Tables Support" begin
     dataset = AG.read(joinpath(@__DIR__, "data/point.geojson"))
@@ -12,11 +11,11 @@ using Tables
 
     @test sprint(print, AG.GeoTable(layer)) == "GeoTable with 4 Features\n"
     @test sprint(print, AG.GeoTable(layer)) != "Layer is not a valid ArchGDAL layer\n"      
-    @test getproperty(AG.Tables.schema(layer), :types) == (Float64, String, GDAL.wkbPoint)
-    @test getproperty(AG.Tables.schema(layer), :names) == (:FID, :pointname, Symbol(""))
-    @test Tables.istable(AG.GeoTable(layer)) == true
-    @test Tables.rowaccess(AG.GeoTable(layer)) == true
-    @test Tables.rows(AG.GeoTable(layer)) == AG.GeoTable(layer)
+    @test getproperty(Tables.schema(layer), :types) == (Float64, String, AG.GDAL.wkbPoint)
+    @test getproperty(Tables.schema(layer), :names) == (:FID, :pointname, Symbol(""))
+    @test AG.Tables.istable(AG.GeoTable(layer)) == true
+    @test AG.Tables.rowaccess(AG.GeoTable(layer)) == true
+    @test AG.Tables.rows(AG.GeoTable(layer)) == AG.GeoTable(layer)
     @test Base.size(AG.GeoTable(layer)) == 4
     @test Base.length(AG.GeoTable(layer)) == 12
 end
