@@ -76,7 +76,6 @@ function Base.iterate(gt::GeoTable, st = 0)
     
     #Using the tables interface
     Row = Tables.rowtable(NamedTuple{keys_tup}(vals_tup))
-    println(Row)
     return FeatureRow(Row, st), st + 1
 end
 
