@@ -14,11 +14,6 @@ function GeoTable(layer)
     GeoTable(layer)
 end
 
-struct FeatureRow
-    Geometry::Array
-    feature_number::Int
-end
-
 function Tables.schema(layer::AG.AbstractFeatureLayer)
     nfield = AG.nfield(layer)
     featuredefn = AG.layerdefn(layer)
@@ -57,7 +52,7 @@ function Base.iterate(gt::GeoTable, st = 0)
     d["geometry"] = IGeometry[]
     
     st >= nfeat && return nothing
-    AG.nextfeature(layer) do feature
+    AG.getfeature(layer, st) do feature
         for (k, v) in pairs(d)
             if k == "geometry"
                 val = getgeom(feature, 0)
@@ -76,7 +71,7 @@ function Base.iterate(gt::GeoTable, st = 0)
     
     #Using the tables interface
     Row = Tables.rowtable(NamedTuple{keys_tup}(vals_tup))
-    return FeatureRow(Row, st), st + 1
+    return Row..., st + 1
 end
 
 
