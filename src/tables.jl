@@ -4,10 +4,9 @@ struct GeoTable{T<:Union{IFeatureLayer, FeatureLayer}}
     layer::T
 end
 
-function GeoTable(layer)
+function geotable(layer)
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
-
     if(ngeometries == 0 )
         error("Layer is not a valid ArchGDAL layer")
     end

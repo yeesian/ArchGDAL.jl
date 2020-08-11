@@ -5,7 +5,7 @@ using Tables
 @testset "Tables Support" begin
     dataset = AG.read(joinpath(@__DIR__, "data/point.geojson"))
     layer = AG.getlayer(dataset, 0)
-    gt = AG.GeoTable(layer)
+    gt = AG.geotable(layer)
     fr = iterate(gt, 1)[1]
     nfeat = AG.nfeature(layer)
     nfield = AG.nfield(layer)
@@ -18,7 +18,7 @@ using Tables
     @test getproperty(Tables.schema(layer), :names) == propertynames(gt)
     @test Tables.istable(AG.GeoTable) == true
     @test Tables.rowaccess(AG.GeoTable) == true
-    @test Tables.rows(gt) == AG.GeoTable(layer)
+    @test Tables.rows(gt) == AG.geotable(layer)
     @test Base.size(gt) == 4
     @test Base.length(gt) == 4
     @test propertynames(iterate(gt, 1)[1]) == (:pointname, :geometry, :FID)
