@@ -86,11 +86,11 @@ Tables.rows(gt::GeoTable) = gt
 
 Base.IteratorSize(::Type{<:GeoTable}) = Base.HasLength()
 Base.size(gt::GeoTable) = nfeature(gt.layer)
-Base.length(gt::GeoTable) = (Base.size(gt::GeoTable)) * (nfield(gt.layer) + ngeom(gt.layer))
+Base.length(gt::GeoTable) = Base.size(gt)
 Base.IteratorEltype(::Type{<:GeoTable}) = Base.HasEltype()
+Base.propertynames(gt::GeoTable) = (Tables.schema(gt.layer)).names
 
-Base.propertynames(fr::FeatureRow, gt::GeoTable) = (Tables.schema(gt.layer)).names
-geometry(fr::FeatureRow) = (fr.Row)
+geometry(gt::GeoTable) = [iterate(gt, i)[1].geometry for i in 0:length(gt)-1]
 
 function Base.show(io::IO, gt::GeoTable)
     println(io, "GeoTable with $(ArchGDAL.nfeature(gt.layer)) Features")
