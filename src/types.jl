@@ -183,9 +183,10 @@ mutable struct IRasterBand{T} <: AbstractRasterBand{T}
         return rasterband
     end
 end
+
 function IRasterBand(ptr::GDALRasterBand; ownedby = Dataset())
-  t = _JLTYPE[GDAL.gdalgetrasterdatatype(ptr)]
-  IRasterBand{t}(ptr, ownedby=ownedby)
+    t = _JLTYPE[GDAL.gdalgetrasterdatatype(ptr)]
+    IRasterBand{t}(ptr, ownedby=ownedby)
 end
 
 mutable struct SpatialRef <: AbstractSpatialRef
