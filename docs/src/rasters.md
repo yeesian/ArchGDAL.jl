@@ -121,9 +121,9 @@ end
 
 # Using the DiskArray interface
 
-## Raster bands as 2D Disk Arrays
+## Raster bands as 2D DiskArrays
 
-As of ArchGDAL version 1.4.2 and higher a `RasterBand` is a subtype of `AbstractDiskArray` from the [DiskArrays.jl package](https://github.com/meggart/DiskArrays.jl). This means that a `RasterBand` is also an `AbstractArray` and can therefore be treated like any Julia array. This means that square bracket indexing works in addition to the `read` methods described above.  
+As of ArchGDAL version 1.5.0 and higher a `RasterBand` is a subtype of `AbstractDiskArray` from the [DiskArrays.jl package](https://github.com/meggart/DiskArrays.jl). This means that a `RasterBand` is also an `AbstractArray` and can therefore be treated like any Julia array. This means that square bracket indexing works in addition to the `read` methods described above.  
 
 ````@example rasters
 band[1000:1010,300:310]
@@ -133,8 +133,10 @@ Also, windowed reading of the data can alternatively be done through the DiskArr
 
 ````@example rasters
 using DiskArrays: eachchunk
-for (rows, cols) in take(eachchunk(band), 5)
-    @info "Window" rows, cols
+# take only the first 3 chunks to decrease output
+using Base.Iterators: take
+for (rows, cols) in take(eachchunk(band), 3)
+    @info "window" rows cols
 end
 ````
 
@@ -144,7 +146,7 @@ This code is similar to the window function mentioned in [Windowed Reads and Wri
 sum(sqrt.(band), dims=1)
 ````
 
-will read the data block by block allocating only the amount of memory in the order of the size of a single raster block. See https://github.com/meggart/DiskArrays.jl/blob/master/README.md for more information on DiskArrays.jl
+will read the data block by block allocating only the amount of memory in the order of the size of a single raster block. See [the DiskArrays README](https://github.com/meggart/DiskArrays.jl/blob/master/README.md) for more information on DiskArrays.jl
 
 ## The RasterDataset type
 
