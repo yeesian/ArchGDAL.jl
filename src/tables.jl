@@ -8,7 +8,7 @@ function geotable(layer)
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
     if(ngeometries == 0 )
-        error("Layer is not a valid ArchGDAL layer")
+        println("NULL Geometry found")
     end
     GeoTable(layer)
 end
@@ -19,17 +19,10 @@ function Tables.schema(layer::AG.AbstractFeatureLayer)
     ngeom = ArchGDAL.ngeom(featuredefn)
 
     fielddefns = (AG.getfielddefn(featuredefn, i) for i in 0:nfield-1)
-    geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
-
     names_fields = Tuple(AG.getname(fielddefn) for fielddefn in fielddefns)
-    geom_names = Tuple(ArchGDAL.getname(geomdefn) for geomdefn in geomdefns)
-    names = (names_fields..., geom_names...)
-    
     types_fields = Tuple(AG._FIELDTYPE[AG.gettype(fielddefn)] for fielddefn in fielddefns)
-    geom_types = Tuple(ArchGDAL.gettype(geomdefn) for geomdefn in geomdefns)
-    types = (types_fields..., geom_types...)
     
-    Tables.Schema(names, types)
+    Tables.Schema(names_fields, types_fields)
 end
 
 function Base.iterate(gt::GeoTable, st = 0)
@@ -37,7 +30,6 @@ function Base.iterate(gt::GeoTable, st = 0)
     AG.resetreading!(layer)
     nfeat = AG.nfeature(layer)
     nfield = AG.nfield(layer)
-    ngeom = AG.ngeom(layer)
     featuredefn = layerdefn(layer)
 
     d = Dict{String, Vector}()
@@ -47,16 +39,11 @@ function Base.iterate(gt::GeoTable, st = 0)
         name = getname(field)
         d[name] = Vector{_FIELDTYPE[gettype(field)]}()
     end
-    d["geometry"] = IGeometry[]
     
     st >= nfeat && return nothing
     AG.getfeature(layer, st) do feature
         for (k, v) in pairs(d)
-            if k == "geometry"
-                val = getgeom(feature, 0)
-            else
-                val = getfield(feature, k)
-            end
+            val = getfield(feature, k)
             push!(v, val)
         end
     end
@@ -83,7 +70,31 @@ Base.length(gt::GeoTable) = Base.size(gt)
 Base.IteratorEltype(::Type{<:GeoTable}) = Base.HasEltype()
 Base.propertynames(gt::GeoTable) = (Tables.schema(gt.layer)).names
 
-geometry(gt::GeoTable) = [iterate(gt, i)[1].geometry for i in 0:length(gt)-1]
+"""
+returns the nth geometry starting from 1 to n
+"""
+function geometry(gt::GeoTable, n::Int)
+    if n > length(gt)
+        return "NULL Geometry"
+    else
+        layer = gt.layer
+        AG.getfeature(layer, n-1) do feature
+        getgeom(feature)
+        end
+    end
+end
+
+function geometry(gt::GeoTable)
+    layer = gt.layer
+    AG.resetreading!(layer)
+    arr = AG.IGeometry[]
+    for i in 1:length(gt)
+        AG.nextfeature(layer) do feature
+        push!(arr, getgeom(feature))
+        end
+    end
+    return arr
+end
 
 function Base.show(io::IO, gt::GeoTable)
     println(io, "GeoTable with $(ArchGDAL.nfeature(gt.layer)) Features")
