@@ -145,4 +145,4 @@ function DiskArrays.writeblock!(dataset::RasterDataset, value, x::AbstractUnitRa
     write!(dataset.ds, value, indices, xoffset, yoffset, xsize, ysize)
 end
 
-Array(dataset::RasterDataset) = dataset[:,:,:]
+Base.Array(dataset::RasterDataset) = dataset[:,:,:]
