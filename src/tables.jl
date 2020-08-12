@@ -45,8 +45,7 @@ function Base.iterate(gt::GeoTable, st = 0)
     for field_no in 0:nfield-1
         field = getfielddefn(featuredefn, field_no)
         name = getname(field)
-        typ = _FIELDTYPE[gettype(field)]
-        d[name] = typ[]
+        d[name] = Vector{_FIELDTYPE[gettype(field)]}()
     end
     d["geometry"] = IGeometry[]
     
