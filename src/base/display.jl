@@ -45,7 +45,10 @@ function Base.show(io::IO, dataset::AbstractDataset)
         end
     end
 end
+
 #Add method to avoid show from DiskArrays
+Base.show(io::IO, raster::RasterDataset) = show(io, raster.ds)
+
 Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset) = show(io, raster.ds)
 
 function summarize(io::IO, rasterband::AbstractRasterBand)
@@ -59,7 +62,9 @@ function summarize(io::IO, rasterband::AbstractRasterBand)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
 end
 
-function Base.show(io::IO, rasterband::AbstractRasterBand)
+Base.show(io::IO, rasterband::AbstractRasterBand) = show(io, "text/plain", rasterband)
+
+function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     summarize(io, rasterband)
     (x,y) = blocksize(rasterband)
