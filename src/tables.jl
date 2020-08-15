@@ -18,10 +18,7 @@ function Tables.schema(layer::AG.AbstractFeatureLayer)
     fielddefns = (AG.getfielddefn(featuredefn, i) for i in 0:nfield-1)
     names_fields = Tuple(AG.getname(fielddefn) for fielddefn in fielddefns)
     types_fields = Tuple(AG._FIELDTYPE[AG.gettype(fielddefn)] for fielddefn in fielddefns)
-    geom_types = Tuple(ArchGDAL.gettype(geomdefn) for geomdefn in geomdefns)
-    types = (types_fields..., geom_types...)
-    
-    Tables.Schema(names, types)
+    Tables.Schema(names_fields, types_fields)
 end
 
 function Base.iterate(gt::GeoTable, st = 0)
@@ -30,7 +27,7 @@ function Base.iterate(gt::GeoTable, st = 0)
     nfeat = AG.nfeature(layer)
     nfield = AG.nfield(layer)
     ngeom = AG.ngeom(layer)
-    featuredefn = layerdefn(layer)
+    featuredefn = AG.layerdefn(layer)
 
     name = []
     v = []
@@ -38,15 +35,15 @@ function Base.iterate(gt::GeoTable, st = 0)
         field = AG.getfielddefn(featuredefn, field_no)
         push!(name, AG.getname(field))
     end
-    d["geometry"] = IGeometry[]
+    push!(name, "geometry")
     
     st >= nfeat && return nothing
     AG.getfeature(layer, st) do feature
-        for (k, v) in pairs(d)
+        for k in name
             if k == "geometry"
-                val = getgeom(feature, 0)
+                val = AG.getgeom(feature, 0)
             else
-                val = getfield(feature, k)
+                val = AG.getfield(feature, k)
             end
             push!(v, val)
         end
