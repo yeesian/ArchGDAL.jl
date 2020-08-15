@@ -7,9 +7,6 @@ end
 function geotable(layer)
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
-    if(ngeometries == 0 )
-        println("NULL Geometry found")
-    end
     GeoTable(layer)
 end
 
@@ -21,8 +18,10 @@ function Tables.schema(layer::AG.AbstractFeatureLayer)
     fielddefns = (AG.getfielddefn(featuredefn, i) for i in 0:nfield-1)
     names_fields = Tuple(AG.getname(fielddefn) for fielddefn in fielddefns)
     types_fields = Tuple(AG._FIELDTYPE[AG.gettype(fielddefn)] for fielddefn in fielddefns)
+    geom_types = Tuple(ArchGDAL.gettype(geomdefn) for geomdefn in geomdefns)
+    types = (types_fields..., geom_types...)
     
-    Tables.Schema(names_fields, types_fields)
+    Tables.Schema(names, types)
 end
 
 function Base.iterate(gt::GeoTable, st = 0)
@@ -30,33 +29,32 @@ function Base.iterate(gt::GeoTable, st = 0)
     AG.resetreading!(layer)
     nfeat = AG.nfeature(layer)
     nfield = AG.nfield(layer)
+    ngeom = AG.ngeom(layer)
     featuredefn = layerdefn(layer)
 
-    d = Dict{String, Vector}()
-
+    name = []
+    v = []
     for field_no in 0:nfield-1
-        field = getfielddefn(featuredefn, field_no)
-        name = getname(field)
-        d[name] = Vector{_FIELDTYPE[gettype(field)]}()
+        field = AG.getfielddefn(featuredefn, field_no)
+        push!(name, AG.getname(field))
     end
+    d["geometry"] = IGeometry[]
     
     st >= nfeat && return nothing
     AG.getfeature(layer, st) do feature
         for (k, v) in pairs(d)
-            val = getfield(feature, k)
+            if k == "geometry"
+                val = getgeom(feature, 0)
+            else
+                val = getfield(feature, k)
+            end
             push!(v, val)
         end
     end
     
-    keys_tup = ()
-    for _key in keys(d)
-        keys_tup = (keys_tup..., Symbol(_key))
-    end
-    vals_tup = Tuple(values(d))
-    
-    #Using the tables interface
-    Row = Tables.rowtable(NamedTuple{keys_tup}(vals_tup))
-    return Row..., st + 1
+
+    Row = NamedTuple{Tuple(Symbol.(name))}(v)
+    return Row, st + 1
 end
 
 
