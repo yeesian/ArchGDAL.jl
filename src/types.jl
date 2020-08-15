@@ -1,3 +1,4 @@
+import DiskArrays: AbstractDiskArray
 const GDALColorTable      = GDAL.GDALColorTableH
 const GDALCoordTransform  = GDAL.OGRCoordinateTransformationH
 const GDALDataset         = GDAL.GDALDatasetH
@@ -40,7 +41,7 @@ abstract type AbstractFieldDefn end
 abstract type AbstractGeomFieldDefn end
     # needs to have a `ptr::GDALGeomFieldDefn` attribute
 
-abstract type AbstractRasterBand end
+abstract type AbstractRasterBand{T} <: AbstractDiskArray{T,2} end
     # needs to have a `ptr::GDALDataset` attribute
 
 mutable struct CoordTransform
@@ -161,22 +162,31 @@ mutable struct IFeatureDefnView <: AbstractFeatureDefn
     end
 end
 
-mutable struct RasterBand <: AbstractRasterBand
+mutable struct RasterBand{T} <: AbstractRasterBand{T}
     ptr::GDALRasterBand
 end
+function RasterBand(ptr::GDALRasterBand)
+  t = _JLTYPE[GDAL.gdalgetrasterdatatype(ptr)]
+  RasterBand{t}(ptr)
+end
 
-mutable struct IRasterBand <: AbstractRasterBand
+mutable struct IRasterBand{T} <: AbstractRasterBand{T}
     ptr::GDALRasterBand
     ownedby::AbstractDataset
 
-    function IRasterBand(
+    function IRasterBand{T}(
             ptr::GDALRasterBand = C_NULL;
             ownedby::AbstractDataset = Dataset()
-        )
+        ) where T
         rasterband = new(ptr, ownedby)
         finalizer(destroy, rasterband)
         return rasterband
     end
+end
+
+function IRasterBand(ptr::GDALRasterBand; ownedby = Dataset())
+    t = _JLTYPE[GDAL.gdalgetrasterdatatype(ptr)]
+    IRasterBand{t}(ptr, ownedby=ownedby)
 end
 
 mutable struct SpatialRef <: AbstractSpatialRef

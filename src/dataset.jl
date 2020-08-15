@@ -597,6 +597,7 @@ end
 
 """
     getband(dataset::AbstractDataset, i::Integer)
+    getband(ds::RasterDataset, i::Integer)
 
 Fetch a band object for a dataset from its index.
 """

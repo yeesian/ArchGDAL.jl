@@ -46,6 +46,11 @@ function Base.show(io::IO, dataset::AbstractDataset)
     end
 end
 
+#Add method to avoid show from DiskArrays
+Base.show(io::IO, raster::RasterDataset) = show(io, raster.ds)
+
+Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset) = show(io, raster.ds)
+
 function summarize(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     access = accessflag(rasterband)
@@ -57,7 +62,9 @@ function summarize(io::IO, rasterband::AbstractRasterBand)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
 end
 
-function Base.show(io::IO, rasterband::AbstractRasterBand)
+Base.show(io::IO, rasterband::AbstractRasterBand) = show(io, "text/plain", rasterband)
+
+function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
     summarize(io, rasterband)
     (x,y) = blocksize(rasterband)
@@ -82,7 +89,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")
     featuredefn = layerdefn(layer)
-    
+
     # Print Geometries
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
@@ -110,7 +117,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)
         resetreading!(layer)
     end
     n > 3 && println(io, "  ...\n  Number of Geometries: $n")
-    
+
     # Print Features
     n = nfield(featuredefn)
     nfielddisplay = min(n, 5)

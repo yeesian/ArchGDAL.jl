@@ -2,7 +2,7 @@
     importCRS(x::GeoFormatTypes.GeoFormat; [order=:compliant])
 
 Import a coordinate reference system from a `GeoFormat` into GDAL,
-returning an [`AbstractSpatialRef`](@ref).
+returning an `ArchGDAL.AbstractSpatialRef`.
 
 ## Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat axis 

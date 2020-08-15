@@ -3,7 +3,11 @@ using Documenter, ArchGDAL
 # make sure you have run the tests before such that the test files are present
 makedocs(
     modules = [ArchGDAL],
-    format = Documenter.HTML(),
+    format = Documenter.HTML(;
+        prettyurls = get(ENV, "CI", "false") == "true",
+        canonical = "https://yeesian.com/ArchGDAL.jl",
+        assets = String[],
+    ),
     sitename = "ArchGDAL.jl",
     workdir = joinpath(@__DIR__, "..", "test"),
     strict = true,
@@ -22,9 +26,4 @@ makedocs(
     ]
 )
 
-deploydocs(
-    deps = nothing,
-    make = nothing,
-    target = "build",
-    repo = "github.com/yeesian/ArchGDAL.jl.git",
-)
+deploydocs(; repo = "github.com/yeesian/ArchGDAL.jl.git")
