@@ -38,8 +38,7 @@ end
 
 Fetch the pixel data type for this band.
 """
-pixeltype(band::AbstractRasterBand) =
-    _JLTYPE[GDAL.gdalgetrasterdatatype(band.ptr)]
+pixeltype(band::AbstractRasterBand{T}) where T = T
 
 """
     width(band::AbstractRasterBand)
@@ -585,7 +584,7 @@ maskflags(band::AbstractRasterBand) = GDAL.gdalgetmaskflags(band.ptr)
 
 """
     createmaskband!(band::AbstractRasterBand, nflags::Integer)
-    
+
 Adds a mask band to the current band.
 
 The default implementation of the `CreateMaskBand()` method is implemented

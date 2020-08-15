@@ -3,7 +3,8 @@
 [![Build Status](https://travis-ci.org/yeesian/ArchGDAL.jl.svg?branch=master)](https://travis-ci.org/yeesian/ArchGDAL.jl)
 [![Build status](https://ci.appveyor.com/api/projects/status/github/yeesian/ArchGDAL.jl?svg=true&branch=master)](https://ci.appveyor.com/project/NgYeeSian/archgdal-jl/branch/master)
 [![Coverage Status](https://coveralls.io/repos/github/yeesian/ArchGDAL.jl/badge.svg?branch=master)](https://coveralls.io/github/yeesian/ArchGDAL.jl?branch=master)
-[![](https://img.shields.io/badge/docs-latest-blue.svg)](https://yeesian.github.io/ArchGDAL.jl/latest)
+[![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://yeesian.com/ArchGDAL.jl/stable)
+[![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://yeesian.com/ArchGDAL.jl/dev)
 
 [GDAL](http://gdal.org/) is a translator library for raster and vector geospatial data formats that is released under an [X/MIT](https://trac.osgeo.org/gdal/wiki/FAQGeneral#WhatlicensedoesGDALOGRuse) license by the [Open Source Geospatial Foundation](http://www.osgeo.org/). As a library, it presents an abstract data model to drivers for various [raster](http://www.gdal.org/formats_list.html) and [vector](http://www.gdal.org/ogr_formats.html) formats.
 

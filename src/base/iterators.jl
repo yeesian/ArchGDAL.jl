@@ -53,6 +53,11 @@ end
 struct WindowIterator
     blockiter::BlockIterator
 end
+Base.size(i::WindowIterator) = (i.blockiter.ni, i.blockiter.nj)
+Base.length(i::WindowIterator) = i.blockiter.n
+Base.IteratorSize(::Type{WindowIterator}) = Base.HasShape{2}()
+Base.IteratorEltype(::Type{WindowIterator}) = Base.HasEltype()
+Base.eltype(::WindowIterator) = Tuple{UnitRange{Int}, UnitRange{Int}}
 
 windows(raster::AbstractRasterBand) = WindowIterator(blocks(raster))
 

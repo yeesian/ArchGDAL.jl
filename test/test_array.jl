@@ -1,18 +1,53 @@
 using Test
 import GDAL
+using DiskArrays: eachchunk, haschunks, Chunked, GridChunks, readblock!
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "RasterDataset Type" begin
+    AG.readraster("ospy/data4/aster.img") do ds
+        @testset "Test forwarded methods" begin 
+            @test ds isa AG.RasterDataset{UInt8}
+            @test AG.getgeotransform(ds) == [419976.5, 15.0, 0.0, 4.6624225e6, 0.0, -15.0]
+            @test AG.nraster(ds) == 3
+            @test AG.getband(ds,1) isa AG.AbstractRasterBand
+            @test startswith(AG.getproj(ds),"PROJCS")
+            @test AG.width(ds)==5665
+            @test AG.height(ds)==5033
+            @test AG.getdriver(ds) isa AG.Driver
+            @test splitpath(AG.filelist(ds)[1]) == ["ospy", "data4", "aster.img"]
+            @test splitpath(AG.filelist(ds)[2]) == ["ospy", "data4", "aster.rrd"]
+            @test AG.listcapability(ds) isa Dict
+            @test AG.ngcp(ds)==0
+            @test AG.write(ds,tempname()) == C_NULL
+            @test AG.testcapability(ds,"ODsCCreateLayer") == false
+        end
+        @testset "DiskArray chunk interface" begin
+            b = AG.getband(ds,1)
+            @test eachchunk(ds) == GridChunks(size(ds),(64,64,1))
+            @test eachchunk(b) == GridChunks(size(b),(64,64))
+            @test haschunks(ds) == Chunked()
+            @test haschunks(b) == Chunked()
+        end
+        @testset "Reading into non-arrays" begin
+            data1 = view(zeros(3,3,3), 1:3, 1:3, 1:3)
+            readblock!(ds, data1, 1:3, 1:3, 1:3)
+            @test data1 == ds[1:3,1:3,1:3]
+        end
+    end
+end
+
+
+
+
+
 @testset "Test Array getindex" begin
-    AG.read("ospy/data4/aster.img") do ds
+    AG.readraster("ospy/data4/aster.img") do ds
         @testset "Dataset indexing" begin
             @testset "dims dropped correctly" begin
                 @test typeof(ds[:, :, :]) <: Array{UInt8,3}
                 @test typeof(ds[:, :, 1]) <: Array{UInt8,2}
                 @test typeof(ds[:, 1, 1]) <: Array{UInt8,1}
                 @test typeof(ds[1, 1, 1]) <: UInt8
-                @test typeof(ds[:, :]) <: Array{UInt8,2}
-                @test typeof(ds[:, 1]) <: Array{UInt8,1}
-                @test typeof(ds[1, 1]) <: UInt8
             end
             @testset "range indexing" begin
                 buffer = ds[1:AG.width(ds), 1:AG.height(ds), 1:1]
@@ -24,7 +59,6 @@ import ArchGDAL; const AG = ArchGDAL
             end
             @testset "colon indexing" begin
                 buffer = ds[:, :, 1]
-                @test buffer == ds[:, :] 
                 total = sum(buffer)
                 count = sum(buffer .> 0)
                 @test total / count ≈ 76.33891347095299
@@ -66,7 +100,7 @@ end
 cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
 
 @testset "Test Array setindex" begin
-    AG.read("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
+    AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
         @testset "Dataset setindex" begin
             @test ds[755, 2107, 1] == 0xff
             ds[755, 2107, 1] = 0x00
@@ -77,21 +111,9 @@ cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
             @test ds[755, 2107, 1] == 0x02
             ds[755:755, 2107, 1] = [0x03]
             @test ds[755, 2107, 1] == 0x03
-            ds[755, 2107] = 0x04
-            @test ds[755, 2107] == 0x04
-            ds[755:755, 2107:2107] = reshape([0xff], 1, 1)
-            @test ds[755, 2107] == 0xff
-            buffer = ds[:, :]
-            ds[:, :] = buffer .* 0x00 
-            @test sum(ds[:, :]) == 0x00
-            ds[:, 1:500] = buffer[:, 1:500]
-            ds[:, 501:end] = buffer[:, 501:end]
-            @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-            @test_throws DimensionMismatch ds[:, 501:end] = [1, 2, 3]  
         end
         @testset "RasterBand setindex" begin
             band = AG.getband(ds, 1)
-            @test band[755, 2107] == 0xff
             band[755:755, 2107] = [0x00]
             @test band[755, 2107] == 0x00
             band[755, 2107] = 0x01
@@ -99,18 +121,18 @@ cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
             band[755:755, 2107:2107] = reshape([0xff], 1, 1)
             @test band[755, 2107] == 0xff
             buffer = band[:, :]
-            band[:, :] = buffer .* 0x00 
+            band[:, :] = buffer .* 0x00
             @test sum(band[:, :]) == 0x00
             band[:, 1:500] = buffer[:, 1:500]
             band[:, 501:end] = buffer[:, 501:end]
             @test sum(buffer) / sum(buffer .> 0) ≈ 76.33891347095299
-            @test_throws DimensionMismatch band[:, 501:end] = [1, 2, 3]  
+            @test_throws DimensionMismatch band[:, 501:end] = [1, 2, 3]
         end
     end
 end
 
 @testset "Test Array constructor" begin
-    AG.read("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
+    AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
         buffer = Array(ds)
         typeof(buffer) <: Array{UInt8,3}
         total = sum(buffer[:, :, 1:1])
