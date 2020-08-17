@@ -117,5 +117,6 @@ So for the above CSV, we want the driver to detect our geometries, so according 
 
 ```@example datasets
 dataset2 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
+
 layer2 = ArchGDAL.getlayer(dataset2, 0)
 ```

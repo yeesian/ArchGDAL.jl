@@ -8,6 +8,14 @@ const testdatadir = @__DIR__
 REPO_URL = "https://github.com/yeesian/ArchGDALDatasets/blob/master/"
 
 # remote files with SHA-2 256 hash
+"""
+While adding more files, follow the below steps to generate the SHA
+```
+julia> using SHA
+julia> open(filepath/filename) do f
+           bytes2hex(sha256(f))
+       end
+"""
 remotefiles = [
     ("data/multi_geom.csv", "00520017658b66ff21e40cbf553672fa8e280cddae6e7a5d1f8bd36bcd521770"),
     ("data/point.geojson", "8744593479054a67c784322e0c198bfa880c9388b39a2ddd4c56726944711bd9"),
