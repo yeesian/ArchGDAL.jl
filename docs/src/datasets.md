@@ -101,3 +101,21 @@ dataset = ArchGDAL.<copy/create/read/update>(...)
 !!! note
 
     This pattern of using `do`-blocks to manage context plays a big way into the way we handle memory in this package. For details, see the section on Memory Management.
+
+The [`ArchGDAL.read`](@ref) method accepts keyword arguments(`kwargs`) viz. the GDAL [open-options](https://gdal.org/drivers/vector/csv.html#open-options) for reading `.csv` spatial datasets.
+
+Example: In a CSV the data is stored as `String`. 
+
+```@example datasets
+dataset1 = ArchGDAL.read("data/multi_geom.csv")
+layer1 = ArchGDAL.getlayer(dataset1, 0)
+```
+
+Well this is weird, the CSV driver recognises our point and linestring geomtries as `String`. Now if you have a .csvt file of the same name with the geometry types as `WKT`, they types will be recognized, else, GDAL offers open-options to tweak the read parameters that are passed as `kwargs`.
+
+So for the above CSV, we want the driver to detect our geometries, so according to [open-options](https://gdal.org/drivers/vector/csv.html#open-options) we should use the `"GEOM_POSSIBLE_NAMES=point,linestring"` option. Also we want that the geometry columns should not be kept as regular `String` columns, so we add a `"KEEP_GEOM_COLUMNS=NO"` option too.
+
+```@example datasets
+dataset2 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
+layer2 = ArchGDAL.getlayer(dataset2, 0)
+```
