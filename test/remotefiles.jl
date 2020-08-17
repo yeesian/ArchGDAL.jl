@@ -1,7 +1,7 @@
 # this file downloads files which are used during testing the package
 # if they are already present and their checksum matches, they are not downloaded again
 
-using Pkg.PlatformEngines
+using Pkg.PlatformEngines: download_verify
 
 const testdatadir = @__DIR__
 

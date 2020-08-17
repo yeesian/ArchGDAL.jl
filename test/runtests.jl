@@ -1,6 +1,6 @@
 using Test
 using Dates
-using BinaryProvider
+using Pkg.PlatformEngines: download_verify
 
 # ensure all testing files are present
 include("remotefiles.jl")
