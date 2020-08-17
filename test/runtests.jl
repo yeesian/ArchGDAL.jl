@@ -1,6 +1,6 @@
 using Test
 using Dates
-using BinaryProvider
+using Pkg.PlatformEngines
 
 # ensure all testing files are present
 include("remotefiles.jl")
