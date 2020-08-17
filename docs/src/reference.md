@@ -20,6 +20,12 @@ Pages   = ["dataset.jl"]
 Modules = [ArchGDAL]
 Pages   = ["feature.jl", "featuredefn.jl", "featurelayer.jl", "fielddefn.jl", "geometry.jl", "styletable.jl", "context.jl"]
 ```
+## [Tables Interface](@id API-Tables-Interface)
+
+```@autodocs
+Modules = [ArchGDAL]
+Pages   = ["tables.jl"]
+```
 
 ## [Raster Data](@id API-Raster-Data)
 
