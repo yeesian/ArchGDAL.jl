@@ -1,16 +1,16 @@
 const AG = ArchGDAL
 
-struct Table{T<:Union{IFeatureLayer, FeatureLayer}} 
+struct Table{T} 
     layer::T
 end
 
-function Table(layer)
+function Table(layer::T) where {T<:Union{IFeatureLayer, FeatureLayer}}
     featuredefn = layerdefn(layer)
     ngeometries = ngeom(featuredefn)
     if ngeometries == 0
         print("NULL Geometry found")
     end
-    Table(layer)
+    Table{T}(layer)
 end
 
 function Tables.schema(layer::AG.AbstractFeatureLayer)
