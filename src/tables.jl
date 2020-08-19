@@ -1,5 +1,11 @@
 const AG = ArchGDAL
 
+"""
+Constructs `Table` out of `FeatureLayer`, where every row is a `Feature` consisting of Geometry and attributes.
+```
+ArchGDAL.Table(T::Union{IFeatureLayer, FeatureLayer})
+```
+"""
 struct Table{T} 
     layer::T
 end
@@ -33,14 +39,16 @@ function Base.iterate(t::Table, st = 0)
     ngeom = AG.ngeom(layer)
     featuredefn = AG.layerdefn(layer)
     geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
+    typ = Tables.schema(layer).types
+    geom_types = Tuple(Type{AG.gettype(geomdefn)} for geomdefn in geomdefns) 
     
-    name = []
-    v = []
+    name = String[]
+    v = Union{typ..., AG.IGeometry}[]
     for field_no in 0:nfield-1
         field = AG.getfielddefn(featuredefn, field_no)
         push!(name, AG.getname(field))
     end
-    geom_names = [ArchGDAL.getname(geomdefn) for geomdefn in geomdefns]
+    geom_names = [AG.getname(geomdefn) for geomdefn in geomdefns]
     push!(name, geom_names...)
 
     st >= nfeat && return nothing
@@ -59,7 +67,6 @@ function Base.iterate(t::Table, st = 0)
     return Row, st + 1
 end
 
-
 Tables.istable(::Type{<:Table}) = true
 Tables.rowaccess(::Type{<:Table}) = true
 Tables.rows(t::Table) = t
@@ -71,9 +78,6 @@ Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
 Base.propertynames(t::Table) = Tables.schema(t.layer).names
 
 function Base.show(io::IO, t::Table)
-    println(io, "Table with $(ArchGDAL.nfeature(t.layer)) Features")
+    println(io, "Table with $(ArchGDAL.nfeature(t.layer)) features")
 end
 Base.show(io::IO, ::MIME"text/plain", t::Table) = show(io, t)
-
-
-

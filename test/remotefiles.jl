@@ -11,7 +11,7 @@ REPO_URL = "https://github.com/yeesian/ArchGDALDatasets/blob/master/"
 
 # remote files with SHA-2 256 hash
 """
-While adding more files, follow the below steps to generate the SHA
+To add more files, follow the below steps to generate the SHA
 ```
 julia> using SHA
 julia> open(filepath/filename) do f

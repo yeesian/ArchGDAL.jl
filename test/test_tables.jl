@@ -20,13 +20,12 @@ using Tables
     ngeometries = AG.ngeom(featuredefn)
     ngeometries1 = AG.ngeom(featuredefn1)
 
-    @test sprint(print, gt) == "Table with 4 Features\n"
-    @test sprint(print, gt1) == "Table with 2 Features\n"
+    @test sprint(print, gt) == "Table with 4 features\n"
+    @test sprint(print, gt1) == "Table with 2 features\n"
     @test getproperty(Tables.schema(layer), :types) == (Float64, String)
     @test getproperty(Tables.schema(layer1), :types) == (String, String, String)
     @test getproperty(Tables.schema(layer), :names) == propertynames(gt)
     @test getproperty(Tables.schema(layer1), :names) == propertynames(gt1)
-    
     
     @test Tables.istable(AG.Table) == true
     @test Tables.rows(gt) == AG.Table(layer)
