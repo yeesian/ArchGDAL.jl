@@ -143,3 +143,38 @@ Z = 10.0 .* (Z2 .- Z1)
 ```
 The fictional field for this example consists of the difference of two Gaussian distributions and is represented by the array `Z`. Its contours are shown below.
 ![creating-dataset](https://user-images.githubusercontent.com/7526346/87633084-5bd5a900-c758-11ea-8fd3-548d039f1a43.png)
+
+Once we have the data to write into a raster dataset, before performing the write operation itself, it is a good idea to define the geotransform and the coordinate reference system of the resulting dataset. For North-up raster images, only the *pixel-size/resolution* and the coordinates of the *upper-left* pixel is required. 
+```Julia
+# Resolution
+res = (x[end] - x[1]) /240.0
+
+# Upper-left pixel coordinates
+ul_x = x[1] - res/2
+ul_y = y[1] - res/2
+
+gt = [ul_x, res, 0.0, ul_y, 0.0, res]
+```
+The coordinate reference system of the dataset needs to be a string in the WKT format. 
+```Julia
+crs = AG.toWKT(AG.importPROJ4("+proj=latlong"))
+```
+
+To write this array, first a dataset has to be created. This can be done using the `AG.create` function. The first argument defines the path of the resulting dataset. The following keyword arguments are hopefully self-explanatory. 
+
+Once inside the ```do...end``` block, the `write!` method can be used to write the array(`Z`), in the 1st band of the opened `dataset`. Next, the geotransform and CRS can be specified using the `setgeotransform!` and `setproj!` methods.
+```Julia
+AG.create(
+    "./temporary.tif",
+    driver = AG.getdriver("GTiff"), 
+    width=240, 
+    height=180, 
+    nbands=1, 
+    dtype=Float64
+) do dataset
+    AG.write!(dataset, Z, 1)
+    
+    AG.setgeotransform!(dataset, gt)
+    AG.setproj!(dataset, crs)
+end
+```
