@@ -9,7 +9,7 @@ makedocs(
     strict = true,
     pages = [
         "index.md",
-        "ArchGDAL Quickstart Guide" => "quickstart.md"
+        "ArchGDAL Quickstart Guide" => "quickstart.md",
         "GDAL Datasets" => "datasets.md",
         "Feature Data" => "features.md",
         "Raster Data" => "rasters.md",
