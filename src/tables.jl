@@ -24,9 +24,8 @@ function Base.iterate(t::Table, st = 0)
         resetreading!(layer) 
     end
 
-    ngeom = ArchGDAL.ngeom(layer)
     featuredefn = layerdefn(layer)
-    geomdefns = (getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
+    geomdefns = (getgeomdefn(featuredefn, i) for i in 0:ArchGDAL.ngeom(layer)-1)
     
     field_names = String[]
     for field_no in 0:nfield(layer)-1
