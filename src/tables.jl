@@ -1,5 +1,3 @@
-const AG = ArchGDAL
-
 """
 Constructs `Table` out of `FeatureLayer`, where every row is a `Feature` consisting of Geometry and attributes.
 ```
@@ -12,44 +10,39 @@ end
 
 Table(layer::T) where {T<:Union{IFeatureLayer, FeatureLayer}} = Table{T}(layer)
 
-function Tables.schema(layer::AG.AbstractFeatureLayer)
-    nfield = AG.nfield(layer)
-    featuredefn = AG.layerdefn(layer)
-    fielddefns = (AG.getfielddefn(featuredefn, i) for i in 0:nfield-1)
-    names_fields = Tuple(AG.getname(fielddefn) for fielddefn in fielddefns)
-    types_fields = Tuple(AG._FIELDTYPE[AG.gettype(fielddefn)] for fielddefn in fielddefns)
+function Tables.schema(layer::AbstractFeatureLayer)
+    featuredefn = layerdefn(layer)
+    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
+    names_fields = Tuple(getname(fielddefn) for fielddefn in fielddefns)
+    types_fields = Tuple(_FIELDTYPE[gettype(fielddefn)] for fielddefn in fielddefns)
     Tables.Schema(names_fields, types_fields)
 end
 
 function Base.iterate(t::Table, st = 0)
     layer = t.layer
     if iszero(st) 
-        AG.resetreading!(layer) 
+        resetreading!(layer) 
     end
 
-    ngeom = AG.ngeom(layer)
-    featuredefn = AG.layerdefn(layer)
-    geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
+    ngeom = ArchGDAL.ngeom(layer)
+    featuredefn = layerdefn(layer)
+    geomdefns = (getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
     
     field_names = String[]
-    typ = Tables.schema(layer).types
-    nfield = AG.nfield(layer)
-    for field_no in 0:nfield-1
-        field = AG.getfielddefn(featuredefn, field_no)
-        push!(field_names, AG.getname(field))
+    for field_no in 0:nfield(layer)-1
+        field = getfielddefn(featuredefn, field_no)
+        push!(field_names, getname(field))
     end
-    geom_names = [AG.getname(geomdefn) for geomdefn in geomdefns]
-    nfeat = AG.nfeature(layer)
-    st >= nfeat && return nothing
-    v = Union{typ..., AG.IGeometry}[]
-    AG.nextfeature(layer) do feature
+    geom_names = [getname(geomdefn) for geomdefn in geomdefns]
+
+    st >= nfeature(layer) && return nothing
+    v = Union{Tables.schema(layer).types..., IGeometry}[]
+    nextfeature(layer) do feature
         for name in field_names
-            val = AG.getfield(feature, name)
-            push!(v, val)
+            push!(v, getfield(feature, name))
         end
         for idx in 1:length(geom_names)
-            val = AG.getgeom(feature, idx-1)  
-            push!(v, val)  
+            push!(v, getgeom(feature, idx-1))  
         end
     end
     Row = NamedTuple{(Symbol.(field_names)..., Symbol.(geom_names)...)}(v)
@@ -67,6 +60,6 @@ Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
 Base.propertynames(t::Table) = Tables.schema(t.layer).names
 
 function Base.show(io::IO, t::Table)
-    println(io, "Table with $(ArchGDAL.nfeature(t.layer)) features")
+    println(io, "Table with $(nfeature(t.layer)) features")
 end
 Base.show(io::IO, ::MIME"text/plain", t::Table) = show(io, t)
