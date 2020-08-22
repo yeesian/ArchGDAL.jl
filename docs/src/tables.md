@@ -5,7 +5,7 @@ using ArchGDAL
 using DataFrames
 ```
 
-ArchGDAL now brings in greater flexibilty in terms of raster data handling via the [Tables.jl](https://github.com/JuliaData/Tables.jl) API, that aims to provide a fast and responsive tabular interface to data, which was earlier handled by the [DataStreams](https://github.com/JuliaData/DataStreams.jl) API. 
+ArchGDAL now brings in greater flexibilty in terms of raster data handling via the [Tables.jl](https://github.com/JuliaData/Tables.jl) API, that aims to provide a fast and responsive tabular interface to data.
 
 In this section, we revisit the [`data/point.geojson`](https://github.com/yeesian/ArchGDALDatasets/blob/307f8f0e584a39a050c042849004e6a2bd674f99/data/point.geojson) dataset.
 

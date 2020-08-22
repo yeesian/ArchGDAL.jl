@@ -10,14 +10,7 @@ struct Table{T}
     layer::T
 end
 
-function Table(layer::T) where {T<:Union{IFeatureLayer, FeatureLayer}}
-    featuredefn = layerdefn(layer)
-    ngeometries = ngeom(featuredefn)
-    if ngeometries == 0
-        print("NULL Geometry found")
-    end
-    Table{T}(layer)
-end
+Table(layer::T) where {T<:Union{IFeatureLayer, FeatureLayer}} = Table{T}(layer)
 
 function Tables.schema(layer::AG.AbstractFeatureLayer)
     nfield = AG.nfield(layer)
@@ -34,36 +27,32 @@ function Base.iterate(t::Table, st = 0)
         AG.resetreading!(layer) 
     end
 
-    nfeat = AG.nfeature(layer)
-    nfield = AG.nfield(layer)
     ngeom = AG.ngeom(layer)
     featuredefn = AG.layerdefn(layer)
     geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
-    typ = Tables.schema(layer).types
-    geom_types = Tuple(Type{AG.gettype(geomdefn)} for geomdefn in geomdefns) 
     
-    name = String[]
-    v = Union{typ..., AG.IGeometry}[]
+    field_names = String[]
+    typ = Tables.schema(layer).types
+    nfield = AG.nfield(layer)
     for field_no in 0:nfield-1
         field = AG.getfielddefn(featuredefn, field_no)
-        push!(name, AG.getname(field))
+        push!(field_names, AG.getname(field))
     end
     geom_names = [AG.getname(geomdefn) for geomdefn in geomdefns]
-    push!(name, geom_names...)
-
+    nfeat = AG.nfeature(layer)
     st >= nfeat && return nothing
+    v = Union{typ..., AG.IGeometry}[]
     AG.nextfeature(layer) do feature
-        for k in name
-            if k in geom_names
-                val = AG.getgeom(feature, findfirst(a->a==k, geom_names)-1)
-            else
-                val = AG.getfield(feature, k)
-            end
+        for name in field_names
+            val = AG.getfield(feature, name)
             push!(v, val)
         end
+        for idx in 1:length(geom_names)
+            val = AG.getgeom(feature, idx-1)  
+            push!(v, val)  
+        end
     end
-    
-    Row = NamedTuple{Tuple(Symbol.(name))}(v)
+    Row = NamedTuple{(Symbol.(field_names)..., Symbol.(geom_names)...)}(v)
     return Row, st + 1
 end
 
