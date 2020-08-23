@@ -61,6 +61,29 @@ Base.size(t::Table) = nfeature(getlayer(t))
 Base.length(t::Table) = size(t)
 Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
 Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
+Base.getproperty(t::Table, s::Symbol) = [getproperty(iterate(t, i)[1], s) for i in 0:size(t)-1]
+
+function Base.getindex(t::Table, idx::Int)
+    layer = getlayer(t)
+    setnextbyindex!(layer, idx) 
+    featuredefn = layerdefn(layer)
+    field_names = Tuple(Symbol(getname(getfielddefn(featuredefn, i-1))) for i in 1:nfield(layer))
+    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
+    types_fields = (_FIELDTYPE[gettype(fielddefn)] for fielddefn in fielddefns)
+    geom_names = Tuple(Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
+    v = Union{types_fields..., IGeometry}[]
+
+    nextfeature(layer) do feature
+        for name in field_names
+            push!(v, getfield(feature, name))
+        end
+        for idx in 1:length(geom_names)
+            push!(v, getgeom(feature, idx-1))
+        end
+    end
+    row = NamedTuple{(field_names..., geom_names...)}(v)
+end
+    
 
 function Base.show(io::IO, t::Table)
     println(io, "Table with $(nfeature(getlayer(t))) features")
