@@ -1,11 +1,10 @@
 module ArchGDAL
 
-    import GDAL, GeoInterface, GeoFormatTypes
-    import Tables: Tables
-    import GeoInterface: coordinates, geotype
-    import Base: convert
-
     using Dates
+    using GDAL: GDAL
+    using GeoFormatTypes: GeoFormatTypes
+    using GeoInterface: GeoInterface
+    using Tables: Tables
     
     const GFT = GeoFormatTypes
 
