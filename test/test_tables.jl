@@ -8,6 +8,7 @@ using Tables
     layer = AG.getlayer(dataset, 0)
     layer1 = AG.getlayer(dataset1, 0)
     gt = AG.Table(layer)
+    @test getlayer(gt) === layer
     gt1 = AG.Table(layer1)
     fr = iterate(gt, 1)[1]
     fr1 = iterate(gt, 1)[1]

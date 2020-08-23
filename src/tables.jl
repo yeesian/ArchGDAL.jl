@@ -8,7 +8,7 @@ struct Table{T}
     layer::T
 end
 
-Table(layer::T) where {T<:Union{IFeatureLayer, FeatureLayer}} = Table{T}(layer)
+getlayer(t::Table) = Base.getfield(t, :layer)
 
 function Tables.schema(layer::AbstractFeatureLayer)
     featuredefn = layerdefn(layer)
@@ -19,9 +19,7 @@ function Tables.schema(layer::AbstractFeatureLayer)
 end
 
 function Base.iterate(t::Table, st = 0)
-    layer = t.layer
-    if iszero(st) 
-        resetreading!(layer) 
+    layer = getlayer(t)
     end
 
     featuredefn = layerdefn(layer)    
@@ -47,12 +45,11 @@ Tables.rowaccess(::Type{<:Table}) = true
 Tables.rows(t::Table) = t
 
 Base.IteratorSize(::Type{<:Table}) = Base.HasLength()
-Base.size(t::Table) = nfeature(t.layer)
-Base.length(t::Table) = Base.size(t)
+Base.size(t::Table) = nfeature(getlayer(t))
 Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
-Base.propertynames(t::Table) = Tables.schema(t.layer).names
+Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
 
 function Base.show(io::IO, t::Table)
-    println(io, "Table with $(nfeature(t.layer)) features")
+    println(io, "Table with $(nfeature(getlayer(t))) features")
 end
 Base.show(io::IO, ::MIME"text/plain", t::Table) = show(io, t)

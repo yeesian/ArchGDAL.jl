@@ -37,7 +37,7 @@ row = Base.iterate(table, 1)
 Layers are retrievable!
 One can get back the layer that a Table is made up of.
 ```@example tables
-lyr = table.layer
+lyr = ArchGDAL.getlayer(table)
 ```
 
 The Tables interface also support multiple geometries per layer.

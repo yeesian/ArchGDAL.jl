@@ -460,8 +460,10 @@ unsafe_getlayer(dataset::AbstractDataset, i::Integer) =
 
 """
     getlayer(dataset::AbstractDataset, name::AbstractString)
+    getlayer(table::Table)
 
-Fetch the feature layer corresponding to the given name.
+Fetch the feature layer corresponding to the given name. If it is called on a Table, which
+supports only one layer, a name is not needed.
 
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
