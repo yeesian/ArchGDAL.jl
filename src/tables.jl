@@ -4,7 +4,7 @@ Constructs `Table` out of `FeatureLayer`, where every row is a `Feature` consist
 ArchGDAL.Table(T::Union{IFeatureLayer, FeatureLayer})
 ```
 """
-struct Table{T} 
+struct Table{T<:Union{IFeatureLayer, FeatureLayer}}
     layer::T
 end
 
