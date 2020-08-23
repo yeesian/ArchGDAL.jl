@@ -24,15 +24,9 @@ function Base.iterate(t::Table, st = 0)
         resetreading!(layer) 
     end
 
-    featuredefn = layerdefn(layer)
-    geomdefns = (getgeomdefn(featuredefn, i) for i in 0:ArchGDAL.ngeom(layer)-1)
-    
-    field_names = String[]
-    for field_no in 0:nfield(layer)-1
-        field = getfielddefn(featuredefn, field_no)
-        push!(field_names, getname(field))
-    end
-    geom_names = [getname(geomdefn) for geomdefn in geomdefns]
+    featuredefn = layerdefn(layer)    
+    field_names = [getname(getfielddefn(featuredefn, i-1)) for i in 1:nfield(layer)]
+    geom_names = [getname(getgeomdefn(featuredefn, i-1)) for i in 1:ngeom(layer)]
 
     st >= nfeature(layer) && return nothing
     v = Union{Tables.schema(layer).types..., IGeometry}[]
