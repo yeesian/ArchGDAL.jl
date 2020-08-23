@@ -148,7 +148,7 @@ import ArchGDAL; const AG = ArchGDAL
             end
         end
         @test AG.findfieldindex(layer,"FID", true) == 0
-        @test AG.findfieldindex(layer,"FID", false) == 0
+        @test AG.findfieldindex(layer,:FID, false) == 0
         @test AG.findfieldindex(layer,"pointname", true) == 1
         @test AG.findfieldindex(layer,"pointname", false) == 1
         @test AG.findfieldindex(layer,"geom", true) == -1
