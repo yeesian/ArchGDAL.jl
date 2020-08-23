@@ -36,7 +36,7 @@ One can get back the layer that a Table is made up of.
 lyr = table.layer
 ```
 
-The Tables interface also support multiple geomtries per layer.
+The Tables interface also support multiple geometries per layer.
 
 Here, we visit the [`data/multi_geom.csv`](https://github.com/yeesian/ArchGDALDatasets/blob/master/data/multi_geom.csv)      dataset.
 
@@ -47,7 +47,7 @@ layer = ArchGDAL.getlayer(dataset, 0)
 table = ArchGDAL.Table(layer)
 ```
 
-Exatracting a row from the table, we see that the row/feature is made up of two geomtries viz. `point` and `linestring`.
+Exatracting a row from the table, we see that the row/feature is made up of two geometries viz. `point` and `linestring`.
 ```@example tables
 row = Base.iterate(table, 0)
 ```
