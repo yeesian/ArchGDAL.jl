@@ -10,10 +10,11 @@ using Tables
     @test dataset1 isa ArchGDAL.IDataset
     layer = AG.getlayer(dataset, 0)
     layer1 = AG.getlayer(dataset1, 0)
+    gt = AG.Table(layer)
+    gt1 = AG.Table(layer1)
+        
 
     @testset "read layer to table" begin
-        gt = AG.Table(layer)
-        gt1 = AG.Table(layer1)
         @test AG.getlayer(gt) === layer
         @test AG.getlayer(gt1) === layer1
         @test sprint(print, gt) == "Table with 4 features\n"
