@@ -37,18 +37,18 @@ function Base.iterate(t::Table, st = 0)
     return get_row(layer), st + 1
 end
 
-Base.IteratorSize(::Type{<:Table}) = Base.HasLength()
-Base.size(t::Table) = nfeature(getlayer(t))
-Base.length(t::Table) = size(t)
-Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
-Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
-Base.getproperty(t::Table, s::Symbol) = [getproperty(iterate(t, i)[1], s) for i in 0:size(t)-1]
-
 function Base.getindex(t::Table, idx::Int)
     layer = getlayer(t)
     setnextbyindex!(layer, idx) 
     return get_row(layer)
 end
+
+Base.IteratorSize(::Type{<:Table}) = Base.HasLength()
+Base.size(t::Table) = nfeature(getlayer(t))
+Base.length(t::Table) = size(t)
+Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
+Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
+Base.getproperty(t::Table, s::Symbol) = [getproperty(row, s) for row in t]
     
 function get_row(layer::IFeatureLayer)
     featuredefn = layerdefn(layer)
@@ -56,16 +56,11 @@ function get_row(layer::IFeatureLayer)
     field_names = Tuple(Symbol(getname(fielddefn)) for fielddefn in fielddefns)
     geom_names = (Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
 
-    v = Union{Tables.schema(layer).types...}[]
     nextfeature(layer) do feature
-        for name in field_names
-            push!(v, getfield(feature, name))
-        end
-        for idx in 1:length(geom_names)
-            push!(v, getgeom(feature, idx-1))
-        end
+        prop = (getfield(feature, name) for name in field_names)
+        geom = (getgeom(feature, idx-1) for idx in 1:length(geom_names))
+        row = NamedTuple{(field_names..., geom_names...)}((prop..., geom...))
     end
-    row = NamedTuple{(field_names..., geom_names...)}(v)
 end
 
 function Base.show(io::IO, t::Table)

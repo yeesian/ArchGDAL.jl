@@ -31,7 +31,7 @@ table = ArchGDAL.Table(layer)
 Individual rows can be retrieved using the `Base.getindex(t::ArchGDAL.Table, idx::Int)` method.
 
 ```@example tables
-row = Base.getindex(table, 1)
+row = table[1]
 ```
 
 Layers are retrievable!
