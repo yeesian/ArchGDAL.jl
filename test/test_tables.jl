@@ -3,7 +3,6 @@ import ArchGDAL; const AG = ArchGDAL
 using Tables
 
 @testset "Tables Support" begin
-    
     dataset = AG.read(joinpath(@__DIR__, "data/point.geojson"))
     dataset1 = AG.read(joinpath(@__DIR__, "data/multi_geom.csv"), options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
     @test dataset isa ArchGDAL.IDataset
