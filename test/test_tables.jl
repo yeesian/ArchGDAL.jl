@@ -8,7 +8,7 @@ using Tables
     layer = AG.getlayer(dataset, 0)
     layer1 = AG.getlayer(dataset1, 0)
     gt = AG.Table(layer)
-    @test getlayer(gt) === layer
+    @test AG.getlayer(gt) === layer
     gt1 = AG.Table(layer1)
     fr = iterate(gt, 1)[1]
     fr1 = iterate(gt, 1)[1]
@@ -23,10 +23,10 @@ using Tables
 
     @test sprint(print, gt) == "Table with 4 features\n"
     @test sprint(print, gt1) == "Table with 2 features\n"
-    @test getproperty(Tables.schema(layer), :types) == (Float64, String)
-    @test getproperty(Tables.schema(layer1), :types) == (String, String, String)
-    @test getproperty(Tables.schema(layer), :names) == propertynames(gt)
-    @test getproperty(Tables.schema(layer1), :names) == propertynames(gt1)
+    @test Tables.schema(layer).types == (Float64, String)
+    @test Tables.schema(layer1).types == (String, String, String)
+    @test Tables.schema(layer).names == propertynames(gt)
+    @test Tables.schema(layer1).names == propertynames(gt1)
     
     @test Tables.istable(AG.Table) == true
     @test Tables.rows(gt) == AG.Table(layer)

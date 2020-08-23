@@ -17,6 +17,7 @@ julia> using SHA
 julia> open(filepath/filename) do f
            bytes2hex(sha256(f))
        end
+```
 """
 remotefiles = [
     ("data/multi_geom.csv", "00520017658b66ff21e40cbf553672fa8e280cddae6e7a5d1f8bd36bcd521770"),
