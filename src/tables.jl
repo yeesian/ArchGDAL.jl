@@ -11,17 +11,12 @@ end
 getlayer(t::Table) = Base.getfield(t, :layer)
 
 function Tables.schema(layer::AbstractFeatureLayer)
-    featuredefn = layerdefn(layer)
-    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
-    names_fields = (getname(fielddefn) for fielddefn in fielddefns)
-    types_fields = (_FIELDTYPE[gettype(fielddefn)] for fielddefn in fielddefns)
-    
+    field_names, geom_names, featuredefn, fielddefns = schema_names(layer)
     ngeom = ArchGDAL.ngeom(featuredefn)
     geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
-    geom_names = (ArchGDAL.getname(geomdefn) for geomdefn in geomdefns)
+    field_types = (_FIELDTYPE[gettype(fielddefn)] for fielddefn in fielddefns)
     geom_types = (IGeometry for i in 1:ngeom)
-    
-    Tables.Schema((names_fields..., geom_names...), (types_fields..., geom_types...))
+    Tables.Schema((field_names..., geom_names...), (field_types..., geom_types...))
 end
 
 Tables.istable(::Type{<:Table}) = true
@@ -34,13 +29,13 @@ function Base.iterate(t::Table, st = 0)
     if iszero(st)
         resetreading!(layer)
     end
-    return get_row(layer), st + 1
+    return nextnamedtuple(layer), st + 1
 end
 
 function Base.getindex(t::Table, idx::Int)
     layer = getlayer(t)
     setnextbyindex!(layer, idx) 
-    return get_row(layer)
+    return nextnamedtuple(layer)
 end
 
 Base.IteratorSize(::Type{<:Table}) = Base.HasLength()
@@ -50,17 +45,26 @@ Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
 Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
 Base.getproperty(t::Table, s::Symbol) = [getproperty(row, s) for row in t]
     
-function get_row(layer::IFeatureLayer)
-    featuredefn = layerdefn(layer)
-    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
-    field_names = Tuple(Symbol(getname(fielddefn)) for fielddefn in fielddefns)
-    geom_names = (Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
-
-    nextfeature(layer) do feature
+"""
+nextnamedtuple(layer::IFeatureLayer)
+Returns the feature row of a layer as a `NamedTuple`
+Calling it iteratively will work similar to `nextfeature` i.e. give the consecutive feature as `NamedTuple`
+"""
+function nextnamedtuple(layer::IFeatureLayer)
+    field_names, geom_names = schema_names(layer)
+    return nextfeature(layer) do feature
         prop = (getfield(feature, name) for name in field_names)
         geom = (getgeom(feature, idx-1) for idx in 1:length(geom_names))
-        row = NamedTuple{(field_names..., geom_names...)}((prop..., geom...))
+        NamedTuple{(field_names..., geom_names...)}((prop..., geom...))
     end
+end
+
+function schema_names(layer::AbstractFeatureLayer)
+    featuredefn = layerdefn(layer)
+    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
+    field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
+    geom_names = (Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
+    return (field_names, geom_names, featuredefn, fielddefns)
 end
 
 function Base.show(io::IO, t::Table)

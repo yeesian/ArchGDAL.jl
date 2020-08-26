@@ -3,8 +3,8 @@ import ArchGDAL; const AG = ArchGDAL
 using Tables
 
 @testset "Tables Support" begin
-    dataset = AG.read(joinpath(@__DIR__, "data/point.geojson"))
-    dataset1 = AG.read(joinpath(@__DIR__, "data/multi_geom.csv"), options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
+    dataset = AG.read("point.geojson")
+    dataset1 = AG.read("multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
     @test dataset isa ArchGDAL.IDataset
     @test dataset1 isa ArchGDAL.IDataset
     layer = AG.getlayer(dataset, 0)
@@ -12,7 +12,6 @@ using Tables
     gt = AG.Table(layer)
     gt1 = AG.Table(layer1)
         
-
     @testset "read layer to table" begin
         @test AG.getlayer(gt) === layer
         @test AG.getlayer(gt1) === layer1
@@ -43,5 +42,15 @@ using Tables
         @test iterate(gt1, 3) === nothing
         @test typeof([getindex(gt, i) for i in 0:size(gt)-1]) == typeof([iterate(gt, i)[1] for i in 0:size(gt)-1])
         @test typeof([getindex(gt1, i) for i in 0:size(gt1)-1]) == typeof([iterate(gt1, i)[1] for i in 0:size(gt1)-1])
+
+        AG.resetreading!(layer)
+        AG.resetreading!(layer1)
+        
+        @test AG.nextnamedtuple(layer) isa NamedTuple{(:FID, :pointname, Symbol("")),Tuple{Float64,String,ArchGDAL.IGeometry}}
+        @test AG.nextnamedtuple(layer1) isa NamedTuple{(:id, :zoom, :location, :point, :linestring),Tuple{String,String,String,ArchGDAL.IGeometry,ArchGDAL.IGeometry}}
+        for i in 1:4
+            @test AG.schema_names(layer)[i] isa Base.Generator || AG.schema_names(layer)[i] isa ArchGDAL.IFeatureDefnView
+            @test AG.schema_names(layer1)[i] isa Base.Generator || AG.schema_names(layer1)[i] isa ArchGDAL.IFeatureDefnView  
+        end
     end
 end
