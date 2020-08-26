@@ -63,3 +63,10 @@ Finally layers can be converted to DataFrames to perform miscellaneous spatial o
 ```@example tables
 df = DataFrame(table)
 ```
+In some cases the `nextfeature` might become a bit tedious to use. In which case the `ArchGDAL.nextnamedtuple()` method comes in handy. Though built upon `nextfeature`, simply calling it, yields the `feature` as a `NamedTuple`. Though one might have to use `ArchGDAL.resetreading!(layer)` method to reset the layer reading to the start.
+
+```@example tables
+ArchGDAL.resetrading!(layer)
+feat1 = ArchGDAL.nextnamedtuple(layer)
+feat2 = ArchGDAL.nextnamedtuple(layer)
+```
