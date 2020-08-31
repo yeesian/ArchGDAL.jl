@@ -21,6 +21,7 @@ julia> open(filepath/filename) do f
 """
 remotefiles = [
     ("data/multi_geom.csv", "00520017658b66ff21e40cbf553672fa8e280cddae6e7a5d1f8bd36bcd521770"),
+    ("data/missing_testcase.csv", "d49ba446aae9ef334350b64c876b4de652f28595fdecf78bea4e16af4033f7c6"),
     ("data/point.geojson", "8744593479054a67c784322e0c198bfa880c9388b39a2ddd4c56726944711bd9"),
     ("data/utmsmall.tif", "f40dae6e8b5e18f3648e9f095e22a0d7027014bb463418d32f732c3756d8c54f"),
     ("gdalworkshop/world.tif", "b376dc8af62f9894b5050a6a9273ac0763ae2990b556910d35d4a8f4753278bb"),
