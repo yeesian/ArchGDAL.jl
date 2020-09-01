@@ -51,7 +51,7 @@ using Tables
         @test getproperty(gt1, :zoom) == [iterate(gt1, i)[1].zoom for i in 0:size(gt1)-1]
         @test sprint(print, gt2[4].linestring) == sprint(print, gt2[2].point)
         @test sprint(print, gt2[8].linestring) == sprint(print, gt2[6].point)
-        @test collect(findall(x->x=="missing", df[:,i]) for i in 1:3) == [6, [4, 8], [3, 7, 8]]
+        @test collect(findall(x->x=="missing", getproperty(gt2, i)) for i in [:id, :zoom, :location]) == [[6], [4, 8], [3, 7, 8]]
         @test iterate(gt, 5) === nothing
         @test iterate(gt1, 3) === nothing
         @test typeof([getindex(gt, i) for i in 0:size(gt)-1]) == typeof([iterate(gt, i)[1] for i in 0:size(gt)-1])
