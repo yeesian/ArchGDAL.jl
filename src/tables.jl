@@ -46,8 +46,8 @@ Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
 Base.getproperty(t::Table, s::Symbol) = [getproperty(row, s) for row in t]
     
 """
-nextnamedtuple(layer::IFeatureLayer)
 Returns the feature row of a layer as a `NamedTuple`
+
 Calling it iteratively will work similar to `nextfeature` i.e. give the consecutive feature as `NamedTuple`
 """
 function nextnamedtuple(layer::IFeatureLayer)
