@@ -49,13 +49,13 @@ using Tables
         @test propertynames(gt2) == (:id, :zoom, :location, :point, :linestring)
         @test getproperty(gt, :FID) == [iterate(gt, i)[1].FID for i in 0:size(gt)-1]
         @test getproperty(gt1, :zoom) == [iterate(gt1, i)[1].zoom for i in 0:size(gt1)-1]
-        @test sprint(print, gt2[4].linestring) == sprint(print, gt2[2].point)
-        @test sprint(print, gt2[8].linestring) == sprint(print, gt2[6].point)
+        @test sprint(print, gt2[5].linestring) == sprint(print, gt2[3].point)
+        @test sprint(print, gt2[9].linestring) == sprint(print, gt2[7].point)
         @test collect(findall(x->x=="missing", getproperty(gt2, i)) for i in [:id, :zoom, :location]) == [[6], [4, 8], [3, 7, 8]]
         @test iterate(gt, 5) === nothing
         @test iterate(gt1, 3) === nothing
-        @test typeof([getindex(gt, i) for i in 0:size(gt)-1]) == typeof([iterate(gt, i)[1] for i in 0:size(gt)-1])
-        @test typeof([getindex(gt1, i) for i in 0:size(gt1)-1]) == typeof([iterate(gt1, i)[1] for i in 0:size(gt1)-1])
+        @test typeof([getindex(gt, i) for i in 1:size(gt)]) == typeof([iterate(gt, i)[1] for i in 0:size(gt)-1])
+        @test typeof([getindex(gt1, i) for i in 1:size(gt1)]) == typeof([iterate(gt1, i)[1] for i in 0:size(gt1)-1])
 
         AG.resetreading!(layer)
         AG.resetreading!(layer1)
@@ -64,7 +64,7 @@ using Tables
         @test AG.nextnamedtuple(layer1) isa NamedTuple{(:id, :zoom, :location, :point, :linestring),Tuple{String,String,String,ArchGDAL.IGeometry,ArchGDAL.IGeometry}}
         for i in 1:4
             @test AG.schema_names(layer)[i] isa Base.Generator || AG.schema_names(layer)[i] isa ArchGDAL.IFeatureDefnView
-            @test AG.schema_names(layer1)[i] isa Base.Generator || AG.schema_names(layer1)[i] isa ArchGDAL.IFeatureDefnView  
+            @test AG.schema_names(layer1)[i] isa Base.Generator || AG.schema_names(layer1)[i] isa ArchGDAL.IFeatureDefnView
         end
     end
 end

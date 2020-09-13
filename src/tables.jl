@@ -34,7 +34,7 @@ end
 
 function Base.getindex(t::Table, idx::Int)
     layer = getlayer(t)
-    setnextbyindex!(layer, idx) 
+    setnextbyindex!(layer, idx-1) 
     return nextnamedtuple(layer)
 end
 
@@ -44,7 +44,7 @@ Base.length(t::Table) = size(t)
 Base.IteratorEltype(::Type{<:Table}) = Base.HasEltype()
 Base.propertynames(t::Table) = Tables.schema(getlayer(t)).names
 Base.getproperty(t::Table, s::Symbol) = [getproperty(row, s) for row in t]
-    
+
 """
 Returns the feature row of a layer as a `NamedTuple`
 

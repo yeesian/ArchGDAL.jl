@@ -28,7 +28,7 @@ The [`ArchGDAL.Table`](@ref) method accepts an `ArchGDAL.FeatureLayer`.
 table = ArchGDAL.Table(layer)
 ```
 
-Individual rows can be retrieved using the `Base.getindex(t::ArchGDAL.Table, idx::Int)` method.
+Individual rows can be retrieved using the `Base.getindex(t::ArchGDAL.Table, idx::Int)` method or simply `table[idx]`.
 
 ```@example tables
 row = table[1]
@@ -56,7 +56,7 @@ table = ArchGDAL.Table(layer)
 Exatracting a row from the table, we see that the row/feature is made up of two geometries
 viz. `point` and `linestring`.
 ```@example tables
-row = Base.getindex(table, 1)
+row = table[1]
 ```
 
 Finally layers can be converted to DataFrames to perform miscellaneous spatial operations.
