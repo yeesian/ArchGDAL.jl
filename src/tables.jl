@@ -32,7 +32,7 @@ function Base.iterate(t::Table, st = 0)
     return nextnamedtuple(layer), st + 1
 end
 
-function Base.getindex(t::Table, idx::Int)
+function Base.getindex(t::Table, idx::Integer)
     layer = getlayer(t)
     setnextbyindex!(layer, idx-1) 
     return nextnamedtuple(layer)
