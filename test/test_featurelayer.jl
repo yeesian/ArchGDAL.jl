@@ -147,14 +147,14 @@ import ArchGDAL; const AG = ArchGDAL
                 @test AG.testcapability(layer,"OLCRandomWrite") == false
             end
         end
-        @test AG.findfieldindex(layer,"FID", true) == 0
-        @test AG.findfieldindex(layer,"FID", false) == 0
-        @test AG.findfieldindex(layer,"pointname", true) == 1
-        @test AG.findfieldindex(layer,"pointname", false) == 1
-        @test AG.findfieldindex(layer,"geom", true) == -1
-        @test AG.findfieldindex(layer,"geom", true) == -1
-        @test AG.findfieldindex(layer,"rubbish", true) == -1
-        @test AG.findfieldindex(layer,"rubbish", false) == -1
+        @test AG.findfieldindex(layer, "FID", true) == 0
+        @test AG.findfieldindex(layer, :FID, false) == 0
+        @test AG.findfieldindex(layer, "pointname", true) == 1
+        @test AG.findfieldindex(layer, "pointname", false) == 1
+        @test AG.findfieldindex(layer, "geom", true) == -1
+        @test AG.findfieldindex(layer, "geom", true) == -1
+        @test AG.findfieldindex(layer, "rubbish", true) == -1
+        @test AG.findfieldindex(layer, "rubbish", false) == -1
         @test sprint(print, AG.envelope(layer, 0, true)) == "GDAL.OGREnvelope(100.0, 100.2785, 0.0, 0.0893)"
         @test sprint(print, AG.envelope(layer, true)) == "GDAL.OGREnvelope(100.0, 100.2785, 0.0, 0.0893)"
     end

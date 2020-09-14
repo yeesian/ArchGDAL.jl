@@ -524,7 +524,7 @@ layerdefn(layer::AbstractFeatureLayer) =
     IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
 
 """
-    findfieldindex(layer::AbstractFeatureLayer, field::AbstractString, exactmatch::Bool)
+    findfieldindex(layer::AbstractFeatureLayer, field::Union{AbstractString, Symbol}, exactmatch::Bool)
 
 Find the index of the field in a layer, or -1 if the field doesn't exist.
 
@@ -534,7 +534,7 @@ the layer was created (eg. like `LAUNDER` in the OCI driver).
 """
 function findfieldindex(
         layer::AbstractFeatureLayer,
-        field::AbstractString,
+        field::Union{AbstractString, Symbol},
         exactmatch::Bool
     )
     return GDAL.ogr_l_findfieldindex(layer.ptr, field, exactmatch)

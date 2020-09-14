@@ -1,11 +1,10 @@
 module ArchGDAL
 
-    import GDAL, GeoInterface, GeoFormatTypes
-    import DataStreams: Data
-    import GeoInterface: coordinates, geotype
-    import Base: convert
-
     using Dates
+    using GDAL: GDAL
+    using GeoFormatTypes: GeoFormatTypes
+    using GeoInterface: GeoInterface
+    using Tables: Tables
     
     const GFT = GeoFormatTypes
 
@@ -30,7 +29,7 @@ module ArchGDAL
     include("context.jl")
     include("base/iterators.jl")
     include("base/display.jl")
-    include("datastreams.jl")
+    include("tables.jl")
     include("geointerface.jl")
     include("convert.jl")
 
