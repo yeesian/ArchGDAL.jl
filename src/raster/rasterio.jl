@@ -156,7 +156,7 @@ function read(
         xsize::Integer,
         ysize::Integer
     )
-    buffer = Array{pixeltype(rb)}(undef, width(rb), height(rb))
+    buffer = Array{pixeltype(rb)}(undef, xsize, ysize)
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
     return buffer
 end
@@ -307,7 +307,7 @@ function read(
         ysize::Integer
     )
     buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
-        width(dataset), height(dataset), length(indices))
+        xsize, ysize, length(indices))
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
     return buffer
 end
@@ -329,7 +329,7 @@ function read(
         cols::UnitRange{<:Integer}
     )
     buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
-        width(dataset), height(dataset), length(indices))
+        length(cols), length(rows), length(indices))
     rasterio!(dataset, buffer, indices, rows, cols)
     return buffer
 end
