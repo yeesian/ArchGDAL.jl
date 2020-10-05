@@ -152,6 +152,8 @@ AG.read("ospy/data4/aster.img") do ds
         @test size(AG.read(ds, [1, 3], 0, 0, 20, 10)) === (20, 10, 2)
         @test size(AG.read(ds, 1, 1:10, 31:50)) === (20, 10)
         @test size(AG.read(ds, [1, 3], 1:10, 31:50)) === (20, 10, 2)
+        band = AG.getband(ds, 1)
+        @test size(AG.read( band, 0, 0, 20, 10)) === (20, 10)
     end
 end
 

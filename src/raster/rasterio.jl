@@ -70,7 +70,7 @@ function rasterio!(
         linespace::Integer  = 0,
         bandspace::Integer  = 0
     )
-    rasterio!(dataset, buffer, bands, 0, 0, width(dataset), height(dataset),
+    rasterio!(dataset, buffer, bands, 0, 0, size(buffer, 1), size(buffer, 2),
         access, pxspace, linespace, bandspace)
     return buffer
 end
