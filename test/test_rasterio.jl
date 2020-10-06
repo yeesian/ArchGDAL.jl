@@ -146,6 +146,15 @@ AG.read("ospy/data4/aster.img") do ds
         @test total / count ≈ 76.33891347095299
         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
     end
+
+    @testset "buffer size" begin
+        @test size(AG.read(ds, 1, 0, 0, 20, 10)) === (20, 10)
+        @test size(AG.read(ds, [1, 3], 0, 0, 20, 10)) === (20, 10, 2)
+        @test size(AG.read(ds, 1, 1:10, 31:50)) === (20, 10)
+        @test size(AG.read(ds, [1, 3], 1:10, 31:50)) === (20, 10, 2)
+        band = AG.getband(ds, 1)
+        @test size(AG.read( band, 0, 0, 20, 10)) === (20, 10)
+    end
 end
 
 # Untested
