@@ -52,5 +52,5 @@ for (f, sha) in remotefiles
     # download the file if it is not there or if it has a different checksum
     currfile = normpath(joinpath(testdatadir, f))
     url = REPO_URL * f * "?raw=true"
-    download_verify(url, sha, currfile; force=true)
+    PlatformEngines.download_verify(url, sha, currfile; force=true)
 end
