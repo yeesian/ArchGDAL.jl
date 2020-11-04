@@ -215,6 +215,18 @@ function envelope3d(geom::AbstractGeometry)
 end
 
 """
+    boundingbox(geom::AbstractGeometry)
+
+Returns a bounding box polygon (CW) built from envelope coordinates
+"""
+function boundingbox(geom::AbstractGeometry)
+    coordinates = envelope(geom)
+    MinX, MaxX, MinY, MaxY = coordinates.MinX, coordinates.MaxX, coordinates.MinY, coordinates.MaxY
+    # creates a CW closed ring polygon
+    return createpolygon([[MaxY, MinX], [MaxY, MaxX], [MinY, MaxX], [MinY, MinX], [MaxY, MinX]])
+end
+
+"""
     toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder = GDAL.wkbNDR)
 
 Convert a geometry well known binary format.
