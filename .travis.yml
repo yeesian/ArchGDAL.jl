@@ -21,3 +21,5 @@ jobs:
         - julia --project=docs/ test/remotefiles.jl
         - julia --project=docs/ docs/make.jl
       after_success: skip
+  allow_failures:
+    - julia: nightly
