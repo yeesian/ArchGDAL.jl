@@ -106,7 +106,7 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.nfeature(layer) == 4
         @test AG.getfield.(layer, 1) == ["point-a", "point-b", "a", "b"]
         AG.setspatialfilter!(layer,100,-1,100.1,1)
-        @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1.0,100 -1))"
+        @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1,100 -1))"
         @test AG.nfeature(layer) == -1
         @test AG.getfield.(layer, 1) == ["point-a", "a"]
         AG.clearspatialfilter!(layer)
@@ -115,7 +115,7 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.getfield.(layer, 1) == ["point-a", "point-b", "a", "b"]
         @test AG.findgeomindex(AG.layerdefn(layer)) == 0
         AG.setspatialfilter!(layer,0,100,-1,100.1,1)
-        @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1.0,100 -1))"
+        @test AG.toWKT(AG.getspatialfilter(layer)) == "POLYGON ((100 -1,100 1,100.1 1.0,100.1 -1,100 -1))"
         @test AG.nfeature(layer) == -1
         @test AG.getfield.(layer, 1) == ["point-a", "a"]
 
