@@ -218,28 +218,28 @@ end
         @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
     end
 
-    @test AG.toWKT(AG.union(geom1, geom2)) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+    @test AG.toWKT(AG.union(geom1, geom2)) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
     AG.union(geom1, geom2) do result
-        @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
         @test AG.hascurvegeom(result, true) == false
         @test AG.hascurvegeom(result, false) == false
     end
 
-    @test AG.toWKT(AG.difference(geom1, geom2)) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+    @test AG.toWKT(AG.difference(geom1, geom2)) == "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
     AG.difference(geom1, geom2) do result
-        @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        @test AG.toWKT(result) == "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
         AG.segmentize!(result, 20)
-        @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        @test AG.toWKT(result) == "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
         AG.segmentize!(result, 2)
-        @test AG.toWKT(result) == "MULTIPOLYGON (((0 0 8,0 2 8,0 4 8,2 4 8,4 4 8,4 2 8,4 0 8,2 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),((10 0 8,10 2 8,10 4 8,12 4 8,14 4 8,14 2 8,14 0 8,12 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        @test AG.toWKT(result) == "MULTIPOLYGON (((0 4 8,2 4 8,4 4 8,4 2 8,4 0 8,2 0 8,0 0 8,0 2 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,12 4 8,14 4 8,14 2 8,14 0 8,12 0 8,10 0 8,10 2 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
     end
 
-    @test AG.toWKT(AG.symdifference(geom1, geom2)) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+    @test AG.toWKT(AG.symdifference(geom1, geom2)) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
     AG.symdifference(geom1, geom2) do result
         @test GeoInterface.geotype(result) == :GeometryCollection
-        @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POINT (3 6 9),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
         AG.removegeom!(result, 1)
-        @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)))"
+        @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POINT (2 5 8),POINT (3 6 9))"
         AG.removeallgeoms!(result)
         @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
     end
@@ -306,6 +306,6 @@ end
             AG.fromWKT("POINT (1120351.57 741921.42)") do point
                 @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
                 AG.transform!(point, transform)
-                @test GeoInterface.coordinates(point) ≈ [47.348801, -122.598135]
+                @test GeoInterface.coordinates(point) ≈ [47.3488070138318, -122.5981499431438]
     end end end end
 end

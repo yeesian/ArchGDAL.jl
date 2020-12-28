@@ -10,7 +10,7 @@ const GFT = GeoFormatTypes
                 AG.fromWKT("POINT (1120351.57 741921.42)") do point
                     @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
                     AG.transform!(point, transform)
-                    @test GeoInterface.coordinates(point) ≈ [47.348801380288485, -122.5981351308777]
+                    @test GeoInterface.coordinates(point) ≈ [47.3488070138318, -122.5981499431438]
         end end end end
     end
 
@@ -30,29 +30,31 @@ const GFT = GeoFormatTypes
     @testset "Use reproject" begin
         @testset "reciprocal reprojection of wkt" begin
             wktpoint = GFT.WellKnownText(GFT.Geom(), "POINT (1120351.57 741921.42)")
-            result = GFT.WellKnownText(GFT.Geom(), "POINT (47.3488013802885 -122.598135130878)")
+            result = GFT.WellKnownText(GFT.Geom(), "POINT (47.3488070138318 -122.598149943144)")
             @test AG.reproject(wktpoint, GFT.EPSG(2927), GFT.EPSG(4326)) == result
             @test convert(AG.Geometry, AG.reproject(result, GFT.EPSG(4326), GFT.EPSG(2927))) |> 
-                GeoInterface.coordinates ≈ [1120351.57, 741921.42]
+                GeoInterface.coordinates ≈ [1.12035156999967e6, 741921.420000271]
         end
         @testset "reproject vector, vector of vector, or tuple" begin
             coord = [1120351.57, 741921.42]
-            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [47.348801, -122.598135]
-            @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈ [[47.348801, -122.598135]]
+            @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈
+                [47.3488070138318, -122.5981499431438]
+            @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈
+                [[47.3488070138318, -122.5981499431438]]
             coord = (1120351.57, 741921.42)
             @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:compliant) ≈ 
-                [47.348801, -122.598135]
+                [47.3488070138318, -122.5981499431438]
             @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order=:trad) ≈ 
-                [-122.598135, 47.348801]
+                [-122.5981499431438, 47.3488070138318]
             @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:compliant) ≈ 
-                [[47.348801, -122.598135]]
+                [[47.3488070138318, -122.5981499431438]]
             @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.WellKnownText, GFT.EPSG(4326)); order=:trad) ≈ 
-                [[-122.598135, 47.348801]]
+                [[-122.5981499431438, 47.3488070138318]]
             # :compliant doesn't work on PROJ axis order, it loses authority information
             @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:compliant) ≈ 
-                [[-122.598135, 47.348801]]
+                [[-122.5981499431438, 47.3488070138318]]
             @test AG.reproject([coord], GFT.EPSG(2927), convert(GFT.ProjString, GFT.EPSG(4326)); order=:trad) ≈ 
-                [[-122.598135, 47.348801]]
+                [[-122.5981499431438, 47.3488070138318]]
         end
     end
 
