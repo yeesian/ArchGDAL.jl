@@ -13,10 +13,9 @@ getlayer(t::Table) = Base.getfield(t, :layer)
 function Tables.schema(layer::AbstractFeatureLayer)
     field_names, geom_names, featuredefn, fielddefns = schema_names(layer)
     ngeom = ArchGDAL.ngeom(featuredefn)
-    geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
+    geomtypes = (IGeometry{ArchGDAL.gettype(ArchGDAL.getgeomdefn(featuredefn, i))} for i in 0:ngeom-1)
     field_types = (_FIELDTYPE[gettype(fielddefn)] for fielddefn in fielddefns)
-    geom_types = (IGeometry for i in 1:ngeom)
-    Tables.Schema((field_names..., geom_names...), (field_types..., geom_types...))
+    Tables.Schema((field_names..., geom_names...), (field_types..., geomtypes...))
 end
 
 Tables.istable(::Type{<:Table}) = true
@@ -34,7 +33,7 @@ end
 
 function Base.getindex(t::Table, idx::Integer)
     layer = getlayer(t)
-    setnextbyindex!(layer, idx-1) 
+    setnextbyindex!(layer, idx-1)
     return nextnamedtuple(layer)
 end
 
@@ -63,7 +62,8 @@ function schema_names(layer::AbstractFeatureLayer)
     featuredefn = layerdefn(layer)
     fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
     field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
-    geom_names = (Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
+    geom_names = collect(Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
+    replace!(geom_names, Symbol("")=>Symbol("geom"), count=1)
     return (field_names, geom_names, featuredefn, fielddefns)
 end
 
