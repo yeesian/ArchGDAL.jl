@@ -206,11 +206,5 @@ end
 
 function Base.show(io::IO, geom::AbstractGeometry)
     geom.ptr == C_NULL && (return print(io, "NULL Geometry"))
-    print(io, "Geometry: ")
-    geomwkt = toWKT(geom)
-    if length(geomwkt) > 60
-        print(io, "$(geomwkt[1:50]) ... $(geomwkt[end-4:end])")
-    else
-        print(io, "$geomwkt")
-    end
+    print(io, "Geometry of type $(getgeomtype(geom))")
 end
