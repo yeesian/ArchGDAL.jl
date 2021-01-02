@@ -211,11 +211,11 @@ mutable struct Geometry <: AbstractGeometry
     Geometry(ptr::GDALGeometry = C_NULL) = new(ptr)
 end
 
-mutable struct IGeometry <: AbstractGeometry
+mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry
     ptr::GDALGeometry
 
     function IGeometry(ptr::GDALGeometry = C_NULL)
-        geom = new(ptr)
+        geom = new{ptr != C_NULL ? GDAL.ogr_g_getgeometrytype(ptr) : GDAL.wkbUnknown}(ptr)
         finalizer(destroy, geom)
         return geom
     end
