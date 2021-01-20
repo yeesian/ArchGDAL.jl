@@ -221,7 +221,7 @@ Build a VRT from a list of datasets.
 The output dataset.
 """
 function unsafe_gdalbuildvrt(
-        datasets::Vector{Dataset},
+        datasets::Vector{<:AbstractDataset},
         options = String[];
         dest = "/vsimem/tmp"
     )
