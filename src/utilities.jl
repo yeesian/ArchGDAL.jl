@@ -32,15 +32,15 @@ Convert raster data between different formats.
 The output dataset.
 """
 function unsafe_gdaltranslate(
-        dataset::AbstractDataset,
+        dataset::T,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where {T<:AbstractDataset}
     options = GDAL.gdaltranslateoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdaltranslate(dest, dataset.ptr, options, usage_error)
     GDAL.gdaltranslateoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -57,16 +57,16 @@ Image reprojection and warping function.
 The output dataset.
 """
 function unsafe_gdalwarp(
-        datasets::Vector{<:AbstractDataset},
+        datasets::Vector{T},
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where T<:AbstractDataset
     options = GDAL.gdalwarpappoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalwarp(dest, C_NULL,
         length(datasets), [ds.ptr for ds in datasets], options, usage_error)
     GDAL.gdalwarpappoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -83,16 +83,16 @@ Convert vector data between file formats.
 The output dataset.
 """
 function unsafe_gdalvectortranslate(
-        datasets::Vector{<:AbstractDataset},
+        datasets::Vector{T},
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where T<:AbstractDataset
     options = GDAL.gdalvectortranslateoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalvectortranslate(dest, C_NULL, length(datasets),
         [ds.ptr for ds in datasets], options, usage_error)
     GDAL.gdalvectortranslateoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -115,12 +115,12 @@ Tools to analyze and visualize DEMs.
 The output dataset.
 """
 function unsafe_gdaldem(
-        dataset::AbstractDataset,
+        dataset::T,
         processing::String,
         options = String[];
         dest = "/vsimem/tmp",
         colorfile = C_NULL
-    )
+    ) where T<:AbstractDataset
     if processing == "color-relief"
         @assert colorfile != C_NULL
     end
@@ -129,7 +129,7 @@ function unsafe_gdaldem(
     result = GDAL.gdaldemprocessing(dest, dataset.ptr, processing, colorfile,
         options, usage_error)
     GDAL.gdaldemprocessingoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -146,15 +146,15 @@ Convert nearly black/white borders to exact value.
 The output dataset.
 """
 function unsafe_gdalnearblack(
-        dataset::AbstractDataset,
+        dataset::T,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where T<:AbstractDataset
     options = GDAL.gdalnearblackoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalnearblack(dest, C_NULL, dataset.ptr, options, usage_error)
     GDAL.gdalnearblackoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -171,15 +171,15 @@ Create a raster from the scattered data.
 The output dataset.
 """
 function unsafe_gdalgrid(
-        dataset::AbstractDataset,
+        dataset::T,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where T<:AbstractDataset
     options = GDAL.gdalgridoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalgrid(dest, dataset.ptr, options, usage_error)
     GDAL.gdalgridoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -196,15 +196,15 @@ Burn vector geometries into a raster.
 The output dataset.
 """
 function unsafe_gdalrasterize(
-        dataset::AbstractDataset,
+        dataset::T,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where T<:AbstractDataset
     options = GDAL.gdalrasterizeoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalrasterize(dest, C_NULL, dataset.ptr, options, usage_error)
     GDAL.gdalrasterizeoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
 
 """
@@ -221,14 +221,14 @@ Build a VRT from a list of datasets.
 The output dataset.
 """
 function unsafe_gdalbuildvrt(
-        datasets::Vector{<:AbstractDataset},
+        datasets::Vector{T},
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    ) where T <:AbstractDataset
     options = GDAL.gdalbuildvrtoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalbuildvrt(dest, length(datasets),
         [ds.ptr for ds in datasets], C_NULL, options, usage_error)
     GDAL.gdalbuildvrtoptionsfree(options)
-    return Dataset(result)
+    return T(result)
 end
