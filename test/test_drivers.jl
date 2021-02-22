@@ -72,3 +72,10 @@ end
         )
     end
 end
+
+@testset "Test Driver from Extension" begin
+    @test AG.extensiondriver("filename.tif") == "GTiff"
+    @test AG.extensiondriver(".tif") == "GTiff"
+    @test AG.extensiondriver("filename.asc") == "AAIGrid"
+    @test AG.extensiondriver(".asc") == "AAIGrid"
+end

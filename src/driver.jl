@@ -138,3 +138,41 @@ end
 
 copyfiles(drvname::AbstractString, new::AbstractString, old::AbstractString) =
     copyfiles(getdriver(drvname), new, old)
+
+"""
+    extensions()
+
+Returns a `Dict{String,String}` of all of the file extensions that can be read by GDAL, 
+with their respective drivers shortname.
+"""
+function extensions()
+    extdict = Dict{String,String}()
+    for i in 1:GDAL.gdalgetdrivercount()
+        driver = ArchGDAL.getdriver(i)
+        if !(driver.ptr == C_NULL)
+            exts = GDAL.gdalgetmetadataitem(driver.ptr, "DMD_EXTENSIONS", Cstring(C_NULL))
+            if !(exts isa Nothing)
+                for ext in split(exts)
+                    extdict[".$ext"] = ArchGDAL.shortname(driver)
+                end
+            end
+        end
+    end
+    return extdict
+end
+
+"""
+    extensiondriver(filename::AbstractString)
+
+Returns a `Driver` that matches the filename extension.
+"""
+function extensiondriver(filename::AbstractString)
+    split = splitext(filename)
+    extensiondict = extensions()
+    ext = split[2] == "" ? split[1] : split[2]
+    if haskey(extensiondict, ext)
+        extensiondict[ext]
+    else
+        throw(ArgumentError("There are no GDAL drivers for the $ext extension"))
+    end
+end
