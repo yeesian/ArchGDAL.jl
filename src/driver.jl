@@ -147,14 +147,12 @@ with their respective drivers shortname.
 """
 function extensions()
     extdict = Dict{String,String}()
-    for i in 1:GDAL.gdalgetdrivercount()
-        driver = ArchGDAL.getdriver(i)
+    for i in 1:ndriver()
+        driver = getdriver(i)
         if !(driver.ptr == C_NULL)
-            exts = GDAL.gdalgetmetadataitem(driver.ptr, "DMD_EXTENSIONS", Cstring(C_NULL))
-            if !(exts isa Nothing)
-                for ext in split(exts)
-                    extdict[".$ext"] = ArchGDAL.shortname(driver)
-                end
+            # exts is a space-delimited list in a String, so split it
+            for ext in split(metadataitem(driver, "DMD_EXTENSIONS"))
+                extdict[".$ext"] = shortname(driver)
             end
         end
     end
@@ -170,9 +168,8 @@ function extensiondriver(filename::AbstractString)
     split = splitext(filename)
     extensiondict = extensions()
     ext = split[2] == "" ? split[1] : split[2]
-    if haskey(extensiondict, ext)
-        extensiondict[ext]
-    else
+    if !haskey(extensiondict, ext)
         throw(ArgumentError("There are no GDAL drivers for the $ext extension"))
     end
+    return extensiondict[ext]
 end
