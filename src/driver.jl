@@ -161,8 +161,10 @@ end
 
 """
     extensiondriver(filename::AbstractString)
+ 
+Returns a driver shortname that matches the filename extension.
 
-Returns a `Driver` that matches the filename extension.
+So `extensiondriver("/my/file.tif") == "GTiff"`.
 """
 function extensiondriver(filename::AbstractString)
     split = splitext(filename)
