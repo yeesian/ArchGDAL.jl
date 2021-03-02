@@ -212,16 +212,20 @@ import GeoFormatTypes; const GFT = GeoFormatTypes
             AG.importXML!(spatialref2, xml4326)
             @test startswith(AG.toXML(spatialref2), "<gml:GeographicCRS")
         end
+    end
 
-        url4326 = "http://spatialreference.org/ref/epsg/4326/ogcwkt/"
-        wkt4326 = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
-        urlsample = "http://spatialreference.org/ref/epsg/2039/esriwkt/"
-        wktsample = "PROJCS[\"Israel / Israeli TM Grid\",GEOGCS[\"Israel\",DATUM[\"Israel_1993\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6141\"]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",31.7343936111111],PARAMETER[\"central_meridian\",35.2045169444444],PARAMETER[\"scale_factor\",1.0000067],PARAMETER[\"false_easting\",219529.584],PARAMETER[\"false_northing\",626907.39],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
-        AG.importURL(url4326) do spatialref
-            spatialref2 = AG.importURL(urlsample)
-            @test AG.toWKT(spatialref2) == wktsample
-            AG.importURL!(spatialref2, url4326)
-            @test AG.toWKT(spatialref2) == wkt4326
+    if VERSION >= v"1.6.0-"
+        @testset "URL Import" begin
+            url4326 = "http://spatialreference.org/ref/epsg/4326/ogcwkt/"
+            wkt4326 = "GEOGCS[\"WGS 84\",DATUM[\"WGS_1984\",SPHEROID[\"WGS 84\",6378137,298.257223563,AUTHORITY[\"EPSG\",\"7030\"]],AUTHORITY[\"EPSG\",\"6326\"]],PRIMEM[\"Greenwich\",0,AUTHORITY[\"EPSG\",\"8901\"]],UNIT[\"degree\",0.0174532925199433,AUTHORITY[\"EPSG\",\"9122\"]],AXIS[\"Latitude\",NORTH],AXIS[\"Longitude\",EAST],AUTHORITY[\"EPSG\",\"4326\"]]"
+            urlsample = "http://spatialreference.org/ref/epsg/2039/esriwkt/"
+            wktsample = "PROJCS[\"Israel / Israeli TM Grid\",GEOGCS[\"Israel\",DATUM[\"Israel_1993\",SPHEROID[\"GRS 1980\",6378137,298.257222101,AUTHORITY[\"EPSG\",\"7019\"]],AUTHORITY[\"EPSG\",\"6141\"]],PRIMEM[\"Greenwich\",0],UNIT[\"Degree\",0.0174532925199433]],PROJECTION[\"Transverse_Mercator\"],PARAMETER[\"latitude_of_origin\",31.7343936111111],PARAMETER[\"central_meridian\",35.2045169444444],PARAMETER[\"scale_factor\",1.0000067],PARAMETER[\"false_easting\",219529.584],PARAMETER[\"false_northing\",626907.39],UNIT[\"metre\",1,AUTHORITY[\"EPSG\",\"9001\"]],AXIS[\"Easting\",EAST],AXIS[\"Northing\",NORTH]]"
+            AG.importURL(url4326) do spatialref
+                spatialref2 = AG.importURL(urlsample)
+                @test AG.toWKT(spatialref2) == wktsample
+                AG.importURL!(spatialref2, url4326)
+                @test AG.toWKT(spatialref2) == wkt4326
+            end
         end
     end
 
