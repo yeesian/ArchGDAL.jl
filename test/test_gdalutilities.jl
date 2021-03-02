@@ -60,19 +60,14 @@ AG.read("data/utmsmall.tif") do ds_small
         end
     end
 
-    # cannot reproject file on AppVeyor yet
-    # GDALError (CE_Failure, code 4):
-    #       Unable to open EPSG support file gcs.csv.  Try setting the
-    #       GDAL_DATA environment variable to point to the directory
-    #       containing EPSG csv files.
-    # @testset "GDAL Warp" begin
-    #     AG.gdalwarp([ds_small], ["-of","MEM","-t_srs","EPSG:4326"]) do ds_warped
-    #         @test AG.width(ds_small) == 100
-    #         @test AG.height(ds_small) == 100
-    #         @test AG.width(ds_warped) == 109
-    #         @test AG.height(ds_warped) == 91
-    #     end
-    # end
+    @testset "GDAL Warp" begin
+        AG.gdalwarp([ds_small], ["-of","MEM","-t_srs","EPSG:4326"]) do ds_warped
+            @test AG.width(ds_small) == 100
+            @test AG.height(ds_small) == 100
+            @test AG.width(ds_warped) == 109
+            @test AG.height(ds_warped) == 91
+        end
+    end
     @testset "GDAL Warp" begin
         AG.gdalwarp([ds_small], ["-of","MEM"]) do ds_warped
             @test AG.width(ds_small) == 100
