@@ -164,19 +164,25 @@ end
 
 Fetch the no data value for this band.
 
-If there is no out of data value, an out of range value will generally be
-returned. The no data value for a band is generally a special marker value
+If there is no out of data value, `nothing` will be
+returned instead. The no data value for a band is generally a special marker value
 used to mark pixels that are not valid data. Such pixels should generally
 not be displayed, nor contribute to analysis operations.
 
 ### Returns
-the nodata value for this band.
+the nodata value for this band or `nothing`.
 """
 function getnodatavalue(band::AbstractRasterBand)
     # ### Parameters
     # * `pbSuccess`   pointer to a boolean to use to indicate if a value is
     #     actually associated with this layer. May be `NULL` (default).
-    return GDAL.gdalgetrasternodatavalue(band.ptr, C_NULL)
+    hasnodatavalue = Ref(Cint(0))
+    nodatavalue = GDAL.gdalgetrasternodatavalue(band.ptr, hasnodatavalue)
+    if Bool(hasnodatavalue[])
+        return nodatavalue
+    else
+        return nothing
+    end
 end
 
 """
