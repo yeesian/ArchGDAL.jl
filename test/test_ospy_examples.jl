@@ -360,7 +360,7 @@ AG.read("ospy/data4/aster.img") do ds
                 outband = AG.getband(outDS, 1)
                 @test sprint(print, outband) == """
                 [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
-                    blocksize: 5665×1, nodata: 0.0, units: 1.0px + 0.0
+                    blocksize: 5665×1, nodata: nothing, units: 1.0px + 0.0
                     overviews: """
                 AG.setnodatavalue!(outband, -99)
                 # georeference the image and set the projection
@@ -448,7 +448,7 @@ end end end end
                 bandout = AG.getband(dsout, 1)
                 @test sprint(print, bandout) == """
                 [GA_Update] Band 1 (Undefined): 4500 x 3000 (UInt8)
-                    blocksize: 4500×1, nodata: 0.0, units: 1.0px + 0.0
+                    blocksize: 4500×1, nodata: nothing, units: 1.0px + 0.0
                     overviews: """
 
                 # set the geotransform and projection on the output
