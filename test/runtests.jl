@@ -31,5 +31,6 @@ include("remotefiles.jl")
         include("test_geos_operations.jl")
         include("test_cookbook_geometry.jl")
         include("test_cookbook_projection.jl")
+        include("test_utils.jl")
     end
 end
