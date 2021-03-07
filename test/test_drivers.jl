@@ -72,3 +72,19 @@ end
         )
     end
 end
+
+@testset "Test extensions list" begin
+    exts = AG.extensions()
+    @test exts[".tif"] == "GTiff"
+    @test exts[".grb"] == "GRIB"
+    @test exts[".geojson"] == "GeoJSON"
+end
+
+@testset "Test getting extensiondriver" begin
+    @test AG.extensiondriver("filename.tif") == "GTiff"
+    @test AG.extensiondriver(".tif") == "GTiff"
+    @test AG.extensiondriver("filename.asc") == "AAIGrid"
+    @test AG.extensiondriver(".asc") == "AAIGrid"
+    @test_throws ArgumentError AG.extensiondriver(".not_an_extension")
+end
+

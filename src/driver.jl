@@ -138,3 +138,40 @@ end
 
 copyfiles(drvname::AbstractString, new::AbstractString, old::AbstractString) =
     copyfiles(getdriver(drvname), new, old)
+
+"""
+    extensions()
+
+Returns a `Dict{String,String}` of all of the file extensions that can be read by GDAL, 
+with their respective drivers shortname.
+"""
+function extensions()
+    extdict = Dict{String,String}()
+    for i in 1:ndriver()
+        driver = getdriver(i)
+        if !(driver.ptr == C_NULL)
+            # exts is a space-delimited list in a String, so split it
+            for ext in split(metadataitem(driver, "DMD_EXTENSIONS"))
+                extdict[".$ext"] = shortname(driver)
+            end
+        end
+    end
+    return extdict
+end
+
+"""
+    extensiondriver(filename::AbstractString)
+ 
+Returns a driver shortname that matches the filename extension.
+
+So `extensiondriver("/my/file.tif") == "GTiff"`.
+"""
+function extensiondriver(filename::AbstractString)
+    split = splitext(filename)
+    extensiondict = extensions()
+    ext = split[2] == "" ? split[1] : split[2]
+    if !haskey(extensiondict, ext)
+        throw(ArgumentError("There are no GDAL drivers for the $ext extension"))
+    end
+    return extensiondict[ext]
+end

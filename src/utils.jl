@@ -71,6 +71,23 @@ metadata(obj; domain::AbstractString = "") =
     GDAL.gdalgetmetadata(obj.ptr, domain)
 
 """
+	metadataitem(obj, name::AbstractString, domain::AbstractString)
+
+Fetch single metadata item.
+
+### Parameters
+* `name` the name of the metadata item to fetch.
+* `domain` (optional) the domain to fetch for.
+
+### Returns
+The metadata item on success, or an empty string on failure.
+"""
+function metadataitem(obj, name::AbstractString; domain::AbstractString = "") 
+    item = GDAL.gdalgetmetadataitem(obj.ptr, name, domain)
+    return item === nothing ? "" : item
+end
+
+"""
     setconfigoption(option::AbstractString, value)
 
 Set a configuration option for GDAL/OGR use.
