@@ -606,7 +606,7 @@ A named tuple with unpacked mask flags
 """
 function maskflaginfo(band::AbstractRasterBand)
     flags = maskflags(band)
-    (
+    return (
         all_valid = !iszero(flags & 0x01), 
         per_dataset = !iszero(flags & 0x02),
         alpha = !iszero(flags & 0x04),
