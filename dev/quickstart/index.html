@@ -46,7 +46,7 @@ julia&gt; AG.height(dataset)
  0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
  0x0000  0x0000  0x0000  0x0000  0x0000  …  0x0000  0x0000  0x0000  0x0000</code></pre><p>Since the dimensions of the dataset are <code>[cols, rows, bands]</code>, respectively, using <code>[:, :, 1]</code> returns all the columns and rows for the first band. Accordingly other complex slice operations can also be performed. </p><p>To get the individual band</p><pre><code class="language-julia-repl">julia&gt; band = AG.getband(dataset, 1)
 [GA_ReadOnly] Band 1 (Gray): 7731 x 7861 (UInt16)
-    blocksize: 512×512, nodata: -1.0e10, units: 1.0px + 0.0
+    blocksize: 512×512, nodata: nothing, units: 1.0px + 0.0
     overviews: (0) 2577x2621 (1) 859x874 (2) 287x292
                (3) 96x98</code></pre><p>Band specific attributes can be easily accessed through a variety of functions</p><pre><code class="language-julia-repl">julia&gt; AG.width(band)
 7731
@@ -55,7 +55,6 @@ julia&gt; AG.height(band)
 7861
 
 julia&gt; AG.getnodatavalue(band)
--1.0e10
 
 julia&gt; AG.indexof(band)
 1</code></pre><p>The no-data value of the band can be obtained using the <code>getnodatavalue(...)</code> function, which in our case is -1.0e10. </p><h2 id="Writing-into-Dataset"><a class="docs-heading-anchor" href="#Writing-into-Dataset">Writing into Dataset</a><a id="Writing-into-Dataset-1"></a><a class="docs-heading-anchor-permalink" href="#Writing-into-Dataset" title="Permalink"></a></h2><p>Creating dummy data to be written as raster dataset.</p><pre><code class="language-julia">x = range(-4.0, 4.0, length=240)
@@ -109,4 +108,4 @@ gt = [ul_x, res, 0.0, ul_y, 0.0, res]</code></pre><pre class="documenter-example
 
     AG.setgeotransform!(dataset, gt)
     AG.setproj!(dataset, crs)
-end</code></pre><pre class="documenter-example-output">NULL Dataset</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« ArchGDAL.jl documentation</a><a class="docs-footer-nextpage" href="../datasets/">GDAL Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 7 March 2021 06:52">Sunday 7 March 2021</span>. Using Julia version 1.5.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+end</code></pre><pre class="documenter-example-output">NULL Dataset</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« ArchGDAL.jl documentation</a><a class="docs-footer-nextpage" href="../datasets/">GDAL Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Sunday 14 March 2021 18:11">Sunday 14 March 2021</span>. Using Julia version 1.5.4.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
