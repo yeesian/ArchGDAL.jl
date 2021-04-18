@@ -198,7 +198,7 @@ function unsafe_create(
         options                     = StringList(C_NULL)
     )
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        _GDALTYPE[dtype], options)
+        gdaltype(dtype), options)
     return Dataset(result)
 end
 
@@ -212,7 +212,7 @@ function unsafe_create(
         options                     = StringList(C_NULL)
     )
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        _GDALTYPE[dtype], options)
+        gdaltype(dtype), options)
     return Dataset(result)
 end
 
@@ -256,7 +256,7 @@ function create(
         options                     = StringList(C_NULL)
     )
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        _GDALTYPE[dtype], options)
+        gdaltype(dtype), options)
     return IDataset(result)
 end
 
@@ -270,7 +270,7 @@ function create(
         options                     = StringList(C_NULL)
     )
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        _GDALTYPE[dtype], options)
+        gdaltype(dtype), options)
     return IDataset(result)
 end
 

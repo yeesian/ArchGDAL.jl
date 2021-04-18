@@ -265,6 +265,9 @@ const _JLTYPE = Dict{GDAL.GDALDataType, DataType}(
     GDAL.GDT_Float32    => Float32,
     GDAL.GDT_Float64    => Float64)
 
+"return the corresponding `GDAL.GDALDataType`."
+datatype(gt::DataType) = get(_GDALTYPE, gt, error("Unknown DataType: $gt"))
+
 const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
     Any         => GDAL.GDT_Unknown,
     UInt8       => GDAL.GDT_Byte,
@@ -274,6 +277,11 @@ const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
     Int32       => GDAL.GDT_Int32,
     Float32     => GDAL.GDT_Float32,
     Float64     => GDAL.GDT_Float64)
+
+"return the corresponding `GDAL.GDALDataType`."
+gdaltype(gt::DataType) = get(_GDALTYPE, gt) do
+    error("Unknown DataType: $gt")
+end
 
 "return the corresponding `DataType` in julia"
 const _FIELDTYPE = Dict{OGRFieldType, DataType}(
