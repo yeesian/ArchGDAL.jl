@@ -166,7 +166,7 @@ mutable struct RasterBand{T} <: AbstractRasterBand{T}
     ptr::GDALRasterBand
 end
 function RasterBand(ptr::GDALRasterBand)
-  t = _JLTYPE[GDAL.gdalgetrasterdatatype(ptr)]
+  t = datatype(GDAL.gdalgetrasterdatatype(ptr))
   RasterBand{t}(ptr)
 end
 
@@ -185,7 +185,7 @@ mutable struct IRasterBand{T} <: AbstractRasterBand{T}
 end
 
 function IRasterBand(ptr::GDALRasterBand; ownedby = Dataset())
-    t = _JLTYPE[GDAL.gdalgetrasterdatatype(ptr)]
+    t = datatype(GDAL.gdalgetrasterdatatype(ptr))
     IRasterBand{t}(ptr, ownedby=ownedby)
 end
 
@@ -265,8 +265,10 @@ const _JLTYPE = Dict{GDAL.GDALDataType, DataType}(
     GDAL.GDT_Float32    => Float32,
     GDAL.GDT_Float64    => Float64)
 
-"return the corresponding `GDAL.GDALDataType`."
-datatype(gt::DataType) = get(_GDALTYPE, gt, error("Unknown DataType: $gt"))
+"return the corresponding `DataType` in julia"
+datatype(gt::GDAL.GDALDataType) = get(_JLTYPE, gt) do
+    error("Unknown GDAL.GDALDataType: $gt")
+end
 
 const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
     Any         => GDAL.GDT_Unknown,
@@ -278,9 +280,9 @@ const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
     Float32     => GDAL.GDT_Float32,
     Float64     => GDAL.GDT_Float64)
 
-"return the corresponding `GDAL.GDALDataType`."
-gdaltype(gt::DataType) = get(_GDALTYPE, gt) do
-    error("Unknown DataType: $gt")
+"return the corresponding `GDAL.GDALDataType`"
+gdaltype(dt::DataType) = get(_GDALTYPE, dt) do
+    error("Unknown DataType: $dt")
 end
 
 "return the corresponding `DataType` in julia"
