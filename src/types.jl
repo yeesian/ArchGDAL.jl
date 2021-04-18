@@ -255,7 +255,7 @@ GWKAverageOrModeAlg = GDAL.GWKAverageOrModeAlg
 OGRAxisOrientation = GDAL.OGRAxisOrientation
 
 "return the corresponding `DataType` in julia"
-const _JLTYPE = Dict{GDAL.GDALDataType, DataType}(
+const _JLTYPE = Dict{GDALDataType, DataType}(
     GDAL.GDT_Unknown    => Any,
     GDAL.GDT_Byte       => UInt8,
     GDAL.GDT_UInt16     => UInt16,
@@ -266,11 +266,11 @@ const _JLTYPE = Dict{GDAL.GDALDataType, DataType}(
     GDAL.GDT_Float64    => Float64)
 
 "return the corresponding `DataType` in julia"
-datatype(gt::GDAL.GDALDataType) = get(_JLTYPE, gt) do
-    error("Unknown GDAL.GDALDataType: $gt")
+datatype(gt::GDALDataType) = get(_JLTYPE, gt) do
+    error("Unknown GDALDataType: $gt")
 end
 
-const _GDALTYPE = Dict{DataType,GDAL.GDALDataType}(
+const _GDALTYPE = Dict{DataType,GDALDataType}(
     Any         => GDAL.GDT_Unknown,
     UInt8       => GDAL.GDT_Byte,
     UInt16      => GDAL.GDT_UInt16,
@@ -301,6 +301,11 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
     GDAL.OFTDateTime        => DateTime,
     GDAL.OFTInteger64       => Int64,
     GDAL.OFTInteger64List   => Nothing)
+
+"return the corresponding `DataType` in julia"
+datatype(ft::OGRFieldType) = get(_FIELDTYPE, ft) do
+    error("Unknown OGRFieldType: $ft")
+end
 
 @enum(GDALOpenFlag,
     OF_ReadOnly             = GDAL.GDAL_OF_READONLY,                # 0x00
