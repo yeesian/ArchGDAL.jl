@@ -29,3 +29,44 @@ To test if it is installed correctly,
 ```julia
 pkg> test ArchGDAL
 ```
+
+## Dependencies
+To manage the dependencies of this package, we work with [environments](https://pkgdocs.julialang.org/v1.6/environments/):
+
+1. Navigate to the directory corresponding to the package:
+
+```julia
+shell> cd /Users/yeesian/.julia/dev/ArchGDAL
+/Users/yeesian/.julia/dev/ArchGDAL
+```
+
+2. Activate the environment corresponding to `Project.toml`):
+
+```julia
+(@v1.6) pkg> activate
+  Activating environment at `~/.julia/environments/v1.6/Project.toml`
+```
+
+3. Manage the dependencies using Pkg in https://pkgdocs.julialang.org/v1.6/managing-packages/, e.g.
+
+```julia
+(ArchGDAL) pkg> st
+     Project ArchGDAL v0.6.0
+      Status `~/.julia/dev/ArchGDAL/Project.toml`
+  [3c3547ce] DiskArrays
+  [add2ef01] GDAL
+  [68eda718] GeoFormatTypes
+  [cf35fbd7] GeoInterface
+  [bd369af6] Tables
+  [ade2ca70] Dates
+
+(ArchGDAL) pkg> add CEnum
+   Resolving package versions...
+    Updating `~/.julia/dev/ArchGDAL/Project.toml`
+  [fa961155] + CEnum v0.4.1
+  [3c3547ce] + DiskArrays v0.2.7
+  [add2ef01] + GDAL v1.2.1
+  [68eda718] + GeoFormatTypes v0.3.0
+  [cf35fbd7] + GeoInterface v0.5.5
+  [bd369af6] + Tables v1.4.2
+```
