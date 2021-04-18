@@ -3,15 +3,15 @@ import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Tests for field defn" begin
-    AG.createfielddefn("fieldname",GDAL.OFTInteger) do fd
+    AG.createfielddefn("fieldname", AG.OFTInteger) do fd
         @test sprint(print, fd) == "fieldname (OFTInteger)"
         @test AG.getname(fd) == "fieldname"
         AG.setname!(fd, "newname")
         @test AG.getname(fd) == "newname"
-        @test AG.gettype(fd) == GDAL.OFTInteger
-        AG.settype!(fd, GDAL.OFTDate)
-        @test AG.gettype(fd) == GDAL.OFTDate
-        AG.settype!(fd, GDAL.OFTInteger)
+        @test AG.gettype(fd) == AG.OFTInteger
+        AG.settype!(fd, AG.OFTDate)
+        @test AG.gettype(fd) == AG.OFTDate
+        AG.settype!(fd, AG.OFTInteger)
         @test AG.getsubtype(fd) == GDAL.OFSTNone
         AG.setsubtype!(fd, GDAL.OFSTInt16)
         @test AG.getsubtype(fd) == GDAL.OFSTInt16
@@ -27,9 +27,9 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.getprecision(fd) == 0
         AG.setprecision!(fd, 20)
         @test AG.getprecision(fd) == 20
-        AG.setparams!(fd, "finalname", GDAL.OFTDate, nwidth=5, nprecision=2,
+        AG.setparams!(fd, "finalname", AG.OFTDate, nwidth=5, nprecision=2,
                       justify=GDAL.OJRight)
-        @test AG.gettype(fd) == GDAL.OFTDate
+        @test AG.gettype(fd) == AG.OFTDate
         @test AG.getname(fd) == "finalname"
         @test AG.getsubtype(fd) == GDAL.OFSTNone
         @test AG.getjustify(fd) == GDAL.OJRight
@@ -99,7 +99,7 @@ end
         @test AG.nreference(fd) == 1
         AG.dereference(fd)
         @test AG.nreference(fd) == 0
-        AG.createfielddefn("fieldname",GDAL.OFTInteger) do fielddef
+        AG.createfielddefn("fieldname", AG.OFTInteger) do fielddef
             @test AG.nfield(fd) == 0
             AG.addfielddefn!(fd, fielddef)
             @test AG.nfield(fd) == 1
@@ -107,7 +107,7 @@ end
             @test AG.nfield(fd) == 2
             AG.addfielddefn!(fd, fielddef)
             @test AG.nfield(fd) == 3
-            AG.createfielddefn("newfield",GDAL.OFTInteger) do fielddef2
+            AG.createfielddefn("newfield", AG.OFTInteger) do fielddef2
                 AG.addfielddefn!(fd, fielddef2)
                 @test AG.nfield(fd) == 4
                 AG.getname(AG.getfielddefn(fd,0)) == "fieldname"

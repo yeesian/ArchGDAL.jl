@@ -80,9 +80,9 @@ end
         featuredefn = AG.layerdefn(layer)
         @test AG.nfield(featuredefn) == 2
         fielddefn = AG.getfielddefn(featuredefn, 0)
-        @test AG.gettype(fielddefn) == GDAL.OFTReal
+        @test AG.gettype(fielddefn) == AG.OFTReal
         fielddefn = AG.getfielddefn(featuredefn, 1)
-        @test AG.gettype(fielddefn) == GDAL.OFTString
+        @test AG.gettype(fielddefn) == AG.OFTString
 
         AG.nextfeature(layer) do feature
             @test AG.asdouble(feature, 0) ≈ 2.0
@@ -108,7 +108,7 @@ end
             dataset = dataset,
             geom = GDAL.wkbPoint
         )
-        AG.addfielddefn!(layer, "Name", GDAL.OFTString, nwidth = 32)
+        AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
         featuredefn = AG.layerdefn(layer)
         @test AG.getname(featuredefn) == "point_out"
         @test AG.nfeature(layer) == 0

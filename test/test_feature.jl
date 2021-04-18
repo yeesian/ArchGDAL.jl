@@ -91,28 +91,28 @@ end
 @testset "In-Memory Driver" begin
     AG.create(AG.getdriver("MEMORY")) do output
         layer = AG.createlayer(dataset = output, geom=GDAL.wkbPolygon)
-        AG.createfielddefn("int64field", GDAL.OFTInteger64) do fielddefn
+        AG.createfielddefn("int64field", AG.OFTInteger64) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("doublefield", GDAL.OFTReal) do fielddefn
+        AG.createfielddefn("doublefield", AG.OFTReal) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("intlistfield", GDAL.OFTIntegerList) do fielddefn
+        AG.createfielddefn("intlistfield", AG.OFTIntegerList) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("int64listfield", GDAL.OFTInteger64List) do fielddefn
+        AG.createfielddefn("int64listfield", AG.OFTInteger64List) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("doublelistfield", GDAL.OFTRealList) do fielddefn
+        AG.createfielddefn("doublelistfield", AG.OFTRealList) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("stringlistfield", GDAL.OFTStringList) do fielddefn
+        AG.createfielddefn("stringlistfield", AG.OFTStringList) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("binaryfield", GDAL.OFTBinary) do fielddefn
+        AG.createfielddefn("binaryfield", AG.OFTBinary) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
-        AG.createfielddefn("datetimefield", GDAL.OFTDateTime) do fielddefn
+        AG.createfielddefn("datetimefield", AG.OFTDateTime) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
         AG.createfeature(layer) do feature

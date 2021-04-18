@@ -30,7 +30,7 @@ end
 getname(fielddefn::AbstractFieldDefn) = GDAL.ogr_fld_getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
-gettype(fielddefn::AbstractFieldDefn) = GDAL.ogr_fld_gettype(fielddefn.ptr)
+gettype(fielddefn::AbstractFieldDefn) = gdaltype(GDAL.ogr_fld_gettype(fielddefn.ptr))
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)

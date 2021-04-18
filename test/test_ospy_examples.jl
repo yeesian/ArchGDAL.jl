@@ -154,7 +154,7 @@ end
         Layer: hw2a
           Geometry 0 (): [wkbPolygon]
         """
-        AG.createfielddefn("name", GDAL.OFTString) do fielddefn
+        AG.createfielddefn("name", AG.OFTString) do fielddefn
             AG.setwidth!(fielddefn, 30)
             AG.addfielddefn!(layer, fielddefn)
         end

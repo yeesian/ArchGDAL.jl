@@ -353,21 +353,21 @@ end
 
 getdefault(feature::Feature, i::Integer) = getdefault(getfielddefn(feature, i))
 
-const _FETCHFIELD = Dict{GDAL.OGRFieldType, Function}(
-    GDAL.OFTInteger         => asint,           #0
-    GDAL.OFTIntegerList     => asintlist,       #1
-    GDAL.OFTReal            => asdouble,        #2
-    GDAL.OFTRealList        => asdoublelist,    #3
-    GDAL.OFTString          => asstring,        #4
-    GDAL.OFTStringList      => asstringlist,    #5
+const _FETCHFIELD = Dict{OGRFieldType, Function}(
+    OFTInteger         => asint,           #0
+    OFTIntegerList     => asintlist,       #1
+    OFTReal            => asdouble,        #2
+    OFTRealList        => asdoublelist,    #3
+    OFTString          => asstring,        #4
+    OFTStringList      => asstringlist,    #5
  # const OFTWideString =                (UInt32)(6)
  # const OFTWideStringList =            (UInt32)(7)
-    GDAL.OFTBinary          => asbinary,        #8
+    OFTBinary          => asbinary,        #8
  # const OFTDate =                      (UInt32)(9)
  # const OFTTime =                      (UInt32)(10)
-    GDAL.OFTDateTime        => asdatetime,      #11
-    GDAL.OFTInteger64       => asint64,         #12
-    GDAL.OFTInteger64List   => asint64list      #13
+    OFTDateTime        => asdatetime,      #11
+    OFTInteger64       => asint64,         #12
+    OFTInteger64List   => asint64list      #13
  # const OFTMaxType =                   (UInt32)(13)
  )
 

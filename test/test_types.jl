@@ -16,6 +16,11 @@ import ArchGDAL; const AG = ArchGDAL
 
         @test AG.typeunion(GDAL.GDT_UInt16, GDAL.GDT_Byte) == GDAL.GDT_UInt16
         @test AG.iscomplex(GDAL.GDT_Float32) == false
+
+        @test AG.datatype(GDAL.GDT_Int16) == Int16
+        @test_throws ErrorException("Unknown GDALDataType: GDT_TypeCount") AG.datatype(GDAL.GDT_TypeCount)
+        @test AG.gdaltype(Int16) == GDAL.GDT_Int16
+        @test_throws ErrorException("Unknown DataType: String") AG.gdaltype(String)
     end
 
     @testset "GDAL Colors and Palettes" begin
@@ -36,14 +41,17 @@ import ArchGDAL; const AG = ArchGDAL
     end
 
     @testset "GDAL Field Types" begin
-        @test AG.getname(GDAL.OFTString) == "String"
-        @test AG.getname(GDAL.OFTIntegerList) == "IntegerList"
+        @test AG.getname(AG.OFTString) == "String"
+        @test AG.getname(AG.OFTIntegerList) == "IntegerList"
         @test AG.getname(GDAL.OFSTBoolean) == "Boolean"
         @test AG.getname(GDAL.OFSTFloat32) == "Float32"
 
-        @test AG.arecompatible(GDAL.OFTReal, GDAL.OFSTNone) == true
-        @test AG.arecompatible(GDAL.OFTReal, GDAL.OFSTBoolean) == false
-        @test AG.arecompatible(GDAL.OFTReal, GDAL.OFSTInt16) == false
-        @test AG.arecompatible(GDAL.OFTReal, GDAL.OFSTFloat32) == true
+        @test AG.arecompatible(AG.OFTReal, GDAL.OFSTNone) == true
+        @test AG.arecompatible(AG.OFTReal, GDAL.OFSTBoolean) == false
+        @test AG.arecompatible(AG.OFTReal, GDAL.OFSTInt16) == false
+        @test AG.arecompatible(AG.OFTReal, GDAL.OFSTFloat32) == true
+
+        @test AG.datatype(AG.OFTString) == String
+        @test AG.gdaltype(GDAL.OFTMaxType) == AG.OFTInteger64List
     end
 end

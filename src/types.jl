@@ -1,4 +1,5 @@
 import DiskArrays: AbstractDiskArray
+import Base.convert
 const GDALColorTable      = GDAL.GDALColorTableH
 const GDALCoordTransform  = GDAL.OGRCoordinateTransformationH
 const GDALDataset         = GDAL.GDALDatasetH
@@ -241,7 +242,6 @@ GDALGridAlgorithm = GDAL.GDALGridAlgorithm
 OGRwkbGeometryType = GDAL.OGRwkbGeometryType
 OGRwkbVariant = GDAL.OGRwkbVariant
 OGRwkbByteOrder = GDAL.OGRwkbByteOrder
-OGRFieldType = GDAL.OGRFieldType
 OGRFieldSubType = GDAL.OGRFieldSubType
 OGRJustification = GDAL.OGRJustification
 OGRSTClassId = GDAL.OGRSTClassId
@@ -285,22 +285,87 @@ gdaltype(dt::DataType) = get(_GDALTYPE, dt) do
     error("Unknown DataType: $dt")
 end
 
+@enum(OGRFieldType,
+    OFTInteger          = Int32(GDAL.OFTInteger),
+    OFTIntegerList      = Int32(GDAL.OFTIntegerList),
+    OFTReal             = Int32(GDAL.OFTReal),
+    OFTRealList         = Int32(GDAL.OFTRealList),
+    OFTString           = Int32(GDAL.OFTString),
+    OFTStringList       = Int32(GDAL.OFTStringList),
+    OFTWideString       = Int32(GDAL.OFTWideString),
+    OFTWideStringList   = Int32(GDAL.OFTWideStringList),
+    OFTBinary           = Int32(GDAL.OFTBinary),
+    OFTDate             = Int32(GDAL.OFTDate),
+    OFTTime             = Int32(GDAL.OFTTime),
+    OFTDateTime         = Int32(GDAL.OFTDateTime),
+    OFTInteger64        = Int32(GDAL.OFTInteger64),
+    OFTInteger64List    = Int32(GDAL.OFTInteger64List),
+    # OFTMaxType          = Int32(GDAL.OFTMaxType), # unsupported
+)
+
 "return the corresponding `DataType` in julia"
 const _FIELDTYPE = Dict{OGRFieldType, DataType}(
-    GDAL.OFTInteger         => Int32,
-    GDAL.OFTIntegerList     => Nothing,
-    GDAL.OFTReal            => Float64,
-    GDAL.OFTRealList        => Nothing,
-    GDAL.OFTString          => String,
-    GDAL.OFTStringList      => Nothing,
-    GDAL.OFTWideString      => Nothing, # deprecated
-    GDAL.OFTWideStringList  => Nothing, # deprecated
-    GDAL.OFTBinary          => Nothing,
-    GDAL.OFTDate            => Date,
-    GDAL.OFTTime            => Nothing,
-    GDAL.OFTDateTime        => DateTime,
-    GDAL.OFTInteger64       => Int64,
-    GDAL.OFTInteger64List   => Nothing)
+    OFTInteger         => Int32,
+    OFTIntegerList     => Vector{Int32},
+    OFTReal            => Float64,
+    OFTRealList        => Vector{Float64},
+    OFTString          => String,
+    OFTStringList      => Vector{String},
+    OFTWideString      => Nothing, # deprecated
+    OFTWideStringList  => Nothing, # deprecated
+    OFTBinary          => Bool,
+    OFTDate            => Dates.Date,
+    OFTTime            => Dates.Time,
+    OFTDateTime        => Dates.DateTime,
+    OFTInteger64       => Int64,
+    OFTInteger64List   => Vector{Int64},
+    # OFTMaxType         => Nothing # unsupported
+)
+
+const _GDALFIELDTYPE = Dict{GDAL.OGRFieldType, OGRFieldType}(
+    GDAL.OFTInteger => OFTInteger,
+    GDAL.OFTIntegerList => OFTIntegerList,
+    GDAL.OFTReal => OFTReal,
+    GDAL.OFTRealList => OFTRealList,
+    GDAL.OFTString => OFTString,
+    GDAL.OFTStringList => OFTStringList,
+    GDAL.OFTWideString => OFTWideString,
+    GDAL.OFTWideStringList => OFTWideStringList,
+    GDAL.OFTBinary => OFTBinary,
+    GDAL.OFTDate => OFTDate,
+    GDAL.OFTTime => OFTTime,
+    GDAL.OFTDateTime => OFTDateTime,
+    GDAL.OFTInteger64 => OFTInteger64,
+    GDAL.OFTInteger64List => OFTInteger64List,
+    # GDAL.OFTMaxType => OFTMaxType, # unsupported
+)
+
+const _GDALFIELDTYPES = Dict{OGRFieldType, GDAL.OGRFieldType}(
+    OFTInteger => GDAL.OFTInteger,
+    OFTIntegerList => GDAL.OFTIntegerList,
+    OFTReal => GDAL.OFTReal,
+    OFTRealList => GDAL.OFTRealList,
+    OFTString => GDAL.OFTString,
+    OFTStringList => GDAL.OFTStringList,
+    OFTWideString => GDAL.OFTWideString,
+    OFTWideStringList => GDAL.OFTWideStringList,
+    OFTBinary => GDAL.OFTBinary,
+    OFTDate => GDAL.OFTDate,
+    OFTTime => GDAL.OFTTime,
+    OFTDateTime => GDAL.OFTDateTime,
+    OFTInteger64 => GDAL.OFTInteger64,
+    OFTInteger64List => GDAL.OFTInteger64List,
+    # OFTMaxType => GDAL.OFTMaxType, # unsupported
+)
+
+convert(::Type{GDAL.OGRFieldType}, ft::OGRFieldType) = get(_GDALFIELDTYPES, ft) do
+    error("Unknown GDAL.OGRFieldType: $ft")
+end
+
+"returns the `OGRFieldType` in julia"
+gdaltype(ft::GDAL.OGRFieldType) = get(_GDALFIELDTYPE, ft) do
+    error("Unknown GDAL.OGRFieldType: $ft")
+end
 
 "return the corresponding `DataType` in julia"
 datatype(ft::OGRFieldType) = get(_FIELDTYPE, ft) do
