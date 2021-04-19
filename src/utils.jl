@@ -1,3 +1,32 @@
+macro gdalenum(args...)
+    @assert length(args) > 0
+    @assert args[1].head == :(::)
+    type1 = esc(args[1].args[1])
+    type2 = esc(args[1].args[2])
+    forward_map = Expr[
+        Expr(:tuple, esc.(a.args)...) for a in args[2:end]
+    ]
+    reverse_map = Expr[
+        Expr(:tuple, esc.(reverse(a.args))...) for a in args[2:end]
+    ]
+    quote
+        function Base.convert(::Type{$type2}, ft::$type1)
+            fwd = Dict{$type1, $type2}(Tuple{$type1, $type2}[$(forward_map...)])
+            return get(fwd, ft) do
+                error("Unknown type: $ft")
+            end
+        end
+
+        "returns the corresponding type in ArchGDAL"
+        function ArchGDAL.gdaltype(ft::$type2)
+            rev = Dict{$type2, $type1}(Tuple{$type2, $type1}[$(reverse_map...)])
+            return get(rev, ft) do
+                error("Unknown type: $ft")
+            end
+        end
+    end
+end
+
 macro gdal(args...)
     @assert length(args) > 0
     @assert args[1].head == :(::)

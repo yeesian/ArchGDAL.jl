@@ -8,6 +8,7 @@ module ArchGDAL
     
     const GFT = GeoFormatTypes
 
+    include("constants.jl")
     include("utils.jl")
     include("types.jl")
     include("driver.jl")
