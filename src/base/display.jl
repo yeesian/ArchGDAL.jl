@@ -1,11 +1,17 @@
-function Base.show(io::IO, drv::Driver)
-    drv.ptr == C_NULL && (return print(io, "NULL Driver"))
+function Base.show(io::IO, drv::Driver)::IO
+    if drv.ptr == C_NULL
+        print(io, "NULL Driver")
+        return io
+    end
     print(io, "Driver: $(shortname(drv))/$(longname(drv))")
     return io
 end
 
-function Base.show(io::IO, dataset::AbstractDataset)
-    dataset.ptr == C_NULL && (return print(io, "NULL Dataset"))
+function Base.show(io::IO, dataset::AbstractDataset)::IO
+    if dataset.ptr == C_NULL
+        print(io, "NULL Dataset")
+        return io
+    end
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
     println(io, "File(s): ")
     for (i,filename) in enumerate(filelist(dataset))
@@ -49,13 +55,16 @@ function Base.show(io::IO, dataset::AbstractDataset)
 end
 
 #Add method to avoid show from DiskArrays
-Base.show(io::IO, raster::RasterDataset) = show(io, raster.ds)
+Base.show(io::IO, raster::RasterDataset)::IO = show(io, raster.ds)
 
-Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset) =
+Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset)::IO =
     show(io, raster.ds)
 
-function summarize(io::IO, rasterband::AbstractRasterBand)
-    rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
+function summarize(io::IO, rasterband::AbstractRasterBand)::IO
+    if rasterband.ptr == C_NULL
+        print(io, "NULL RasterBand")
+        return io
+    end
     access = accessflag(rasterband)
     color = getname(getcolorinterp(rasterband))
     xsize = width(rasterband)
@@ -66,11 +75,18 @@ function summarize(io::IO, rasterband::AbstractRasterBand)
     return io
 end
 
-Base.show(io::IO, rasterband::AbstractRasterBand) =
+Base.show(io::IO, rasterband::AbstractRasterBand)::IO =
     show(io, "text/plain", rasterband)
 
-function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)
-    rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
+function Base.show(
+        io::IO,
+        ::MIME"text/plain",
+        rasterband::AbstractRasterBand
+    )::IO
+    if rasterband.ptr == C_NULL
+        print(io, "NULL RasterBand")
+        return io
+    end
     summarize(io, rasterband)
     (x,y) = blocksize(rasterband)
     sc = getscale(rasterband)
@@ -90,8 +106,11 @@ function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)
 end
 
 # assumes that the layer is reset, and will reset it after display
-function Base.show(io::IO, layer::AbstractFeatureLayer)
-    layer.ptr == C_NULL && (return println(io, "NULL Layer"))
+function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
+    if layer.ptr == C_NULL
+        println(io, "NULL Layer")
+        return io
+    end
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")
     featuredefn = layerdefn(layer)
@@ -152,8 +171,11 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)
     return io
 end
 
-function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
-    featuredefn.ptr == C_NULL && (return print(io, "NULL FeatureDefn"))
+function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::IO
+    if featuredefn.ptr == C_NULL
+        print(io, "NULL FeatureDefn")
+        return io
+    end
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
@@ -172,20 +194,29 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
     return io
 end
 
-function Base.show(io::IO, fd::AbstractFieldDefn)
-    fd.ptr == C_NULL && (return print(io, "NULL FieldDefn"))
+function Base.show(io::IO, fd::AbstractFieldDefn)::IO
+    if fd.ptr == C_NULL
+        print(io, "NULL FieldDefn")
+        return io
+    end
     print(io, "$(getname(fd)) ($(gettype(fd)))")
     return io
 end
 
-function Base.show(io::IO, gfd::AbstractGeomFieldDefn)
-    gfd.ptr == C_NULL && (return print(io, "NULL GeomFieldDefn"))
+function Base.show(io::IO, gfd::AbstractGeomFieldDefn)::IO
+    if gfd.ptr == C_NULL
+        print(io, "NULL GeomFieldDefn")
+        return io
+    end
     print(io, "$(getname(gfd)) ($(gettype(gfd)))")
     return io
 end
 
-function Base.show(io::IO, feature::Feature)
-    feature.ptr == C_NULL && (return println(io, "NULL Feature"))
+function Base.show(io::IO, feature::Feature)::IO
+    if feature.ptr == C_NULL
+        println(io, "NULL Feature")
+        return io
+    end
     println(io, "Feature")
     n = ngeom(feature)
     for i in 1:min(n, 3)
@@ -203,8 +234,11 @@ function Base.show(io::IO, feature::Feature)
     return io
 end
 
-function Base.show(io::IO, spref::AbstractSpatialRef)
-    spref.ptr == C_NULL && (return print(io, "NULL Spatial Reference System"))
+function Base.show(io::IO, spref::AbstractSpatialRef)::IO
+    if spref.ptr == C_NULL
+        print(io, "NULL Spatial Reference System")
+        return io
+    end
     projstr = toPROJ4(spref)
     if length(projstr) > 45
         projstart = projstr[1:35]
@@ -216,8 +250,11 @@ function Base.show(io::IO, spref::AbstractSpatialRef)
     return io
 end
 
-function Base.show(io::IO, geom::AbstractGeometry)
-    geom.ptr == C_NULL && (return print(io, "NULL Geometry"))
+function Base.show(io::IO, geom::AbstractGeometry)::IO
+    if geom.ptr == C_NULL
+        print(io, "NULL Geometry")
+        return io
+    end
     compact = get(io, :compact, false)
 
     if !compact
