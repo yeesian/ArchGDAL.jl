@@ -118,22 +118,22 @@ end
         AG.createfeature(layer) do feature
             AG.setfield!(feature, 0, 1)
             AG.setfield!(feature, 1, 1.0)
-            AG.setfield!(feature, 2, Cint[1, 2])
+            AG.setfield!(feature, 2, Int32[1, 2])
             AG.setfield!(feature, 3, Int64[1, 2])
             AG.setfield!(feature, 4, Float64[1.0, 2.0])
             AG.setfield!(feature, 5, ["1", "2.0"])
-            AG.setfield!(feature, 6, GDAL.GByte[1,2,3,4])
+            AG.setfield!(feature, 6, UInt8[1,2,3,4])
             AG.setfield!(feature, 7, Dates.DateTime(2016,9,25,21,17,0))
 
             AG.addfeature(layer) do newfeature
                 AG.setfrom!(newfeature, feature)
                 @test AG.getfield(newfeature, 0) == 1 
-                @test AG.getfield(newfeature, 1) ≈ 1.0
+                @test AG.getfield(newfeature, 1)  ≈ 1.0
                 @test AG.getfield(newfeature, 2) == Int32[1, 2]
                 @test AG.getfield(newfeature, 3) == Int64[1, 2]
-                @test AG.getfield(newfeature, 4) ≈ [1.0, 2.0]
-                @test AG.getfield(newfeature, 5) == ["1", "2.0"]
-                @test AG.getfield(newfeature, 6) == GDAL.GByte[1,2,3,4]
+                @test AG.getfield(newfeature, 4)  ≈ Float64[1.0, 2.0]
+                @test AG.getfield(newfeature, 5) == String["1", "2.0"]
+                @test AG.getfield(newfeature, 6) == UInt8[1,2,3,4]
                 @test AG.getfield(newfeature, 7) == Dates.DateTime(2016,9,25,21,17,0)
 
                 AG.createfeature(layer) do lastfeature
@@ -142,21 +142,21 @@ end
                     AG.setfield!(lastfeature, 1, 18.2)
                     AG.setfield!(lastfeature, 5, ["foo", "bar"])
                     @test AG.getfield(lastfeature, 0) == 45
-                    @test AG.getfield(lastfeature, 1) ≈ 18.2
+                    @test AG.getfield(lastfeature, 1)  ≈ 18.2
                     @test AG.getfield(lastfeature, 2) == Int32[1, 2]
                     @test AG.getfield(lastfeature, 3) == Int64[1, 2]
-                    @test AG.getfield(lastfeature, 4) ≈ [1.0, 2.0]
-                    @test AG.getfield(lastfeature, 5) == ["foo", "bar"]
-                    @test AG.getfield(lastfeature, 6) == GDAL.GByte[1,2,3,4]
+                    @test AG.getfield(lastfeature, 4)  ≈ Float64[1.0, 2.0]
+                    @test AG.getfield(lastfeature, 5) == String["foo", "bar"]
+                    @test AG.getfield(lastfeature, 6) == UInt8[1,2,3,4]
                     @test AG.getfield(lastfeature, 7) == Dates.DateTime(2016,9,25,21,17,0)
 
                     @test AG.getfield(newfeature, 0) == 1
-                    @test AG.getfield(newfeature, 1) ≈ 1.0
-                    @test AG.getfield(newfeature, 5) == ["1", "2.0"]
+                    @test AG.getfield(newfeature, 1)  ≈ 1.0
+                    @test AG.getfield(newfeature, 5) == String["1", "2.0"]
                     AG.setfrom!(newfeature, lastfeature, collect(Cint, 0:7))
                     @test AG.getfield(newfeature, 0) == 45
-                    @test AG.getfield(newfeature, 1) ≈ 18.2
-                    @test AG.getfield(newfeature, 5) == ["foo", "bar"]
+                    @test AG.getfield(newfeature, 1)  ≈ 18.2
+                    @test AG.getfield(newfeature, 5) == String["foo", "bar"]
                 end
                 @test AG.nfeature(layer) == 1
             end

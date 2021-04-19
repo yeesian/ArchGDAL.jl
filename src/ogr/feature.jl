@@ -409,7 +409,7 @@ field types may be unaffected.
 """
 function setfield! end
 
-function setfield!(feature::Feature, i::Integer, value::Cint)
+function setfield!(feature::Feature, i::Integer, value::Int32)
     GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
     return feature
 end
@@ -419,7 +419,7 @@ function setfield!(feature::Feature, i::Integer, value::Int64)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Cdouble)
+function setfield!(feature::Feature, i::Integer, value::Float64)
     GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
     return feature
 end
@@ -429,17 +429,17 @@ function setfield!(feature::Feature, i::Integer, value::AbstractString)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Vector{Cint})
+function setfield!(feature::Feature, i::Integer, value::Vector{Int32})
     GDAL.ogr_f_setfieldintegerlist(feature.ptr, i, length(value), value)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GIntBig})
+function setfield!(feature::Feature, i::Integer, value::Vector{Int64})
     GDAL.ogr_f_setfieldinteger64list(feature.ptr, i, length(value), value)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Vector{Cdouble})
+function setfield!(feature::Feature, i::Integer, value::Vector{Float64})
     GDAL.ogr_f_setfielddoublelist(feature.ptr, i, length(value), value)
     return feature
 end
@@ -468,7 +468,7 @@ end
 #           Ptr{OGRField}),arg1,arg2,arg3)
 # end
 
-function setfield!(feature::Feature, i::Integer, value::Vector{GDAL.GByte})
+function setfield!(feature::Feature, i::Integer, value::Vector{UInt8})
     GDAL.ogr_f_setfieldbinary(feature.ptr, i, sizeof(value), value)
     return feature
 end
