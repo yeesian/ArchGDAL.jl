@@ -102,21 +102,21 @@ function unsafe_clone(geom::AbstractGeometry)
 end
 
 """
-    creategeom(geomtype::OGRwkbGeometryType)
+    creategeom(geomtype::WKBGeometryType)
 
 Create an empty geometry of desired type.
 
 This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
-creategeom(geomtype::OGRwkbGeometryType) =
+creategeom(geomtype::WKBGeometryType) =
     IGeometry(GDAL.ogr_g_creategeometry(geomtype))
 
-unsafe_creategeom(geomtype::OGRwkbGeometryType) =
+unsafe_creategeom(geomtype::WKBGeometryType) =
     Geometry(GDAL.ogr_g_creategeometry(geomtype))
 
 """
-    forceto(geom::AbstractGeometry, targettype::OGRwkbGeometryType, [options])
+    forceto(geom::AbstractGeometry, targettype::WKBGeometryType, [options])
 
 Tries to force the provided geometry to the specified geometry type.
 
@@ -137,7 +137,7 @@ The passed in geometry is cloned and a new one returned.
 """
 function forceto(
         geom::AbstractGeometry,
-        targettype::OGRwkbGeometryType,
+        targettype::WKBGeometryType,
         options = StringList(C_NULL)
     )
     return IGeometry(GDAL.ogr_g_forceto(unsafe_clone(geom).ptr, targettype,
@@ -146,7 +146,7 @@ end
 
 function unsafe_forceto(
         geom::AbstractGeometry,
-        targettype::OGRwkbGeometryType,
+        targettype::WKBGeometryType,
         options = StringList(C_NULL)
     )
     return Geometry(GDAL.ogr_g_forceto(unsafe_clone(geom).ptr, targettype,
@@ -301,7 +301,8 @@ end
 
 Fetch geometry type code
 """
-getgeomtype(geom::AbstractGeometry) = GDAL.ogr_g_getgeometrytype(geom.ptr)
+getgeomtype(geom::AbstractGeometry) =
+    gdaltype(GDAL.ogr_g_getgeometrytype(geom.ptr))
 
 """
     geomname(geom::AbstractGeometry)
@@ -1347,15 +1348,15 @@ Get flag to enable/disable returning non-linear geometries in the C API.
 """
 getnonlineargeomflag() = Bool(GDAL.ogrgetnonlineargeometriesenabledflag())
 
-for (geom, wkbgeom) in ((:geomcollection,       GDAL.wkbGeometryCollection),
-                        (:linestring,           GDAL.wkbLineString),
-                        (:linearring,           GDAL.wkbLinearRing),
-                        (:multilinestring,      GDAL.wkbMultiLineString),
-                        (:multipoint,           GDAL.wkbMultiPoint),
-                        (:multipolygon,         GDAL.wkbMultiPolygon),
-                        (:multipolygon_noholes, GDAL.wkbMultiPolygon),
-                        (:point,                GDAL.wkbPoint),
-                        (:polygon,              GDAL.wkbPolygon))
+for (geom, wkbgeom) in ((:geomcollection,       wkbGeometryCollection),
+                        (:linestring,           wkbLineString),
+                        (:linearring,           wkbLinearRing),
+                        (:multilinestring,      wkbMultiLineString),
+                        (:multipoint,           wkbMultiPoint),
+                        (:multipolygon,         wkbMultiPolygon),
+                        (:multipolygon_noholes, wkbMultiPolygon),
+                        (:point,                wkbPoint),
+                        (:polygon,              wkbPolygon))
     eval(quote
         $(Symbol("create$geom"))() = creategeom($wkbgeom)
         $(Symbol("unsafe_create$geom"))() = unsafe_creategeom($wkbgeom)

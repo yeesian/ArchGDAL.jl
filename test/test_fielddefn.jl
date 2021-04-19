@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_fielddefn.jl" begin
+
 @testset "Tests for field defn" begin
     AG.createfielddefn("fieldname", AG.OFTInteger) do fd
         @test sprint(print, fd) == "fieldname (OFTInteger)"
@@ -55,14 +57,14 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 @testset "Tests for Geom Field Defn" begin
-    AG.creategeomdefn("geomname", GDAL.wkbPolygon) do gfd
+    AG.creategeomdefn("geomname", AG.wkbPolygon) do gfd
         @test AG.getname(gfd) == "geomname"
         AG.setname!(gfd, "my name!")
         @test AG.getname(gfd) == "my name!"
 
-        @test AG.gettype(gfd) == GDAL.wkbPolygon
-        AG.settype!(gfd, GDAL.wkbPolyhedralSurface)
-        @test AG.gettype(gfd) == GDAL.wkbPolyhedralSurface
+        @test AG.gettype(gfd) == AG.wkbPolygon
+        AG.settype!(gfd, AG.wkbPolyhedralSurface)
+        @test AG.gettype(gfd) == AG.wkbPolyhedralSurface
 
         @test sprint(print, AG.getspatialref(gfd)) == "NULL Spatial Reference System"
         AG.getspatialref(gfd) do spref
@@ -129,9 +131,9 @@ end
         AG.getname(AG.getfielddefn(fd,2)) == "fieldname"
 
         @test AG.ngeom(fd) == 1
-        @test AG.getgeomtype(fd) == GDAL.wkbUnknown
-        AG.setgeomtype!(fd, GDAL.wkbPolygon)
-        @test AG.getgeomtype(fd) == GDAL.wkbPolygon
+        @test AG.getgeomtype(fd) == AG.wkbUnknown
+        AG.setgeomtype!(fd, AG.wkbPolygon)
+        @test AG.getgeomtype(fd) == AG.wkbPolygon
         @test AG.ngeom(fd) == 1
 
         @test AG.isgeomignored(fd) == false
@@ -169,4 +171,6 @@ end
         end
         @test AG.nreference(fd) == 0
     end
+end
+
 end

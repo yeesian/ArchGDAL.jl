@@ -265,11 +265,11 @@ isdefaultdriverspecific(fielddefn::AbstractFieldDefn) =
     Bool(GDAL.ogr_fld_isdefaultdriverspecific(fielddefn.ptr))
 
 """
-    unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType)
+    unsafe_creategeomdefn(name::AbstractString, etype::WKBGeometryType)
 
 Create a new field geometry definition.
 """
-unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType) =
+unsafe_creategeomdefn(name::AbstractString, etype::WKBGeometryType) =
     GeomFieldDefn(GDAL.ogr_gfld_create(name, etype))
 
 "Destroy a geometry field definition."
@@ -297,10 +297,11 @@ getname(geomdefn::AbstractGeomFieldDefn) =
     GDAL.ogr_gfld_getnameref(geomdefn.ptr)
 
 "Fetch geometry type of this field."
-gettype(geomdefn::AbstractGeomFieldDefn) = GDAL.ogr_gfld_gettype(geomdefn.ptr)
+gettype(geomdefn::AbstractGeomFieldDefn) =
+    gdaltype(GDAL.ogr_gfld_gettype(geomdefn.ptr))
 
 "Set the geometry type of this field."
-function settype!(geomdefn::GeomFieldDefn, etype::OGRwkbGeometryType)
+function settype!(geomdefn::GeomFieldDefn, etype::WKBGeometryType)
     GDAL.ogr_gfld_settype(geomdefn.ptr, etype)
     return geomdefn
 end

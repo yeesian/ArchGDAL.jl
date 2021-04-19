@@ -183,11 +183,11 @@ For layers with multiple geometry fields, this method only returns the geometry
 type of the first geometry column. For other columns, use
     `OGR_GFld_GetType(OGR_FD_GetGeomFieldDefn(OGR_L_GetLayerDefn(hLayer), i))`.
 """
-getgeomtype(featuredefn::AbstractFeatureDefn) =
-    GDAL.ogr_fd_getgeomtype(featuredefn.ptr)
+getgeomtype(featuredefn::AbstractFeatureDefn)::WKBGeometryType =
+    gdaltype(GDAL.ogr_fd_getgeomtype(featuredefn.ptr))
 
 """
-    setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType)
+    setgeomtype!(featuredefn::FeatureDefn, etype::WKBGeometryType)
 
 Assign the base geometry type for the passed layer (same as the fd).
 
@@ -196,7 +196,7 @@ type. The default upon creation is `wkbUnknown` which allows for any geometry
 type. The geometry type should generally not be changed after any OGRFeatures
 have been created against this definition.
 """
-function setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType)
+function setgeomtype!(featuredefn::FeatureDefn, etype::WKBGeometryType)
     GDAL.ogr_fd_setgeomtype(featuredefn.ptr, etype)
     return featuredefn
 end

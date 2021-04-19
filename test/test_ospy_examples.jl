@@ -3,6 +3,8 @@ using Statistics
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_ospy_examples.jl" begin
+
 """
 function to copy fields (not the data) from one layer to another
 parameters:
@@ -94,7 +96,7 @@ AG.read("ospy/data1/sites.shp") do input
         outlayer = AG.createlayer(
             name = "hw1b",
             dataset = output,
-            geom = GDAL.wkbPoint
+            geom = AG.wkbPoint
         )
         inlayerdefn = AG.layerdefn(inlayer)
         AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
@@ -148,7 +150,7 @@ end
         layer = AG.createlayer(
             name = "hw2a",
             dataset = output,
-            geom = GDAL.wkbPolygon
+            geom = AG.wkbPolygon
         )
         @test sprint(print, layer) == """
         Layer: hw2a
@@ -193,7 +195,7 @@ end
         #     outlayer = AG.createlayer(
         #         name = "hw2b",
         #         dataset = output,
-        #         geom = GDAL.wkbPolygon
+        #         geom = AG.wkbPolygon
         #     )
         #     infeaturedefn = AG.layerdefn(inlayer)
         #     nameindex = AG.findfieldindex(infeaturedefn, "name")
@@ -464,3 +466,5 @@ end end end end
                 #                   # bandlist (omit to include all bands)
                 #                    resampling="NEAREST") # resampling method
 end end end end
+
+end

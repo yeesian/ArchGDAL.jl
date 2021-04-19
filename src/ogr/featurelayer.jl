@@ -21,7 +21,7 @@ This function attempts to create a new layer on the dataset with the indicated
 * `name`: the name for the new layer. This should ideally not match any
     existing layer on the datasource. Defaults to an empty string.
 * `dataset`: the dataset. Defaults to creating a new in memory dataset.
-* `geom`: the geometry type for the layer. Use wkbUnknown (default) if
+* `geom`: the geometry type for the layer. Use `wkbUnknown` (default) if
     there are no constraints on the types geometry to be written.
 * `spatialref`: the coordinate system to use for the new layer.
 * `options`: a StringList of name=value (driver-specific) options.
@@ -29,7 +29,7 @@ This function attempts to create a new layer on the dataset with the indicated
 function createlayer(;
         name::AbstractString            = "",
         dataset::AbstractDataset        = create(getdriver("Memory")),
-        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
+        geom::WKBGeometryType           = wkbUnknown,
         spatialref::AbstractSpatialRef  = SpatialRef(),
         options                         = StringList(C_NULL)
     )
@@ -44,7 +44,7 @@ end
 function unsafe_createlayer(;
         name::AbstractString            = "",
         dataset::AbstractDataset        = create(getdriver("Memory")),
-        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
+        geom::WKBGeometryType           = wkbUnknown,
         spatialref::AbstractSpatialRef  = SpatialRef(),
         options                         = StringList(C_NULL)
     )
@@ -102,7 +102,8 @@ getname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getname(layer.ptr)
 
 Return the layer geometry type.
 """
-getgeomtype(layer::AbstractFeatureLayer) = GDAL.ogr_l_getgeomtype(layer.ptr)
+getgeomtype(layer::AbstractFeatureLayer) =
+    gdaltype(GDAL.ogr_l_getgeomtype(layer.ptr))
 
 """
     getspatialfilter(layer::AbstractFeatureLayer)

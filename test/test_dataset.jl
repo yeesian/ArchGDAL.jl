@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_dataset.jl" begin
+
 @testset "Test methods for raster dataset" begin
     AG.read("data/utmsmall.tif") do dataset
         @testset "Method 1" begin
@@ -73,7 +75,7 @@ end
     layer4 = AG.createlayer(
         name = "layer4",
         dataset = dataset4,
-        geom = GDAL.wkbLineString
+        geom = AG.wkbLineString
     )
     @test AG.nlayer(dataset4) == 1
 
@@ -82,7 +84,7 @@ end
         AG.createlayer(
             name = "layer5",
             dataset = dataset5,
-            geom = GDAL.wkbLineString
+            geom = AG.wkbLineString
         ) do layer5
             @test AG.nfeature(layer5) == 0
         end
@@ -94,4 +96,6 @@ end
     @test AG.nfeature(layer5) == 0
     @test AG.nfield(layer5) == 0
     @test AG.ngeom(layer5) == 1
+end
+
 end

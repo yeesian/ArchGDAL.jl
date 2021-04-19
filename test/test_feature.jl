@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_feature.jl" begin
+
 AG.read("data/point.geojson") do dataset
     layer = AG.getlayer(dataset, 0)
     AG.getfeature(layer, 0) do f1
@@ -37,8 +39,8 @@ AG.read("data/point.geojson") do dataset
             @test AG.findgeomindex(f1, "") == 0
             @test AG.findgeomindex(f2, "geom") == -1
             @test AG.findgeomindex(f2, "") == 0
-            @test AG.gettype(AG.getgeomdefn(f1, 0)) == GDAL.wkbPoint
-            @test AG.gettype(AG.getgeomdefn(f2, 0)) == GDAL.wkbPoint
+            @test AG.gettype(AG.getgeomdefn(f1, 0)) == AG.wkbPoint
+            @test AG.gettype(AG.getgeomdefn(f2, 0)) == AG.wkbPoint
         end
     end
     
@@ -90,7 +92,7 @@ end
 
 @testset "In-Memory Driver" begin
     AG.create(AG.getdriver("MEMORY")) do output
-        layer = AG.createlayer(dataset = output, geom=GDAL.wkbPolygon)
+        layer = AG.createlayer(dataset = output, geom = AG.wkbPolygon)
         AG.createfielddefn("int64field", AG.OFTInteger64) do fielddefn
             AG.addfielddefn!(layer, fielddefn)
         end
@@ -168,3 +170,5 @@ end
 
 # untested
 # getstyletable
+
+end

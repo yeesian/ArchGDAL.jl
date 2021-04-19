@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_gdal_tutorials.jl" begin
+
 @testset "Raster Tutorial" begin
     driver = AG.getdriver("GTiff")
 
@@ -94,7 +96,7 @@ end
 
             geometry = AG.getgeom(feature)
             @test AG.geomname(geometry) == "POINT"
-            @test AG.getgeomtype(geometry) == GDAL.wkbPoint
+            @test AG.getgeomtype(geometry) == AG.wkbPoint
             @test AG.nfield(featuredefn) == 2
             @test AG.getx(geometry, 0) ≈ 100.2785
             @test AG.gety(geometry, 0) ≈ 0.0893
@@ -106,7 +108,7 @@ end
         layer = AG.createlayer(
             name = "point_out",
             dataset = dataset,
-            geom = GDAL.wkbPoint
+            geom = AG.wkbPoint
         )
         AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
         featuredefn = AG.layerdefn(layer)
@@ -118,4 +120,6 @@ end
         end
         @test AG.nfeature(layer) == 1
     end
+end
+
 end

@@ -138,7 +138,7 @@ function addfielddefn(
 end
 
 """
-    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::OGRwkbGeometryType,
+    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::WKBGeometryType,
         approx=false)
 
 Write a new geometry field on a layer.
@@ -168,7 +168,7 @@ to the layer.
 function writegeomdefn!(
         layer::AbstractFeatureLayer,
         name::AbstractString,
-        etype::OGRwkbGeometryType;
+        etype::WKBGeometryType;
         approx::Bool = false
     )
     geomdefn = unsafe_creategeomdefn(name, etype)
@@ -181,7 +181,7 @@ function writegeomdefn(
         f::Function,
         layer::AbstractFeatureLayer,
         name::AbstractString,
-        etype::OGRwkbGeometryType;
+        etype::WKBGeometryType;
         approx::Bool = false
     )
     geomdefn = unsafe_creategeomdefn(name, etype)

@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_featurelayer.jl" begin
+
 @testset "Testing FeatureLayer Methods" begin
     AG.read("data/point.geojson") do dataset
         AG.copy(dataset) do tmpcopy
@@ -26,7 +28,7 @@ import ArchGDAL; const AG = ArchGDAL
                 name = "new layer",
                 dataset = tmpcopy,
                 spatialref = AG.getspatialref(tmplayer),
-                geom = GDAL.wkbPoint
+                geom = AG.wkbPoint
             )
                 @test AG.ngeom(AG.layerdefn(newlayer)) == 1
                 @test sprint(print, newlayer) == """
@@ -35,9 +37,9 @@ import ArchGDAL; const AG = ArchGDAL
                     """
                 AG.writegeomdefn(newlayer,
                                  "new geom",
-                                 GDAL.wkbLineString) do gfd
+                                 AG.wkbLineString) do gfd
                     @test AG.getname(gfd) == "new geom"
-                    @test AG.gettype(gfd) == GDAL.wkbLineString
+                    @test AG.gettype(gfd) == AG.wkbLineString
                 end
                 @test sprint(print, newlayer) == """
                     Layer: new layer
@@ -63,7 +65,7 @@ import ArchGDAL; const AG = ArchGDAL
                       Geometry 0 (): [wkbPoint]
                       Geometry 1 (new geom): [wkbLineString]
                     """
-                AG.writegeomdefn!(newlayer, "new poly", GDAL.wkbPolygon)
+                AG.writegeomdefn!(newlayer, "new poly", AG.wkbPolygon)
                 @test AG.ngeom(AG.layerdefn(newlayer)) == 3
                 @test sprint(print, newlayer) == """
                     Layer: new layer
@@ -178,3 +180,5 @@ end
 # starttransaction(layer)
 # committransaction(layer)
 # rollbacktransaction(layer)
+
+end

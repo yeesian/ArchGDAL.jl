@@ -1,18 +1,15 @@
-let pointtypes = (GDAL.wkbPoint, GDAL.wkbPoint25D, GDAL.wkbPointM,
-        GDAL.wkbPointZM),
-    multipointtypes = (GDAL.wkbMultiPoint, GDAL.wkbMultiPoint25D,
-        GDAL.wkbMultiPointM, GDAL.wkbMultiPointZM),
-    linetypes = (GDAL.wkbLineString, GDAL.wkbLineString25D, GDAL.wkbLineStringM,
-        GDAL.wkbLineStringZM),
-    multilinetypes = (GDAL.wkbMultiLineString, GDAL.wkbMultiLineString25D,
-        GDAL.wkbMultiLineStringM, GDAL.wkbMultiLineStringZM),
-    polygontypes = (GDAL.wkbPolygon, GDAL.wkbPolygon25D, GDAL.wkbPolygonM,
-        GDAL.wkbPolygonZM),
-    multipolygontypes = (GDAL.wkbMultiPolygon, GDAL.wkbMultiPolygon25D,
-        GDAL.wkbMultiPolygonM, GDAL.wkbMultiPolygonZM),
-    collectiontypes = (GDAL.wkbGeometryCollection,
-        GDAL.wkbGeometryCollection25D, GDAL.wkbGeometryCollectionM,
-        GDAL.wkbGeometryCollectionZM)
+let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
+    multipointtypes = (wkbMultiPoint, wkbMultiPoint25D, wkbMultiPointM,
+        wkbMultiPointZM),
+    linetypes = (wkbLineString, wkbLineString25D, wkbLineStringM,
+        wkbLineStringZM),
+    multilinetypes = (wkbMultiLineString, wkbMultiLineString25D,
+        wkbMultiLineStringM, wkbMultiLineStringZM),
+    polygontypes = (wkbPolygon, wkbPolygon25D, wkbPolygonM, wkbPolygonZM),
+    multipolygontypes = (wkbMultiPolygon, wkbMultiPolygon25D, wkbMultiPolygonM,
+        wkbMultiPolygonZM),
+    collectiontypes = (wkbGeometryCollection, wkbGeometryCollection25D,
+        wkbGeometryCollectionM, wkbGeometryCollectionZM)
 
     function GeoInterface.geotype(g::AbstractGeometry)
         gtype = getgeomtype(g)
@@ -22,7 +19,7 @@ let pointtypes = (GDAL.wkbPoint, GDAL.wkbPoint25D, GDAL.wkbPointM,
             :MultiPoint
         elseif gtype in linetypes
             :LineString
-        elseif gtype == GDAL.wkbLinearRing
+        elseif gtype == wkbLinearRing
             :LinearRing
         elseif gtype in multilinetypes
             :MultiLineString
@@ -55,7 +52,7 @@ let pointtypes = (GDAL.wkbPoint, GDAL.wkbPoint25D, GDAL.wkbPointM,
             Vector{Float64}[
                 GeoInterface.coordinates(getgeom(g,i-1)) for i in 1:ngeom(g)
             ]
-        elseif gtype in linetypes || gtype == GDAL.wkbLinearRing
+        elseif gtype in linetypes || gtype == wkbLinearRing
             Vector{Float64}[
                 collect(getpoint(g,i-1)[1:ndim]) for i in 1:ngeom(g)
             ]

@@ -3,14 +3,16 @@ import GeoInterface, GeoFormatTypes, GDAL, ArchGDAL;
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
 
+@testset "test_geometry.jl" begin
+
 @testset "Incomplete GeoInterface geometries" begin
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCircularString))
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCompoundCurve))
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbCurvePolygon))
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbMultiSurface))
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbPolyhedralSurface))
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbTIN))
-    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(GDAL.wkbTriangle))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbCircularString))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbCompoundCurve))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbCurvePolygon))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbMultiSurface))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbPolyhedralSurface))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbTIN))
+    @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(AG.creategeom(AG.wkbTriangle))
 end
 
 @testset "Create a Point" begin
@@ -187,8 +189,8 @@ end
             AG.curvegeom(lgeom) do clgeom
                 @test AG.toWKT(clgeom) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
             end
-            @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, GDAL.wkbMultiLineString))) == 2
-            AG.forceto(lgeom, GDAL.wkbMultiLineString) do mlsgeom
+            @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
+            AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
                 AG.polygonize(mlsgeom) do plgeom
                     @test AG.ngeom(plgeom) == 2
                 end
@@ -265,18 +267,18 @@ end
         end
     end
 
-    @test AG.getgeomtype(AG.getgeom(geom3, 0)) == GDAL.wkbPoint25D
-    @test AG.getgeomtype(AG.getgeom(geom3, 1)) == GDAL.wkbPolygon25D
-    @test AG.getgeomtype(AG.getgeom(geom3, 2)) == GDAL.wkbPolygon25D
+    @test AG.getgeomtype(AG.getgeom(geom3, 0)) == AG.wkbPoint25D
+    @test AG.getgeomtype(AG.getgeom(geom3, 1)) == AG.wkbPolygon25D
+    @test AG.getgeomtype(AG.getgeom(geom3, 2)) == AG.wkbPolygon25D
     @test sprint(print, AG.getgeom(geom3, 3)) == "NULL Geometry"
     AG.getgeom(geom3, 0) do geom4
-        @test AG.getgeomtype(geom4) == GDAL.wkbPoint25D
+        @test AG.getgeomtype(geom4) == AG.wkbPoint25D
     end
     AG.getgeom(geom3, 1) do geom4
-        @test AG.getgeomtype(geom4) == GDAL.wkbPolygon25D
+        @test AG.getgeomtype(geom4) == AG.wkbPolygon25D
     end
     AG.getgeom(geom3, 2) do geom4
-        @test AG.getgeomtype(geom4) == GDAL.wkbPolygon25D
+        @test AG.getgeomtype(geom4) == AG.wkbPolygon25D
     end
     AG.getgeom(geom3, 3) do geom4
         @test sprint(print, geom4) == "NULL Geometry"
@@ -308,4 +310,6 @@ end
                 AG.transform!(point, transform)
                 @test GeoInterface.coordinates(point) ≈ [47.3488070138318, -122.5981499431438]
     end end end end
+end
+
 end
