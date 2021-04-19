@@ -1,6 +1,8 @@
 using Test
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_display.jl" begin
+
 @testset "Testing Displays for different objects" begin
     AG.read("data/point.geojson") do dataset
         @test sprint(print, dataset) == """
@@ -68,3 +70,5 @@ end
 # untested
 # Geometry with length(toWKT(geom)) > 60 # should be able to see ...
 # Dataset with nlayer(dataset) > 5
+
+end

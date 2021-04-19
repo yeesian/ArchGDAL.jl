@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_types.jl" begin
+
 @testset "Testing GDAL Type Methods" begin
     @testset "GDAL Open Flags" begin
         @test AG.OF_ReadOnly | 0x04 == 0x04
@@ -54,4 +56,6 @@ import ArchGDAL; const AG = ArchGDAL
         @test AG.datatype(AG.OFTString) == String
         @test AG.gdaltype(GDAL.OFTMaxType) == AG.OFTInteger64List
     end
+end
+
 end

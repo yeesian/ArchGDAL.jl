@@ -2,6 +2,8 @@ using Test
 import ArchGDAL; const AG = ArchGDAL
 using Tables
 
+@testset "test_tables.jl" begin
+
 @testset "Tables Support" begin
     dataset = AG.read(joinpath(@__DIR__, "data/point.geojson"))
     dataset1 = AG.read(joinpath(@__DIR__, "data/multi_geom.csv"), options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
@@ -67,4 +69,6 @@ using Tables
             @test AG.schema_names(layer1)[i] isa Base.Generator || AG.schema_names(layer1)[i] isa ArchGDAL.IFeatureDefnView
         end
     end
+end
+
 end

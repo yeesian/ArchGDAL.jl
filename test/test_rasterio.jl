@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_rasterio.jl" begin
+
 AG.read("ospy/data4/aster.img") do ds
     @testset "version 1" begin
         band = AG.getband(ds, 1)
@@ -203,3 +205,5 @@ end
 #             @cplerr result "Access in DatasetRasterIO failed."
 #             buffer
 #         end
+
+end

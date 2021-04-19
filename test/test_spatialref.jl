@@ -3,6 +3,8 @@ import GDAL
 import ArchGDAL; const AG = ArchGDAL
 import GeoFormatTypes; const GFT = GeoFormatTypes
 
+@testset "test_spatialref.jl" begin
+
 @testset "Test Formats for Spatial Reference Systems" begin
     proj4326 = "+proj=longlat +datum=WGS84 +no_defs"
     proj26912 = "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs"
@@ -257,4 +259,6 @@ end
         @test AG.getattrvalue(spatialref, "AUTHORITY", 0) == "EPSG"
         @test AG.getattrvalue(spatialref, "AUTHORITY", 1) == "4326"
     end
+end
+
 end

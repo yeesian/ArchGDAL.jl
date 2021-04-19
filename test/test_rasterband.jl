@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_rasterband.jl" begin
+
 @testset "Test methods for rasterband" begin
     AG.read("data/utmsmall.tif") do dataset
         ds_result = """
@@ -134,3 +136,5 @@ end
 # untested
 # setcategorynames!(rasterband, names)
 # getcolortable(band) do C_NULL
+
+end

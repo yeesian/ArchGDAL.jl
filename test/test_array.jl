@@ -3,6 +3,8 @@ import GDAL
 using DiskArrays: eachchunk, haschunks, Chunked, GridChunks, readblock!
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_array.jl" begin
+
 @testset "RasterDataset Type" begin
     AG.readraster("ospy/data4/aster.img") do ds
         @testset "Test forwarded methods" begin 
@@ -140,4 +142,6 @@ end
         @test total / count ≈ 76.33891347095299
         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
     end
+end
+
 end

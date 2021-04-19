@@ -2,8 +2,9 @@ using Test
 import ArchGDAL; const AG = ArchGDAL
 import GeoFormatTypes; const GFT = GeoFormatTypes
 
-# Tests high level convert methods
+@testset "test_convert.jl" begin
 
+# Tests high level convert methods
 @testset "convert point format" begin
     point = AG.createpoint(100, 70)
     json = convert(GFT.GeoJSON, point)
@@ -27,4 +28,6 @@ end
                   convert(GFT.WellKnownText, GFT.CRS(), 
                           convert(GFT.ESRIWellKnownText, GFT.CRS(), 
                                   GFT.EPSG(4326)))) == proj4326
+end
+
 end

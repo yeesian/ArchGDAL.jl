@@ -1,6 +1,8 @@
 using ArchGDAL, GDAL; AG = ArchGDAL
 using Test
 
+@testset "test_gdalutilities.jl" begin
+
 AG.read("data/utmsmall.tif") do ds_small
     @testset "GDAL Error" begin
         @test_throws GDAL.GDALError AG.gdalinfo(ds_small, ["-novalidoption"])
@@ -107,4 +109,6 @@ AG.read("data/point.geojson") do ds_point
         """
         rm("data/point.csv")
     end
+end
+
 end

@@ -3,6 +3,8 @@ import GeoInterface, GeoFormatTypes, ArchGDAL
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
 
+@testset "test_cookbook_projection.jl" begin
+
 @testset "Reproject a Geometry" begin
     @testset "Method 1" begin
         AG.importEPSG(2927) do source; AG.importEPSG(4326) do target
@@ -94,4 +96,6 @@ end
         @test AG.toWKT(cloneref) == AG.toWKT(AG.importEPSGA(4326))
         @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
     end
+end
+
 end

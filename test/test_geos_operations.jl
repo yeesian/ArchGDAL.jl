@@ -1,7 +1,9 @@
 using Test
 import ArchGDAL; const AG = ArchGDAL
 
-function equivalent_to_wkt(geom::ArchGDAL.Geometry, wkt::String)
+@testset "test_geos_operations.jl" begin
+
+function equivalent_to_wkt(geom::AG.Geometry, wkt::String)
     fromWKT(wkt) do test_geom
         @test toWKT(geom) == toWKT(test_geom)
     end
@@ -218,4 +220,6 @@ end
         end
         @test AG.toWKT(AG.simplifypreservetopology(g1, 43.2)) == "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
     end
+end
+
 end

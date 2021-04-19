@@ -1,6 +1,8 @@
 using Test
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_drivers.jl" begin
+
 @testset "Testing ConfigOptions" begin
     @test AG.getconfigoption("GDAL_CACHEMAX") == ""
     AG.setconfigoption("GDAL_CACHEMAX", "64")
@@ -88,3 +90,4 @@ end
     @test_throws ArgumentError AG.extensiondriver(".not_an_extension")
 end
 
+end

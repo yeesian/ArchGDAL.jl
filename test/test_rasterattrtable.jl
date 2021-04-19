@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_rasterattrtable.jl" begin
+
 @testset "Testing Raster Attribute Tables" begin
     AG.createRAT() do rat
         @test AG.ncolumn(rat) == 0
@@ -123,4 +125,6 @@ end
             end
         end
     end
+end
+
 end

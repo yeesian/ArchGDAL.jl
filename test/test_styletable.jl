@@ -2,6 +2,8 @@ using Test
 import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
+@testset "test_styletable.jl" begin
+
 @testset "Testing StyleTable Methods" begin
     AG.createstylemanager() do sm
         @test AG.initialize!(sm) == true
@@ -69,3 +71,4 @@ import ArchGDAL; const AG = ArchGDAL
 end
 
 # Untested: initialize!(stylemanager::StyleManager, feature::Feature)
+end
