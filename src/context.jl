@@ -14,11 +14,13 @@ function environment(
     #
     # (ref https://github.com/mapbox/rasterio/pull/997#issuecomment-287117289)
     globalsettings = Dict(k => getconfigoption(k) for (k,v) in globalconfig)
-    localsettings = Dict(k => getthreadconfigoption(k) for (k,v) in threadconfig)
+    localsettings = Dict(
+        k => getthreadconfigoption(k) for (k,v) in threadconfig
+    )
     for (k,v) in threadconfig; setthreadconfigoption(k, v) end
     for (k,v) in globalconfig; setconfigoption(k, v) end
 
-    try
+    return try
         f()
     finally
         # Restore previous settings
@@ -41,7 +43,7 @@ end
 
 function executesql(f::Function, dataset::Dataset, args...)
     result = unsafe_executesql(dataset, args...)
-    try
+    return try
         f(result)
     finally
         releaseresultset(dataset, result)
@@ -57,7 +59,7 @@ function createfeature(f::Function, featuredefn::FeatureDefn)
     # if we do not artificially increase the reference, then destroy(feature)
     # will release the featuredefn, when we're going to handle it ourselves
     # later. Therefore we dereference (rather than release) the featuredefn.
-    try
+    return try
         f(feature)
     finally
         destroy(feature)
@@ -66,7 +68,8 @@ function createfeature(f::Function, featuredefn::FeatureDefn)
 end
 
 """
-    addfielddefn!(layer::AbstractFeatureLayer, name, etype::OGRFieldType; <keyword arguments>)
+    addfielddefn!(layer::AbstractFeatureLayer, name, etype::OGRFieldType;
+        <keyword arguments>)
 
 Create a new field on a layer.
 
@@ -110,7 +113,7 @@ function addfielddefn!(
         justify = justify)
     addfielddefn!(layer, fielddefn)
     destroy(fielddefn)
-    layer
+    return layer
 end
 
 function addfielddefn(
@@ -126,7 +129,7 @@ function addfielddefn(
     fielddefn = unsafe_createfielddefn(name, etype)
     setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
         justify = justify)
-    try
+    return try
         f(fielddefn)
         addfielddefn!(layer, fielddefn)
     finally
@@ -135,7 +138,8 @@ function addfielddefn(
 end
 
 """
-    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::OGRwkbGeometryType, approx=false)
+    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::OGRwkbGeometryType,
+        approx=false)
 
 Write a new geometry field on a layer.
 
@@ -181,7 +185,7 @@ function writegeomdefn(
         approx::Bool = false
     )
     geomdefn = unsafe_creategeomdefn(name, etype)
-    try
+    return try
         f(geomdefn)
         addgeomdefn!(layer, geomdefn)
     finally
@@ -202,17 +206,17 @@ for gdalfunc in (
         :gdalbuildvrt, :gdaldem, :gdalgrid, :gdalnearblack, :gdalrasterize,
         :gdaltranslate, :gdalvectortranslate, :gdalwarp, :getband,
         :getcolortable, :getfeature, :getgeom, :getlayer, :getmaskband,
-        :getoverview, :getpart, :getspatialref, :importCRS, :intersection, :importEPSG,
-        :importEPSGA, :importESRI, :importPROJ4, :importWKT, :importXML,
-        :importURL, :lineargeom, :newspatialref, :nextfeature, :pointalongline,
-        :pointonsurface, :polygonfromedges, :polygonize, :read, :sampleoverview,
-        :simplify, :simplifypreservetopology, :symdifference, :union, :update,
-        :readraster,
+        :getoverview, :getpart, :getspatialref, :importCRS, :intersection,
+        :importEPSG, :importEPSGA, :importESRI, :importPROJ4, :importWKT,
+        :importXML, :importURL, :lineargeom, :newspatialref, :nextfeature,
+        :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
+        :sampleoverview, :simplify, :simplifypreservetopology, :symdifference,
+        :union, :update, :readraster,
     )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
             obj = $(Symbol("unsafe_$gdalfunc"))(args...; kwargs...)
-            try
+            return try
                 f(obj)
             finally
                 destroy(obj)

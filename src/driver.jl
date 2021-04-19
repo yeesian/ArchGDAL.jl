@@ -24,6 +24,7 @@ driver that is registered with the `GDALDriverManager`.
 function destroy(drv::Driver)
     GDAL.gdaldestroydriver(drv.ptr)
     drv.ptr = C_NULL
+    return nothing
 end
 
 """
@@ -134,6 +135,7 @@ function copyfiles end
 function copyfiles(drv::Driver, new::AbstractString, old::AbstractString)
     result = GDAL.gdalcopydatasetfiles(drv.ptr, new, old)
     @cplerr result "Failed to copy dataset files"
+    return result
 end
 
 copyfiles(drvname::AbstractString, new::AbstractString, old::AbstractString) =
@@ -142,8 +144,8 @@ copyfiles(drvname::AbstractString, new::AbstractString, old::AbstractString) =
 """
     extensions()
 
-Returns a `Dict{String,String}` of all of the file extensions that can be read by GDAL, 
-with their respective drivers shortname.
+Returns a `Dict{String,String}` of all of the file extensions that can be read
+by GDAL,  with their respective drivers' `shortname`s.
 """
 function extensions()
     extdict = Dict{String,String}()

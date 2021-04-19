@@ -30,7 +30,8 @@ end
 getname(fielddefn::AbstractFieldDefn) = GDAL.ogr_fld_getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
-gettype(fielddefn::AbstractFieldDefn) = gdaltype(GDAL.ogr_fld_gettype(fielddefn.ptr))
+gettype(fielddefn::AbstractFieldDefn) =
+    gdaltype(GDAL.ogr_fld_gettype(fielddefn.ptr))
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)
@@ -186,9 +187,9 @@ Return whether this field can receive null values.
 
 By default, fields are nullable.
 
-Even if this method returns `false` (i.e not-nullable field), it doesn't mean that
-OGRFeature::IsFieldSet() will necessary return `true`, as fields can be temporary
-unset and null/not-null validation is usually done when
+Even if this method returns `false` (i.e not-nullable field), it doesn't mean
+that OGRFeature::IsFieldSet() will necessarily return `true`, as fields can be
+temporarily unset and null/not-null validation is usually done when
 OGRLayer::CreateFeature()/SetFeature() is called.
 """
 isnullable(fielddefn::AbstractFieldDefn) =
@@ -217,10 +218,10 @@ Get default field value
 """
 function getdefault(fielddefn::AbstractFieldDefn)
     result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
-    if result == C_NULL
-        return ""
+    return if result == C_NULL
+        ""
     else
-        return unsafe_string(result)
+        unsafe_string(result)
     end
 end
 
@@ -356,9 +357,9 @@ Return whether this geometry field can receive null values.
 
 By default, fields are nullable.
 
-Even if this method returns `false` (i.e not-nullable field), it doesn't mean that
-OGRFeature::IsFieldSet() will necessary return `true`, as fields can be temporary
-unset and null/not-null validation is usually done when
+Even if this method returns `false` (i.e not-nullable field), it doesn't mean
+that OGRFeature::IsFieldSet() will necessary return `true`, as fields can be
+temporarily unset and null/not-null validation is usually done when
 OGRLayer::CreateFeature()/SetFeature() is called.
 
 Note that not-nullable geometry fields might also contain 'empty' geometries.

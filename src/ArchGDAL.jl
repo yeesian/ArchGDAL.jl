@@ -46,6 +46,7 @@ module ArchGDAL
 
     function __init__()
         DRIVER_MANAGER[] = DriverManager()
+        return nothing
     end
 
 end # module

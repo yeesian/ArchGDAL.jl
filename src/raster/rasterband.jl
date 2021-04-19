@@ -165,8 +165,8 @@ end
 Fetch the no data value for this band.
 
 If there is no out of data value, `nothing` will be
-returned instead. The no data value for a band is generally a special marker value
-used to mark pixels that are not valid data. Such pixels should generally
+returned instead. The no data value for a band is generally a special marker
+value used to mark pixels that are not valid data. Such pixels should generally
 not be displayed, nor contribute to analysis operations.
 
 ### Returns
@@ -178,10 +178,10 @@ function getnodatavalue(band::AbstractRasterBand)
     #     actually associated with this layer. May be `NULL` (default).
     hasnodatavalue = Ref(Cint(0))
     nodatavalue = GDAL.gdalgetrasternodatavalue(band.ptr, hasnodatavalue)
-    if Bool(hasnodatavalue[])
-        return nodatavalue
+    return if Bool(hasnodatavalue[])
+        nodatavalue
     else
-        return nothing
+        nothing
     end
 end
 
@@ -355,10 +355,10 @@ depended on for long, nor should it ever be modified by the caller.)
 """
 function unsafe_getcolortable(band::AbstractRasterBand)
     result = ColorTable(GDALColorTable(GDAL.gdalgetrastercolortable(band.ptr)))
-    if result.ptr == C_NULL
-        return result
+    return if result.ptr == C_NULL
+        result
     else
-        return unsafe_clone(result)
+        unsafe_clone(result)
     end
 end
 
@@ -386,8 +386,8 @@ function clearcolortable!(band::AbstractRasterBand)
 end
 
 """
-    regenerateoverviews!(band::AbstractRasterBand, overviewbands::Vector{<:AbstractRasterBand},
-        resampling = "NEAREST")
+    regenerateoverviews!(band::AbstractRasterBand,
+        overviewbands::Vector{<:AbstractRasterBand}, resampling = "NEAREST")
 
 Generate downsampled overviews.
 
@@ -592,8 +592,8 @@ maskflags(band::AbstractRasterBand) = GDAL.gdalgetmaskflags(band.ptr)
 """
     maskflaginfo(band::AbstractRasterBand)
 
-Returns the flags as in `maskflags`(@ref) but unpacks the bit values into a named
-tuple with the following fields:
+Returns the flags as in `maskflags`(@ref) but unpacks the bit values into a
+named tuple with the following fields:
 
 * `all_valid`
 * `per_dataset`

@@ -17,6 +17,7 @@ unsafe_createRAT(ct::ColorTable) =
 function destroy(rat::RasterAttrTable)
     GDAL.gdaldestroyrasterattributetable(rat.ptr)
     rat.ptr = C_NULL
+    return nothing
 end
 
 """
@@ -186,7 +187,8 @@ changesarewrittentofile(rat::RasterAttrTable) =
     Bool(GDAL.gdalratchangesarewrittentofile(rat.ptr))
 
 """
-    attributeio!(rat::RasterAttrTable, access::GDALRWFlag, col, startrow, nrows, data::Vector)
+    attributeio!(rat::RasterAttrTable, access::GDALRWFlag, col, startrow, nrows,
+        data::Vector)
 
 Read or Write a block of data to/from the Attribute Table.
 
@@ -195,7 +197,8 @@ Read or Write a block of data to/from the Attribute Table.
 * `col`         Column of the Attribute Table
 * `startrow`    Row to start reading/writing (zero based)
 * `nrows`       Number of rows to read or write
-* `data`        Vector of Float64, Int32 or AbstractString to read/write. Should be at least `nrows` long.
+* `data`        Vector of Float64, Int32 or AbstractString to read/write. Should
+                be at least `nrows` long.
 """
 function attributeio! end
 
@@ -256,7 +259,8 @@ function setrowcount!(rat::RasterAttrTable, n::Integer)
 end
 
 """
-    createcolumn!(rat::RasterAttrTable, name, fieldtype::GDALRATFieldType, fieldusage::GDALRATFieldUsage)
+    createcolumn!(rat::RasterAttrTable, name, fieldtype::GDALRATFieldType,
+        fieldusage::GDALRATFieldUsage)
 
 Create new column.
 

@@ -18,7 +18,7 @@ import ArchGDAL; const AG = ArchGDAL
             @test splitpath(AG.filelist(ds)[2]) == ["ospy", "data4", "aster.rrd"]
             @test AG.listcapability(ds) isa Dict
             @test AG.ngcp(ds)==0
-            @test AG.write(ds,tempname()) == C_NULL
+            @test AG.write(ds,tempname()) == nothing
             @test AG.testcapability(ds,"ODsCCreateLayer") == false
         end
         @testset "DiskArray chunk interface" begin

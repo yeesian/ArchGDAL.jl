@@ -7,20 +7,25 @@
         source::GeoFormatTypes.GeoFormat
     )
 
-Convert a `GeoFormatTypes.GeoFormat` object to Geometry, then to the target format.
-The Geom trait is needed to separate out convert for CRS for WellKnownText
-and GML, which may contain both.
+Convert a `GeoFormatTypes.GeoFormat` object to Geometry, then to the target
+format. The Geom trait is needed to separate out convert for CRS for
+WellKnownText and GML, which may contain both.
 
 Both `Geom` and `Mixed` formats are converted to Geometries by default. 
 To convert a `Mixed` format to crs, `CRS` must be explicitly passed for `mode`.
 """
 
-Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.FormatMode,Type{GFT.FormatMode}}, 
-             source::GFT.GeoFormat) =
-    convert(target, convert(AbstractGeometry, source))
+function Base.convert(
+        target::Type{<:GFT.GeoFormat},
+        mode::Union{GFT.FormatMode,Type{GFT.FormatMode}}, 
+        source::GFT.GeoFormat
+    )
+    return convert(target, convert(AbstractGeometry, source))
+end
 
 """
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.AbstractWellKnownText)
+    convert(::Type{<:AbstractGeometry},
+        source::GeoFormatTypes.AbstractWellKnownText)
     convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.WellKnownBinary)
     convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.GeoJSON)
     convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.GML)
@@ -38,7 +43,8 @@ Base.convert(::Type{<:AbstractGeometry}, source::GFT.GML) =
     fromGML(GFT.val(source))
 
 """
-    convert(::Type{<:GeoFormatTypes.AbstractWellKnownText}, source::AbstractGeometry)
+    convert(::Type{<:GeoFormatTypes.AbstractWellKnownText},
+        source::AbstractGeometry)
     convert(::Type{<:GeoFormatTypes.WellKnownBinary}, source::AbstractGeometry)
     convert(::Type{<:GeoFormatTypes.GeoJSON}, source::AbstractGeometry)
     convert(::Type{<:GeoFormatTypes.GML}, source::AbstractGeometry)
@@ -59,7 +65,8 @@ Base.convert(::Type{<:GFT.KML}, source::AbstractGeometry) =
     GFT.KML(toKML(source))
 
 """
-    convert(target::Type{<:GeoFormatTypes.GeoFormat}, mode::CRS, source::GeoFormat)
+    convert(target::Type{<:GeoFormatTypes.GeoFormat}, mode::CRS,
+        source::GeoFormat)
 
 Convert `GeoFormat` CRS data to another `GeoFormat` CRS type.
 """

@@ -91,7 +91,8 @@ getfielddefn(featuredefn::IFeatureDefnView, i::Integer) =
     IFieldDefnView(GDAL.ogr_fd_getfielddefn(featuredefn.ptr, i))
 
 """
-    findfieldindex(featuredefn::AbstractFeatureDefn, name::Union{AbstractString, Symbol})
+    findfieldindex(featuredefn::AbstractFeatureDefn,
+        name::Union{AbstractString, Symbol})
 
 Find field by name.
 
@@ -101,8 +102,12 @@ the field index, or -1 if no match found.
 ### Remarks
 This uses the OGRFeatureDefn::GetFieldIndex() method.
 """
-findfieldindex(featuredefn::AbstractFeatureDefn, name::Union{AbstractString, Symbol}) =
-    GDAL.ogr_fd_getfieldindex(featuredefn.ptr, name)
+function findfieldindex(
+        featuredefn::AbstractFeatureDefn,
+        name::Union{AbstractString, Symbol}
+    )
+    return GDAL.ogr_fd_getfieldindex(featuredefn.ptr, name)
+end
 
 """
     addfielddefn!(featuredefn::FeatureDefn, fielddefn::FieldDefn)

@@ -86,7 +86,7 @@ function unsafe_copy(
         name::AbstractString = "copy($(getname(layer)))",
         options = StringList(C_NULL)
     )
-    FeatureLayer(GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name,
+    return FeatureLayer(GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name,
         options))
 end
 
@@ -111,12 +111,12 @@ Returns the current spatial filter for this layer.
 """
 function getspatialfilter(layer::AbstractFeatureLayer)
     result = GDALGeometry(GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr)))
-    if result == C_NULL
-        return IGeometry(result)
+    return if result == C_NULL
+        IGeometry(result)
     else
         # NOTE(yeesian): we make a clone here so that the geometry does not
         # depend on the FeatureLayer.
-        return IGeometry(GDALGeometry(GDAL.ogr_g_clone(result)))
+        IGeometry(GDALGeometry(GDAL.ogr_g_clone(result)))
     end
 end
 
@@ -127,23 +127,23 @@ Returns a clone of the spatial reference system for this layer.
 """
 function getspatialref(layer::AbstractFeatureLayer)
     result = GDAL.ogr_l_getspatialref(layer.ptr)
-    if result == C_NULL
-        return ISpatialRef()
+    return if result == C_NULL
+        ISpatialRef()
     else
         # NOTE(yeesian): we make a clone here so that the spatialref does not
         # depend on the FeatureLayer/Dataset.
-        return ISpatialRef(GDAL.osrclone(result))
+        ISpatialRef(GDAL.osrclone(result))
     end
 end
 
 function unsafe_getspatialref(layer::AbstractFeatureLayer)
     result = GDAL.ogr_l_getspatialref(layer.ptr)
-    if result == C_NULL
-        return SpatialRef()
+    return if result == C_NULL
+        SpatialRef()
     else
         # NOTE(yeesian): we make a clone here so that the spatialref does not
         # depend on the FeatureLayer/Dataset.
-        return SpatialRef(GDAL.osrclone(result))
+        SpatialRef(GDAL.osrclone(result))
     end
 end
 
@@ -217,7 +217,8 @@ function setspatialfilter!(
 end
 
 """
-    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, geom::AbstractGeometry)
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer,
+        geom::AbstractGeometry)
 
 Set a new spatial filter.
 
@@ -259,7 +260,8 @@ function clearspatialfilter!(layer::AbstractFeatureLayer, i::Integer)
 end
 
 """
-    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, xmin, ymin, xmax, ymax)
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, xmin, ymin, xmax,
+        ymax)
 
 Set a new rectangular spatial filter.
 
@@ -419,7 +421,8 @@ the features in the layer looking for the desired feature.
 Sequential reads (with OGR_L_GetNextFeature()) are generally considered
 interrupted by a OGR_L_GetFeature() call.
 
-The returned feature is now owned by the caller, and should be freed with `destroy()`.
+The returned feature is now owned by the caller, and should be freed with
+`destroy()`.
 """
 unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer) =
     Feature(GDALFeature(GDAL.ogr_l_getfeature(layer.ptr, i)))
@@ -464,7 +467,7 @@ end
 
 function addfeature(f::Function, layer::AbstractFeatureLayer)
     feature = unsafe_createfeature(layer)
-    try
+    return try
         f(feature)
         addfeature!(layer, feature)
     finally
@@ -485,7 +488,7 @@ unsafe_createfeature(layer::AbstractFeatureLayer) =
 
 function createfeature(f::Function, layer::AbstractFeatureLayer)
     feature = unsafe_createfeature(layer)
-    try
+    return try
         f(feature)
         setfeature!(layer, feature)
     finally
@@ -524,7 +527,8 @@ layerdefn(layer::AbstractFeatureLayer) =
     IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
 
 """
-    findfieldindex(layer::AbstractFeatureLayer, field::Union{AbstractString, Symbol}, exactmatch::Bool)
+    findfieldindex(layer::AbstractFeatureLayer,
+        field::Union{AbstractString, Symbol}, exactmatch::Bool)
 
 Find the index of the field in a layer, or -1 if the field doesn't exist.
 
@@ -633,8 +637,8 @@ the caller.
     implementation using `resetreading!()` and `nextfeature()` to find the
     requested feature id.
 
-* `OLCSequentialWrite` / \"SequentialWrite\": `true` if the CreateFeature() method
-    works for this layer. Note this means that this particular layer is
+* `OLCSequentialWrite` / \"SequentialWrite\": `true` if the CreateFeature()
+    method works for this layer. Note this means that this particular layer is
     writable. The same OGRLayer class may returned `false` for other layer
     instances that are effectively read-only.
 
@@ -643,19 +647,19 @@ the caller.
     writable. The same OGRLayer class may returned `false` for other layer
     instances that are effectively read-only.
 
-* `OLCFastSpatialFilter` / \"FastSpatialFilter\": `true` if this layer implements
-    spatial filtering efficiently. Layers that effectively read all features,
-    and test them with the OGRFeature intersection methods should return `false`.
-    This can be used as a clue by the application whether it should build and
-    maintain its own spatial index for features in this layer.
+* `OLCFastSpatialFilter` / \"FastSpatialFilter\": `true` if this layer
+    implements spatial filtering efficiently. Layers that effectively read all
+    features, and test them with the OGRFeature intersection methods should
+    return `false`. This can be used as a clue by the application whether it
+    should build and maintain its own spatial index for features in this layer.
 
-* `OLCFastFeatureCount` / \"FastFeatureCount\": `true` if this layer can return a
-    feature count (via GetFeatureCount()) efficiently. i.e. without counting the
-    features. In some cases this will return `true` until a spatial filter is
-    installed after which it will return `false`.
+* `OLCFastFeatureCount` / \"FastFeatureCount\": `true` if this layer can return
+    a feature count (via GetFeatureCount()) efficiently. i.e. without counting
+    the features. In some cases this will return `true` until a spatial filter
+    is installed after which it will return `false`.
 
-* `OLCFastGetExtent` / \"FastGetExtent\": `true` if this layer can return its data
-    extent (via GetExtent()) efficiently, i.e. without scanning all the
+* `OLCFastGetExtent` / \"FastGetExtent\": `true` if this layer can return its
+    data extent (via GetExtent()) efficiently, i.e. without scanning all the
     features. In some cases this will return `true` until a spatial filter is
     installed after which it will return `false`.
 
@@ -665,9 +669,9 @@ the caller.
 * `OLCCreateField` / \"CreateField\": `true` if this layer can create new fields
     on the current layer using CreateField(), otherwise `false`.
 
-* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) `true` if this layer
-    can create new geometry fields on the current layer using CreateGeomField(),
-    otherwise `false`.
+* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) `true` if this
+    layer can create new geometry fields on the current layer using
+    CreateGeomField(), otherwise `false`.
 
 * `OLCDeleteField` / \"DeleteField\": `true` if this layer can delete existing
     fields on the current layer using DeleteField(), otherwise `false`.
@@ -680,19 +684,19 @@ the caller.
     definition of an existing field on the current layer using AlterFieldDefn(),
     otherwise `false`.
 
-* `OLCDeleteFeature` / \"DeleteFeature\": `true` if the DeleteFeature() method is
-    supported on this layer, otherwise `false`.
+* `OLCDeleteFeature` / \"DeleteFeature\": `true` if the DeleteFeature() method
+    is supported on this layer, otherwise `false`.
 
-* `OLCStringsAsUTF8` / \"StringsAsUTF8\": `true` if values of OFTString fields are
-    assured to be in UTF-8 format. If `false` the encoding of fields is uncertain,
-    though it might still be UTF-8.
+* `OLCStringsAsUTF8` / \"StringsAsUTF8\": `true` if values of OFTString fields
+    are assured to be in UTF-8 format. If `false` the encoding of fields is
+    uncertain, though it might still be UTF-8.
 
 * `OLCTransactions` / \"Transactions\": `true` if the StartTransaction(),
     CommitTransaction() and RollbackTransaction() methods work in a meaningful
     way, otherwise `false`.
 
-* `OLCIgnoreFields` / \"IgnoreFields\": `true` if fields, geometry and style will
-    be omitted when fetching features as set by SetIgnoredFields() method.
+* `OLCIgnoreFields` / \"IgnoreFields\": `true` if fields, geometry and style
+    will be omitted when fetching features as set by SetIgnoredFields() method.
 
 * `OLCCurveGeometries` / \"CurveGeometries\": `true` if this layer supports
     writing curve geometries or may return such geometries. (GDAL 2.0).
@@ -721,7 +725,7 @@ function listcapability(
                         GDAL.OLCCurveGeometries,
                         GDAL.OLCMeasuredGeometries)
     )
-    Dict{String, Bool}([
+    return Dict{String, Bool}([
         c => testcapability(layer,c) for c in capabilities
     ])
 end
@@ -739,7 +743,8 @@ end
 # )
 
 """
-    addfielddefn!(layer::AbstractFeatureLayer, field::AbstractFieldDefn, approx = false)
+    addfielddefn!(layer::AbstractFeatureLayer, field::AbstractFieldDefn,
+        approx = false)
 
 Create a new field on a layer.
 
@@ -778,7 +783,8 @@ function addfielddefn!(
 end
 
 """
-    addgeomdefn!(layer::AbstractFeatureLayer, field::AbstractGeomFieldDefn, approx = false)
+    addgeomdefn!(layer::AbstractFeatureLayer, field::AbstractGeomFieldDefn,
+        approx = false)
 
 Create a new geometry field on a layer.
 

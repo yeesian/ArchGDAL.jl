@@ -1,5 +1,6 @@
 """
-    copywholeraster(source::AbstractDataset, dest::AbstractDataset; <keyword arguments>)
+    copywholeraster(source::AbstractDataset, dest::AbstractDataset;
+        <keyword arguments>)
 
 Copy all dataset raster data.
 
@@ -8,8 +9,8 @@ similarly configured dataset. The source and destination dataset must have the
 same number of bands, and the same width and height. The bands do not have to
 have the same data type.
 
-Currently the only `options` supported are : `\"INTERLEAVE=PIXEL\"` to
-force pixel interleaved operation and `\"COMPRESSED=YES\"` to force alignment on
+Currently the only `options` supported are : `\"INTERLEAVE=PIXEL\"` to force
+pixel interleaved operation and `\"COMPRESSED=YES\"` to force alignment on
 target dataset block sizes to achieve best compression. More options may be
 supported in the future.
 
@@ -29,10 +30,12 @@ function copywholeraster(
     result = GDAL.gdaldatasetcopywholeraster(source.ptr, dest.ptr, options,
         @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to copy whole raster"
+    return result
 end
 
 """
-    unsafe_copy(dataset::AbstractDataset; [filename, [driver, [<keyword arguments>]]])
+    unsafe_copy(dataset::AbstractDataset; [filename, [driver,
+        [<keyword arguments>]]])
 
 Create a copy of a dataset.
 
@@ -166,7 +169,8 @@ function write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
 end
 
 """
-    unsafe_create(filename::AbstractString; driver, width, height, nbands, dtype, options)
+    unsafe_create(filename::AbstractString; driver, width, height, nbands,
+        dtype, options)
 
 Create a new dataset.
 
@@ -217,7 +221,8 @@ function unsafe_create(
 end
 
 """
-    create(filename::AbstractString; driver, width, height, nbands, dtype, options)
+    create(filename::AbstractString; driver, width, height, nbands, dtype,
+        options)
 
 Create a new dataset.
 
@@ -275,7 +280,8 @@ function create(
 end
 
 """
-    unsafe_read(filename; flags=OF_ReadOnly, alloweddrivers, options, siblingfiles)
+    unsafe_read(filename; flags=OF_ReadOnly, alloweddrivers, options,
+        siblingfiles)
 
 Open a raster file as a GDALDataset.
 
@@ -462,8 +468,8 @@ unsafe_getlayer(dataset::AbstractDataset, i::Integer) =
     getlayer(dataset::AbstractDataset, name::AbstractString)
     getlayer(table::Table)
 
-Fetch the feature layer corresponding to the given name. If it is called on a Table, which
-supports only one layer, a name is not needed.
+Fetch the feature layer corresponding to the given name. If it is called on a
+Table, which supports only one layer, a name is not needed.
 
 The returned layer remains owned by the GDALDataset and should not be deleted by
 the application.
@@ -496,7 +502,8 @@ end
 """
     testcapability(dataset::AbstractDataset, capability::AbstractString)
 
-Test if capability is available. `true` if capability available otherwise `false`.
+Test if capability is available. `true` if capability available otherwise
+`false`.
 
 One of the following dataset capability names can be passed into this function,
 and a `true` or `false` value will be returned indicating whether or not the
@@ -536,7 +543,8 @@ function listcapability(
 end
 
 """
-    unsafe_executesql(dataset::AbstractDataset, query::AbstractString; dialect, spatialfilter)
+    unsafe_executesql(dataset::AbstractDataset, query::AbstractString; dialect,
+        spatialfilter)
 
 Execute an SQL statement against the data store.
 
@@ -595,6 +603,7 @@ before destroying the GDALDataset may cause errors.
 function releaseresultset(dataset::AbstractDataset, layer::FeatureLayer)
     GDAL.gdaldatasetreleaseresultset(dataset.ptr, layer.ptr)
     destroy(layer)
+    return nothing
 end
 
 """
@@ -688,9 +697,10 @@ function setproj!(dataset::AbstractDataset, projstring::AbstractString)
 end
 
 """
-    buildoverviews!(dataset::AbstractDataset, overviewlist::Vector{Cint}; bandlist, resampling="NEAREST",
-        progressfunc, progressdata)
-        Build raster overview(s).
+    buildoverviews!(dataset::AbstractDataset, overviewlist::Vector{Cint};
+        bandlist, resampling="NEAREST", progressfunc, progressdata)
+
+Build raster overview(s).
 
 If the operation is unsupported for the indicated dataset, then CE_Failure is
 returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
@@ -731,4 +741,5 @@ end
 function destroy(dataset::AbstractDataset)
     GDAL.gdalclose(dataset.ptr)
     dataset.ptr = C_NULL
+    return nothing
 end

@@ -10,6 +10,7 @@ unsafe_createcolortable(palette::GDALPaletteInterp) =
 function destroy(ct::ColorTable)
     GDAL.gdaldestroycolortable(ct.ptr)
     ct.ptr = C_NULL
+    return nothing
 end
 
 """
@@ -87,8 +88,9 @@ function setcolorentry!(ct::ColorTable, i::Integer, entry::GDAL.GDALColorEntry)
 end
 
 """
-    createcolorramp!(ct::ColorTable, startindex, startcolor::GDAL.GDALColorEntry,
-        endindex, endcolor::GDAL.GDALColorEntry)
+    createcolorramp!(ct::ColorTable, startindex,
+        startcolor::GDAL.GDALColorEntry, endindex,
+        endcolor::GDAL.GDALColorEntry)
 
 Create color ramp.
 

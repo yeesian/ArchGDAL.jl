@@ -22,6 +22,7 @@ inappropriate.
 function destroy(feature::Feature)
     GDAL.ogr_f_destroy(feature.ptr)
     feature.ptr = C_NULL
+    return nothing
 end
 
 """
@@ -44,6 +45,7 @@ type is illegal for the `OGRFeatureDefn` (checking not yet implemented).
 function setgeom!(feature::Feature, geom::AbstractGeometry)
     result = GDAL.ogr_f_setgeometry(feature.ptr, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry."
+    return result
 end
 
 """
@@ -53,19 +55,19 @@ Returns a clone of the geometry corresponding to the feature.
 """
 function getgeom(feature::Feature)
     result = GDAL.ogr_f_getgeometryref(feature.ptr)
-    if result == C_NULL
-        return IGeometry()
+    return if result == C_NULL
+        IGeometry()
     else
-        return IGeometry(GDAL.ogr_g_clone(result))
+        IGeometry(GDAL.ogr_g_clone(result))
     end
 end
 
 function unsafe_getgeom(feature::Feature)
     result = GDAL.ogr_f_getgeometryref(feature.ptr)
-    if result == C_NULL
-        return Geometry()
+    return if result == C_NULL
+        Geometry()
     else
-        return Geometry(GDAL.ogr_g_clone(result))
+        Geometry(GDAL.ogr_g_clone(result))
     end
 end
 
@@ -301,7 +303,8 @@ end
 """
     asdatetime(feature::Feature, i::Integer)
 
-Fetch field value as date and time.
+Fetch field value as date and time. Currently this method only works for
+OFTDate, OFTTime and OFTDateTime fields.
 
 ### Parameters
 * `hFeat`: handle to the feature that owned the field.
@@ -363,21 +366,20 @@ const _FETCHFIELD = Dict{OGRFieldType, Function}(
  # const OFTWideString =                (UInt32)(6)
  # const OFTWideStringList =            (UInt32)(7)
     OFTBinary          => asbinary,        #8
- # const OFTDate =                      (UInt32)(9)
- # const OFTTime =                      (UInt32)(10)
+    OFTDate            => asdatetime,      #9
+    OFTTime            => asdatetime,      #10
     OFTDateTime        => asdatetime,      #11
     OFTInteger64       => asint64,         #12
     OFTInteger64List   => asint64list      #13
- # const OFTMaxType =                   (UInt32)(13)
  )
 
 function getfield(feature::Feature, i::Integer)
-    if isfieldset(feature, i)
+    return if isfieldset(feature, i)
         _fieldtype = gettype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
-        return _fetchfield(feature, i)
+        _fetchfield(feature, i)
     else
-        return getdefault(feature, i)
+        getdefault(feature, i)
     end
 end
 
@@ -390,10 +392,10 @@ getfield(feature::Feature, name::Union{AbstractString, Symbol}) =
 
 Set a feature's `i`-th field to `value`.
 
-The following types for `value` are accepted: `Int32`, `Int64`, `Float64`, `AbstractString`,
-or a `Vector` with those in it, as well as `Vector{UInt8}`. For `DateTime` values, an
-additional keyword argument `tzflag` is accepted (0=unknown, 1=localtime, 100=GMT, see data
-model for details).
+The following types for `value` are accepted: `Int32`, `Int64`, `Float64`,
+`AbstractString`, or a `Vector` with those in it, as well as `Vector{UInt8}`.
+For `DateTime` values, an additional keyword argument `tzflag` is accepted
+(0=unknown, 1=localtime, 100=GMT, see data model for details).
 
 OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
 fields will be assigned a string representation of the value, but not
@@ -540,19 +542,19 @@ Returns a clone of the feature geometry at index `i`.
 """
 function getgeom(feature::Feature, i::Integer)
     result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
-    if result == C_NULL
-        return IGeometry()
+    return if result == C_NULL
+        IGeometry()
     else
-        return IGeometry(GDAL.ogr_g_clone(result))
+        IGeometry(GDAL.ogr_g_clone(result))
     end
 end
 
 function unsafe_getgeom(feature::Feature, i::Integer)
     result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
-    if result == C_NULL
-        return Geometry()
+    return if result == C_NULL
+        Geometry()
     else
-        return Geometry(GDAL.ogr_g_clone(result))
+        Geometry(GDAL.ogr_g_clone(result))
     end
 end
 
@@ -610,7 +612,8 @@ end
 
 """
     setfrom!(feature1::Feature, feature2::Feature, forgiving::Bool = false)
-    setfrom!(feature1::Feature, feature2::Feature, indices::Vector{Cint}, forgiving::Bool = false)
+    setfrom!(feature1::Feature, feature2::Feature, indices::Vector{Cint},
+        forgiving::Bool = false)
 
 Set one feature from another.
 
@@ -750,7 +753,8 @@ function setmediatype!(feature::Feature, mediatype::AbstractString)
 end
 
 """
-    fillunsetwithdefault!(feature::Feature; notnull = true, options = StringList(C_NULL))
+    fillunsetwithdefault!(feature::Feature; notnull = true,
+        options = StringList(C_NULL))
 
 Fill unset fields with default values that might be defined.
 
@@ -764,7 +768,7 @@ function fillunsetwithdefault!(
         notnull::Bool   = true,
         options         = StringList(C_NULL)
     )
-    GDAL.ogr_f_fillunsetwithdefault(feature.ptr, notnull, options)
+    return GDAL.ogr_f_fillunsetwithdefault(feature.ptr, notnull, options)
 end
 
 """

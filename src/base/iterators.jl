@@ -2,11 +2,11 @@ function Base.iterate(layer::AbstractFeatureLayer, state::Int=0)
     layer.ptr == C_NULL && return nothing
     state == 0 && resetreading!(layer)
     ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
-    if ptr == C_NULL
+    return if ptr == C_NULL
         resetreading!(layer)
-        return nothing
+        nothing
     else
-        return (Feature(ptr), state+1)
+        (Feature(ptr), state+1)
     end
 end
 
@@ -30,7 +30,7 @@ function blocks(raster::AbstractRasterBand)
     cols = width(raster)
     ni = ceil(Cint, rows / ybsize)
     nj = ceil(Cint, cols / xbsize)
-    BlockIterator(rows, cols, ni, nj, ni * nj, xbsize, ybsize)
+    return BlockIterator(rows, cols, ni, nj, ni * nj, xbsize, ybsize)
 end
 
 function Base.iterate(obj::BlockIterator, iter::Int=0)
@@ -47,7 +47,7 @@ function Base.iterate(obj::BlockIterator, iter::Int=0)
     else
         obj.cols - j * obj.xbsize
     end
-    (((i, j), (nrows, ncols)), iter+1)
+    return (((i, j), (nrows, ncols)), iter+1)
 end
 
 struct WindowIterator
@@ -66,7 +66,10 @@ function Base.iterate(obj::WindowIterator, iter::Int=0)
     next = Base.iterate(handle, iter)
     next == nothing && return nothing
     (((i, j), (nrows, ncols)), iter) = next
-    (((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize), iter)
+    return (
+        ((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize),
+        iter
+    )
 end
 
 mutable struct BufferIterator{T <: Real}
@@ -76,7 +79,7 @@ mutable struct BufferIterator{T <: Real}
 end
 
 function bufferwindows(raster::AbstractRasterBand)
-    BufferIterator(
+    return BufferIterator(
         raster,
         windows(raster),
         Array{pixeltype(raster)}(undef, blocksize(raster)...)

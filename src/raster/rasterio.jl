@@ -1,9 +1,13 @@
 
 """
-    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands; <keyword arguments>)
-    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands, rows, cols; <keyword arguments>)
-    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}; <keyword arguments>)
-    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}, rows, cols; <keyword arguments>)
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3},
+        bands; <keyword arguments>)
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands, rows,
+        cols; <keyword arguments>)
+    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real};
+        <keyword arguments>)
+    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}, rows,
+        cols; <keyword arguments>)
 
 
 Read/write a region of image data from multiple bands.
@@ -24,10 +28,10 @@ boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
 `writeblock!()` methods.
 
 ### Parameters
-* `rows`        A continuous range of rows expressed as a `UnitRange{<:Integer}`,
-                such as 2:9.
-* `cols`        A continuous range of columns expressed as a `UnitRange{<:Integer}`,
-                such as 2:9.
+* `rows`        A continuous range of rows expressed as a
+                `UnitRange{<:Integer}`, such as 2:9.
+* `cols`        A continuous range of columns expressed as a
+                `UnitRange{<:Integer}`, such as 2:9.
 * `access`      Either `GDAL.GF_Read` to read a region of data, or
                 `GDAL.GF_Write` to write a region of data.
 * `xoffset`     The pixel offset to the top left corner of the region to be
@@ -496,7 +500,8 @@ for (T,GT) in _GDALTYPE
 end
 
 """
-    readblock!(rb::AbstractRasterBand, xoffset::Integer, yoffset::Integer, buffer)
+    readblock!(rb::AbstractRasterBand, xoffset::Integer, yoffset::Integer,
+        buffer)
 
 Read a block of image data efficiently.
 
@@ -525,7 +530,8 @@ function readblock!(
 end
 
 """
-    writeblock!(rb::AbstractRasterBand, xoffset::Integer, yoffset::Integer, buffer)
+    writeblock!(rb::AbstractRasterBand, xoffset::Integer, yoffset::Integer,
+        buffer)
 
 Write a block of image data efficiently.
 

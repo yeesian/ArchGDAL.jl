@@ -21,6 +21,7 @@ Destroy Style Manager.
 function destroy(sm::StyleManager)
     GDAL.ogr_sm_destroy(sm.ptr)
     sm.ptr = C_NULL
+    return nothing
 end
 
 
@@ -76,7 +77,8 @@ npart(stylemanager::StyleManager, stylestring::AbstractString) =
     GDAL.ogr_sm_getpartcount(stylemanager.ptr, stylestring)
 
 """
-    unsafe_getpart(stylemanager::StyleManager, id::Integer, stylestring = C_NULL)
+    unsafe_getpart(stylemanager::StyleManager, id::Integer,
+        stylestring = C_NULL)
 
 Fetch a part (style tool) from the current style.
 
@@ -156,6 +158,7 @@ Destroy Style Tool.
 function destroy(styletool::StyleTool)
     GDAL.ogr_st_destroy(styletool.ptr)
     styletool.ptr = C_NULL
+    return nothing
 end
 
 """
@@ -342,6 +345,7 @@ Destroy Style Table.
 function destroy(st::StyleTable)
     GDAL.ogr_stbl_destroy(st.ptr)
     st.ptr = C_NULL
+    return nothing
 end
 
 """

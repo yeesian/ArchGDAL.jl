@@ -1,6 +1,7 @@
 function Base.show(io::IO, drv::Driver)
     drv.ptr == C_NULL && (return print(io, "NULL Driver"))
     print(io, "Driver: $(shortname(drv))/$(longname(drv))")
+    return io
 end
 
 function Base.show(io::IO, dataset::AbstractDataset)
@@ -44,12 +45,14 @@ function Base.show(io::IO, dataset::AbstractDataset)
             end
         end
     end
+    return io
 end
 
 #Add method to avoid show from DiskArrays
 Base.show(io::IO, raster::RasterDataset) = show(io, raster.ds)
 
-Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset) = show(io, raster.ds)
+Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset) =
+    show(io, raster.ds)
 
 function summarize(io::IO, rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
@@ -60,9 +63,11 @@ function summarize(io::IO, rasterband::AbstractRasterBand)
     i = indexof(rasterband)
     pxtype = pixeltype(rasterband)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
+    return io
 end
 
-Base.show(io::IO, rasterband::AbstractRasterBand) = show(io, "text/plain", rasterband)
+Base.show(io::IO, rasterband::AbstractRasterBand) =
+    show(io, "text/plain", rasterband)
 
 function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)
     rasterband.ptr == C_NULL && (return print(io, "NULL RasterBand"))
@@ -81,6 +86,7 @@ function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)
         print(io, "($(i-1)) $(width(ovr_band))x$(height(ovr_band)) ")
         i % 3 == 0 && print(io, "\n               ")
     end
+    return io
 end
 
 # assumes that the layer is reset, and will reset it after display
@@ -143,6 +149,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)
         resetreading!(layer)
     end
     n > 5 && print(io, "...\n Number of Fields: $n")
+    return io
 end
 
 function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
@@ -162,16 +169,19 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)
         println(io, "     Field (index $(i-1)): $fd")
     end
     n > 5 && print(io, "...\n Number of Fields: $n")
+    return io
 end
 
 function Base.show(io::IO, fd::AbstractFieldDefn)
     fd.ptr == C_NULL && (return print(io, "NULL FieldDefn"))
     print(io, "$(getname(fd)) ($(gettype(fd)))")
+    return io
 end
 
 function Base.show(io::IO, gfd::AbstractGeomFieldDefn)
     gfd.ptr == C_NULL && (return print(io, "NULL GeomFieldDefn"))
     print(io, "$(getname(gfd)) ($(gettype(gfd)))")
+    return io
 end
 
 function Base.show(io::IO, feature::Feature)
@@ -190,6 +200,7 @@ function Base.show(io::IO, feature::Feature)
         println(io, "$(getfield(feature, i-1))")
     end
     n > 10 && print(io, "...\n Number of Fields: $n")
+    return io
 end
 
 function Base.show(io::IO, spref::AbstractSpatialRef)
@@ -202,6 +213,7 @@ function Base.show(io::IO, spref::AbstractSpatialRef)
     else
         print(io, "Spatial Reference System: $projstr")
     end
+    return io
 end
 
 function Base.show(io::IO, geom::AbstractGeometry)
@@ -219,4 +231,5 @@ function Base.show(io::IO, geom::AbstractGeometry)
     else
         print(io, "Geometry: $(getgeomtype(geom))")
     end
+    return io
 end

@@ -221,9 +221,12 @@ Returns a bounding box polygon (CW) built from envelope coordinates
 """
 function boundingbox(geom::AbstractGeometry)
     coordinates = envelope(geom)
-    MinX, MaxX, MinY, MaxY = coordinates.MinX, coordinates.MaxX, coordinates.MinY, coordinates.MaxY
+    MinX, MaxX = coordinates.MinX, coordinates.MaxX
+    MinY, MaxY = coordinates.MinY, coordinates.MaxY
     # creates a CW closed ring polygon
-    return createpolygon([[MaxY, MinX], [MaxY, MaxX], [MinY, MaxX], [MinY, MinX], [MaxY, MinX]])
+    return createpolygon([
+        [MaxY, MinX], [MaxY, MaxX], [MinY, MaxX], [MinY, MinX], [MaxY, MinX]
+    ])
 end
 
 """
@@ -1269,7 +1272,8 @@ unsafe_curvegeom(geom::AbstractGeometry) =
     Geometry(GDAL.ogr_g_getcurvegeometry(geom.ptr, C_NULL))
 
 """
-    polygonfromedges(lines::AbstractGeometry, tol::Real; besteffort = false, autoclose = false)
+    polygonfromedges(lines::AbstractGeometry, tol::Real; besteffort = false,
+        autoclose = false)
 
 Build a ring from a bunch of arcs.
 
