@@ -11,10 +11,13 @@ import ArchGDAL; const AG = ArchGDAL
                 @test AG.ngcp(copydataset) == 0
                 AG.getband(copydataset,1) do band
                     @test AG.noverview(band) == 0
-                    AG.buildoverviews!(copydataset, Cint[2,4,8])
+                    AG.buildoverviews!(copydataset, Cint[2, 4, 8])
                     @test AG.noverview(band) == 3
-                    AG.copywholeraster(dataset, copydataset,
-                                       progressfunc=GDAL.gdaltermprogress)
+                    AG.copywholeraster!(
+                        dataset,
+                        copydataset,
+                        progressfunc = GDAL.gdaltermprogress
+                    )
                 end
             end
         end
@@ -22,16 +25,23 @@ import ArchGDAL; const AG = ArchGDAL
             copydataset = AG.copy(dataset, filename = "/vsimem/utmcopy.tif")
             @test AG.ngcp(copydataset) == 0
             @test AG.noverview(AG.getband(copydataset,1)) == 0
-            AG.buildoverviews!(copydataset, Cint[2,4,8])
+            AG.buildoverviews!(copydataset, Cint[2, 4, 8])
             @test AG.noverview(AG.getband(copydataset,1)) == 3
-            AG.copywholeraster(dataset, copydataset,
-                               progressfunc=GDAL.gdaltermprogress)
+            AG.copywholeraster!(
+                dataset,
+                copydataset,
+                progressfunc = GDAL.gdaltermprogress
+            )
         end
         AG.copyfiles("GTiff", "/vsimem/utmcopy2.tif", "/vsimem/utmcopy.tif")
         AG.update("/vsimem/utmcopy2.tif") do copydataset
             @test AG.ngcp(copydataset) == 0
             @test AG.noverview(AG.getband(copydataset,1)) == 3
-            AG.copywholeraster(dataset, copydataset, options = ["COMPRESS=LZW"])
+            AG.copywholeraster!(
+                dataset,
+                copydataset,
+                options = ["COMPRESS=LZW"]
+            )
         end
     end
 end

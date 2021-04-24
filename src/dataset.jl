@@ -20,17 +20,17 @@ specific `createcopy()` functions. It implements efficient copying, in
 particular \"chunking\" the copy in substantial blocks and, if appropriate,
 performing the transfer in a pixel interleaved fashion.
 """
-function copywholeraster(
+function copywholeraster!(
         source::AbstractDataset,
-        dest::AbstractDataset;
+        dest::D;
         options                 = StringList(C_NULL),
         progressfunc::Function  = GDAL.gdaldummyprogress,
         progressdata::Any       = C_NULL
-    )
+    )::D where {D <: AbstractDataset}
     result = GDAL.gdaldatasetcopywholeraster(source.ptr, dest.ptr, options,
         @cplprogress(progressfunc), progressdata)
     @cplerr result "Failed to copy whole raster"
-    return result
+    return dest
 end
 
 """
@@ -612,10 +612,10 @@ end
 
 Fetch a band object for a dataset from its index.
 """
-getband(dataset::AbstractDataset, i::Integer) =
+getband(dataset::AbstractDataset, i::Integer)::IRasterBand =
     IRasterBand(GDAL.gdalgetrasterband(dataset.ptr, i), ownedby = dataset)
 
-unsafe_getband(dataset::AbstractDataset, i::Integer) =
+unsafe_getband(dataset::AbstractDataset, i::Integer)::RasterBand =
     RasterBand(GDAL.gdalgetrasterband(dataset.ptr, i))
 
 """
