@@ -118,7 +118,7 @@ function metadataitem(
         domain::AbstractString = ""
     )::String
     item = GDAL.gdalgetmetadataitem(obj.ptr, name, domain)
-    return item === nothing ? "" : item
+    return isnothing(item) ? "" : item
 end
 
 """

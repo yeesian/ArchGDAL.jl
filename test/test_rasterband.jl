@@ -43,11 +43,11 @@ import ArchGDAL; const AG = ArchGDAL
         AG.setscale!(rb, 1)
         @test AG.getscale(rb) ≈ 1
 
-        @test AG.getnodatavalue(rb) === nothing
+        @test isnothing(AG.getnodatavalue(rb))
         AG.setnodatavalue!(rb, -100)
         @test AG.getnodatavalue(rb) ≈ -100
         AG.deletenodatavalue!(rb)
-        @test AG.getnodatavalue(rb) === nothing
+        @test isnothing(AG.getnodatavalue(rb))
 
         AG.copy(dataset) do dest
             destband = AG.getband(dest, 1)
