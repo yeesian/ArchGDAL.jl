@@ -226,7 +226,7 @@ pointer may be NULL or non-NULL.
 function asintlist(feature::Feature, i::Integer)::Vector{Int32}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasintegerlist(feature.ptr, i, n)
-    return (n.x == 0) ? Int32[] : unsafe_wrap(Array{Int32}, ptr, n.x)
+    return (n.x == 0) ? Int32[] : unsafe_wrap(Vector{Int32}, ptr, n.x)
 end
 
 """
@@ -247,7 +247,7 @@ pointer may be NULL or non-NULL.
 function asint64list(feature::Feature, i::Integer)::Vector{Int64}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasinteger64list(feature.ptr, i, n)
-    return (n.x == 0) ? Int64[] : unsafe_wrap(Array{Int64}, ptr, n.x)
+    return (n.x == 0) ? Int64[] : unsafe_wrap(Vector{Int64}, ptr, n.x)
 end
 
 """
@@ -268,7 +268,7 @@ pointer may be NULL or non-NULL.
 function asdoublelist(feature::Feature, i::Integer)::Vector{Float64}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasdoublelist(feature.ptr, i, n)
-    return (n.x == 0) ? Float64[] : unsafe_wrap(Array{Float64}, ptr, n.x)
+    return (n.x == 0) ? Float64[] : unsafe_wrap(Vector{Float64}, ptr, n.x)
 end
 
 """
