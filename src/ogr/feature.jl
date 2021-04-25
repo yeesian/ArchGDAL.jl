@@ -391,8 +391,14 @@ function getfield(feature::Feature, i::Integer)
     end
 end
 
-getfield(feature::Feature, name::Union{AbstractString, Symbol}) =
-    getfield(feature, findfieldindex(feature, name))
+function getfield(feature::Feature, name::Union{AbstractString, Symbol})
+    i = findfieldindex(feature, name)
+    return if i == -1
+        nothing
+    else
+        getfield(feature, i)
+    end
+end
 
 """
     setfield!(feature::Feature, i::Integer, value)
@@ -532,7 +538,7 @@ function getgeomdefn(feature::Feature, i::Integer)::IGeomFieldDefnView
 end
 
 """
-    findgeomindex(feature::Feature, name::AbstractString="")
+    findgeomindex(feature::Feature, name::Union{AbstractString, Symbol} = "")
 
 Fetch the geometry field index given geometry field name.
 
@@ -546,8 +552,12 @@ the geometry field index, or -1 if no matching geometry field is found.
 ### Remarks
 This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
-findgeomindex(feature::Feature, name::AbstractString = "")::Integer =
-    GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
+function findgeomindex(
+        feature::Feature,
+        name::Union{AbstractString, Symbol} = ""
+    )::Integer
+    return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
+end
 
 """
     getgeom(feature::Feature, i::Integer)
@@ -573,6 +583,30 @@ function unsafe_getgeom(feature::Feature, i::Integer)::Geometry
         Geometry()
     else
         Geometry(GDAL.ogr_g_clone(result))
+    end
+end
+
+function getgeom(
+        feature::Feature,
+        name::Union{AbstractString, Symbol} = ""
+    )::IGeometry
+    i = findgeomindex(feature, name)
+    return if i == -1
+        IGeometry()
+    else
+        getgeom(feature, i)
+    end
+end
+
+function unsafe_getgeom(
+        feature::Feature,
+        name::Union{AbstractString, Symbol} = ""
+    )::Geometry
+    i = findgeomindex(feature, name)
+    return if i == -1
+        Geometry()
+    else
+        unsafe_getgeom(feature, i)
     end
 end
 

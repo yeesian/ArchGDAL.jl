@@ -23,7 +23,7 @@ function copyfields(fromlayer, tolayer)
             # to too larger number with respect to field width
             fwidth = AG.getwidth(fd)
             if fwidth != 0
-                AG.setwidth!(fd, fwidth+1)
+                AG.setwidth!(fd, fwidth + 1)
         end end
         AG.createfield!(tolayer, fd)
     end
@@ -80,7 +80,7 @@ end
 @testset "Homework 1" begin
 AG.read("ospy/data1/sites.shp") do input
     #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1a.py
-    for (i,feature) in enumerate(AG.getlayer(input, 0))
+    for (i, feature) in enumerate(AG.getlayer(input, 0))
         id = AG.getfield(feature, 0); cover = AG.getfield(feature, 1)
         (x,y) = AG.getpoint(AG.getgeom(feature, 0), 0)
         @test id == i
@@ -122,13 +122,13 @@ AG.read("ospy/data1/sites.shp") do input
 
     # version 2
     AG.create(AG.getdriver("MEMORY")) do output
-        AG.executesql(input, """SELECT * FROM sites
+        AG.executesql(input, """SELECT id, cover FROM sites
                                 WHERE cover = 'trees' """) do results
             @test sprint(print, results) == """
             Layer: sites
-              Geometry 0 (_ogr_geometry_): [wkbPoint], POINT (449959.840851...), ...
-                 Field 0 (ID): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
-                 Field 1 (COVER): [OFTString], trees, trees, trees, trees, trees, trees, ...
+              Geometry 0 (): [wkbPoint], POINT (449959.840851...), ...
+                 Field 0 (id): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
+                 Field 1 (cover): [OFTString], trees, trees, trees, trees, trees, trees, ...
             """
             AG.copy(results, name = "hw1b", dataset = output)
         end
