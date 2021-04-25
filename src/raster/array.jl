@@ -2,7 +2,6 @@ import DiskArrays
 const AllowedXY = Union{Integer,Colon,AbstractRange}
 const AllowedBand = Union{Integer,Colon,AbstractArray}
 
-
 """
     RasterDataset(dataset::AbstractDataset)
 
@@ -22,12 +21,14 @@ us to be able to index into it like we would an array.
 Constructing a RasterDataset will error if the raster bands do not have all the
 same size and a common element data type.
 """
-struct RasterDataset{T,DS} <: AbstractDiskArray{T,3}
+struct RasterDataset{T, DS <: AbstractDataset} <: AbstractDiskArray{T,3}
     ds::DS
     size::Tuple{Int,Int,Int}
 end
 
-function RasterDataset(ds::AbstractDataset)
+function RasterDataset(
+        ds::AbstractDataset
+    )::RasterDataset{_dataset_type(ds), typeof(ds)}
     if iszero(nraster(ds))
         throw(ArgumentError("The Dataset does not contain any raster bands"))
     end
@@ -41,16 +42,39 @@ end
 for f in (:getgeotransform, :nraster, :getband, :getproj,
     :width, :height, :destroy, :getdriver, :filelist, :listcapability, 
     :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews!)
-    eval(:($(f)(x::RasterDataset, args...; kwargs...) = $(f)(x.ds, args...; kwargs...)))
+    eval(:(
+        $(f)(x::RasterDataset, args...; kwargs...) = 
+            $(f)(x.ds, args...; kwargs...)
+    ))
 end
 
 # Here we need to special-case, because source and dest might be rasters
-copywholeraster(x::RasterDataset,y::AbstractDataset;kwargs...) =
-    copywholeraster(x.ds, y; kwargs...)
-copywholeraster(x::RasterDataset,y::RasterDataset;kwargs...) =
-    copywholeraster(x.ds, y.ds; kwargs...)
-copywholeraster(x::AbstractDataset,y::RasterDataset;kwargs...) =
-    copywholeraster(x.ds, y.ds; kwargs...)
+function copywholeraster!(
+        source::RasterDataset,
+        dest::D;
+        kwargs...
+    )::D where {D <: AbstractDataset}
+    copywholeraster!(source.ds, dest; kwargs...)
+    return dest
+end
+
+function copywholeraster!(
+        source::RasterDataset,
+        dest::RasterDataset;
+        kwargs...
+    )::RasterDataset
+    copywholeraster!(source.ds, dest.ds; kwargs...)
+    return dest
+end
+
+function copywholeraster!(
+        source::AbstractDataset,
+        dest::RasterDataset;
+        kwargs...
+    )::RasterDataset
+    copywholeraster!(source.ds, dest.ds; kwargs...)
+    return dest
+end
 
 """
     _dataset_type(ds::AbstractDataset)
@@ -58,7 +82,7 @@ copywholeraster(x::AbstractDataset,y::RasterDataset;kwargs...) =
 Tries to determine a common dataset type for all the bands
 in a raster dataset.
 """
-function _dataset_type(ds::AbstractDataset)
+function _dataset_type(ds::AbstractDataset)::DataType
     alldatatypes = map(1:nraster(ds)) do i
         b = getband(ds, i)
         pixeltype(b)
@@ -87,8 +111,8 @@ function _common_size(ds::AbstractDataset)
     return Int.((s[1]..., nr))
 end
 
-getband(ds::RasterDataset, i::Integer) = getband(ds.ds, i)
-unsafe_readraster(args...; kwargs...)  =
+getband(ds::RasterDataset, i::Integer)::IRasterBand = getband(ds.ds, i)
+unsafe_readraster(args...; kwargs...)::RasterDataset =
     RasterDataset(unsafe_read(args...; kwargs...))
 
 """
@@ -99,19 +123,22 @@ function returns a `RasterDataset`, which is a subtype of
 `AbstractDiskArray{T,3}`, so that users can operate on the array using direct
 indexing.
 """
-readraster(s::String; kwargs...) = RasterDataset(read(s; kwargs...))
+readraster(s::String; kwargs...)::RasterDataset =
+    RasterDataset(read(s; kwargs...))
 
-function DiskArrays.eachchunk(ds::RasterDataset)
+function DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks
     subchunks = DiskArrays.eachchunk(getband(ds, 1))
     return DiskArrays.GridChunks(ds,(subchunks.chunksize..., 1))
 end
 
-DiskArrays.haschunks(::RasterDataset) = DiskArrays.Chunked()
-DiskArrays.haschunks(::AbstractRasterBand) = DiskArrays.Chunked()
+DiskArrays.haschunks(::RasterDataset)::DiskArrays.Chunked = DiskArrays.Chunked()
+DiskArrays.haschunks(::AbstractRasterBand)::DiskArrays.Chunked =
+    DiskArrays.Chunked()
 
-Base.size(band::AbstractRasterBand) = (width(band), height(band))
+Base.size(band::AbstractRasterBand)::Tuple{T, T} where {T <: Integer} =
+    (width(band), height(band))
 
-function DiskArrays.eachchunk(band::AbstractRasterBand)
+function DiskArrays.eachchunk(band::AbstractRasterBand)::DiskArrays.GridChunks
     wI = windows(band)
     cs = (wI.blockiter.xbsize, wI.blockiter.ybsize)
     return DiskArrays.GridChunks(band, cs)
@@ -119,66 +146,71 @@ end
 
 function DiskArrays.readblock!(
         band::AbstractRasterBand,
-        buffer, x::AbstractUnitRange,
+        buffer::T,
+        x::AbstractUnitRange,
         y::AbstractUnitRange
-    )
-    xoffset, yoffset = first(x)-1, first(y)-1
+    )::T where {T <: Any}
+    xoffset, yoffset = first(x) - 1, first(y) - 1
     xsize, ysize = length(x), length(y)
-    return read!(band, buffer, xoffset, yoffset, xsize, ysize)
+    read!(band, buffer, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function DiskArrays.writeblock!(
         band::AbstractRasterBand,
-        value,
+        buffer::T,
         x::AbstractUnitRange,
         y::AbstractUnitRange
-    )
-    xoffset, yoffset = first(x)-1, first(y)-1
+    )::T where {T <: Any}
+    xoffset, yoffset = first(x) - 1, first(y) - 1
     xsize, ysize = length(x), length(y)
-    return write!(band, value, xoffset, yoffset, xsize, ysize)
+    write!(band, buffer, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 
 # AbstractDataset indexing
 
-Base.size(dataset::RasterDataset) = dataset.size
+Base.size(dataset::RasterDataset)::Tuple{Int,Int,Int} = dataset.size
 
 function DiskArrays.readblock!(
         dataset::RasterDataset,
-        buffer,
+        buffer::T,
         x::AbstractUnitRange,
         y::AbstractUnitRange,
         z::AbstractUnitRange
-    )
+    )::T where {T <: Any}
     buffer2 = Array(buffer)
     DiskArrays.readblock!(dataset::RasterDataset, buffer2, x, y, z)
-    return buffer .= buffer2
+    buffer .= buffer2
+    return buffer
 end
 
 function DiskArrays.readblock!(
         dataset::RasterDataset,
-        buffer::Array,
+        buffer::T,
         x::AbstractUnitRange,
         y::AbstractUnitRange,
         z::AbstractUnitRange
-    )
+    )::T where {T <: Array}
     xoffset, yoffset = first.((x, y)) .- 1
-    xsize, ysize= length.((x, y))
-    indices  = [Cint(i) for i in z]
-    return read!(dataset.ds, buffer, indices, xoffset, yoffset, xsize, ysize)
+    xsize, ysize = length.((x, y))
+    read!(dataset.ds, buffer, Cint.(z), xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 function DiskArrays.writeblock!(
         dataset::RasterDataset,
-        value,
+        buffer::T,
         x::AbstractUnitRange,
         y::AbstractUnitRange,
         bands::AbstractUnitRange
-    )
+    )::T where {T <: Any}
     xoffset, yoffset = first.((x, y)) .- 1
     xsize, ysize= length.((x, y))
     indices  = [Cint(i) for i in bands]
-    return write!(dataset.ds, value, indices, xoffset, yoffset, xsize, ysize)
+    write!(dataset.ds, buffer, indices, xoffset, yoffset, xsize, ysize)
+    return buffer
 end
 
 Base.Array(dataset::RasterDataset) = dataset[:,:,:]
