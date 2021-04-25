@@ -9,7 +9,7 @@ function Base.iterate(
         resetreading!(layer)
         nothing
     else
-        (Feature(ptr), state+1)
+        (Feature(ptr), state + 1)
     end
 end
 
