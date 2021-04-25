@@ -382,12 +382,12 @@ attribute table is too large to clone:
 unsafe_clone(rat::RasterAttrTable)::RasterAttrTable =
     RasterAttrTable(GDAL.gdalratclone(rat.ptr))
 
-"""
-    serializeJSON(rat::RasterAttrTable)
-
-Serialize Raster Attribute Table in Json format.
-"""
-serializeJSON(rat::RasterAttrTable) = GDAL.gdalratserializejson(rat.ptr)
+# """
+#     serializeJSON(rat::RasterAttrTable)
+# 
+# Serialize Raster Attribute Table in Json format.
+# """
+# serializeJSON(rat::RasterAttrTable) = GDAL.gdalratserializejson(rat.ptr)
 
 """
     findrowindex(rat::RasterAttrTable, pxvalue::Real)
