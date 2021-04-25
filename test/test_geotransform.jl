@@ -9,7 +9,7 @@ import ArchGDAL; const AG = ArchGDAL
     ]
     gt1 = [
         -1111950.519667, 463.3127165279167,                0.0,
-            6671703.118, 0.0,               -463.3127165279165,
+            6671703.118,               0.0, -463.3127165279165,
     ]
     for (pixel, line) in ((0.0, 0.0), (3.0, 2.0), (15.5, 9.9))
         @test AG.applygeotransform(gt1, pixel, line) ≈ f(gt1, pixel, line)
@@ -17,8 +17,8 @@ import ArchGDAL; const AG = ArchGDAL
 
     gt2 = AG.invgeotransform(gt1)
     @test gt2 ≈ [
-         2400.0,  0.0021583694216166533, 0.0,
-        14400.0, 0.0,                   -0.002158369421616654,
+         2400.0, 0.0021583694216166533,                   0.0,
+        14400.0,                   0.0, -0.002158369421616654,
     ]
 
     gt3 = AG.composegeotransform(gt1, gt2)
