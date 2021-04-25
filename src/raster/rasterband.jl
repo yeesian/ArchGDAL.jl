@@ -1,11 +1,11 @@
 
 function destroy(band::AbstractRasterBand)::Nothing
-    band.ptr = GDALRasterBand(C_NULL)
+    band.ptr = C_NULL
     return nothing
 end
 
 function destroy(band::IRasterBand)::Nothing
-    band.ptr = GDALRasterBand(C_NULL)
+    band.ptr = C_NULL
     band.ownedby = Dataset()
     return nothing
 end
@@ -70,7 +70,7 @@ accessflag(band::AbstractRasterBand)::GDAL.GDALAccess =
 Fetch the band number (1+) within its dataset, or 0 if unknown.
 
 This method may return a value of 0 to indicate overviews, or free-standing
-`GDALRasterBand` objects without a relationship to a dataset.
+`RasterBand` objects without a relationship to a dataset.
 """
 indexof(band::AbstractRasterBand)::Integer = GDAL.gdalgetbandnumber(band.ptr)
 
@@ -372,11 +372,11 @@ end
 Returns a clone of the color table associated with the band.
 
 (If there is no associated color table, the original result is `NULL`. The
-original color table remains owned by the `GDALRasterBand`, and can't be
+original color table remains owned by the `RasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.)
 """
 function unsafe_getcolortable(band::AbstractRasterBand)::ColorTable
-    result = ColorTable(GDALColorTable(GDAL.gdalgetrastercolortable(band.ptr)))
+    result = ColorTable(GDAL.gdalgetrastercolortable(band.ptr))
     return if result.ptr == C_NULL
         result
     else
@@ -405,7 +405,7 @@ function setcolortable!(
 end
 
 function clearcolortable!(band::T)::T where {T <: AbstractRasterBand}
-    result = GDAL.gdalsetrastercolortable(band.ptr, GDALColorTable(C_NULL))
+    result = GDAL.gdalsetrastercolortable(band.ptr, C_NULL)
     @cplwarn result "CPLError $(result): action is unsupported by the driver"
     return band
 end
@@ -451,7 +451,7 @@ function regenerateoverviews!(
     result = GDAL.gdalregenerateoverviews(
         band.ptr,
         length(overviewbands),
-        GDALRasterBand[band.ptr for band in overviewbands],
+        [band.ptr for band in overviewbands],
         resampling,
         cfunc,
         progressdata
@@ -542,7 +542,7 @@ end
 
 Return the mask band associated with the band.
 
-The `GDALRasterBand` class includes a default implementation of `GetMaskBand()`
+The `RasterBand` class includes a default implementation of `GetMaskBand()`
 that returns one of four default implementations:
 
 - If a corresponding .msk file exists it will be used for the mask band.
@@ -560,7 +560,7 @@ apply to this band (specific rules yet to be determined) and that is of type
 `GDALAllValidRasterBand` class will be returned that has 255 values for all
 pixels. The null flags will return `GMF_ALL_VALID`.
 
-Note that the `GetMaskBand()` should always return a `GDALRasterBand` mask,
+Note that the `GetMaskBand()` should always return a `RasterBand` mask,
 even if it is only an all 255 mask with the flags indicating `GMF_ALL_VALID`.
 
 See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
@@ -591,7 +591,7 @@ have values other than 0 and 255.
 - `GMF_NODATA` (`0x08`):       Indicates the mask is actually being generated
 from nodata values. (mutually exclusive of `GMF_ALPHA`)
 
-The `GDALRasterBand` class includes a default implementation of `GetMaskBand()`
+The `RasterBand` class includes a default implementation of `GetMaskBand()`
 that returns one of four default implementations:
 
 - If a corresponding .msk file exists it will be used for the mask band.

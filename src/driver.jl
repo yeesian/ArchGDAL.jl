@@ -15,7 +15,7 @@ getdriver(name::AbstractString)::Driver = Driver(GDAL.gdalgetdriverbyname(name))
 """
     destroy(drv::Driver)
 
-Destroy a `GDALDriver`.
+Destroy a `Driver`.
 
 This is roughly equivalent to deleting the driver, but is guaranteed to take
 place in the GDAL heap. It is important this that function not be called on a
@@ -92,7 +92,7 @@ listdrivers()::Dict{String,String} = Dict{String,String}([
 Identify the driver that can open a raster file.
 
 This function will try to identify the driver that can open the passed filename
-by invoking the Identify method of each registered `GDALDriver` in turn. The
+by invoking the Identify method of each registered `Driver` in turn. The
 first driver that successful identifies the file name will be returned. If all
 drivers fail then `NULL` is returned.
 """

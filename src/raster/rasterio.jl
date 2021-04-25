@@ -16,7 +16,7 @@ This method allows reading a region of one or more `RasterBand`s from this
 dataset into a buffer, or writing data from a buffer into a region of the
 `RasterBand`s. It automatically takes care of data type translation if the
 element type (`<:Real`) of the buffer is different than that of the
-`GDALRasterBand`. The method also takes care of image decimation / replication
+`RasterBand`. The method also takes care of image decimation / replication
 if the buffer size (`xsz × ysz`) is different than the size of the
 region being accessed (`xsize × ysize`).
 
@@ -449,7 +449,7 @@ for (T,GT) in _GDALTYPE
             @assert nband == zbsize
             result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),
                            GDAL.CPLErr,  # return type
-                           (GDALDataset,
+                           (GDAL.GDALDatasetH,
                            GDAL.GDALRWFlag,  # access
                            Cint,  # xoffset
                            Cint,  # yoffset
@@ -507,11 +507,11 @@ for (T,GT) in _GDALTYPE
             (rasterband == C_NULL) && error("Can't read invalid rasterband")
             xbsize, ybsize = size(buffer)
             result = ccall((:GDALRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
-                (GDALRasterBand,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,Ptr{Cvoid},
-                Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing, GDAL.GSpacing,
-                Ptr{GDAL.GDALRasterIOExtraArg}),rasterband.ptr,access,xoffset,
-                yoffset,xsize,ysize,pointer(buffer),xbsize,ybsize,$GT,pxspace,
-                linespace,extraargs)
+                (GDAL.GDALRasterBandH,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
+                Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
+                GDAL.GSpacing,Ptr{GDAL.GDALRasterIOExtraArg}),rasterband.ptr,
+                access,xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,
+                ybsize,$GT,pxspace,linespace,extraargs)
             @cplerr result "Access in RasterIO failed."
             return buffer
         end

@@ -288,10 +288,10 @@ end
     unsafe_read(filename; flags=OF_ReadOnly, alloweddrivers, options,
         siblingfiles)
 
-Open a raster file as a GDALDataset.
+Open a raster file as a `Dataset`.
 
 This function will try to open the passed file, or virtual dataset name by
-invoking the Open method of each registered `GDALDriver` in turn. The first
+invoking the Open method of each registered `Driver` in turn. The first
 successful open will result in a returned dataset. If all drivers fail then
 `NULL` is returned and an error is issued.
 
@@ -306,9 +306,9 @@ driver on how to access a dataset. It should be in UTF-8 encoding.
                    drivers. If none of the value is specified, both are implied.
     - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
     - Shared mode: `GDAL_OF_SHARED`. If set, it allows the sharing of
-                   GDALDataset handles for a dataset with other callers that
+                   `Dataset` handles for a dataset with other callers that
                    have set GDAL_OF_SHARED. In particular, GDALOpenEx() will
-                   consult its list of currently open and shared GDALDataset's,
+                   consult its list of currently open and shared `Dataset`'s,
                    and if the GetDescription() name for one exactly matches the
                    pszFilename passed to GDALOpenEx() it will be referenced and
                    returned, if GDALOpenEx() is called from the same thread.
@@ -463,7 +463,7 @@ filelist(dataset::AbstractDataset)::Vector{String} =
 
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
 
-The returned layer remains owned by the GDALDataset and should not be deleted by
+The returned layer remains owned by the `Dataset` and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
@@ -479,7 +479,7 @@ unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
 Fetch the feature layer corresponding to the given name. If it is called on a
 Table, which supports only one layer, a name is not needed.
 
-The returned layer remains owned by the GDALDataset and should not be deleted by
+The returned layer remains owned by the `Dataset` and should not be deleted by
 the application.
 """
 function getlayer(dataset::AbstractDataset, name::AbstractString)::IFeatureLayer
@@ -585,14 +585,14 @@ function unsafe_executesql(
         dataset::AbstractDataset,
         query::AbstractString;
         dialect::AbstractString = "",
-        spatialfilter::Geometry = Geometry(GDALGeometry(C_NULL))
+        spatialfilter::Geometry = Geometry(C_NULL)
     )::FeatureLayer
-    return FeatureLayer(GDALFeatureLayer(GDAL.gdaldatasetexecutesql(
+    return FeatureLayer(GDAL.gdaldatasetexecutesql(
         dataset.ptr,
         query,
         spatialfilter.ptr,
         dialect
-    )))
+    ))
 end
 
 """
@@ -601,8 +601,8 @@ end
 Release results of ExecuteSQL().
 
 This function should only be used to deallocate OGRLayers resulting from an
-ExecuteSQL() call on the same GDALDataset. Failure to deallocate a results set
-before destroying the GDALDataset may cause errors.
+ExecuteSQL() call on the same `Dataset`. Failure to deallocate a results set
+before destroying the `Dataset` may cause errors.
 
 ### Parameters
 * `dataset`: the dataset handle.

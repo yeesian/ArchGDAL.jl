@@ -361,7 +361,7 @@ OGRFeatures that depend on it is likely to result in a crash.
 Starting with GDAL 2.1, returns NULL in case out of memory situation.
 """
 function unsafe_createfeature(featuredefn::AbstractFeatureDefn)::Feature
-    return Feature(GDALFeature(GDAL.ogr_f_create(featuredefn.ptr)))
+    return Feature(GDAL.ogr_f_create(featuredefn.ptr))
 end
 
 """

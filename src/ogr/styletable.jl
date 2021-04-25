@@ -1,5 +1,5 @@
 """
-    unsafe_createstylemanager(styletable = GDALStyleTable(C_NULL))
+    unsafe_createstylemanager(styletable = C_NULL)
 
 OGRStyleMgr factory.
 
@@ -9,8 +9,11 @@ OGRStyleMgr factory.
 ### Returns
 an handle to the new style manager object.
 """
-unsafe_createstylemanager(styletable = GDALStyleTable(C_NULL))::StyleManager =
-    StyleManager(GDAL.ogr_sm_create(styletable))
+function unsafe_createstylemanager(
+        styletable::GDAL.OGRStyleTableH = C_NULL
+    )::StyleManager
+    return StyleManager(GDAL.ogr_sm_create(styletable))
+end
 
 """
 Destroy Style Manager.

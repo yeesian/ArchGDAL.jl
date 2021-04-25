@@ -1,11 +1,11 @@
 
 function destroy(layer::AbstractFeatureLayer)::Nothing
-    layer.ptr = GDALFeatureLayer(C_NULL)
+    layer.ptr = C_NULL
     return nothing
 end
 
 function destroy(layer::IFeatureLayer)::Nothing
-    layer.ptr = GDALFeatureLayer(C_NULL)
+    layer.ptr = C_NULL
     layer.ownedby = Dataset()
     layer.spatialref = SpatialRef()
     return nothing
@@ -111,13 +111,13 @@ getgeomtype(layer::AbstractFeatureLayer)::WKBGeometryType =
 Returns the current spatial filter for this layer.
 """
 function getspatialfilter(layer::AbstractFeatureLayer)::IGeometry
-    result = GDALGeometry(GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr)))
+    result = GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr))
     return if result == C_NULL
         IGeometry(result)
     else
         # NOTE(yeesian): we make a clone here so that the geometry does not
         # depend on the FeatureLayer.
-        IGeometry(GDALGeometry(GDAL.ogr_g_clone(result)))
+        IGeometry(GDAL.ogr_g_clone(result))
     end
 end
 
@@ -190,7 +190,7 @@ end
 function clearspatialfilter!(
         layer::L
     )::L where {L <: AbstractFeatureLayer}
-    GDAL.ogr_l_setspatialfilter(layer.ptr, GDALGeometry(C_NULL))
+    GDAL.ogr_l_setspatialfilter(layer.ptr, C_NULL)
     return layer
 end
 
@@ -264,7 +264,7 @@ function clearspatialfilter!(
         layer::L,
         i::Integer
     )::L where {L <: AbstractFeatureLayer}
-    GDAL.ogr_l_setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL))
+    GDAL.ogr_l_setspatialfilterex(layer.ptr, i, C_NULL)
     return layer
 end
 
@@ -375,7 +375,7 @@ reading may or may not be valid after that operation and a call to
 `resetreading!()` might be needed.
 """
 function unsafe_nextfeature(layer::AbstractFeatureLayer)::Feature
-    return Feature(GDALFeature(GDAL.ogr_l_getnextfeature(layer.ptr)))
+    return Feature(GDAL.ogr_l_getnextfeature(layer.ptr))
 end
 
 """
@@ -440,7 +440,7 @@ The returned feature is now owned by the caller, and should be freed with
 `destroy()`.
 """
 unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer)::Feature =
-    Feature(GDALFeature(GDAL.ogr_l_getfeature(layer.ptr, i)))
+    Feature(GDAL.ogr_l_getfeature(layer.ptr, i))
 
 """
     setfeature!(layer::AbstractFeatureLayer, feature::Feature)
@@ -1075,7 +1075,7 @@ nreference(layer::AbstractFeatureLayer)::Integer =
 # function synctodisk!(layer::AbstractFeatureLayer)
 #     result = GDAL.ogr_l_synctodisk(layer.ptr)
 #     @ogrerr result "Failed to flush pending changes to disk"
-#     layer.ptr = GDALFeatureLayer(C_NULL)
+#     layer.ptr = C_NULL
 # end
 
 # """

@@ -180,7 +180,7 @@ end
 
 Determine whether changes made to this RAT are reflected directly in the dataset
 
-If this returns `false` then GDALRasterBand.SetDefaultRAT() should be called.
+If this returns `false` then RasterBand.SetDefaultRAT() should be called.
 Otherwise this is unnecessary since changes to this object are reflected in the
 dataset.
 """

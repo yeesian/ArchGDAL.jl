@@ -2,43 +2,43 @@ import DiskArrays: AbstractDiskArray
 import Base.convert
 
 abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
-    # needs to have a `ptr::GDALGeometry` attribute
+    # needs to have a `ptr::GDAL.OGRGeometryH` attribute
 
 abstract type AbstractSpatialRef end
-    # needs to have a `ptr::GDALSpatialRef` attribute
+    # needs to have a `ptr::GDAL.OGRSpatialReferenceH` attribute
 
 abstract type AbstractDataset end
-    # needs to have a `ptr::GDALDataset` attribute
+    # needs to have a `ptr::GDAL.GDALDatasetH` attribute
 
 abstract type AbstractFeatureDefn end
-    # needs to have a `ptr::GDALFeatureDefn` attribute
+    # needs to have a `ptr::GDAL.OGRFeatureDefnH` attribute
 
 abstract type AbstractFeatureLayer end
-    # needs to have a `ptr::GDALDataset` attribute
+    # needs to have a `ptr::GDAL.OGRLayerH` attribute
 
 abstract type AbstractFieldDefn end
-    # needs to have a `ptr::GDALFieldDefn` attribute
+    # needs to have a `ptr::GDAL.OGRFieldDefnH` attribute
 
 abstract type AbstractGeomFieldDefn end
-    # needs to have a `ptr::GDALGeomFieldDefn` attribute
+    # needs to have a `ptr::GDAL.OGRGeomFieldDefnH` attribute
 
 abstract type AbstractRasterBand{T} <: AbstractDiskArray{T,2} end
-    # needs to have a `ptr::GDALDataset` attribute
+    # needs to have a `ptr::GDAL.GDALRasterBandH` attribute
 
 mutable struct CoordTransform
-    ptr::GDALCoordTransform
+    ptr::GDAL.OGRCoordinateTransformationH
 end
 
 mutable struct Dataset <: AbstractDataset
-    ptr::GDALDataset
+    ptr::GDAL.GDALDatasetH
 
-    Dataset(ptr::GDALDataset = C_NULL) = new(ptr)
+    Dataset(ptr::GDAL.GDALDatasetH = C_NULL) = new(ptr)
 end
 
 mutable struct IDataset <: AbstractDataset
-    ptr::GDALDataset
+    ptr::GDAL.GDALDatasetH
 
-    function IDataset(ptr::GDALDataset = C_NULL)
+    function IDataset(ptr::GDAL.GDALDatasetH = C_NULL)
         dataset = new(ptr)
         finalizer(destroy, dataset)
         return dataset
@@ -46,21 +46,21 @@ mutable struct IDataset <: AbstractDataset
 end
 
 mutable struct Driver
-    ptr::GDALDriver
+    ptr::GDAL.GDALDriverH
 end
 
 mutable struct Field
-    ptr::GDALField
+    ptr::GDAL.OGRField
 end
 
 mutable struct FieldDefn <: AbstractFieldDefn
-    ptr::GDALFieldDefn
+    ptr::GDAL.OGRFieldDefnH
 end
 
 mutable struct IFieldDefnView <: AbstractFieldDefn
-    ptr::GDALFieldDefn
+    ptr::GDAL.OGRFieldDefnH
 
-    function IFieldDefnView(ptr::GDALFieldDefn = C_NULL)
+    function IFieldDefnView(ptr::GDAL.OGRFieldDefnH = C_NULL)
         fielddefn = new(ptr)
         finalizer(destroy, fielddefn)
         return fielddefn
@@ -68,11 +68,11 @@ mutable struct IFieldDefnView <: AbstractFieldDefn
 end
 
 mutable struct GeomFieldDefn <: AbstractGeomFieldDefn
-    ptr::GDALGeomFieldDefn
+    ptr::GDAL.OGRGeomFieldDefnH
     spatialref::AbstractSpatialRef
 
     function GeomFieldDefn(
-            ptr::GDALGeomFieldDefn = C_NULL;
+            ptr::GDAL.OGRGeomFieldDefnH = C_NULL;
             spatialref::AbstractSpatialRef = SpatialRef()
         )
         return new(ptr, spatialref)
@@ -80,9 +80,9 @@ mutable struct GeomFieldDefn <: AbstractGeomFieldDefn
 end
 
 mutable struct IGeomFieldDefnView <: AbstractGeomFieldDefn
-    ptr::GDALGeomFieldDefn
+    ptr::GDAL.OGRGeomFieldDefnH
 
-    function IGeomFieldDefnView(ptr::GDALGeomFieldDefn = C_NULL)
+    function IGeomFieldDefnView(ptr::GDAL.OGRGeomFieldDefnH = C_NULL)
         geomdefn = new(ptr)
         finalizer(destroy, geomdefn)
         return geomdefn
@@ -90,32 +90,32 @@ mutable struct IGeomFieldDefnView <: AbstractGeomFieldDefn
 end
 
 mutable struct RasterAttrTable
-    ptr::GDALRasterAttrTable
+    ptr::GDAL.GDALRasterAttributeTableH
 end
 
 mutable struct StyleManager
-    ptr::GDALStyleManager
+    ptr::GDAL.OGRStyleMgrH
 end
 
 mutable struct StyleTable
-    ptr::GDALStyleTable
+    ptr::GDAL.OGRStyleTableH
 end
 
 mutable struct StyleTool
-    ptr::GDALStyleTool
+    ptr::GDAL.OGRStyleToolH
 end
 
 mutable struct FeatureLayer <: AbstractFeatureLayer
-    ptr::GDALFeatureLayer
+    ptr::GDAL.OGRLayerH
 end
 
 mutable struct IFeatureLayer <: AbstractFeatureLayer
-    ptr::GDALFeatureLayer
+    ptr::GDAL.OGRLayerH
     ownedby::AbstractDataset
     spatialref::AbstractSpatialRef
 
     function IFeatureLayer(
-            ptr::GDALFeatureLayer = C_NULL;
+            ptr::GDAL.OGRLayerH = C_NULL;
             ownedby::AbstractDataset = Dataset(),
             spatialref::AbstractSpatialRef = SpatialRef()
         )
@@ -126,17 +126,17 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
 end
 
 mutable struct Feature
-    ptr::GDALFeature
+    ptr::GDAL.OGRFeatureH
 end
 
 mutable struct FeatureDefn <: AbstractFeatureDefn
-    ptr::GDALFeatureDefn
+    ptr::GDAL.OGRFeatureDefnH
 end
 
 mutable struct IFeatureDefnView <: AbstractFeatureDefn
-    ptr::GDALFeatureDefn
+    ptr::GDAL.OGRFeatureDefnH
 
-    function IFeatureDefnView(ptr::GDALFeatureDefn = C_NULL)
+    function IFeatureDefnView(ptr::GDAL.OGRFeatureDefnH = C_NULL)
         featuredefn = new(ptr)
         finalizer(destroy, featuredefn)
         return featuredefn
@@ -144,19 +144,21 @@ mutable struct IFeatureDefnView <: AbstractFeatureDefn
 end
 
 mutable struct RasterBand{T} <: AbstractRasterBand{T}
-    ptr::GDALRasterBand
+    ptr::GDAL.GDALRasterBandH
 end
-function RasterBand(ptr::GDALRasterBand)
-  t = datatype(GDAL.gdalgetrasterdatatype(ptr))
-  RasterBand{t}(ptr)
+
+function RasterBand(
+        ptr::GDAL.GDALRasterBandH
+    )::RasterBand{datatype(GDAL.gdalgetrasterdatatype(ptr))}
+    return RasterBand{datatype(GDAL.gdalgetrasterdatatype(ptr))}(ptr)
 end
 
 mutable struct IRasterBand{T} <: AbstractRasterBand{T}
-    ptr::GDALRasterBand
+    ptr::GDAL.GDALRasterBandH
     ownedby::AbstractDataset
 
     function IRasterBand{T}(
-            ptr::GDALRasterBand = C_NULL;
+            ptr::GDAL.GDALRasterBandH = C_NULL;
             ownedby::AbstractDataset = Dataset()
         ) where T
         rasterband = new(ptr, ownedby)
@@ -165,21 +167,24 @@ mutable struct IRasterBand{T} <: AbstractRasterBand{T}
     end
 end
 
-function IRasterBand(ptr::GDALRasterBand; ownedby = Dataset())
-    t = datatype(GDAL.gdalgetrasterdatatype(ptr))
-    IRasterBand{t}(ptr, ownedby=ownedby)
+function IRasterBand(
+        ptr::GDAL.GDALRasterBandH;
+        ownedby = Dataset()
+    )::IRasterBand{datatype(GDAL.gdalgetrasterdatatype(ptr))}
+    T = datatype(GDAL.gdalgetrasterdatatype(ptr))
+    return IRasterBand{T}(ptr, ownedby = ownedby)
 end
 
 mutable struct SpatialRef <: AbstractSpatialRef
-    ptr::GDALSpatialRef
+    ptr::GDAL.OGRSpatialReferenceH
 
-    SpatialRef(ptr::GDALSpatialRef = C_NULL) = new(ptr)
+    SpatialRef(ptr::GDAL.OGRSpatialReferenceH = C_NULL) = new(ptr)
 end
 
 mutable struct ISpatialRef <: AbstractSpatialRef
-    ptr::GDALSpatialRef
+    ptr::GDAL.OGRSpatialReferenceH
 
-    function ISpatialRef(ptr::GDALSpatialRef = C_NULL)
+    function ISpatialRef(ptr::GDAL.OGRSpatialReferenceH = C_NULL)
         spref = new(ptr)
         finalizer(destroy, spref)
         return spref
@@ -187,15 +192,15 @@ mutable struct ISpatialRef <: AbstractSpatialRef
 end
 
 mutable struct Geometry <: AbstractGeometry
-    ptr::GDALGeometry
+    ptr::GDAL.OGRGeometryH
 
-    Geometry(ptr::GDALGeometry = C_NULL) = new(ptr)
+    Geometry(ptr::GDAL.OGRGeometryH = C_NULL) = new(ptr)
 end
 
 mutable struct IGeometry <: AbstractGeometry
-    ptr::GDALGeometry
+    ptr::GDAL.OGRGeometryH
 
-    function IGeometry(ptr::GDALGeometry = C_NULL)
+    function IGeometry(ptr::GDAL.OGRGeometryH = C_NULL)
         geom = new(ptr)
         finalizer(destroy, geom)
         return geom
@@ -203,7 +208,7 @@ mutable struct IGeometry <: AbstractGeometry
 end
 
 mutable struct ColorTable
-    ptr::GDALColorTable
+    ptr::GDAL.GDALColorTableH
 end
 
 "return the corresponding `DataType` in julia"

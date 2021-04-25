@@ -1,22 +1,3 @@
-const GDALColorTable      = GDAL.GDALColorTableH
-const GDALCoordTransform  = GDAL.OGRCoordinateTransformationH
-const GDALDataset         = GDAL.GDALDatasetH
-const GDALDriver          = GDAL.GDALDriverH
-const GDALFeature         = GDAL.OGRFeatureH
-const GDALFeatureDefn     = GDAL.OGRFeatureDefnH
-const GDALFeatureLayer    = GDAL.OGRLayerH
-const GDALField           = GDAL.OGRField
-const GDALFieldDefn       = GDAL.OGRFieldDefnH
-const GDALGeometry        = GDAL.OGRGeometryH
-const GDALGeomFieldDefn   = GDAL.OGRGeomFieldDefnH
-const GDALProgressFunc    = GDAL.GDALProgressFunc
-const GDALRasterAttrTable = GDAL.GDALRasterAttributeTableH
-const GDALRasterBand      = GDAL.GDALRasterBandH
-const GDALSpatialRef      = GDAL.OGRSpatialReferenceH
-const GDALStyleManager    = GDAL.OGRStyleMgrH
-const GDALStyleTable      = GDAL.OGRStyleTableH
-const GDALStyleTool       = GDAL.OGRStyleToolH
-
 const StringList          = Ptr{Cstring}
 
 CPLErr = GDAL.CPLErr

@@ -222,7 +222,7 @@ end
 Get default field value
 """
 function getdefault(fielddefn::AbstractFieldDefn)::String
-    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDALFieldDefn)
+    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
     return if result == C_NULL
         ""
     else

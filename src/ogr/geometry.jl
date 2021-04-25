@@ -9,11 +9,11 @@ binary (WKB) representation.
 * `data`: pointer to the input BLOB data.
 """
 function fromWKB(data)::IGeometry
-    geom = Ref{GDALGeometry}()
+    geom = Ref{GDAL.OGRGeometryH}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
-        C_NULL::GDALSpatialRef,
-        geom::Ptr{GDALGeometry},
+        C_NULL::GDAL.OGRSpatialReferenceH,
+        geom::Ptr{GDAL.OGRGeometryH},
         sizeof(data)::Cint
     )
     @ogrerr result "Failed to create geometry from WKB"
@@ -21,11 +21,11 @@ function fromWKB(data)::IGeometry
 end
 
 function unsafe_fromWKB(data)::Geometry
-    geom = Ref{GDALGeometry}()
+    geom = Ref{GDAL.OGRGeometryH}()
     result = @gdal(OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
-        C_NULL::GDALSpatialRef,
-        geom::Ptr{GDALGeometry},
+        C_NULL::GDAL.OGRSpatialReferenceH,
+        geom::Ptr{GDAL.OGRGeometryH},
         sizeof(data)::Cint
     )
     @ogrerr result "Failed to create geometry from WKB"
@@ -44,22 +44,22 @@ Create a geometry object of the appropriate type from its well known text
     last character consumed.
 """
 function fromWKT(data::Vector{String})::IGeometry
-    geom = Ref{GDALGeometry}()
+    geom = Ref{GDAL.OGRGeometryH}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
-        C_NULL::GDALSpatialRef,
-        geom::Ptr{GDALGeometry}
+        C_NULL::GDAL.OGRSpatialReferenceH,
+        geom::Ptr{GDAL.OGRGeometryH}
     )
     @ogrerr result "Failed to create geometry from WKT"
     return IGeometry(geom[])
 end
 
 function unsafe_fromWKT(data::Vector{String})::Geometry
-    geom = Ref{GDALGeometry}()
+    geom = Ref{GDAL.OGRGeometryH}()
     result = @gdal(OGR_G_CreateFromWkt::GDAL.OGRErr,
         data::StringList,
-        C_NULL::GDALSpatialRef,
-        geom::Ptr{GDALGeometry}
+        C_NULL::GDAL.OGRSpatialReferenceH,
+        geom::Ptr{GDAL.OGRGeometryH}
     )
     @ogrerr result "Failed to create geometry from WKT"
     return Geometry(geom[])
