@@ -105,7 +105,7 @@ function addfielddefn!(
         etype::OGRFieldType;
         nwidth::Integer             = 0,
         nprecision::Integer         = 0,
-        justify::OGRJustification   = GDAL.OJUndefined,
+        justify::OGRJustification   = OJUndefined,
         approx::Bool                = false
     )::T where {T <: AbstractFeatureLayer}
     fielddefn = unsafe_createfielddefn(name, etype)
@@ -123,7 +123,7 @@ function addfielddefn(
         etype::OGRFieldType;
         nwidth::Integer             = 0,
         nprecision::Integer         = 0,
-        justify::OGRJustification   = GDAL.OJUndefined,
+        justify::OGRJustification   = OJUndefined,
         approx::Bool                = false
     )
     fielddefn = unsafe_createfielddefn(name, etype)
@@ -138,7 +138,7 @@ function addfielddefn(
 end
 
 """
-    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::WKBGeometryType,
+    writegeomdefn!(layer::AbstractFeatureLayer, name, etype::OGRwkbGeometryType,
         approx=false)
 
 Write a new geometry field on a layer.
@@ -168,7 +168,7 @@ to the layer.
 function writegeomdefn!(
         layer::T,
         name::AbstractString,
-        etype::WKBGeometryType;
+        etype::OGRwkbGeometryType;
         approx::Bool = false
     )::T where {T <: AbstractFeatureLayer}
     geomdefn = unsafe_creategeomdefn(name, etype)
@@ -181,7 +181,7 @@ function writegeomdefn(
         f::Function,
         layer::AbstractFeatureLayer,
         name::AbstractString,
-        etype::WKBGeometryType;
+        etype::OGRwkbGeometryType;
         approx::Bool = false
     )
     geomdefn = unsafe_creategeomdefn(name, etype)

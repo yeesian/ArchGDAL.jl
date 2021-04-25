@@ -17,8 +17,7 @@ macro gdalenum(args...)
             end
         end
 
-        "returns the corresponding type in ArchGDAL"
-        function ArchGDAL.gdaltype(ft::$type2)
+        function Base.convert(::Type{$type1}, ft::$type2)
             rev = Dict{$type2, $type1}(Tuple{$type2, $type1}[$(reverse_map...)])
             return get(rev, ft) do
                 error("Unknown type: $ft")

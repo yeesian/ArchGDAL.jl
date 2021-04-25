@@ -59,9 +59,9 @@ height(band::AbstractRasterBand)::Integer = GDAL.gdalgetrasterbandysize(band.ptr
 """
     accessflag(band::AbstractRasterBand)
 
-Return the access flag (e.g. `OF_ReadOnly` or `OF_Update`) for this band.
+Return the access flag (e.g. `OF_READONLY` or `OF_UPDATE`) for this band.
 """
-accessflag(band::AbstractRasterBand)::GDAL.GDALAccess =
+accessflag(band::AbstractRasterBand)::GDALAccess =
     GDAL.gdalgetrasteraccess(band.ptr)
 
 """
@@ -349,7 +349,7 @@ unsafe_sampleoverview(band::AbstractRasterBand, nsamples::Integer)::RasterBand =
 
 Color Interpretation value for band
 """
-getcolorinterp(band::AbstractRasterBand)::GDAL.GDALColorInterp =
+getcolorinterp(band::AbstractRasterBand)::GDALColorInterp =
     GDAL.gdalgetrastercolorinterpretation(band.ptr)
 
 """

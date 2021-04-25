@@ -64,9 +64,9 @@ import ArchGDAL; const AG = ArchGDAL
                 blocksize: 100×81, nodata: nothing, units: 1.0px + 0.0
                 overviews: (0) 50x50 (1) 25x25 (2) 13x13 
                            """
-            @test AG.getcolorinterp(destband) == GDAL.GCI_GrayIndex
-            AG.setcolorinterp!(destband, GDAL.GCI_RedBand)
-            @test AG.getcolorinterp(destband) == GDAL.GCI_RedBand
+            @test AG.getcolorinterp(destband) == AG.GCI_GrayIndex
+            AG.setcolorinterp!(destband, AG.GCI_RedBand)
+            @test AG.getcolorinterp(destband) == AG.GCI_RedBand
 
             @test sprint(print, AG.sampleoverview(destband, 100)) == """
             [GA_Update] Band 1 (Gray): 13 x 13 (UInt8)
@@ -112,7 +112,7 @@ import ArchGDAL; const AG = ArchGDAL
                 ])
             end
 
-            AG.createcolortable(GDAL.GPI_RGB) do ct
+            AG.createcolortable(AG.GPI_RGB) do ct
                 AG.createcolorramp!(ct,
                     128, GDAL.GDALColorEntry(0,0,0,0),
                     255, GDAL.GDALColorEntry(0,0,255,0)

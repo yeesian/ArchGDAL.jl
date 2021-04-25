@@ -32,7 +32,7 @@ getname(fielddefn::AbstractFieldDefn)::String =
 
 "Fetch the type of this field."
 gettype(fielddefn::AbstractFieldDefn)::OGRFieldType =
-    gdaltype(GDAL.ogr_fld_gettype(fielddefn.ptr))
+    GDAL.ogr_fld_gettype(fielddefn.ptr)
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)::FieldDefn
@@ -51,7 +51,7 @@ Fetch subtype of this field.
 ### Returns
 field subtype.
 """
-getsubtype(fielddefn::AbstractFieldDefn)::GDAL.OGRFieldSubType =
+getsubtype(fielddefn::AbstractFieldDefn)::OGRFieldSubType =
     GDAL.ogr_fld_getsubtype(fielddefn.ptr)
 
 """
@@ -66,7 +66,10 @@ OGRFeatureDefn.
 * `fielddefn`: handle to the field definition to set type to.
 * `subtype`: the new field subtype.
 """
-function setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)::FieldDefn
+function setsubtype!(
+        fielddefn::FieldDefn,
+        subtype::OGRFieldSubType
+    )::FieldDefn
     GDAL.ogr_fld_setsubtype(fielddefn.ptr, subtype)
     return fielddefn
 end
@@ -78,7 +81,7 @@ Get the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-getjustify(fielddefn::AbstractFieldDefn)::GDAL.OGRJustification =
+getjustify(fielddefn::AbstractFieldDefn)::OGRJustification =
     GDAL.ogr_fld_getjustify(fielddefn.ptr)
 
 """
@@ -161,7 +164,7 @@ function setparams!(
         etype::OGRFieldType;
         nwidth::Integer             = 0,
         nprecision::Integer         = 0,
-        justify::OGRJustification   = GDAL.OJUndefined
+        justify::OGRJustification   = OJUndefined
     )::FieldDefn
     GDAL.ogr_fld_set(fielddefn.ptr, name, etype, nwidth, nprecision, justify)
     return fielddefn
@@ -270,13 +273,13 @@ isdefaultdriverspecific(fielddefn::AbstractFieldDefn)::Bool =
     Bool(GDAL.ogr_fld_isdefaultdriverspecific(fielddefn.ptr))
 
 """
-    unsafe_creategeomdefn(name::AbstractString, etype::WKBGeometryType)
+    unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType)
 
 Create a new field geometry definition.
 """
 function unsafe_creategeomdefn(
         name::AbstractString,
-        etype::WKBGeometryType
+        etype::OGRwkbGeometryType
     )::GeomFieldDefn
     return GeomFieldDefn(GDAL.ogr_gfld_create(name, etype))
 end
@@ -306,13 +309,13 @@ getname(geomdefn::AbstractGeomFieldDefn)::String =
     GDAL.ogr_gfld_getnameref(geomdefn.ptr)
 
 "Fetch geometry type of this field."
-gettype(geomdefn::AbstractGeomFieldDefn)::WKBGeometryType =
-    gdaltype(GDAL.ogr_gfld_gettype(geomdefn.ptr))
+gettype(geomdefn::AbstractGeomFieldDefn)::OGRwkbGeometryType =
+    GDAL.ogr_gfld_gettype(geomdefn.ptr)
 
 "Set the geometry type of this field."
 function settype!(
         geomdefn::GeomFieldDefn,
-        etype::WKBGeometryType
+        etype::OGRwkbGeometryType
     )::GeomFieldDefn
     GDAL.ogr_gfld_settype(geomdefn.ptr, etype)
     return geomdefn

@@ -195,11 +195,11 @@ For layers with multiple geometry fields, this method only returns the geometry
 type of the first geometry column. For other columns, use
     `OGR_GFld_GetType(OGR_FD_GetGeomFieldDefn(OGR_L_GetLayerDefn(hLayer), i))`.
 """
-getgeomtype(featuredefn::AbstractFeatureDefn)::WKBGeometryType =
-    gdaltype(GDAL.ogr_fd_getgeomtype(featuredefn.ptr))
+getgeomtype(featuredefn::AbstractFeatureDefn)::OGRwkbGeometryType =
+    GDAL.ogr_fd_getgeomtype(featuredefn.ptr)
 
 """
-    setgeomtype!(featuredefn::FeatureDefn, etype::WKBGeometryType)
+    setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType)
 
 Assign the base geometry type for the passed layer (same as the fd).
 
@@ -210,7 +210,7 @@ have been created against this definition.
 """
 function setgeomtype!(
         featuredefn::FeatureDefn,
-        etype::WKBGeometryType
+        etype::OGRwkbGeometryType
     )::FeatureDefn
     GDAL.ogr_fd_setgeomtype(featuredefn.ptr, etype)
     return featuredefn

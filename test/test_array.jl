@@ -102,7 +102,7 @@ end
 cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
 
 @testset "Test Array setindex" begin
-    AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
+    AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_UPDATE) do ds
         @testset "Dataset setindex" begin
             @test ds[755, 2107, 1] == 0xff
             ds[755, 2107, 1] = 0x00
@@ -134,7 +134,7 @@ cp("ospy/data4/aster.img", "ospy/data4/aster_write.img"; force=true)
 end
 
 @testset "Test Array constructor" begin
-    AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_Update) do ds
+    AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_UPDATE) do ds
         buffer = Array(ds)
         typeof(buffer) <: Array{UInt8,3}
         total = sum(buffer[:, :, 1:1])

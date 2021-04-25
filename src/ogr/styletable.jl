@@ -10,9 +10,9 @@ OGRStyleMgr factory.
 an handle to the new style manager object.
 """
 function unsafe_createstylemanager(
-        styletable::GDAL.OGRStyleTableH = C_NULL
+        styletable::StyleTable = StyleTable()
     )::StyleManager
-    return StyleManager(GDAL.ogr_sm_create(styletable))
+    return StyleManager(GDAL.ogr_sm_create(styletable.ptr))
 end
 
 """
@@ -181,7 +181,8 @@ Determine type of Style Tool.
 the style tool type, one of OGRSTCPen (1), OGRSTCBrush (2), OGRSTCSymbol (3) or
 OGRSTCLabel (4). Returns OGRSTCNone (0) if the OGRStyleToolH is invalid.
 """
-gettype(styletool::StyleTool)::GDAL.OGRSTClassId = GDAL.ogr_st_gettype(styletool.ptr)
+gettype(styletool::StyleTool)::OGRSTClassId =
+    GDAL.ogr_st_gettype(styletool.ptr)
 
 """
     getunit(styletool::StyleTool)
@@ -194,7 +195,8 @@ Get Style Tool units.
 ### Returns
 the style tool units.
 """
-getunit(styletool::StyleTool)::GDAL.OGRSTUnitId = GDAL.ogr_st_getunit(styletool.ptr)
+getunit(styletool::StyleTool)::OGRSTUnitId =
+    GDAL.ogr_st_getunit(styletool.ptr)
 
 """
     setunit!(styletool::StyleTool, newunit::OGRSTUnitId, scale::Real)

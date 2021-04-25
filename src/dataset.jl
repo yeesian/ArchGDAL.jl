@@ -207,7 +207,7 @@ function unsafe_create(
         options                     = StringList(C_NULL)
     )::Dataset
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        gdaltype(dtype), options)
+        convert(GDALDataType, dtype), options)
     return Dataset(result)
 end
 
@@ -221,7 +221,7 @@ function unsafe_create(
         options                     = StringList(C_NULL)
     )::Dataset
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        gdaltype(dtype), options)
+        convert(GDALDataType, dtype), options)
     return Dataset(result)
 end
 
@@ -266,7 +266,7 @@ function create(
         options                     = StringList(C_NULL)
     )::IDataset
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        gdaltype(dtype), options)
+        convert(GDALDataType, dtype), options)
     return IDataset(result)
 end
 
@@ -280,12 +280,12 @@ function create(
         options                     = StringList(C_NULL)
     )::IDataset
     result = GDAL.gdalcreate(driver.ptr, filename, width, height, nbands,
-        gdaltype(dtype), options)
+        convert(GDALDataType, dtype), options)
     return IDataset(result)
 end
 
 """
-    unsafe_read(filename; flags=OF_ReadOnly, alloweddrivers, options,
+    unsafe_read(filename; flags=OF_READONLY, alloweddrivers, options,
         siblingfiles)
 
 Open a raster file as a `Dataset`.
@@ -304,7 +304,7 @@ driver on how to access a dataset. It should be in UTF-8 encoding.
 
     - Driver kind: GDAL_OF_RASTER for raster drivers, GDAL_OF_VECTOR for vector
                    drivers. If none of the value is specified, both are implied.
-    - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
+    - Access mode: `OF_READONLY` (exclusive) or `OF_UPDATE`.
     - Shared mode: `GDAL_OF_SHARED`. If set, it allows the sharing of
                    `Dataset` handles for a dataset with other callers that
                    have set GDAL_OF_SHARED. In particular, GDALOpenEx() will
@@ -344,7 +344,7 @@ archive (see `VSIInstallTarFileHandler()`), or a HTTP / FTP server
 """
 function unsafe_read(
         filename::AbstractString;
-        flags           = OF_ReadOnly,
+        flags           = OF_READONLY,
         alloweddrivers  = StringList(C_NULL),
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)
@@ -355,7 +355,7 @@ function unsafe_read(
 end
 
 """
-    read(filename; flags=OF_ReadOnly, alloweddrivers, options, siblingfiles)
+    read(filename; flags=OF_READONLY, alloweddrivers, options, siblingfiles)
 
 Open a raster file
 
@@ -364,13 +364,13 @@ Open a raster file
 
 ### Keyword Arguments
 * `flags`: a combination of `OF_*` flags (listed below) that may be
-    combined through the logical `|` operator. It defaults to `OF_ReadOnly`.
+    combined through the logical `|` operator. It defaults to `OF_READONLY`.
     - Driver kind: `OF_Raster` for raster drivers, `OF_Vector` for vector
         drivers. If none of the value is specified, both are implied.
-    - Access mode: `OF_ReadOnly` (exclusive) or `OF_Update`.
+    - Access mode: `OF_READONLY` (exclusive) or `OF_UPDATE`.
     - Shared mode: `OF_Shared`. If set, it allows the sharing of handles for a
         dataset with other callers that have set `OF_Shared`.
-    - Verbose error: `OF_Verbose_Error`. If set, a failed attempt to open the
+    - Verbose error: `OF_VERBOSE_ERROR`. If set, a failed attempt to open the
         file will lead to an error message to be reported.
 * `options`: additional format dependent options.
 
@@ -391,7 +391,7 @@ The corresponding dataset.
 """
 function read(
         filename::AbstractString;
-        flags           = OF_ReadOnly | OF_Verbose_Error,
+        flags           = OF_READONLY | OF_VERBOSE_ERROR,
         alloweddrivers  = StringList(C_NULL),
         options         = StringList(C_NULL),
         siblingfiles    = StringList(C_NULL)
@@ -401,8 +401,8 @@ function read(
     return IDataset(result)
 end
 
-unsafe_update(filename::AbstractString; flags = OF_Update, kwargs...)::Dataset =
-    unsafe_read(filename; flags = OF_Update | flags, kwargs...)
+unsafe_update(filename::AbstractString; flags = OF_UPDATE, kwargs...)::Dataset =
+    unsafe_read(filename; flags = OF_UPDATE | flags, kwargs...)
 
 """
     width(dataset::AbstractDataset)

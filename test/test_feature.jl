@@ -72,11 +72,11 @@ AG.read("data/point.geojson") do dataset
         AG.setmediatype!(f, "mediatype2")
         @test AG.getmediatype(f) == "mediatype2"
 
-        @test AG.validate(f, GDAL.OGR_F_VAL_NULL, false) == true
-        @test AG.validate(f, GDAL.OGR_F_VAL_GEOM_TYPE, false) == false
-        @test AG.validate(f, GDAL.OGR_F_VAL_WIDTH, false) == true
-        @test AG.validate(f, GDAL.OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT, false) == true
-        @test AG.validate(f, GDAL.OGR_F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) == true
+        @test AG.validate(f, AG.F_VAL_NULL, false) == true
+        @test AG.validate(f, AG.F_VAL_GEOM_TYPE, false) == false
+        @test AG.validate(f, AG.F_VAL_WIDTH, false) == true
+        @test AG.validate(f, AG.F_VAL_ALLOW_NULL_WHEN_DEFAULT, false) == true
+        @test AG.validate(f, AG.F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) == true
 
         @test AG.getfield(f, 1) == "point-a"
         @test AG.getdefault(f, 1) == ""

@@ -364,24 +364,23 @@ function getdefault(feature::Feature, i::Integer)::String
     return getdefault(getfielddefn(feature, i))
 end
 
-const _FETCHFIELD = Dict{OGRFieldType, Function}(
-    OFTInteger         => asint,           #0
-    OFTIntegerList     => asintlist,       #1
-    OFTReal            => asdouble,        #2
-    OFTRealList        => asdoublelist,    #3
-    OFTString          => asstring,        #4
-    OFTStringList      => asstringlist,    #5
- # const OFTWideString =                (UInt32)(6)
- # const OFTWideStringList =            (UInt32)(7)
-    OFTBinary          => asbinary,        #8
-    OFTDate            => asdatetime,      #9
-    OFTTime            => asdatetime,      #10
-    OFTDateTime        => asdatetime,      #11
-    OFTInteger64       => asint64,         #12
-    OFTInteger64List   => asint64list      #13
- )
-
 function getfield(feature::Feature, i::Integer)
+    _FETCHFIELD = Dict{OGRFieldType, Function}(
+        OFTInteger         => asint,           #0
+        OFTIntegerList     => asintlist,       #1
+        OFTReal            => asdouble,        #2
+        OFTRealList        => asdoublelist,    #3
+        OFTString          => asstring,        #4
+        OFTStringList      => asstringlist,    #5
+     # const OFTWideString =                (UInt32)(6)
+     # const OFTWideStringList =            (UInt32)(7)
+        OFTBinary          => asbinary,        #8
+        OFTDate            => asdatetime,      #9
+        OFTTime            => asdatetime,      #10
+        OFTDateTime        => asdatetime,      #11
+        OFTInteger64       => asint64,         #12
+        OFTInteger64List   => asint64list,     #13
+    )
     return if isfieldset(feature, i)
         _fieldtype = gettype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
@@ -588,7 +587,7 @@ end
 
 function getgeom(
         feature::Feature,
-        name::Union{AbstractString, Symbol} = ""
+        name::Union{AbstractString, Symbol}
     )::IGeometry
     i = findgeomindex(feature, name)
     return if i == -1
@@ -600,7 +599,7 @@ end
 
 function unsafe_getgeom(
         feature::Feature,
-        name::Union{AbstractString, Symbol} = ""
+        name::Union{AbstractString, Symbol}
     )::Geometry
     i = findgeomindex(feature, name)
     return if i == -1
@@ -852,5 +851,5 @@ fails, then it will fail for all interpretations).
 ### Returns
 `true` if all enabled validation tests pass.
 """
-validate(feature::Feature, flags::Integer, emiterror::Bool)::Bool =
+validate(feature::Feature, flags::FieldValidation, emiterror::Bool)::Bool =
     Bool(GDAL.ogr_f_validate(feature.ptr, flags, emiterror))

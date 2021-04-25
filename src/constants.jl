@@ -1,53 +1,19 @@
-const StringList          = Ptr{Cstring}
+const StringList = Ptr{Cstring}
 
-CPLErr = GDAL.CPLErr
-CPLXMLNodeType = GDAL.CPLXMLNodeType
-GDALDataType = GDAL.GDALDataType
-GDALAsyncStatusType = GDAL.GDALAsyncStatusType
-GDALAccess = GDAL.GDALAccess
-GDALRWFlag = GDAL.GDALRWFlag
-GDALRIOResampleAlg = GDAL.GDALRIOResampleAlg
-GDALColorInterp = GDAL.GDALColorInterp
-GDALPaletteInterp = GDAL.GDALPaletteInterp
-GDALRATFieldType = GDAL.GDALRATFieldType
-GDALRATFieldUsage = GDAL.GDALRATFieldUsage
-GDALTileOrganization = GDAL.GDALTileOrganization
-GDALGridAlgorithm = GDAL.GDALGridAlgorithm
-OGRwkbGeometryType = GDAL.OGRwkbGeometryType
-OGRwkbVariant = GDAL.OGRwkbVariant
-OGRFieldSubType = GDAL.OGRFieldSubType
-OGRJustification = GDAL.OGRJustification
-OGRSTClassId = GDAL.OGRSTClassId
-OGRSTUnitId = GDAL.OGRSTUnitId
-OGRSTPenParam = GDAL.OGRSTPenParam
-OGRSTBrushParam = GDAL.OGRSTBrushParam
-OGRSTSymbolParam = GDAL.OGRSTSymbolParam
-OGRSTLabelParam = GDAL.OGRSTLabelParam
-GDALResampleAlg = GDAL.GDALResampleAlg
-GWKAverageOrModeAlg = GDAL.GWKAverageOrModeAlg
-OGRAxisOrientation = GDAL.OGRAxisOrientation
-
-"return the corresponding `DataType` in julia"
-const _JLTYPE = Dict{GDALDataType, DataType}(
-    GDAL.GDT_Unknown    => Any,
-    GDAL.GDT_Byte       => UInt8,
-    GDAL.GDT_UInt16     => UInt16,
-    GDAL.GDT_Int16      => Int16,
-    GDAL.GDT_UInt32     => UInt32,
-    GDAL.GDT_Int32      => Int32,
-    GDAL.GDT_Float32    => Float32,
-    GDAL.GDT_Float64    => Float64,
-)
-
-const _GDALTYPE = Dict{DataType,GDALDataType}(
-    Any         => GDAL.GDT_Unknown,
-    UInt8       => GDAL.GDT_Byte,
-    UInt16      => GDAL.GDT_UInt16,
-    Int16       => GDAL.GDT_Int16,
-    UInt32      => GDAL.GDT_UInt32,
-    Int32       => GDAL.GDT_Int32,
-    Float32     => GDAL.GDT_Float32,
-    Float64     => GDAL.GDT_Float64,
+@enum(GDALDataType,
+    GDT_Unknown = 0,
+    GDT_Byte = 1,
+    GDT_UInt16 = 2,
+    GDT_Int16 = 3,
+    GDT_UInt32 = 4,
+    GDT_Int32 = 5,
+    GDT_Float32 = 6,
+    GDT_Float64 = 7,
+    GDT_CInt16 = 8,
+    GDT_CInt32 = 9,
+    GDT_CFloat32 = 10,
+    GDT_CFloat64 = 11,
+    GDT_TypeCount = 12,
 )
 
 @enum(OGRFieldType,
@@ -65,29 +31,117 @@ const _GDALTYPE = Dict{DataType,GDALDataType}(
     OFTDateTime         = 11,
     OFTInteger64        = 12,
     OFTInteger64List    = 13,
-    OFTMaxType          = 14,
+    OFTMaxType          = 14, # 13
 )
 
-"return the corresponding `DataType` in julia"
-const _FIELDTYPE = Dict{OGRFieldType, DataType}(
-    OFTInteger         => Int32,
-    OFTIntegerList     => Vector{Int32},
-    OFTReal            => Float64,
-    OFTRealList        => Vector{Float64},
-    OFTString          => String,
-    OFTStringList      => Vector{String},
-    OFTWideString      => Nothing, # deprecated
-    OFTWideStringList  => Nothing, # deprecated
-    OFTBinary          => Vector{UInt8},
-    OFTDate            => Dates.Date,
-    OFTTime            => Dates.Time,
-    OFTDateTime        => Dates.DateTime,
-    OFTInteger64       => Int64,
-    OFTInteger64List   => Vector{Int64},
-    # OFTMaxType         => Nothing # unsupported
+@enum(OGRFieldSubType,
+    OFSTNone = 0,
+    OFSTBoolean = 1,
+    OFSTInt16 = 2,
+    OFSTFloat32 = 3,
+    OFSTJSON = 4,
+    OFSTMaxSubType = 5, # 4
 )
 
-@enum(WKBGeometryType,
+@enum(OGRJustification,
+    OJUndefined = 0,
+    OJLeft = 1,
+    OJRight = 2,
+)
+
+@enum(GDALRATFieldType,
+    GFT_Integer = 0,
+    GFT_Real = 1,
+    GFT_String = 2,
+)
+
+@enum(GDALRATFieldUsage,
+    GFU_Generic = 0,
+    GFU_PixelCount = 1,
+    GFU_Name = 2,
+    GFU_Min = 3,
+    GFU_Max = 4,
+    GFU_MinMax = 5,
+    GFU_Red = 6,
+    GFU_Green = 7,
+    GFU_Blue = 8,
+    GFU_Alpha = 9,
+    GFU_RedMin = 10,
+    GFU_GreenMin = 11,
+    GFU_BlueMin = 12,
+    GFU_AlphaMin = 13,
+    GFU_RedMax = 14,
+    GFU_GreenMax = 15,
+    GFU_BlueMax = 16,
+    GFU_AlphaMax = 17,
+    GFU_MaxCount = 18,
+)
+
+@enum(GDALAccess,
+    GA_ReadOnly = 0,
+    GA_Update = 1,
+)
+
+@enum(GDALRWFlag,
+    GF_Read = 0,
+    GF_Write = 1,
+)
+
+@enum(GDALPaletteInterp,
+    GPI_Gray = 0,
+    GPI_RGB = 1,
+    GPI_CMYK = 2,
+    GPI_HLS = 3,
+)
+
+@enum(GDALColorInterp,
+    GCI_Undefined = 0,
+    GCI_GrayIndex = 1,
+    GCI_PaletteIndex = 2,
+    GCI_RedBand = 3,
+    GCI_GreenBand = 4,
+    GCI_BlueBand = 5,
+    GCI_AlphaBand = 6,
+    GCI_HueBand = 7,
+    GCI_SaturationBand = 8,
+    GCI_LightnessBand = 9,
+    GCI_CyanBand = 10,
+    GCI_MagentaBand = 11,
+    GCI_YellowBand = 12,
+    GCI_BlackBand = 13,
+    GCI_YCbCr_YBand = 14,
+    GCI_YCbCr_CbBand = 15,
+    GCI_YCbCr_CrBand = 16,
+    GCI_Max = 17, # 16
+)
+
+@enum(GDALAsyncStatusType,
+    GARIO_PENDING = 0,
+    GARIO_UPDATE = 1,
+    GARIO_ERROR = 2,
+    GARIO_COMPLETE = 3,
+    GARIO_TypeCount = 4,
+)
+
+@enum(OGRSTClassId,
+    OGRSTCNone = 0,
+    OGRSTCPen = 1,
+    OGRSTCBrush = 2,
+    OGRSTCSymbol = 3,
+    OGRSTCLabel = 4,
+    OGRSTCVector = 5,
+)
+
+@enum(OGRSTUnitId,
+    OGRSTUGround = 0,
+    OGRSTUPixel = 1,
+    OGRSTUPoints = 2,
+    OGRSTUMM = 3,
+    OGRSTUCM = 4,
+    OGRSTUInches = 5,
+)
+
+@enum(OGRwkbGeometryType,
     wkbUnknown                  = 0,
     wkbPoint                    = 1,
     wkbLineString               = 2,
@@ -161,25 +215,33 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
     wkbGeometryCollection25D    = 70,
 )
 
-@enum(WKBByteOrder,
+@enum(OGRwkbByteOrder,
     wkbXDR = 0,
     wkbNDR = 1,
 )
 
 @enum(GDALOpenFlag,
-    OF_ReadOnly             = GDAL.GDAL_OF_READONLY,                # 0x00
-    OF_Update               = GDAL.GDAL_OF_UPDATE,                  # 0x01
-    # OF_All                  = GDAL.GDAL_OF_ALL,                     # 0x00
-    OF_Raster               = GDAL.GDAL_OF_RASTER,                  # 0x02
-    OF_Vector               = GDAL.GDAL_OF_VECTOR,                  # 0x04
+    OF_READONLY             = GDAL.GDAL_OF_READONLY,                # 0x00
+    OF_UPDATE               = GDAL.GDAL_OF_UPDATE,                  # 0x01
+    # OF_All                  = GDAL.GDAL_OF_ALL,                   # 0x00
+    OF_RASTER               = GDAL.GDAL_OF_RASTER,                  # 0x02
+    OF_VECTOR               = GDAL.GDAL_OF_VECTOR,                  # 0x04
     OF_GNM                  = GDAL.GDAL_OF_GNM,                     # 0x08
-    OF_Kind_Mask            = GDAL.GDAL_OF_KIND_MASK,               # 0x1e
-    OF_Shared               = GDAL.GDAL_OF_SHARED,                  # 0x20
-    OF_Verbose_Error        = GDAL.GDAL_OF_VERBOSE_ERROR,           # 0x40
-    OF_Internal             = GDAL.GDAL_OF_INTERNAL,                # 0x80
-    # OF_DEFAULT_BLOCK_ACCESS = GDAL.GDAL_OF_DEFAULT_BLOCK_ACCESS,    # 0
-    OF_Array_Block_Access   = GDAL.GDAL_OF_ARRAY_BLOCK_ACCESS,      # 0x0100
-    OF_Hashset_Block_Access = GDAL.GDAL_OF_HASHSET_BLOCK_ACCESS,    # 0x0200
-    # OF_RESERVED_1           = GDAL.GDAL_OF_RESERVED_1,              # 0x0300
-    OF_Block_Access_Mask    = GDAL.GDAL_OF_BLOCK_ACCESS_MASK,       # 0x0300
+    OF_KIND_MASK            = GDAL.GDAL_OF_KIND_MASK,               # 0x1e
+    OF_SHARED               = GDAL.GDAL_OF_SHARED,                  # 0x20
+    OF_VERBOSE_ERROR        = GDAL.GDAL_OF_VERBOSE_ERROR,           # 0x40
+    OF_INTERNAL             = GDAL.GDAL_OF_INTERNAL,                # 0x80
+    # OF_DEFAULT_BLOCK_ACCESS = GDAL.GDAL_OF_DEFAULT_BLOCK_ACCESS,  # 0
+    OF_ARRAY_BLOCK_ACCESS   = GDAL.GDAL_OF_ARRAY_BLOCK_ACCESS,      # 0x0100
+    OF_HASHSET_BLOCK_ACCESS = GDAL.GDAL_OF_HASHSET_BLOCK_ACCESS,    # 0x0200
+    # OF_RESERVED_1           = GDAL.GDAL_OF_RESERVED_1,            # 0x0300
+    OF_BLOCK_ACCESS_MASK    = GDAL.GDAL_OF_BLOCK_ACCESS_MASK,       # 0x0300
+)
+
+@enum(FieldValidation,
+    F_VAL_NULL                      = GDAL.OGR_F_VAL_NULL,                      # 0x0001
+    F_VAL_GEOM_TYPE                 = GDAL.OGR_F_VAL_GEOM_TYPE,                 # 0x0002
+    F_VAL_WIDTH                     = GDAL.OGR_F_VAL_WIDTH,                     # 0x0004
+    F_VAL_ALLOW_NULL_WHEN_DEFAULT   = GDAL.OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT,   # 0x0008
+    F_VAL_ALLOW_DIFFERENT_GEOM_DIM  = GDAL.OGR_F_VAL_ALLOW_DIFFERENT_GEOM_DIM,  # 0x0010
 )

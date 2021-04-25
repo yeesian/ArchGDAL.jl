@@ -11,7 +11,9 @@ function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
     field_names, geom_names, featuredefn, fielddefns = schema_names(layer)
     ngeom = ArchGDAL.ngeom(featuredefn)
     geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
-    field_types = (datatype(gettype(fielddefn)) for fielddefn in fielddefns)
+    field_types = (
+        convert(DataType, gettype(fielddefn)) for fielddefn in fielddefns
+    )
     geom_types = (IGeometry for i in 1:ngeom)
     Tables.Schema(
         (field_names..., geom_names...),

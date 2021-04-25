@@ -32,8 +32,8 @@ boundaries\" as returned by `blocksize()`, or use the `readblock!()` and
                 `UnitRange{<:Integer}`, such as 2:9.
 * `cols`        A continuous range of columns expressed as a
                 `UnitRange{<:Integer}`, such as 2:9.
-* `access`      Either `GDAL.GF_Read` to read a region of data, or
-                `GDAL.GF_Write` to write a region of data.
+* `access`      Either `GF_Read` to read a region of data, or
+                `GF_Write` to write a region of data.
 * `xoffset`     The pixel offset to the top left corner of the region to be
                 accessed. It will be `0` (default) to start from the left.
 * `yoffset`     The line offset to the top left corner of the region to be
@@ -69,10 +69,10 @@ function rasterio!(
         dataset::AbstractDataset,
         buffer::T,
         bands,
-        access::GDALRWFlag  = GDAL.GF_Read,
-        pxspace::Integer    = 0,
-        linespace::Integer  = 0,
-        bandspace::Integer  = 0
+        access::GDALRWFlag   = GF_Read,
+        pxspace::Integer        = 0,
+        linespace::Integer      = 0,
+        bandspace::Integer      = 0
     )::T where {T <: Array{<:Real, 3}}
     rasterio!(dataset, buffer, bands, 0, 0, size(buffer, 1), size(buffer, 2),
         access, pxspace, linespace, bandspace)
@@ -85,10 +85,10 @@ function rasterio!(
         bands,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer},
-        access::GDALRWFlag  = GDAL.GF_Read,
-        pxspace::Integer    = 0,
-        linespace::Integer  = 0,
-        bandspace::Integer  = 0
+        access::GDALRWFlag   = GF_Read,
+        pxspace::Integer        = 0,
+        linespace::Integer      = 0,
+        bandspace::Integer      = 0
     )::T where {T <: Array{<:Real, 3}}
     xsize = cols[end] - cols[1] + 1; xsize < 0 && error("invalid window width")
     ysize = rows[end] - rows[1] + 1; ysize < 0 && error("invalid window height")
@@ -98,11 +98,43 @@ function rasterio!(
 end
 
 function rasterio!(
+        dataset::AbstractDataset,
+        buffer::Array{T, 3},
+        bands,
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer,
+        access::GDALRWFlag   = GF_Read,
+        pxspace::Integer        = 0,
+        linespace::Integer      = 0,
+        bandspace::Integer      = 0,
+        extraargs               = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL)
+    )::Array{T, 3} where {T <: Any}
+    # `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg
+    # structure with additional arguments to specify resampling and
+    # progress callback, or `NULL` for default behaviour. The
+    # `GDAL_RASTERIO_RESAMPLING` configuration option can also be
+    # defined to override the default resampling to one of `BILINEAR`,
+    # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
+    (dataset == C_NULL) && error("Can't read NULL dataset")
+    xbsize, ybsize, zbsize = size(buffer)
+    nband = length(bands)
+    bands = isa(bands, Vector{Cint}) ? bands : Cint.(collect(bands))
+    @assert nband == zbsize
+    result = GDAL.gdaldatasetrasterioex(dataset.ptr, access, xoffset, yoffset,
+        xsize, ysize, pointer(buffer), xbsize, ybsize, convert(GDALDataType, T),
+        nband, pointer(bands), pxspace, linespace, bandspace, extraargs)
+    @cplerr result "Access in DatasetRasterIO failed."
+    return buffer
+end
+
+function rasterio!(
         rasterband::AbstractRasterBand,
         buffer::T,
-        access::GDALRWFlag  = GDAL.GF_Read,
-        pxspace::Integer    = 0,
-        linespace::Integer  = 0
+        access::GDALRWFlag = GF_Read,
+        pxspace::Integer        = 0,
+        linespace::Integer      = 0
     )::T where {T <: Matrix{<:Real}}
     rasterio!(rasterband, buffer, 0, 0, width(rasterband), height(rasterband),
         access, pxspace, linespace)
@@ -114,9 +146,9 @@ function rasterio!(
         buffer::T,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer},
-        access::GDALRWFlag  = GDAL.GF_Read,
-        pxspace::Integer    = 0,
-        linespace::Integer  = 0
+        access::GDALRWFlag   = GF_Read,
+        pxspace::Integer        = 0,
+        linespace::Integer      = 0
     )::T where {T <: Matrix{<:Real}}
     xsize = length(cols); xsize < 1 && error("invalid window width")
     ysize = length(rows); ysize < 1 && error("invalid window height")
@@ -125,11 +157,38 @@ function rasterio!(
     return buffer
 end
 
+function rasterio!(
+        rasterband::AbstractRasterBand,
+        buffer::Matrix{T},
+        xoffset::Integer,
+        yoffset::Integer,
+        xsize::Integer,
+        ysize::Integer,
+        access::GDALRWFlag   = GF_Read,
+        pxspace::Integer        = 0,
+        linespace::Integer      = 0,
+        extraargs               = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL)
+    )::Matrix{T} where {T <: Any}
+    # `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg
+    # structure with additional arguments to specify resampling and
+    # progress callback, or `NULL` for default behaviour. The
+    # `GDAL_RASTERIO_RESAMPLING` configuration option can also be
+    # defined to override the default resampling to one of `BILINEAR`,
+    # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
+    (rasterband == C_NULL) && error("Can't read NULL rasterband")
+    xbsize, ybsize = size(buffer)
+    result = GDAL.gdalrasterioex(rasterband.ptr, access, xoffset, yoffset,
+        xsize, ysize, pointer(buffer), xbsize, ybsize, convert(GDALDataType, T),
+        pxspace, linespace, extraargs)
+    @cplerr result "Access in RasterIO failed."
+    return buffer
+end
+
 function read!(
         rb::AbstractRasterBand,
         buffer::T
     )::T where {T <: Matrix{<:Real}}
-    rasterio!(rb, buffer, GDAL.GF_Read)
+    rasterio!(rb, buffer, GF_Read)
     return buffer
 end
 
@@ -184,7 +243,7 @@ function write!(
         rb::AbstractRasterBand,
         buffer::T
     )::T where {T <: Matrix{<:Real}}
-    rasterio!(rb, buffer, GDAL.GF_Write)
+    rasterio!(rb, buffer, GF_Write)
     return buffer
 end
 
@@ -196,7 +255,7 @@ function write!(
         xsize::Integer,
         ysize::Integer
     )::T where {T <: Matrix{<:Real}}
-    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GDAL.GF_Write)
+    rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GF_Write)
     return buffer
 end
 
@@ -206,7 +265,7 @@ function write!(
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )::T where {T <: Matrix{<:Real}}
-    rasterio!(rb, buffer, rows, cols, GDAL.GF_Write)
+    rasterio!(rb, buffer, rows, cols, GF_Write)
     return buffer
 end
 
@@ -224,7 +283,7 @@ function read!(
         buffer::T,
         indices
     )::T where {T <: Array{<:Real, 3}}
-    rasterio!(dataset, buffer, indices, GDAL.GF_Read)
+    rasterio!(dataset, buffer, indices, GF_Read)
     return buffer
 end
 
@@ -234,7 +293,7 @@ function read!(
     )::T where {T <: Array{<:Real, 3}}
     nband = nraster(dataset)
     @assert size(buffer, 3) == nband
-    rasterio!(dataset, buffer, collect(Cint, 1:nband), GDAL.GF_Read)
+    rasterio!(dataset, buffer, collect(Cint, 1:nband), GF_Read)
     return buffer
 end
 
@@ -367,7 +426,7 @@ function write!(
         buffer::Array{<:Real, 3},
         indices
     )::T where {T <: AbstractDataset}
-    rasterio!(dataset, buffer, indices, GDAL.GF_Write)
+    rasterio!(dataset, buffer, indices, GF_Write)
     return dataset
 end
 
@@ -394,7 +453,7 @@ function write!(
         ysize::Integer
     )::T where {T <: AbstractDataset}
     rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize,
-        GDAL.GF_Write)
+        GF_Write)
     return dataset
 end
 
@@ -416,106 +475,8 @@ function write!(
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
     )::T where {T <: AbstractDataset}
-    rasterio!(dataset, buffer, indices, rows, cols, GDAL.GF_Write)
+    rasterio!(dataset, buffer, indices, rows, cols, GF_Write)
     return dataset
-end
-
-for (T,GT) in _GDALTYPE
-    eval(quote
-        function rasterio!(
-                dataset::AbstractDataset,
-                buffer::Array{$T, 3},
-                bands,
-                xoffset::Integer,
-                yoffset::Integer,
-                xsize::Integer,
-                ysize::Integer,
-                access::GDALRWFlag   = GDAL.GF_Read,
-                pxspace::Integer     = 0,
-                linespace::Integer   = 0,
-                bandspace::Integer   = 0,
-                extraargs            = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL)
-            )::Array{$T, 3}
-            # `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg
-            # structure with additional arguments to specify resampling and
-            # progress callback, or `NULL` for default behaviour. The
-            # `GDAL_RASTERIO_RESAMPLING` configuration option can also be
-            # defined to override the default resampling to one of `BILINEAR`,
-            # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
-            (dataset == C_NULL) && error("Can't read invalid rasterband")
-            xbsize, ybsize, zbsize = size(buffer)
-            nband = length(bands)
-            bands = isa(bands, Vector{Cint}) ? bands : Cint.(collect(bands))
-            @assert nband == zbsize
-            result = ccall((:GDALDatasetRasterIOEx,GDAL.libgdal),
-                           GDAL.CPLErr,  # return type
-                           (GDAL.GDALDatasetH,
-                           GDAL.GDALRWFlag,  # access
-                           Cint,  # xoffset
-                           Cint,  # yoffset
-                           Cint,  # xsize
-                           Cint,  # ysize
-                           Ptr{Cvoid},  # poiter to buffer
-                           Cint,  # xbsize
-                           Cint,  # ybsize
-                           GDAL.GDALDataType,
-                           Cint,  # number of bands
-                           Ptr{Cint},  # bands
-                           GDAL.GSpacing,  # pxspace
-                           GDAL.GSpacing,  # linespace
-                           GDAL.GSpacing,  # bandspace
-                           Ptr{GDAL.GDALRasterIOExtraArg}  # extra args
-                           ),
-                           dataset.ptr,
-                           access,
-                           xoffset,
-                           yoffset,
-                           xsize,
-                           ysize,
-                           pointer(buffer),
-                           xbsize,
-                           ybsize,
-                           $GT,
-                           nband,
-                           pointer(bands),
-                           pxspace,
-                           linespace,
-                           bandspace,
-                           extraargs)
-            @cplerr result "Access in DatasetRasterIO failed."
-            return buffer
-        end
-
-        function rasterio!(
-                rasterband::AbstractRasterBand,
-                buffer::Matrix{$T},
-                xoffset::Integer,
-                yoffset::Integer,
-                xsize::Integer,
-                ysize::Integer,
-                access::GDALRWFlag   = GDAL.GF_Read,
-                pxspace::Integer     = 0,
-                linespace::Integer   = 0,
-                extraargs            = Ptr{GDAL.GDALRasterIOExtraArg}(C_NULL)
-            )::Matrix{$T}
-            # `psExtraArg`  (new in GDAL 2.0) pointer to a GDALRasterIOExtraArg
-            # structure with additional arguments to specify resampling and
-            # progress callback, or `NULL` for default behaviour. The
-            # `GDAL_RASTERIO_RESAMPLING` configuration option can also be
-            # defined to override the default resampling to one of `BILINEAR`,
-            # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
-            (rasterband == C_NULL) && error("Can't read invalid rasterband")
-            xbsize, ybsize = size(buffer)
-            result = ccall((:GDALRasterIOEx,GDAL.libgdal),GDAL.CPLErr,
-                (GDAL.GDALRasterBandH,GDAL.GDALRWFlag,Cint,Cint,Cint,Cint,
-                Ptr{Cvoid},Cint,Cint,GDAL.GDALDataType,GDAL.GSpacing,
-                GDAL.GSpacing,Ptr{GDAL.GDALRasterIOExtraArg}),rasterband.ptr,
-                access,xoffset,yoffset,xsize,ysize,pointer(buffer),xbsize,
-                ybsize,$GT,pxspace,linespace,extraargs)
-            @cplerr result "Access in RasterIO failed."
-            return buffer
-        end
-    end)
 end
 
 """

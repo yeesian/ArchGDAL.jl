@@ -104,21 +104,21 @@ function unsafe_clone(geom::AbstractGeometry)::Geometry
 end
 
 """
-    creategeom(geomtype::WKBGeometryType)
+    creategeom(geomtype::OGRwkbGeometryType)
 
 Create an empty geometry of desired type.
 
 This is equivalent to allocating the desired geometry with new, but the
 allocation is guaranteed to take place in the context of the GDAL/OGR heap.
 """
-creategeom(geomtype::WKBGeometryType)::IGeometry =
+creategeom(geomtype::OGRwkbGeometryType)::IGeometry =
     IGeometry(GDAL.ogr_g_creategeometry(geomtype))
 
-unsafe_creategeom(geomtype::WKBGeometryType)::Geometry =
+unsafe_creategeom(geomtype::OGRwkbGeometryType)::Geometry =
     Geometry(GDAL.ogr_g_creategeometry(geomtype))
 
 """
-    forceto(geom::AbstractGeometry, targettype::WKBGeometryType, [options])
+    forceto(geom::AbstractGeometry, targettype::OGRwkbGeometryType, [options])
 
 Tries to force the provided geometry to the specified geometry type.
 
@@ -139,7 +139,7 @@ The passed in geometry is cloned and a new one returned.
 """
 function forceto(
         geom::AbstractGeometry,
-        targettype::WKBGeometryType,
+        targettype::OGRwkbGeometryType,
         options = StringList(C_NULL)
     )::IGeometry
     return IGeometry(GDAL.ogr_g_forceto(unsafe_clone(geom).ptr, targettype,
@@ -148,7 +148,7 @@ end
 
 function unsafe_forceto(
         geom::AbstractGeometry,
-        targettype::WKBGeometryType,
+        targettype::OGRwkbGeometryType,
         options = StringList(C_NULL)
     )::Geometry
     return Geometry(GDAL.ogr_g_forceto(unsafe_clone(geom).ptr, targettype,
@@ -232,7 +232,7 @@ function boundingbox(geom::AbstractGeometry)::IGeometry
 end
 
 """
-    toWKB(geom::AbstractGeometry, order::WKBByteOrder = wkbNDR)
+    toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder = wkbNDR)
 
 Convert a geometry well known binary format.
 
@@ -242,7 +242,7 @@ Convert a geometry well known binary format.
 """
 function toWKB(
         geom::AbstractGeometry,
-        order::WKBByteOrder = wkbNDR
+        order::OGRwkbByteOrder = wkbNDR
     )::Vector{Cuchar}
     buffer = Vector{Cuchar}(undef, wkbsize(geom))
     result = GDAL.ogr_g_exporttowkb(geom.ptr, order, buffer)
@@ -251,7 +251,7 @@ function toWKB(
 end
 
 """
-    toISOWKB(geom::AbstractGeometry, order::WKBByteOrder = wkbNDR)
+    toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder = wkbNDR)
 
 Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 
@@ -261,7 +261,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 """
 function toISOWKB(
         geom::AbstractGeometry,
-        order::WKBByteOrder = wkbNDR
+        order::OGRwkbByteOrder = wkbNDR
     )::Vector{Cuchar}
     buffer = Array{Cuchar}(undef, wkbsize(geom))
     result = GDAL.ogr_g_exporttoisowkb(geom.ptr, order, buffer)
@@ -309,8 +309,8 @@ end
 
 Fetch geometry type code
 """
-getgeomtype(geom::AbstractGeometry)::WKBGeometryType =
-    gdaltype(GDAL.ogr_g_getgeometrytype(geom.ptr))
+getgeomtype(geom::AbstractGeometry)::OGRwkbGeometryType =
+    GDAL.ogr_g_getgeometrytype(geom.ptr)
 
 """
     geomname(geom::AbstractGeometry)

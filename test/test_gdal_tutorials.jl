@@ -59,8 +59,8 @@ import ArchGDAL; const AG = ArchGDAL
     end
 
     # Techniques for Creating Files
-    @test GDAL.gdalgetmetadataitem(driver.ptr, "DCAP_CREATE", "") == "YES"
-    @test GDAL.gdalgetmetadataitem(driver.ptr, "DCAP_CREATECOPY", "") == "YES"
+    @test AG.metadataitem(driver, "DCAP_CREATE", domain = "") == "YES"
+    @test AG.metadataitem(driver, "DCAP_CREATECOPY", domain = "") == "YES"
 
     AG.read("data/utmsmall.tif") do ds_src
         AG.write(ds_src, "/vsimem/utmsmall.tif")

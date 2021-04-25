@@ -95,10 +95,14 @@ end
 
 mutable struct StyleManager
     ptr::GDAL.OGRStyleMgrH
+
+    StyleManager(ptr::GDAL.OGRStyleMgrH = C_NULL) = new(ptr)
 end
 
 mutable struct StyleTable
     ptr::GDAL.OGRStyleTableH
+
+    StyleTable(ptr::GDAL.OGRStyleTableH = C_NULL) = new(ptr)
 end
 
 mutable struct StyleTool
@@ -147,10 +151,14 @@ mutable struct RasterBand{T} <: AbstractRasterBand{T}
     ptr::GDAL.GDALRasterBandH
 end
 
+"Fetch the pixel data type for this band."
+pixeltype(ptr::GDAL.GDALRasterBandH)::DataType =
+    convert(GDALDataType, GDAL.gdalgetrasterdatatype(ptr))
+
 function RasterBand(
         ptr::GDAL.GDALRasterBandH
-    )::RasterBand{datatype(GDAL.gdalgetrasterdatatype(ptr))}
-    return RasterBand{datatype(GDAL.gdalgetrasterdatatype(ptr))}(ptr)
+    )::RasterBand{pixeltype(ptr)}
+    return RasterBand{pixeltype(ptr)}(ptr)
 end
 
 mutable struct IRasterBand{T} <: AbstractRasterBand{T}
@@ -170,9 +178,8 @@ end
 function IRasterBand(
         ptr::GDAL.GDALRasterBandH;
         ownedby = Dataset()
-    )::IRasterBand{datatype(GDAL.gdalgetrasterdatatype(ptr))}
-    T = datatype(GDAL.gdalgetrasterdatatype(ptr))
-    return IRasterBand{T}(ptr, ownedby = ownedby)
+    )::IRasterBand{pixeltype(ptr)}
+    return IRasterBand{pixeltype(ptr)}(ptr, ownedby = ownedby)
 end
 
 mutable struct SpatialRef <: AbstractSpatialRef
@@ -211,20 +218,32 @@ mutable struct ColorTable
     ptr::GDAL.GDALColorTableH
 end
 
-"return the corresponding `DataType` in julia"
-datatype(gt::GDALDataType)::DataType = get(_JLTYPE, gt) do
-    error("Unknown GDALDataType: $gt")
-end
+eval(@gdalenum(GDALDataType::GDAL.GDALDataType,
+    GDT_Unknown::GDAL.GDT_Unknown,
+    GDT_Byte::GDAL.GDT_Byte,
+    GDT_UInt16::GDAL.GDT_UInt16,
+    GDT_Int16::GDAL.GDT_Int16,
+    GDT_UInt32::GDAL.GDT_UInt32,
+    GDT_Int32::GDAL.GDT_Int32,
+    GDT_Float32::GDAL.GDT_Float32,
+    GDT_Float64::GDAL.GDT_Float64,
+    GDT_CInt16::GDAL.GDT_CInt16,
+    GDT_CInt32::GDAL.GDT_CInt32,
+    GDT_CFloat32::GDAL.GDT_CFloat32,
+    GDT_CFloat64::GDAL.GDT_CFloat64,
+    GDT_TypeCount::GDAL.GDT_TypeCount,
+))
 
-"return the corresponding `GDAL.GDALDataType`"
-gdaltype(dt::DataType)::GDAL.GDALDataType = get(_GDALTYPE, dt) do
-    error("Unknown DataType: $dt")
-end
-
-"return the corresponding `DataType` in julia"
-datatype(ft::OGRFieldType)::DataType = get(_FIELDTYPE, ft) do
-    error("Unknown OGRFieldType: $ft")
-end
+eval(@gdalenum(GDALDataType::DataType,
+    GDT_Unknown::Any,
+    GDT_Byte::UInt8,
+    GDT_UInt16::UInt16,
+    GDT_Int16::Int16,
+    GDT_UInt32::UInt32,
+    GDT_Int32::Int32,
+    GDT_Float32::Float32,
+    GDT_Float64::Float64,
+))
 
 eval(@gdalenum(OGRFieldType::GDAL.OGRFieldType,
     OFTInteger::GDAL.OFTInteger,
@@ -240,10 +259,140 @@ eval(@gdalenum(OGRFieldType::GDAL.OGRFieldType,
     OFTTime::GDAL.OFTTime,
     OFTDateTime::GDAL.OFTDateTime,
     OFTInteger64::GDAL.OFTInteger64,
-    OFTInteger64List::GDAL.OFTInteger64List
+    OFTInteger64List::GDAL.OFTInteger64List,
 ))
 
-eval(@gdalenum(WKBGeometryType::GDAL.OGRwkbGeometryType,
+eval(@gdalenum(OGRFieldType::DataType,
+    OFTInteger::Int32,
+    OFTIntegerList::Vector{Int32},
+    OFTReal::Float64,
+    OFTRealList::Vector{Float64},
+    OFTString::String,
+    OFTStringList::Vector{String},
+    OFTWideString::Nothing,
+    OFTWideStringList::Nothing,
+    OFTBinary::Vector{UInt8},
+    OFTDate::Dates.Date,
+    OFTTime::Dates.Time,
+    OFTDateTime::Dates.DateTime,
+    OFTInteger64::Int64,
+    OFTInteger64List::Vector{Int64},
+))
+
+eval(@gdalenum(OGRFieldSubType::GDAL.OGRFieldSubType,
+    OFSTNone::GDAL.OFSTNone,
+    OFSTBoolean::GDAL.OFSTBoolean,
+    OFSTInt16::GDAL.OFSTInt16,
+    OFSTFloat32::GDAL.OFSTFloat32,
+    OFSTJSON::GDAL.OFSTJSON,
+))
+
+eval(@gdalenum(OGRFieldSubType::DataType,
+    OFSTNone::Nothing,
+    OFSTBoolean::Bool,
+    OFSTInt16::Int16,
+    OFSTFloat32::Float32,
+    OFSTJSON::String,
+))
+
+eval(@gdalenum(OGRJustification::GDAL.OGRJustification,
+    OJUndefined::GDAL.OJUndefined,
+    OJLeft::GDAL.OJLeft,
+    OJRight::GDAL.OJRight,
+))
+
+eval(@gdalenum(GDALRATFieldType::GDAL.GDALRATFieldType,
+    GFT_Integer::GDAL.GFT_Integer,
+    GFT_Real::GDAL.GFT_Real,
+    GFT_String::GDAL.GFT_String,
+))
+
+eval(@gdalenum(GDALRATFieldUsage::GDAL.GDALRATFieldUsage,
+    GFU_Generic::GDAL.GFU_Generic,
+    GFU_PixelCount::GDAL.GFU_PixelCount,
+    GFU_Name::GDAL.GFU_Name,
+    GFU_Min::GDAL.GFU_Min,
+    GFU_Max::GDAL.GFU_Max,
+    GFU_MinMax::GDAL.GFU_MinMax,
+    GFU_Red::GDAL.GFU_Red,
+    GFU_Green::GDAL.GFU_Green,
+    GFU_Blue::GDAL.GFU_Blue,
+    GFU_Alpha::GDAL.GFU_Alpha,
+    GFU_RedMin::GDAL.GFU_RedMin,
+    GFU_GreenMin::GDAL.GFU_GreenMin,
+    GFU_BlueMin::GDAL.GFU_BlueMin,
+    GFU_AlphaMin::GDAL.GFU_AlphaMin,
+    GFU_RedMax::GDAL.GFU_RedMax,
+    GFU_GreenMax::GDAL.GFU_GreenMax,
+    GFU_BlueMax::GDAL.GFU_BlueMax,
+    GFU_AlphaMax::GDAL.GFU_AlphaMax,
+    GFU_MaxCount::GDAL.GFU_MaxCount,
+))
+
+eval(@gdalenum(GDALAccess::GDAL.GDALAccess,
+    GA_ReadOnly::GDAL.GA_ReadOnly,
+    GA_Update::GDAL.GA_Update,
+))
+
+eval(@gdalenum(GDALRWFlag::GDAL.GDALRWFlag,
+    GF_Read::GDAL.GF_Read,
+    GF_Write::GDAL.GF_Write,
+))
+
+eval(@gdalenum(GDALPaletteInterp::GDAL.GDALPaletteInterp,
+    GPI_Gray::GDAL.GPI_Gray,
+    GPI_RGB::GDAL.GPI_RGB,
+    GPI_CMYK::GDAL.GPI_CMYK,
+    GPI_HLS::GDAL.GPI_HLS,
+))
+
+eval(@gdalenum(GDALColorInterp::GDAL.GDALColorInterp,
+    GCI_Undefined::GDAL.GCI_Undefined,
+    GCI_GrayIndex::GDAL.GCI_GrayIndex,
+    GCI_PaletteIndex::GDAL.GCI_PaletteIndex,
+    GCI_RedBand::GDAL.GCI_RedBand,
+    GCI_GreenBand::GDAL.GCI_GreenBand,
+    GCI_BlueBand::GDAL.GCI_BlueBand,
+    GCI_AlphaBand::GDAL.GCI_AlphaBand,
+    GCI_HueBand::GDAL.GCI_HueBand,
+    GCI_SaturationBand::GDAL.GCI_SaturationBand,
+    GCI_LightnessBand::GDAL.GCI_LightnessBand,
+    GCI_CyanBand::GDAL.GCI_CyanBand,
+    GCI_MagentaBand::GDAL.GCI_MagentaBand,
+    GCI_YellowBand::GDAL.GCI_YellowBand,
+    GCI_BlackBand::GDAL.GCI_BlackBand,
+    GCI_YCbCr_YBand::GDAL.GCI_YCbCr_YBand,
+    GCI_YCbCr_CbBand::GDAL.GCI_YCbCr_CbBand,
+    GCI_YCbCr_CrBand::GDAL.GCI_YCbCr_CrBand,
+))
+
+eval(@gdalenum(GDALAsyncStatusType::GDAL.GDALAsyncStatusType,
+    GARIO_PENDING::GDAL.GARIO_PENDING,
+    GARIO_UPDATE::GDAL.GARIO_UPDATE,
+    GARIO_ERROR::GDAL.GARIO_ERROR,
+    GARIO_COMPLETE::GDAL.GARIO_COMPLETE,
+    GARIO_TypeCount::GDAL.GARIO_TypeCount,
+))
+
+eval(@gdalenum(OGRSTClassId::GDAL.OGRSTClassId,
+    OGRSTCNone::GDAL.OGRSTCNone,
+    OGRSTCPen::GDAL.OGRSTCPen,
+    OGRSTCBrush::GDAL.OGRSTCBrush,
+    OGRSTCSymbol::GDAL.OGRSTCSymbol,
+    OGRSTCLabel::GDAL.OGRSTCLabel,
+    OGRSTCVector::GDAL.OGRSTCVector,
+))
+
+eval(@gdalenum(OGRSTUnitId::GDAL.OGRSTUnitId,
+    OGRSTUGround::GDAL.OGRSTUGround,
+    OGRSTUPixel::GDAL.OGRSTUPixel,
+    OGRSTUPoints::GDAL.OGRSTUPoints,
+    OGRSTUMM::GDAL.OGRSTUMM,
+    OGRSTUCM::GDAL.OGRSTUCM,
+    OGRSTUInches::GDAL.OGRSTUInches,
+))
+
+eval(@gdalenum(OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
     wkbUnknown::GDAL.wkbUnknown,
     wkbPoint::GDAL.wkbPoint,
     wkbLineString::GDAL.wkbLineString,
@@ -317,16 +466,20 @@ eval(@gdalenum(WKBGeometryType::GDAL.OGRwkbGeometryType,
     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
 ))
 
-eval(@gdalenum(WKBByteOrder::GDAL.OGRwkbByteOrder,
+eval(@gdalenum(OGRwkbByteOrder::GDAL.OGRwkbByteOrder,
     wkbXDR::GDAL.wkbXDR,
     wkbNDR::GDAL.wkbNDR,
 ))
 
 import Base.|
 
-|(x::GDALOpenFlag,y::UInt8) = UInt8(x) | y
-|(x::UInt8,y::GDALOpenFlag) = x | UInt8(y)
-|(x::GDALOpenFlag,y::GDALOpenFlag) = UInt8(x) | UInt8(y)
+for T in (GDALOpenFlag, FieldValidation)
+    eval(quote
+        |(x::$T, y::UInt8) = UInt8(x) | y
+        |(x::UInt8, y::$T) = x | UInt8(y)
+        |(x::$T, y::$T) = UInt8(x) | UInt8(y)
+    end)
+end
 
 """
     typesize(dt::GDALDataType)
@@ -347,7 +500,7 @@ typename(dt::GDALDataType)::String = GDAL.gdalgetdatatypename(dt)
 
 Returns GDAL data type by symbolic name.
 """
-gettype(name::AbstractString)::GDAL.GDALDataType =
+gettype(name::AbstractString)::GDALDataType =
     GDAL.gdalgetdatatypebyname(name)
 
 """
@@ -355,7 +508,7 @@ gettype(name::AbstractString)::GDAL.GDALDataType =
 
 Return the smallest data type that can fully express both input data types.
 """
-typeunion(dt1::GDALDataType, dt2::GDALDataType)::GDAL.GDALDataType =
+typeunion(dt1::GDALDataType, dt2::GDALDataType)::GDALDataType =
     GDAL.gdaldatatypeunion(dt1, dt2)
 
 """
@@ -363,7 +516,8 @@ typeunion(dt1::GDALDataType, dt2::GDALDataType)::GDAL.GDALDataType =
 
 `true` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}.`
 """
-iscomplex(dtype::GDALDataType)::Bool = Bool(GDAL.gdaldatatypeiscomplex(dtype))
+iscomplex(dtype::GDALDataType)::Bool =
+    Bool(GDAL.gdaldatatypeiscomplex(dtype))
 
 """
     getname(dtype::GDALAsyncStatusType)
@@ -378,7 +532,7 @@ getname(dtype::GDALAsyncStatusType)::String =
 
 Get AsyncStatusType by symbolic name.
 """
-asyncstatustype(name::AbstractString)::GDAL.GDALAsyncStatusType =
+asyncstatustype(name::AbstractString)::GDALAsyncStatusType =
     GDAL.gdalgetasyncstatustypebyname(name)
 
 """
@@ -386,14 +540,15 @@ asyncstatustype(name::AbstractString)::GDAL.GDALAsyncStatusType =
 
 Return name (string) corresponding to color interpretation.
 """
-getname(obj::GDALColorInterp)::String = GDAL.gdalgetcolorinterpretationname(obj)
+getname(obj::GDALColorInterp)::String =
+    GDAL.gdalgetcolorinterpretationname(obj)
 
 """
     colorinterp(name::AbstractString)
 
 Get color interpretation corresponding to the given symbolic name.
 """
-colorinterp(name::AbstractString)::GDAL.GDALColorInterp =
+colorinterp(name::AbstractString)::GDALColorInterp =
     GDAL.gdalgetcolorinterpretationbyname(name)
 
 """

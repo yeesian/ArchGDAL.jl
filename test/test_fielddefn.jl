@@ -14,27 +14,27 @@ import ArchGDAL; const AG = ArchGDAL
         AG.settype!(fd, AG.OFTDate)
         @test AG.gettype(fd) == AG.OFTDate
         AG.settype!(fd, AG.OFTInteger)
-        @test AG.getsubtype(fd) == GDAL.OFSTNone
-        AG.setsubtype!(fd, GDAL.OFSTInt16)
-        @test AG.getsubtype(fd) == GDAL.OFSTInt16
-        AG.setsubtype!(fd, GDAL.OFSTBoolean)
-        @test AG.getsubtype(fd) == GDAL.OFSTBoolean
-        AG.setsubtype!(fd, GDAL.OFSTNone)
-        @test AG.getjustify(fd) == GDAL.OJUndefined
-        AG.setjustify!(fd, GDAL.OJLeft)
-        @test AG.getjustify(fd) == GDAL.OJLeft
+        @test AG.getsubtype(fd) == AG.OFSTNone
+        AG.setsubtype!(fd, AG.OFSTInt16)
+        @test AG.getsubtype(fd) == AG.OFSTInt16
+        AG.setsubtype!(fd, AG.OFSTBoolean)
+        @test AG.getsubtype(fd) == AG.OFSTBoolean
+        AG.setsubtype!(fd, AG.OFSTNone)
+        @test AG.getjustify(fd) == AG.OJUndefined
+        AG.setjustify!(fd, AG.OJLeft)
+        @test AG.getjustify(fd) == AG.OJLeft
         @test AG.getwidth(fd) == 0
         AG.setwidth!(fd, 10)
         @test AG.getwidth(fd) == 10
         @test AG.getprecision(fd) == 0
         AG.setprecision!(fd, 20)
         @test AG.getprecision(fd) == 20
-        AG.setparams!(fd, "finalname", AG.OFTDate, nwidth=5, nprecision=2,
-                      justify=GDAL.OJRight)
+        AG.setparams!(fd, "finalname", AG.OFTDate, nwidth = 5, nprecision = 2,
+                      justify = AG.OJRight)
         @test AG.gettype(fd) == AG.OFTDate
         @test AG.getname(fd) == "finalname"
-        @test AG.getsubtype(fd) == GDAL.OFSTNone
-        @test AG.getjustify(fd) == GDAL.OJRight
+        @test AG.getsubtype(fd) == AG.OFSTNone
+        @test AG.getjustify(fd) == AG.OJRight
         @test AG.getwidth(fd) == 5
         @test AG.getprecision(fd) == 2
         @test AG.isignored(fd) == false

@@ -29,7 +29,7 @@ This function attempts to create a new layer on the dataset with the indicated
 function createlayer(;
         name::AbstractString            = "",
         dataset::AbstractDataset        = create(getdriver("Memory")),
-        geom::WKBGeometryType           = wkbUnknown,
+        geom::OGRwkbGeometryType           = wkbUnknown,
         spatialref::AbstractSpatialRef  = SpatialRef(),
         options                         = StringList(C_NULL)
     )::IFeatureLayer
@@ -44,7 +44,7 @@ end
 function unsafe_createlayer(;
         name::AbstractString            = "",
         dataset::AbstractDataset        = create(getdriver("Memory")),
-        geom::WKBGeometryType           = wkbUnknown,
+        geom::OGRwkbGeometryType           = wkbUnknown,
         spatialref::AbstractSpatialRef  = SpatialRef(),
         options                         = StringList(C_NULL)
     )::FeatureLayer
@@ -102,8 +102,8 @@ getname(layer::AbstractFeatureLayer)::String = GDAL.ogr_l_getname(layer.ptr)
 
 Return the layer geometry type.
 """
-getgeomtype(layer::AbstractFeatureLayer)::WKBGeometryType =
-    gdaltype(GDAL.ogr_l_getgeomtype(layer.ptr))
+getgeomtype(layer::AbstractFeatureLayer)::OGRwkbGeometryType =
+    GDAL.ogr_l_getgeomtype(layer.ptr)
 
 """
     getspatialfilter(layer::AbstractFeatureLayer)
