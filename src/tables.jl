@@ -8,7 +8,8 @@ struct Table{T <: AbstractFeatureLayer}
 end
 
 function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
-    field_names, geom_names, featuredefn, fielddefns = schema_names(layer)
+    field_names, geom_names, featuredefn, fielddefns =
+        schema_names(layerdefn(layer))
     ngeom = ArchGDAL.ngeom(featuredefn)
     geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
     field_types = (
@@ -52,17 +53,17 @@ end
 
 function Tables.columnnames(
         row::Feature
-    )::NTuple{nfield(row) + ngeom(row), String}
-    field_names, geom_names = schema_names(layer)
+    )::NTuple{Int64(nfield(row) + ngeom(row)), Symbol}
+    field_names, geom_names = schema_names(getfeaturedefn(row))
     return (field_names..., geom_names...)
 end
 
-function schema_names(layer::AbstractFeatureLayer)
-    featuredefn = layerdefn(layer)
-    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
+function schema_names(featuredefn::IFeatureDefnView)
+    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(featuredefn)-1)
     field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
     geom_names = (
-        Symbol(getname(getgeomdefn(featuredefn, i - 1))) for i in 1:ngeom(layer)
+        Symbol(getname(getgeomdefn(featuredefn, i - 1)))
+        for i in 1:ngeom(featuredefn)
     )
     return (field_names, geom_names, featuredefn, fielddefns)
 end
