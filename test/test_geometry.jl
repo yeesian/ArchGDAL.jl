@@ -121,8 +121,8 @@ end
     
     @test AG.toWKT(AG.createlinearring([1.,2.,3.], [4.,5.,6.])) == "LINEARRING (1 4,2 5,3 6)"
     AG.createlinearring([1.,2.,3.], [4.,5.,6.]) do geom
-        # @test GeoInterface.geotype(geom) == :LinearRing
-        @test isapprox(GeoInterface.coordinates(geom), [[1,4],[2,5],[3,6]], atol=1e-6)
+        @test GeoInterface.geotype(geom) == :LineString
+        @test isapprox(GeoInterface.coordinates(geom), [[1,4], [2,5], [3,6]], atol=1e-6)
         @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
         AG.setpointcount!(geom, 5)
         @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
