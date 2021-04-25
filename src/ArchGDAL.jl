@@ -12,7 +12,7 @@ module ArchGDAL
     include("utils.jl")
     include("types.jl")
     include("driver.jl")
-    include("gcp.jl")
+    include("geotransform.jl")
     include("spatialref.jl")
     include("dataset.jl")
     include("raster/rasterband.jl")

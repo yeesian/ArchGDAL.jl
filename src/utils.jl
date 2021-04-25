@@ -100,7 +100,7 @@ metadata(obj; domain::AbstractString = "")::Vector{String} =
     GDAL.gdalgetmetadata(obj.ptr, domain)
 
 """
-	metadataitem(obj, name::AbstractString, domain::AbstractString)
+    metadataitem(obj, name::AbstractString, domain::AbstractString)
 
 Fetch single metadata item.
 

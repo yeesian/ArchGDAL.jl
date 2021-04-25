@@ -1,5 +1,5 @@
 """
-    invgeotransform!(gt_in::Vector{Cdouble}, gt_out::Vector{Cdouble})
+    invgeotransform!(gt_in::Vector{Float64}, gt_out::Vector{Float64})
 
 Invert Geotransform.
 
@@ -14,20 +14,20 @@ converts the equation from being pixel to geo to being geo to pixel.
 `gt_out`
 """
 function invgeotransform!(
-        gt_in::Vector{Cdouble},
-        gt_out::Vector{Cdouble}
-    )::Vector{Cdouble}
+        gt_in::Vector{Float64},
+        gt_out::Vector{Float64}
+    )::Vector{Float64}
     result = Bool(GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)))
     result || error("Geotransform coefficients is uninvertable")
     return gt_out
 end
 
-invgeotransform(gt_in::Vector{Cdouble})::Vector{Cdouble} =
-    invgeotransform!(gt_in, Array{Cdouble}(undef, 6))
+invgeotransform(gt_in::Vector{Float64})::Vector{Float64} =
+    invgeotransform!(gt_in, Array{Float64}(undef, 6))
 
 """
-    applygeotransform(geotransform::Vector{Cdouble}, pixel::Cdouble,
-        line::Cdouble)
+    applygeotransform(geotransform::Vector{Float64}, pixel::Float64,
+        line::Float64)
 
 Apply GeoTransform to x/y coordinate.
 
@@ -43,13 +43,13 @@ georeferenced `(geo_x,geo_y)` location.
 * `line`            input line position.
 """
 function applygeotransform(
-        geotransform::Vector{Cdouble},
-        pixel::Cdouble,
-        line::Cdouble
-    )::Vector{Cdouble}
-    geo_xy = Vector{Cdouble}(undef, 2)
+        geotransform::Vector{Float64},
+        pixel::Float64,
+        line::Float64
+    )::Vector{Float64}
+    geo_xy = Vector{Float64}(undef, 2)
     geo_x = pointer(geo_xy)
-    geo_y = geo_x + sizeof(Cdouble)
+    geo_y = geo_x + sizeof(Float64)
     GDAL.gdalapplygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
     return geo_xy
 end
@@ -60,27 +60,26 @@ end
 
 Compose two geotransforms.
 
-The resulting geotransform is the equivelent to `padfGT1` and then `padfGT2`
+The resulting geotransform is the equivalent to `padfGT1` and then `padfGT2`
 being applied to a point.
 
 ### Parameters
 * `gt1`     the first geotransform, six values.
 * `gt2`     the second geotransform, six values.
-* `gtout`   the output geotransform, six values, may safely be the same
-array as `gt1` or `gt2`.
+* `gtout`   the output geotransform, six values.
 """
 function composegeotransform!(
-        gt1::Vector{Cdouble},
-        gt2::Vector{Cdouble},
-        gtout::Vector{Cdouble}
-    )::Vector{Cdouble}
-    GDAL.gdalcomposegeotransform(pointer(gt1), pointer(gt2), pointer(gtout))
+        gt1::Vector{Float64},
+        gt2::Vector{Float64},
+        gtout::Vector{Float64}
+    )::Vector{Float64}
+    GDAL.gdalcomposegeotransforms(pointer(gt1), pointer(gt2), pointer(gtout))
     return gtout
 end
 
 function composegeotransform(
-        gt1::Vector{Cdouble},
-        gt2::Vector{Cdouble}
-    )::Vector{Cdouble}
-    return composegeotransform!(gt1, gt2, Vector{Cdouble}(undef, 6))
+        gt1::Vector{Float64},
+        gt2::Vector{Float64}
+    )::Vector{Float64}
+    return composegeotransform!(gt1, gt2, Vector{Float64}(undef, 6))
 end
