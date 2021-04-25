@@ -34,7 +34,6 @@ GDALTileOrganization = GDAL.GDALTileOrganization
 GDALGridAlgorithm = GDAL.GDALGridAlgorithm
 OGRwkbGeometryType = GDAL.OGRwkbGeometryType
 OGRwkbVariant = GDAL.OGRwkbVariant
-OGRwkbByteOrder = GDAL.OGRwkbByteOrder
 OGRFieldSubType = GDAL.OGRFieldSubType
 OGRJustification = GDAL.OGRJustification
 OGRSTClassId = GDAL.OGRSTClassId
@@ -179,6 +178,11 @@ const _FIELDTYPE = Dict{OGRFieldType, DataType}(
     wkbMultiLineString25D       = 68,
     wkbMultiPolygon25D          = 69,
     wkbGeometryCollection25D    = 70,
+)
+
+@enum(WKBByteOrder,
+    wkbXDR = 0,
+    wkbNDR = 1,
 )
 
 @enum(GDALOpenFlag,

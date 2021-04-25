@@ -312,6 +312,11 @@ eval(@gdalenum(WKBGeometryType::GDAL.OGRwkbGeometryType,
     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
 ))
 
+eval(@gdalenum(WKBByteOrder::GDAL.OGRwkbByteOrder,
+    wkbXDR::GDAL.wkbXDR,
+    wkbNDR::GDAL.wkbNDR,
+))
+
 import Base.|
 
 |(x::GDALOpenFlag,y::UInt8) = UInt8(x) | y

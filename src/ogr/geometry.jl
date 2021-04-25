@@ -232,7 +232,7 @@ function boundingbox(geom::AbstractGeometry)::IGeometry
 end
 
 """
-    toWKB(geom::AbstractGeometry, order::OGRwkbByteOrder = GDAL.wkbNDR)
+    toWKB(geom::AbstractGeometry, order::WKBByteOrder = wkbNDR)
 
 Convert a geometry well known binary format.
 
@@ -242,7 +242,7 @@ Convert a geometry well known binary format.
 """
 function toWKB(
         geom::AbstractGeometry,
-        order::OGRwkbByteOrder = GDAL.wkbNDR
+        order::WKBByteOrder = wkbNDR
     )::Vector{Cuchar}
     buffer = Vector{Cuchar}(undef, wkbsize(geom))
     result = GDAL.ogr_g_exporttowkb(geom.ptr, order, buffer)
@@ -251,7 +251,7 @@ function toWKB(
 end
 
 """
-    toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder = GDAL.wkbNDR)
+    toISOWKB(geom::AbstractGeometry, order::WKBByteOrder = wkbNDR)
 
 Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 
@@ -261,7 +261,7 @@ Convert a geometry into SFSQL 1.2 / ISO SQL/MM Part 3 well known binary format.
 """
 function toISOWKB(
         geom::AbstractGeometry,
-        order::OGRwkbByteOrder = GDAL.wkbNDR
+        order::WKBByteOrder = wkbNDR
     )::Vector{Cuchar}
     buffer = Array{Cuchar}(undef, wkbsize(geom))
     result = GDAL.ogr_g_exporttoisowkb(geom.ptr, order, buffer)
