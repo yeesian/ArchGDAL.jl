@@ -94,7 +94,7 @@ windows(raster::AbstractRasterBand)::WindowIterator{Int64} =
 function Base.iterate(
         obj::WindowIterator{T},
         iter::T = 0
-    )::Union{Nothing, Tuple{Tuple{UnitRange{T}, UnitRange{T}}, T}} where T
+    )::Union{Nothing, Tuple{NTuple{2, UnitRange{T}}, T}} where T <: Integer
     handle = obj.blockiter
     next = Base.iterate(handle, iter)
     next == nothing && return nothing
