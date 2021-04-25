@@ -345,68 +345,73 @@ gettype(name::AbstractString)::GDAL.GDALDataType =
 
 Return the smallest data type that can fully express both input data types.
 """
-typeunion(dt1::GDALDataType, dt2::GDALDataType) = GDAL.gdaldatatypeunion(dt1, dt2)
+typeunion(dt1::GDALDataType, dt2::GDALDataType)::GDAL.GDALDataType =
+    GDAL.gdaldatatypeunion(dt1, dt2)
 
 """
     iscomplex(dtype::GDALDataType)
 
 `true` if `dtype` is one of `GDT_{CInt16|CInt32|CFloat32|CFloat64}.`
 """
-iscomplex(dtype::GDALDataType) = Bool(GDAL.gdaldatatypeiscomplex(dtype))
+iscomplex(dtype::GDALDataType)::Bool = Bool(GDAL.gdaldatatypeiscomplex(dtype))
 
 """
     getname(dtype::GDALAsyncStatusType)
 
 Get name of AsyncStatus data type.
 """
-getname(dtype::GDALAsyncStatusType) = GDAL.gdalgetasyncstatustypename(dtype)
+getname(dtype::GDALAsyncStatusType)::String =
+    GDAL.gdalgetasyncstatustypename(dtype)
 
 """
     asyncstatustype(name::AbstractString)
 
 Get AsyncStatusType by symbolic name.
 """
-asyncstatustype(name::AbstractString) = GDAL.gdalgetasyncstatustypebyname(name)
+asyncstatustype(name::AbstractString)::GDAL.GDALAsyncStatusType =
+    GDAL.gdalgetasyncstatustypebyname(name)
 
 """
     getname(obj::GDALColorInterp)
 
 Return name (string) corresponding to color interpretation.
 """
-getname(obj::GDALColorInterp) = GDAL.gdalgetcolorinterpretationname(obj)
+getname(obj::GDALColorInterp)::String = GDAL.gdalgetcolorinterpretationname(obj)
 
 """
     colorinterp(name::AbstractString)
 
 Get color interpretation corresponding to the given symbolic name.
 """
-colorinterp(name::AbstractString) = GDAL.gdalgetcolorinterpretationbyname(name)
+colorinterp(name::AbstractString)::GDAL.GDALColorInterp =
+    GDAL.gdalgetcolorinterpretationbyname(name)
 
 """
     getname(obj::GDALPaletteInterp)
 
 Get name of palette interpretation.
 """
-getname(obj::GDALPaletteInterp) = GDAL.gdalgetpaletteinterpretationname(obj)
+getname(obj::GDALPaletteInterp)::String =
+    GDAL.gdalgetpaletteinterpretationname(obj)
 
 """
     getname(obj::OGRFieldType)
 
 Fetch human readable name for a field type.
 """
-getname(obj::OGRFieldType) = GDAL.ogr_getfieldtypename(obj)
+getname(obj::OGRFieldType)::String = GDAL.ogr_getfieldtypename(obj)
 
 """
     getname(obj::OGRFieldSubType)
 
 Fetch human readable name for a field subtype.
 """
-getname(obj::OGRFieldSubType) = GDAL.ogr_getfieldsubtypename(obj)
+getname(obj::OGRFieldSubType)::String = GDAL.ogr_getfieldsubtypename(obj)
 
 """
     arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType)
 
 Return if type and subtype are compatible.
 """
-arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType) =
+arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType)::Bool =
     Bool(GDAL.ogr_aretypesubtypecompatible(dtype, subtype))

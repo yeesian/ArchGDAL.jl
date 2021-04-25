@@ -11,7 +11,7 @@ List various information about a GDAL supported raster dataset.
 ### Returns
 String corresponding to the information about the raster dataset.
 """
-function gdalinfo(dataset::Dataset, options = String[])
+function gdalinfo(dataset::Dataset, options = String[])::String
     options = GDAL.gdalinfooptionsnew(options, C_NULL)
     result = GDAL.gdalinfo(dataset.ptr, options)
     GDAL.gdalinfooptionsfree(options)
@@ -35,7 +35,7 @@ function unsafe_gdaltranslate(
         dataset::Dataset,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdaltranslateoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdaltranslate(dest, dataset.ptr, options, usage_error)
@@ -60,7 +60,7 @@ function unsafe_gdalwarp(
         datasets::Vector{Dataset},
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdalwarpappoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalwarp(dest, C_NULL,
@@ -86,7 +86,7 @@ function unsafe_gdalvectortranslate(
         datasets::Vector{Dataset},
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdalvectortranslateoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalvectortranslate(dest, C_NULL, length(datasets),
@@ -120,7 +120,7 @@ function unsafe_gdaldem(
         options = String[];
         dest = "/vsimem/tmp",
         colorfile = C_NULL
-    )
+    )::Dataset
     if processing == "color-relief"
         @assert colorfile != C_NULL
     end
@@ -149,7 +149,7 @@ function unsafe_gdalnearblack(
         dataset::Dataset,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdalnearblackoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalnearblack(dest, C_NULL, dataset.ptr, options, usage_error)
@@ -174,7 +174,7 @@ function unsafe_gdalgrid(
         dataset::Dataset,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdalgridoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalgrid(dest, dataset.ptr, options, usage_error)
@@ -199,7 +199,7 @@ function unsafe_gdalrasterize(
         dataset::Dataset,
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdalrasterizeoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalrasterize(dest, C_NULL, dataset.ptr, options, usage_error)
@@ -224,7 +224,7 @@ function unsafe_gdalbuildvrt(
         datasets::Vector{Dataset},
         options = String[];
         dest = "/vsimem/tmp"
-    )
+    )::Dataset
     options = GDAL.gdalbuildvrtoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
     result = GDAL.gdalbuildvrt(dest, length(datasets),
