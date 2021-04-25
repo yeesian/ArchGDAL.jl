@@ -35,12 +35,13 @@ using Tables
     @testset "Misc. methods" begin
         AG.resetreading!(layer)
         AG.resetreading!(layer1)
+
+        schema_names = AG.schema_names(layer)
+        schema_names1 = AG.schema_names(layer1)
         
-        @test AG.nextnamedtuple(layer) isa NamedTuple{(:FID, :pointname, Symbol("")),Tuple{Float64,String,ArchGDAL.IGeometry}}
-        @test AG.nextnamedtuple(layer1) isa NamedTuple{(:id, :zoom, :location, :point, :linestring),Tuple{String,String,String,ArchGDAL.IGeometry,ArchGDAL.IGeometry}}
         for i in 1:4
-            @test AG.schema_names(layer)[i] isa Base.Generator || AG.schema_names(layer)[i] isa ArchGDAL.IFeatureDefnView
-            @test AG.schema_names(layer1)[i] isa Base.Generator || AG.schema_names(layer1)[i] isa ArchGDAL.IFeatureDefnView
+            @test schema_names[i] isa Base.Generator || schema_names[i] isa ArchGDAL.IFeatureDefnView
+            @test schema_names1[i] isa Base.Generator || schema_names1[i] isa ArchGDAL.IFeatureDefnView
         end
     end
 end

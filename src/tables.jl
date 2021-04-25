@@ -57,21 +57,6 @@ function Tables.columnnames(
     return (field_names..., geom_names...)
 end
 
-"""
-Returns the feature row of a layer as a `NamedTuple`
-
-Calling it iteratively will work similar to `nextfeature` i.e. give the
-consecutive feature as `NamedTuple`.
-"""
-function nextnamedtuple(layer::IFeatureLayer)::NamedTuple
-    field_names, geom_names = schema_names(layer)
-    return nextfeature(layer) do feature
-        prop = (getfield(feature, name) for name in field_names)
-        geom = (getgeom(feature, i - 1) for i in 1:length(geom_names))
-        NamedTuple{(field_names..., geom_names...)}((prop..., geom...))
-    end
-end
-
 function schema_names(layer::AbstractFeatureLayer)
     featuredefn = layerdefn(layer)
     fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
