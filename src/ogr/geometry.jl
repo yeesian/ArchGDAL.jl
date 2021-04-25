@@ -172,8 +172,7 @@ geomdim(geom::AbstractGeometry)::Integer = GDAL.ogr_g_getdimension(geom.ptr)
 Get the dimension of the coordinates in this geometry.
 
 ### Returns
-In practice this will return 2 or 3. It can also return 0 in the case of an
-empty point.
+This will return 2 or 3.
 """
 getcoorddim(geom::AbstractGeometry)::Integer =
     GDAL.ogr_g_getcoordinatedimension(geom.ptr)
