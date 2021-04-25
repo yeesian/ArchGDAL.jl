@@ -466,6 +466,13 @@ eval(@gdalenum(OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
 ))
 
+function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType
+    wkbGeomType = convert(GDAL.OGRwkbGeometryType, gt)
+    wkbGeomType &= (~0x80000000) # Remove 2.5D flag.
+    wkbGeomType %= 1000 # Normalize Z, M, and ZM types.
+    return GDAL.OGRwkbGeometryType(wkbGeomType)
+end
+
 eval(@gdalenum(OGRwkbByteOrder::GDAL.OGRwkbByteOrder,
     wkbXDR::GDAL.wkbXDR,
     wkbNDR::GDAL.wkbNDR,
