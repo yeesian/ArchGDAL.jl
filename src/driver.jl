@@ -3,14 +3,14 @@
 
 Fetch driver by index.
 """
-getdriver(i::Integer) = Driver(GDAL.gdalgetdriver(i))
+getdriver(i::Integer)::Driver = Driver(GDAL.gdalgetdriver(i))
 
 """
     getdriver(name::AbstractString)
 
 Fetch a driver based on the short name (such as `GTiff`).
 """
-getdriver(name::AbstractString) = Driver(GDAL.gdalgetdriverbyname(name))
+getdriver(name::AbstractString)::Driver = Driver(GDAL.gdalgetdriverbyname(name))
 
 """
     destroy(drv::Driver)
@@ -21,7 +21,7 @@ This is roughly equivalent to deleting the driver, but is guaranteed to take
 place in the GDAL heap. It is important this that function not be called on a
 driver that is registered with the `GDALDriverManager`.
 """
-function destroy(drv::Driver)
+function destroy(drv::Driver)::Nothing
     GDAL.gdaldestroydriver(drv.ptr)
     drv.ptr = C_NULL
     return nothing
@@ -32,51 +32,57 @@ end
 
 Register a driver for use.
 """
-register(drv::Driver) = GDAL.gdalregisterdriver(drv.ptr)
+function register(drv::Driver)::Nothing
+    GDAL.gdalregisterdriver(drv.ptr)
+    return nothing
+end
 
 """
     deregister(drv::Driver)
 
 Deregister the passed driver.
 """
-deregister(drv::Driver) = GDAL.gdalderegisterdriver(drv.ptr)
+function deregister(drv::Driver)::Nothing
+    GDAL.gdalderegisterdriver(drv.ptr)
+    return nothing
+end
 
 """
     options(drv::Driver)
 
 Return the list of creation options of the driver [an XML string].
 """
-options(drv::Driver) = GDAL.gdalgetdrivercreationoptionlist(drv.ptr)
+options(drv::Driver)::String = GDAL.gdalgetdrivercreationoptionlist(drv.ptr)
 
-driveroptions(name::AbstractString) = options(getdriver(name))
+driveroptions(name::AbstractString)::String = options(getdriver(name))
 
 """
     shortname(drv::Driver)
 
 Return the short name of a driver (e.g. `GTiff`).
 """
-shortname(drv::Driver) = GDAL.gdalgetdrivershortname(drv.ptr)
+shortname(drv::Driver)::String = GDAL.gdalgetdrivershortname(drv.ptr)
 
 """
     longname(drv::Driver)
 
 Return the long name of a driver (e.g. `GeoTIFF`), or empty string.
 """
-longname(drv::Driver) = GDAL.gdalgetdriverlongname(drv.ptr)
+longname(drv::Driver)::String = GDAL.gdalgetdriverlongname(drv.ptr)
 
 """
     ndriver()
 
 Fetch the number of registered drivers.
 """
-ndriver() = GDAL.gdalgetdrivercount()
+ndriver()::Integer = GDAL.gdalgetdrivercount()
 
 """
     listdrivers()
 
 Returns a listing of all registered drivers.
 """
-listdrivers() = Dict{String,String}([
+listdrivers()::Dict{String,String} = Dict{String,String}([
     shortname(getdriver(i)) => longname(getdriver(i)) for i in 0:(ndriver()-1)
 ])
 
@@ -90,7 +96,7 @@ by invoking the Identify method of each registered `GDALDriver` in turn. The
 first driver that successful identifies the file name will be returned. If all
 drivers fail then `NULL` is returned.
 """
-identifydriver(filename::AbstractString) =
+identifydriver(filename::AbstractString)::Driver =
     Driver(GDAL.gdalidentifydriver(filename, C_NULL))
 
 """
@@ -121,8 +127,12 @@ in the list of creation options are compatible with the capabilities declared
 by the `GDAL_DMD_CREATIONOPTIONLIST` metadata item. In case of incompatibility
 a (non fatal) warning will be emited and ``false`` will be returned.
 """
-validate(drv::Driver, options::Vector{T}) where {T <: AbstractString} =
-    Bool(GDAL.gdalvalidatecreationoptions(drv.ptr, options))
+function validate(
+        drv::Driver,
+        options::Vector{T}
+    )::Bool where {T <: AbstractString}
+    return Bool(GDAL.gdalvalidatecreationoptions(drv.ptr, options))
+end
 
 """
     copyfiles(drv::Driver, new::AbstractString, old::AbstractString)
@@ -132,14 +142,24 @@ Copy all the files associated with a dataset.
 """
 function copyfiles end
 
-function copyfiles(drv::Driver, new::AbstractString, old::AbstractString)
+function copyfiles(
+        drv::Driver,
+        new::AbstractString,
+        old::AbstractString
+    )::Nothing
     result = GDAL.gdalcopydatasetfiles(drv.ptr, new, old)
     @cplerr result "Failed to copy dataset files"
-    return result
+    return nothing
 end
 
-copyfiles(drvname::AbstractString, new::AbstractString, old::AbstractString) =
+function copyfiles(
+        drvname::AbstractString,
+        new::AbstractString,
+        old::AbstractString
+    )::Nothing
     copyfiles(getdriver(drvname), new, old)
+    return nothing
+end
 
 """
     extensions()
@@ -147,8 +167,8 @@ copyfiles(drvname::AbstractString, new::AbstractString, old::AbstractString) =
 Returns a `Dict{String,String}` of all of the file extensions that can be read
 by GDAL,  with their respective drivers' `shortname`s.
 """
-function extensions()
-    extdict = Dict{String,String}()
+function extensions()::Dict{String, String}
+    extdict = Dict{String, String}()
     for i in 1:ndriver()
         driver = getdriver(i)
         if !(driver.ptr == C_NULL)
@@ -168,7 +188,7 @@ Returns a driver shortname that matches the filename extension.
 
 So `extensiondriver("/my/file.tif") == "GTiff"`.
 """
-function extensiondriver(filename::AbstractString)
+function extensiondriver(filename::AbstractString)::String
     split = splitext(filename)
     extensiondict = extensions()
     ext = split[2] == "" ? split[1] : split[2]

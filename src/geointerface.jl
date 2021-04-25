@@ -11,7 +11,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     collectiontypes = (wkbGeometryCollection, wkbGeometryCollection25D,
         wkbGeometryCollectionM, wkbGeometryCollectionZM)
 
-    function GeoInterface.geotype(g::AbstractGeometry)
+    function GeoInterface.geotype(g::AbstractGeometry)::Symbol
         gtype = getgeomtype(g)
         return if gtype in pointtypes
             :Point
@@ -66,5 +66,4 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
             ]
         end
     end
-
 end

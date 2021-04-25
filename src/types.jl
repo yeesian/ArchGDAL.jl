@@ -207,17 +207,17 @@ mutable struct ColorTable
 end
 
 "return the corresponding `DataType` in julia"
-datatype(gt::GDALDataType) = get(_JLTYPE, gt) do
+datatype(gt::GDALDataType)::DataType = get(_JLTYPE, gt) do
     error("Unknown GDALDataType: $gt")
 end
 
 "return the corresponding `GDAL.GDALDataType`"
-gdaltype(dt::DataType) = get(_GDALTYPE, dt) do
+gdaltype(dt::DataType)::GDAL.GDALDataType = get(_GDALTYPE, dt) do
     error("Unknown DataType: $dt")
 end
 
 "return the corresponding `DataType` in julia"
-datatype(ft::OGRFieldType) = get(_FIELDTYPE, ft) do
+datatype(ft::OGRFieldType)::DataType = get(_FIELDTYPE, ft) do
     error("Unknown OGRFieldType: $ft")
 end
 
@@ -321,23 +321,24 @@ import Base.|
 """
     typesize(dt::GDALDataType)
 
-Get data type size in bits.
+Get the number of bits or zero if it is not recognised.
 """
-typesize(dt::GDALDataType) = GDAL.gdalgetdatatypesize(dt)
+typesize(dt::GDALDataType)::Integer = GDAL.gdalgetdatatypesize(dt)
 
 """
     typename(dt::GDALDataType)
 
 name (string) corresponding to GDAL data type.
 """
-typename(dt::GDALDataType) = GDAL.gdalgetdatatypename(dt)
+typename(dt::GDALDataType)::String = GDAL.gdalgetdatatypename(dt)
 
 """
     gettype(name::AbstractString)
 
 Returns GDAL data type by symbolic name.
 """
-gettype(name::AbstractString) = GDAL.gdalgetdatatypebyname(name)
+gettype(name::AbstractString)::GDAL.GDALDataType =
+    GDAL.gdalgetdatatypebyname(name)
 
 """
     typeunion(dt1::GDALDataType, dt2::GDALDataType)

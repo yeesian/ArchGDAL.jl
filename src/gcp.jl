@@ -13,13 +13,16 @@ converts the equation from being pixel to geo to being geo to pixel.
 ### Returns
 `gt_out`
 """
-function invgeotransform!(gt_in::Vector{Cdouble}, gt_out::Vector{Cdouble})
+function invgeotransform!(
+        gt_in::Vector{Cdouble},
+        gt_out::Vector{Cdouble}
+    )::Vector{Cdouble}
     result = Bool(GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)))
     result || error("Geotransform coefficients is uninvertable")
     return gt_out
 end
 
-invgeotransform(gt_in::Vector{Cdouble}) =
+invgeotransform(gt_in::Vector{Cdouble})::Vector{Cdouble} =
     invgeotransform!(gt_in, Array{Cdouble}(undef, 6))
 
 """
@@ -43,8 +46,8 @@ function applygeotransform(
         geotransform::Vector{Cdouble},
         pixel::Cdouble,
         line::Cdouble
-    )
-    geo_xy = Array{Cdouble}(undef, 2)
+    )::Vector{Cdouble}
+    geo_xy = Vector{Cdouble}(undef, 2)
     geo_x = pointer(geo_xy)
     geo_y = geo_x + sizeof(Cdouble)
     GDAL.gdalapplygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
@@ -70,10 +73,14 @@ function composegeotransform!(
         gt1::Vector{Cdouble},
         gt2::Vector{Cdouble},
         gtout::Vector{Cdouble}
-    )
+    )::Vector{Cdouble}
     GDAL.gdalcomposegeotransform(pointer(gt1), pointer(gt2), pointer(gtout))
     return gtout
 end
 
-composegeotransform(gt1::Vector{Cdouble}, gt2::Vector{Cdouble}) =
-    composegeotransform!(gt1, gt2, Array{Cdouble}(undef, 6))
+function composegeotransform(
+        gt1::Vector{Cdouble},
+        gt2::Vector{Cdouble}
+    )::Vector{Cdouble}
+    return composegeotransform!(gt1, gt2, Vector{Cdouble}(undef, 6))
+end

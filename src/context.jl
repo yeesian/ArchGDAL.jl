@@ -100,14 +100,14 @@ to the layer.
                 format driver.
 """
 function addfielddefn!(
-        layer::AbstractFeatureLayer,
+        layer::T,
         name::AbstractString,
         etype::OGRFieldType;
         nwidth::Integer             = 0,
         nprecision::Integer         = 0,
         justify::OGRJustification   = GDAL.OJUndefined,
         approx::Bool                = false
-    )
+    )::T where {T <: AbstractFeatureLayer}
     fielddefn = unsafe_createfielddefn(name, etype)
     setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
         justify = justify)
@@ -166,11 +166,11 @@ to the layer.
             slightly different form depending on the limitations of the driver.
 """
 function writegeomdefn!(
-        layer::AbstractFeatureLayer,
+        layer::T,
         name::AbstractString,
         etype::WKBGeometryType;
         approx::Bool = false
-    )
+    )::T where {T <: AbstractFeatureLayer}
     geomdefn = unsafe_creategeomdefn(name, etype)
     addgeomdefn!(layer, geomdefn)
     destroy(geomdefn)
