@@ -49,9 +49,13 @@ end
     @test sprint(print, AG.identifydriver("data/point.geojson")) == "Driver: GeoJSON/GeoJSON"
     @test sprint(print, AG.identifydriver("data/utmsmall.tif")) == "Driver: GTiff/GeoTIFF"
 
-    @test AG.validate(AG.getdriver("GTiff"), ["COMPRESS=LZW", "INTERLEAVE=PIXEL"]) == true
-    @test AG.validate(AG.getdriver("GTiff"), ["COMPRESS=LZW"]) == true
-    @test AG.validate(AG.getdriver("GTiff"), ["INTERLEAVE=PIXEL"]) == true
+    driver = AG.getdriver("GTiff")
+    @test isnothing(AG.deregister(driver))
+    @test isnothing(AG.register(driver))
+    @test AG.validate(driver, ["COMPRESS=LZW", "INTERLEAVE=PIXEL"]) == true
+    @test AG.validate(driver, ["COMPRESS=LZW"]) == true
+    @test AG.validate(driver, ["INTERLEAVE=PIXEL"]) == true
+
     AG.read("data/point.geojson") do dataset
         @test AG.listcapability(dataset) == Dict(
             "CreateLayer"=>false,
