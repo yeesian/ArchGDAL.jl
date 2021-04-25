@@ -28,12 +28,12 @@ end
 
 function RasterDataset(
         ds::AbstractDataset
-    )::RasterDataset{_dataset_type(ds), typeof(ds)}
+    )::RasterDataset{pixeltype(ds), typeof(ds)}
     if iszero(nraster(ds))
         throw(ArgumentError("The Dataset does not contain any raster bands"))
     end
     s = _common_size(ds)
-    return RasterDataset{_dataset_type(ds), typeof(ds)}(ds, s)
+    return RasterDataset{pixeltype(ds), typeof(ds)}(ds, s)
 end
 
 # Forward a few functions
@@ -74,20 +74,6 @@ function copywholeraster!(
     )::RasterDataset
     copywholeraster!(source.ds, dest.ds; kwargs...)
     return dest
-end
-
-"""
-    _dataset_type(ds::AbstractDataset)
-
-Tries to determine a common dataset type for all the bands
-in a raster dataset.
-"""
-function _dataset_type(ds::AbstractDataset)::DataType
-    alldatatypes = map(1:nraster(ds)) do i
-        b = getband(ds, i)
-        pixeltype(b)
-    end
-    return reduce(promote_type, alldatatypes)
 end
 
 """

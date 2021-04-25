@@ -291,15 +291,15 @@ read(dataset::AbstractDataset, i::Integer) = read(getband(dataset, i))
 function read(
         dataset::AbstractDataset,
         indices
-    )::Array{pixeltype(getband(dataset, indices[1]))}
-    buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
+    )::Array{pixeltype(dataset), 3}
+    buffer = Array{pixeltype(dataset)}(undef,
         width(dataset), height(dataset), length(indices))
     rasterio!(dataset, buffer, indices)
     return buffer
 end
 
-function read(dataset::AbstractDataset)::Array{pixeltype(getband(dataset, 1))}
-    buffer = Array{pixeltype(getband(dataset, 1))}(undef, width(dataset),
+function read(dataset::AbstractDataset)::Array{pixeltype(dataset), 3}
+    buffer = Array{pixeltype(dataset)}(undef, width(dataset),
         height(dataset), nraster(dataset))
     read!(dataset, buffer)
     return buffer
@@ -312,7 +312,7 @@ function read(
         yoffset::Integer,
         xsize::Integer,
         ysize::Integer
-    )
+    )::Matrix{pixeltype(dataset)}
     buffer = read(getband(dataset, i), xoffset, yoffset, xsize, ysize)
     return buffer
 end
@@ -324,8 +324,8 @@ function read(
         yoffset::Integer,
         xsize::Integer,
         ysize::Integer
-    )::Array{pixeltype(getband(dataset, indices[1]))}
-    buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
+    )::Array{pixeltype(dataset), 3}
+    buffer = Array{pixeltype(dataset)}(undef,
         xsize, ysize, length(indices))
     rasterio!(dataset, buffer, indices, xsize, ysize, xoffset, yoffset)
     return buffer
@@ -336,7 +336,7 @@ function read(
         i::Integer,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
-    )
+    )::Matrix{pixeltype(dataset)}
     buffer = read(getband(dataset, i), rows, cols)
     return buffer
 end
@@ -346,8 +346,8 @@ function read(
         indices,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
-    )::Array{pixeltype(getband(dataset, indices[1]))}
-    buffer = Array{pixeltype(getband(dataset, indices[1]))}(undef,
+    )::Array{pixeltype(dataset), 3}
+    buffer = Array{pixeltype(dataset), 3}(undef,
         length(cols), length(rows), length(indices))
     rasterio!(dataset, buffer, indices, rows, cols)
     return buffer
