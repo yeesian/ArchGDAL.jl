@@ -1,5 +1,4 @@
 using Test
-import GDAL
 using DiskArrays: eachchunk, haschunks, Chunked, GridChunks, readblock!
 import ArchGDAL; const AG = ArchGDAL
 

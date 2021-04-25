@@ -1,5 +1,4 @@
 using Test
-import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "test_dataset.jl" begin
@@ -13,11 +12,7 @@ import ArchGDAL; const AG = ArchGDAL
                     @test AG.noverview(band) == 0
                     AG.buildoverviews!(copydataset, Cint[2, 4, 8])
                     @test AG.noverview(band) == 3
-                    AG.copywholeraster!(
-                        dataset,
-                        copydataset,
-                        progressfunc = GDAL.gdaltermprogress
-                    )
+                    AG.copywholeraster!(dataset, copydataset)
                 end
             end
         end
@@ -27,11 +22,7 @@ import ArchGDAL; const AG = ArchGDAL
             @test AG.noverview(AG.getband(copydataset,1)) == 0
             AG.buildoverviews!(copydataset, Cint[2, 4, 8])
             @test AG.noverview(AG.getband(copydataset,1)) == 3
-            AG.copywholeraster!(
-                dataset,
-                copydataset,
-                progressfunc = GDAL.gdaltermprogress
-            )
+            AG.copywholeraster!(dataset, copydataset)
         end
         AG.copyfiles("GTiff", "/vsimem/utmcopy2.tif", "/vsimem/utmcopy.tif")
         AG.update("/vsimem/utmcopy2.tif") do copydataset

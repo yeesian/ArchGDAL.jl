@@ -1,5 +1,4 @@
 using Test
-import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "test_types.jl" begin

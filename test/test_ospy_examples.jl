@@ -1,6 +1,5 @@
 using Test
 using Statistics
-import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "test_ospy_examples.jl" begin

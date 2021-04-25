@@ -1,5 +1,4 @@
 using Test
-import GDAL
 import ArchGDAL; const AG = ArchGDAL
 import GeoFormatTypes; const GFT = GeoFormatTypes
 

@@ -1,7 +1,7 @@
 # adapted from http://pcjericks.github.io/py-gdalogr-cookbook/geometry.html
 using Test
 import GeoInterface
-import GDAL, ArchGDAL; const AG = ArchGDAL
+import ArchGDAL; const AG = ArchGDAL
 
 @testset "test_cookbook_geometry.jl" begin
 

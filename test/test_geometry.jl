@@ -1,5 +1,5 @@
 using Test
-import GeoInterface, GeoFormatTypes, GDAL, ArchGDAL;
+import GeoInterface, GeoFormatTypes, ArchGDAL;
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
 
