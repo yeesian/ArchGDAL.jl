@@ -38,14 +38,14 @@ function Base.show(io::IO, dataset::AbstractDataset)::IO
         println(io, "\nNumber of feature layers: $nlayers")
         ndisplay = min(nlayers, 5) # display up to 5 layers
         for i in 1:ndisplay
-            layer = getlayer(dataset, i-1)
+            layer = getlayer(dataset, i - 1)
             layergeomtype = getgeomtype(layer)
-            println(io, "  Layer $(i-1): $(getname(layer)) ($layergeomtype)")
+            println(io, "  Layer $(i - 1): $(getname(layer)) ($layergeomtype)")
         end
         if nlayers > 5
             print(io, "  Remaining layers: ")
             for i in 6:nlayers
-                print(io, "$(getname(getlayer(dataset, i-1))) ")
+                print(io, "$(getname(getlayer(dataset, i - 1))) ")
                 # display up to 5 layer names per line
                 if i % 5 == 0 println() end
             end
@@ -98,8 +98,8 @@ function Base.show(
     println(io, "units: $(sc)px + $ofs$ut")
     print(io, "    overviews: ")
     for i in 1:norvw
-        ovr_band = getoverview(rasterband, i-1)
-        print(io, "($(i-1)) $(width(ovr_band))x$(height(ovr_band)) ")
+        ovr_band = getoverview(rasterband, i - 1)
+        print(io, "($(i - 1)) $(width(ovr_band))x$(height(ovr_band)) ")
         i % 3 == 0 && print(io, "\n               ")
     end
     return io
@@ -119,8 +119,8 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
-        gfd = getgeomdefn(featuredefn, i-1)
-        display = "  Geometry $(i-1) ($(getname(gfd))): [$(gettype(gfd))]"
+        gfd = getgeomdefn(featuredefn, i - 1)
+        display = "  Geometry $(i - 1) ($(getname(gfd))): [$(gettype(gfd))]"
         if length(display) > 75
             println(io, "$display[1:70]...")
             continue
@@ -147,14 +147,14 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
     n = nfield(featuredefn)
     nfielddisplay = min(n, 5)
     for i in 1:nfielddisplay
-        fd = getfielddefn(featuredefn, i-1)
-        display = "     Field $(i-1) ($(getname(fd))): [$(gettype(fd))]"
+        fd = getfielddefn(featuredefn, i - 1)
+        display = "     Field $(i - 1) ($(getname(fd))): [$(gettype(fd))]"
         if length(display) > 75
             println(io, "$display[1:70]...")
             continue
         end
         for f in layer
-            field = string(getfield(f, i-1))
+            field = string(getfield(f, i - 1))
             length(field) > 25 && (field = "$(field[1:20])...")
             newdisplay = "$display, $field"
             if length(newdisplay) > 75
@@ -179,16 +179,16 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::IO
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
     for i in 1:ngeomdisplay
-        gfd = getgeomdefn(featuredefn, i-1)
-        println(io, "  Geometry (index $(i-1)): $gfd")
+        gfd = getgeomdefn(featuredefn, i - 1)
+        println(io, "  Geometry (index $(i - 1)): $gfd")
     end
     n > 3 && println(io, "  ...\n  Number of Geometries: $n")
 
     n = nfield(featuredefn)
     nfielddisplay = min(n, 5)
     for i in 1:nfielddisplay
-        fd = getfielddefn(featuredefn, i-1)
-        println(io, "     Field (index $(i-1)): $fd")
+        fd = getfielddefn(featuredefn, i - 1)
+        println(io, "     Field (index $(i - 1)): $fd")
     end
     n > 5 && print(io, "...\n Number of Fields: $n")
     return io
@@ -220,15 +220,15 @@ function Base.show(io::IO, feature::Feature)::IO
     println(io, "Feature")
     n = ngeom(feature)
     for i in 1:min(n, 3)
-        displayname = geomname(getgeom(feature, i-1))
-        println(io, "  (index $(i-1)) geom => $displayname")
+        displayname = geomname(getgeom(feature, i - 1))
+        println(io, "  (index $(i - 1)) geom => $displayname")
     end
     n > 3 && println(io, "...\n Number of geometries: $n")
     n = nfield(feature)
     for i in 1:min(n, 10)
-        displayname = getname(getfielddefn(feature, i-1))
-        print(io, "  (index $(i-1)) $displayname => ")
-        println(io, "$(getfield(feature, i-1))")
+        displayname = getname(getfielddefn(feature, i - 1))
+        print(io, "  (index $(i - 1)) $displayname => ")
+        println(io, "$(getfield(feature, i - 1))")
     end
     n > 10 && print(io, "...\n Number of Fields: $n")
     return io
@@ -242,7 +242,7 @@ function Base.show(io::IO, spref::AbstractSpatialRef)::IO
     projstr = toPROJ4(spref)
     if length(projstr) > 45
         projstart = projstr[1:35]
-        projend = projstr[end-4:end]
+        projend = projstr[(end - 4):end]
         print(io, "Spatial Reference System: $projstart ... $projend")
     else
         print(io, "Spatial Reference System: $projstr")
@@ -261,7 +261,7 @@ function Base.show(io::IO, geom::AbstractGeometry)::IO
         print(io, "Geometry: ")
         geomwkt = toWKT(geom)
         if length(geomwkt) > 60
-            print(io, "$(geomwkt[1:50]) ... $(geomwkt[end-4:end])")
+            print(io, "$(geomwkt[1:50]) ... $(geomwkt[(end - 4):end])")
         else
             print(io, "$geomwkt")
         end

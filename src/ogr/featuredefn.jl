@@ -66,7 +66,8 @@ end
 
 Get name of the OGRFeatureDefn passed as an argument.
 """
-getname(featuredefn::AbstractFeatureDefn)::String = GDAL.ogr_fd_getname(featuredefn.ptr)
+getname(featuredefn::AbstractFeatureDefn)::String =
+    GDAL.ogr_fd_getname(featuredefn.ptr)
 
 """
     nfield(featuredefn::AbstractFeatureDefn)
