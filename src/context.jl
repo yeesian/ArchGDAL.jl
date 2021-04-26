@@ -116,27 +116,6 @@ function addfielddefn!(
     return layer
 end
 
-function addfielddefn(
-        f::Function,
-        layer::AbstractFeatureLayer,
-        name::AbstractString,
-        etype::OGRFieldType;
-        nwidth::Integer             = 0,
-        nprecision::Integer         = 0,
-        justify::OGRJustification   = OJUndefined,
-        approx::Bool                = false
-    )
-    fielddefn = unsafe_createfielddefn(name, etype)
-    setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
-        justify = justify)
-    return try
-        f(fielddefn)
-        addfielddefn!(layer, fielddefn)
-    finally
-        destroy(fielddefn)
-    end
-end
-
 """
     writegeomdefn!(layer::AbstractFeatureLayer, name, etype::OGRwkbGeometryType,
         approx=false)
