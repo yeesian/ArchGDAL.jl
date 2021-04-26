@@ -19,6 +19,9 @@ import ArchGDAL; const AG = ArchGDAL
 
         AG.copy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
             tmplayer = AG.getlayer(dataset, 0)
+            AG.copy(tmplayer) do copylayer
+                @test AG.nfeature(tmplayer) == AG.nfeature(copylayer)
+            end
             @test sprint(print, AG.getspatialref(tmplayer)) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
             AG.getspatialref(tmplayer) do spref
                 @test sprint(print, spref) == "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
