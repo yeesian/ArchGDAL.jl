@@ -140,6 +140,11 @@ end
         count = sum(buffer[:, :, 1:1] .> 0)
         @test total / count ≈ 76.33891347095299
         @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+
+        AG.copy(ds) do copy1
+            @test typeof(AG.copywholeraster!(ds, copy1)) == typeof(copy1)
+            @test typeof(AG.copywholeraster!(copy1, ds)) == typeof(ds)
+        end
     end
 end
 

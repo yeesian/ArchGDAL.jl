@@ -39,9 +39,9 @@ end
 # Forward a few functions
 # Here we try to include all functions that are relevant
 # for raster-like datasets.
-for f in (:getgeotransform, :nraster, :getband, :getproj,
-    :width, :height, :destroy, :getdriver, :filelist, :listcapability, 
-    :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews!)
+for f in (:getgeotransform, :nraster, :getband, :getproj, :width, :height,
+    :destroy, :getdriver, :filelist, :listcapability,  :ngcp, :copy,
+    :unsafe_copy, :write, :testcapability, :setproj!, :buildoverviews!)
     eval(:(
         $(f)(x::RasterDataset, args...; kwargs...) = 
             $(f)(x.ds, args...; kwargs...)
@@ -63,7 +63,7 @@ function copywholeraster!(
         dest::RasterDataset;
         kwargs...
     )::RasterDataset
-    copywholeraster!(source.ds, dest.ds; kwargs...)
+    copywholeraster!(source, dest.ds; kwargs...)
     return dest
 end
 
@@ -72,7 +72,7 @@ function copywholeraster!(
         dest::RasterDataset;
         kwargs...
     )::RasterDataset
-    copywholeraster!(source.ds, dest.ds; kwargs...)
+    copywholeraster!(source, dest.ds; kwargs...)
     return dest
 end
 
