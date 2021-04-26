@@ -13,7 +13,9 @@ AG.read("data/point.geojson") do dataset
               (index 0) FID => 2.0
               (index 1) pointname => point-a
             """
-            @test sprint(print, AG.getgeom(f1)) == "Geometry: POINT (100 0)"
+            AG.getgeom(f1) do g1
+                @test sprint(print, g1) == "Geometry: POINT (100 0)"
+            end
             fid1 = AG.getfid(f1)
             @test fid1 == 0
 
