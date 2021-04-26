@@ -270,3 +270,16 @@ function Base.show(io::IO, geom::AbstractGeometry)::IO
     end
     return io
 end
+
+function Base.show(io::IO, ct::ColorTable)::IO
+    if ct.ptr == C_NULL
+        print(io, "NULL ColorTable")
+        return io
+    end
+    palette = paletteinterp(ct)
+    print(io, "ColorTable[$palette] with $nentries entries")
+    return io
+end
+
+Base.show(io::IO, ::MIME"text/plain", ct::ColorTable)::IO =
+    show(io, ct)

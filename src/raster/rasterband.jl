@@ -375,14 +375,8 @@ Returns a clone of the color table associated with the band.
 original color table remains owned by the `RasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.)
 """
-function unsafe_getcolortable(band::AbstractRasterBand)::ColorTable
-    result = ColorTable(GDAL.gdalgetrastercolortable(band.ptr))
-    return if result.ptr == C_NULL
-        result
-    else
-        unsafe_clone(result)
-    end
-end
+unsafe_getcolortable(band::AbstractRasterBand)::ColorTable =
+    unsafe_clone(ColorTable(GDAL.gdalgetrastercolortable(band.ptr)))
 
 """
     setcolortable!(band::AbstractRasterBand, colortable::ColorTable)

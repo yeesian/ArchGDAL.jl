@@ -18,8 +18,13 @@ end
 
 Make a copy of a color table.
 """
-unsafe_clone(ct::ColorTable)::ColorTable =
-    ColorTable(GDAL.gdalclonecolortable(ct.ptr))
+function unsafe_clone(ct::ColorTable)::ColorTable
+    return if ct.ptr == C_NULL
+        ColorTable(C_NULL)
+    else
+        ColorTable(GDAL.gdalclonecolortable(ct.ptr))
+    end
+end
 
 """
     paletteinterp(ct::ColorTable)
