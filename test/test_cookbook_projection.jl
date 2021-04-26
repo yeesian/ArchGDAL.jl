@@ -39,6 +39,7 @@ const GFT = GeoFormatTypes
         end
         @testset "reproject vector, vector of vector, or tuple" begin
             coord = [1120351.57, 741921.42]
+            @test AG.reproject(coord, GFT.EPSG(2927), nothing) ≈ [1120351.57, 741921.42]
             @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈
                 [47.3488070138318, -122.5981499431438]
             @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈
