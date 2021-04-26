@@ -312,4 +312,12 @@ end
     end end end end
 end
 
+@testset "Cloning NULL geometries" begin
+    geom = AG.IGeometry()
+    @test sprint(print, AG.clone(geom)) == "NULL Geometry"
+    AG.clone(geom) do g
+        @test sprint(print, g) == "NULL Geometry"
+    end
+end
+
 end
