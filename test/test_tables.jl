@@ -39,6 +39,8 @@ using Tables
         @test length(features) == 2
         
         @test Tables.columnnames(features[1]) == (:id, :zoom, :location, :point, :linestring)
+        @test Tables.getcolumn(features[2], -5) == nothing
+        @test Tables.getcolumn(features[2], 0) == nothing
         @test Tables.getcolumn(features[1], 1) == "5.1"
         @test Tables.getcolumn(features[1], 2) == "1.0"
         @test Tables.getcolumn(features[1], 3) == "Mumbai"
@@ -52,6 +54,8 @@ using Tables
         @test isnothing(Tables.getcolumn(features[1], :fake))
         
         @test Tables.columnnames(features[2]) == (:id, :zoom, :location, :point, :linestring)
+        @test Tables.getcolumn(features[2], -5) == nothing
+        @test Tables.getcolumn(features[2], 0) == nothing
         @test Tables.getcolumn(features[2], 1) == "5.2"
         @test Tables.getcolumn(features[2], 2) == "2.0"
         @test Tables.getcolumn(features[2], 3) == "New Delhi"
