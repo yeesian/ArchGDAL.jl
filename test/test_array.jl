@@ -155,6 +155,7 @@ end
         AG.copy(ds) do copy1
             @test typeof(AG.copywholeraster!(ds, copy1)) == typeof(copy1)
             @test typeof(AG.copywholeraster!(AG.RasterDataset(copy1), ds)) == typeof(ds)
+            @test typeof(AG.copywholeraster!(copy1, ds)) == typeof(ds)
         end
     end
 end
