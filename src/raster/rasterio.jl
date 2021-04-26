@@ -408,15 +408,6 @@ end
 
 function write!(
         dataset::T,
-        buffer::Array{<:Real, 3},
-        indices
-    )::T where {T <: AbstractDataset}
-    rasterio!(dataset, buffer, indices, GF_Write)
-    return dataset
-end
-
-function write!(
-        dataset::T,
         buffer::Matrix{<:Real},
         i::Integer,
         xoffset::Integer,
