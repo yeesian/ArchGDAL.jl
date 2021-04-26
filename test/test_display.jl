@@ -3,6 +3,17 @@ import ArchGDAL; const AG = ArchGDAL
 
 @testset "test_display.jl" begin
 
+@testset "Testing Displays for NULL objects" begin
+    @test sprint(print, AG.Driver(C_NULL)) == "NULL Driver"
+    @test sprint(print, AG.IDataset()) == "NULL Dataset"
+    @test sprint(print, AG.IRasterBand{UInt8}()) == "NULL RasterBand"
+    @test sprint(print, AG.IFeatureLayer()) == "NULL FeatureLayer"
+    @test sprint(print, AG.IFeatureDefnView()) == "NULL FeatureDefn"
+    @test sprint(print, AG.IFieldDefnView()) == "NULL FieldDefn"
+    @test sprint(print, AG.IGeomFieldDefnView()) == "NULL GeomFieldDefn"
+    @test sprint(print, AG.Feature(C_NULL)) == "NULL Feature"
+end
+
 @testset "Testing Displays for different objects" begin
     AG.read("data/point.geojson") do dataset
         @test sprint(print, dataset) == """

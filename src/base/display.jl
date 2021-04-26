@@ -108,7 +108,7 @@ end
 # assumes that the layer is reset, and will reset it after display
 function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
     if layer.ptr == C_NULL
-        println(io, "NULL Layer")
+        print(io, "NULL FeatureLayer")
         return io
     end
     layergeomtype = getgeomtype(layer)
@@ -214,7 +214,7 @@ end
 
 function Base.show(io::IO, feature::Feature)::IO
     if feature.ptr == C_NULL
-        println(io, "NULL Feature")
+        print(io, "NULL Feature")
         return io
     end
     println(io, "Feature")

@@ -134,6 +134,17 @@ end
 
 @testset "Test Array constructor" begin
     AG.readraster("ospy/data4/aster_write.img"; flags=AG.OF_UPDATE) do ds
+        @test sprint(print, ds) == """
+        GDAL Dataset (Driver: HFA/Erdas Imagine Images (.img))
+        File(s): 
+          ospy/data4/aster_write.img
+
+        Dataset (width x height): 5665 x 5033 (pixels)
+        Number of raster bands: 3
+          [GA_Update] Band 1 (Undefined): 5665 x 5033 (UInt8)
+          [GA_Update] Band 2 (Undefined): 5665 x 5033 (UInt8)
+          [GA_Update] Band 3 (Undefined): 5665 x 5033 (UInt8)
+        """
         buffer = Array(ds)
         typeof(buffer) <: Array{UInt8,3}
         total = sum(buffer[:, :, 1:1])
