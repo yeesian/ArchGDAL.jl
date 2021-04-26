@@ -28,21 +28,7 @@ The [`ArchGDAL.Table`](@ref) method accepts an `ArchGDAL.FeatureLayer`.
 table = ArchGDAL.Table(layer)
 ```
 
-Individual rows can be retrieved using the `Base.getindex(t::ArchGDAL.Table, idx::Int)` method or simply `table[idx]`.
-
-```@example tables
-row = table[1]
-```
-
-Layers are retrievable!
-One can get back the layer that a Table is made up of.
-```@example tables
-lyr = ArchGDAL.getlayer(table)
-```
-
-The Tables interface also support multiple geometries per layer.
-
-Here, we visit the
+Finally layers can be converted to DataFrames to perform miscellaneous spatial operations. Here, we visit the
 [`data/multi_geom.csv`](https://github.com/yeesian/ArchGDALDatasets/blob/master/data/multi_geom.csv)
 dataset.
 
@@ -51,22 +37,7 @@ dataset1 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=
 
 layer = ArchGDAL.getlayer(dataset, 0)
 table = ArchGDAL.Table(layer)
-```
-
-Exatracting a row from the table, we see that the row/feature is made up of two geometries
-viz. `point` and `linestring`.
-```@example tables
-row = table[1]
-```
-
-Finally layers can be converted to DataFrames to perform miscellaneous spatial operations.
-```@example tables
 df = DataFrame(table)
 ```
-In some cases the `nextfeature` might become a bit tedious to use. In which case the `ArchGDAL.nextnamedtuple()` method comes in handy. Though built upon `nextfeature`, simply calling it, yields the `feature` as a `NamedTuple`. Though one might have to use `ArchGDAL.resetreading!(layer)` method to reset the layer reading to the start.
 
-```@example tables
-ArchGDAL.resetreading!(layer)
-feat1 = ArchGDAL.nextnamedtuple(layer)
-feat2 = ArchGDAL.nextnamedtuple(layer)
-```
+The Tables interface also supports multiple geometries per layer.
