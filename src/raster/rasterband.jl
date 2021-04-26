@@ -215,17 +215,6 @@ function deletenodatavalue!(band::T)::T where {T <: AbstractRasterBand}
 end
 
 """
-    setcategorynames!(band::AbstractRasterBand, names)
-
-Set the category names for this band.
-"""
-function setcategorynames!(band::T, names)::T where {T <: AbstractRasterBand}
-    result = GDAL.gdalsetrastercategorynames(band.ptr, names)
-    @cplerr result "Failed to set category names"
-    return band
-end
-
-"""
     minimum(band::AbstractRasterBand)
 
 Fetch the minimum value for this band.
