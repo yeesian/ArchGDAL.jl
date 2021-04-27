@@ -40,8 +40,14 @@ end
 # for raster-like datasets.
 for f in (:getgeotransform, :nraster, :getband, :getproj,
     :width, :height, :destroy, :getdriver, :filelist, :listcapability, 
-    :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews!)
+    :ngcp, :copy, :write, :testcapability, :setproj!, :buildoverviews!,
+    :metadata, :metadatadomainlist)
     eval(:($(f)(x::RasterDataset, args...; kwargs...) = $(f)(x.ds, args...; kwargs...)))
+end
+
+# Here we need to special-case, to avoid a method ambiguity
+function metadataitem(obj::RasterDataset, name::AbstractString; kwargs...)
+    return metadataitem(obj.ds, name; kwargs...)
 end
 
 # Here we need to special-case, because source and dest might be rasters
