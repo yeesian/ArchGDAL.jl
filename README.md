@@ -43,7 +43,7 @@ shell> cd /Users/yeesian/.julia/dev/ArchGDAL
 2. Activate the environment corresponding to `Project.toml`):
 
 ```julia
-(@v1.6) pkg> activate
+(@v1.6) pkg> activate .
   Activating environment at `~/.julia/environments/v1.6/Project.toml`
 ```
 
