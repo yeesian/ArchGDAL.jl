@@ -16,7 +16,7 @@ function imread(
         """)
     else; error("Unknown color palette: $palette")
     end
-    ImageCore.permuteddimsview(ImageCore.colorview(colortype,
+    return ImageCore.permuteddimsview(ImageCore.colorview(colortype,
         ImageCore.normedview(read(dataset, indices[1]))
     ), (2,1))
 end
@@ -26,7 +26,7 @@ function imread(
         dataset::AbstractDataset,
         indices::NTuple{1, <:Integer}
     )
-    ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.Gray,
+    return ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.Gray,
         ImageCore.normedview(read(dataset, indices[1]))
     ), (2,1))
 end
@@ -36,7 +36,7 @@ function imread(
         dataset::AbstractDataset,
         indices::NTuple{3,<:Integer}
     )
-    ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.RGB,
+    return ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.RGB,
         ImageCore.normedview(read(dataset, indices[1])),
         ImageCore.normedview(read(dataset, indices[2])),
         ImageCore.normedview(read(dataset, indices[3]))
@@ -48,7 +48,7 @@ function imread(
         dataset::Dataset,
         indices::NTuple{4,<:Integer}
     )
-    ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.RGBA,
+    return ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.RGBA,
         ImageCore.normedview(read(dataset, indices[1])),
         ImageCore.normedview(read(dataset, indices[2])),
         ImageCore.normedview(read(dataset, indices[3])),
@@ -78,7 +78,7 @@ function imread(dataset::AbstractDataset, indices::Vector{<:Integer})
         https://github.com/yeesian/ArchGDAL.jl/issues
         """)
     end
-    imread(colortype, dataset, Tuple(indices[sortperm(gci)]))
+    return imread(colortype, dataset, Tuple(indices[sortperm(gci)]))
 end
 
 imread(dataset::AbstractDataset) = imread(dataset, collect(1:nraster(dataset)))
