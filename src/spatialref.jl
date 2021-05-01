@@ -207,10 +207,10 @@ Construct a Spatial Reference System from its WKT.
     axis ordering in any actions done with the crs. `:compliant`, will use axis 
     ordering compliant with the relevant CRS authority.
 """
-newspatialref(wkt::AbstractString = ""; order=:compliant) =
+newspatialref(wkt::AbstractString = ""; order::Symbol = :compliant) =
     maybesetaxisorder!(ISpatialRef(GDAL.osrnewspatialreference(wkt)), order)
 
-unsafe_newspatialref(wkt::AbstractString = ""; order=:compliant) =
+unsafe_newspatialref(wkt::AbstractString = ""; order::Symbol = :compliant) =
     maybesetaxisorder!(SpatialRef(GDAL.osrnewspatialreference(wkt)), order)
 
 function maybesetaxisorder!(

@@ -235,8 +235,11 @@ import GeoFormatTypes; const GFT = GeoFormatTypes
         @test AG.toWKT(AG.importCRS(GFT.ESRIWellKnownText(GFT.CRS(), wkt4326))) == AG.toWKT(AG.importESRI(wkt4326))
         @test AG.toWKT(AG.importCRS(GFT.ProjString(proj4326))) == AG.toWKT(AG.importPROJ4(proj4326))
         @test AG.toWKT(AG.importCRS(GFT.EPSG(4326))) == AG.toWKT(AG.importEPSG(4326))
+        @test AG.toWKT(AG.importCRS(GFT.EPSG(4326), order = :trad)) == AG.toWKT(AG.importEPSG(4326))
+        @test AG.toWKT(AG.importCRS(GFT.EPSG(4326), order = :compliant)) == AG.toWKT(AG.importEPSG(4326))
         @test AG.toWKT(AG.importCRS(GFT.GML(xml4326))) == AG.toWKT(AG.importXML(xml4326))
         @test AG.toWKT(AG.importCRS(GFT.KML(""))) == AG.toWKT(AG.importEPSG(4326))
+        @test_throws ArgumentError AG.importCRS(GFT.EPSG(4326), order = :unknown)
     end
 end
 
