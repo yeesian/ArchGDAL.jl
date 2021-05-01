@@ -96,23 +96,23 @@ const StringList = Ptr{Cstring}
 
 @enum(GDALColorInterp,
     GCI_Undefined = 0,
-    GCI_GrayIndex = 1,
-    GCI_PaletteIndex = 2,
-    GCI_RedBand = 3,
-    GCI_GreenBand = 4,
-    GCI_BlueBand = 5,
-    GCI_AlphaBand = 6,
-    GCI_HueBand = 7,
-    GCI_SaturationBand = 8,
-    GCI_LightnessBand = 9,
-    GCI_CyanBand = 10,
-    GCI_MagentaBand = 11,
-    GCI_YellowBand = 12,
-    GCI_BlackBand = 13,
-    GCI_YCbCr_YBand = 14,
-    GCI_YCbCr_CbBand = 15,
-    GCI_YCbCr_CrBand = 16,
-    GCI_Max = 17, # 16
+    GCI_GrayIndex = 1,      # GreyScale
+    GCI_PaletteIndex = 2,   # Paletted (see associated color table)
+    GCI_RedBand = 3,        # Red band of RGBA image
+    GCI_GreenBand = 4,      # Green band of RGBA image
+    GCI_BlueBand = 5,       # Green band of RGBA image
+    GCI_AlphaBand = 6,      # Alpha (0=transparent, 255=opaque)
+    GCI_HueBand = 7,        # Hue band of HLS image
+    GCI_SaturationBand = 8, # Saturation band of HLS image
+    GCI_LightnessBand = 9,  # Lightness band of HLS image
+    GCI_CyanBand = 10,      # Cyan band of CMYK image
+    GCI_MagentaBand = 11,   # Magenta band of CMYK image
+    GCI_YellowBand = 12,    # Yellow band of CMYK image
+    GCI_BlackBand = 13,     # Black band of CMYK image
+    GCI_YCbCr_YBand = 14,   # Y Luminance
+    GCI_YCbCr_CbBand = 15,  # Cb Chroma
+    GCI_YCbCr_CrBand = 16,  # Cr Chroma
+    GCI_Max = 17,           # Max current value = 16
 )
 
 @enum(GDALAsyncStatusType,

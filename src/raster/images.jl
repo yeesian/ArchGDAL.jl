@@ -56,6 +56,19 @@ function imread(
     ), (2,1))
 end
 
+function imread(
+        colortype::Type{ColorTypes.YCbCr},
+        dataset::Dataset,
+        indices::NTuple{4,<:Integer}
+    )
+    return ImageCore.permuteddimsview(ImageCore.colorview(ColorTypes.YCbCr,
+        ImageCore.normedview(read(dataset, indices[1])),
+        ImageCore.normedview(read(dataset, indices[2])),
+        ImageCore.normedview(read(dataset, indices[3])),
+        ImageCore.normedview(read(dataset, indices[4]))
+    ), (2,1))
+end
+
 function imread(dataset::AbstractDataset, indices::Vector{<:Integer})
     gci = GDALColorInterp[getcolorinterp(getband(dataset, i)) for i in indices]
     gciorder = sort(gci)
@@ -69,9 +82,12 @@ function imread(dataset::AbstractDataset, indices::Vector{<:Integer})
     	ColorTypes.RGBA
     elseif gciorder == [GCI_HueBand, GCI_SaturationBand, GCI_LightnessBand]
     	ColorTypes.HSL
-	elseif gciorder == [
-			GCI_CyanBand, GCI_MagentaBand, GCI_YellowBand, GCI_BlackBand
-		]
+	# elseif gciorder == [
+	# 		GCI_CyanBand, GCI_MagentaBand, GCI_YellowBand, GCI_BlackBand
+	# 	]
+    #   ColorTypes.CMYK
+    elseif gciorder == [GCI_YCbCr_YBand, GCI_YCbCr_CbBand, GCI_YCbCr_CrBand]
+        ColorTypes.YCbCr
     else
         error("""
         Unknown GCI: $colororder. Please file an issue at
