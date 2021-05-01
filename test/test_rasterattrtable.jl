@@ -88,45 +88,8 @@ end
 
 @testset ("Testing Color Tables") begin
     AG.createcolortable(AG.GPI_RGB) do ct
-        @test sprint(print, ct) == "ColorTable[GPI_RGB] with 0 entries"
+        @test sprint(print, ct) == "ColorTable[GPI_RGB]"
         @test AG.paletteinterp(ct) == AG.GPI_RGB
-        @test AG.ncolorentry(ct) == 0
-        AG.createcolorramp!(ct, 128, GDAL.GDALColorEntry(0,0,0,0),
-                                255, GDAL.GDALColorEntry(0,0,255,0))
-        @test AG.ncolorentry(ct) == 256
-        @test sprint(print, ct) == "ColorTable[GPI_RGB] with 256 entries"
-        @test sprint(print, AG.getcolorentry(ct, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-        @test sprint(print, AG.getcolorentry(ct, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-        @test sprint(print, AG.getcolorentry(ct, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
-        @test sprint(print, AG.getcolorentry(ct, 255)) == "GDAL.GDALColorEntry(0, 0, 255, 0)"
-
-        @test sprint(print, AG.getcolorentryasrgb(ct, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-        @test sprint(print, AG.getcolorentryasrgb(ct, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-        @test sprint(print, AG.getcolorentryasrgb(ct, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
-        @test sprint(print, AG.getcolorentryasrgb(ct, 255)) == "GDAL.GDALColorEntry(0, 0, 255, 0)"
-        
-        AG.setcolorentry!(ct, 255, GDAL.GDALColorEntry(0,0,100,0))
-        @test sprint(print, AG.getcolorentry(ct, 255)) == "GDAL.GDALColorEntry(0, 0, 100, 0)"
-
-        AG.clone(ct) do ctclone
-            @test AG.paletteinterp(ctclone) == AG.GPI_RGB
-            @test AG.ncolorentry(ctclone) == 256
-            @test sprint(print, AG.getcolorentry(ctclone, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-            @test sprint(print, AG.getcolorentry(ctclone, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-            @test sprint(print, AG.getcolorentry(ctclone, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
-            @test sprint(print, AG.getcolorentry(ctclone, 255)) == "GDAL.GDALColorEntry(0, 0, 100, 0)"
-            
-            AG.createRAT(ctclone) do rat
-                ct2 = AG.toColorTable(rat)
-                @test AG.paletteinterp(ct2) == AG.GPI_RGB
-                @test AG.ncolorentry(ct2) == 256
-                @test sprint(print, AG.getcolorentry(ct2, 0)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-                @test sprint(print, AG.getcolorentry(ct2, 128)) == "GDAL.GDALColorEntry(0, 0, 0, 0)"
-                @test sprint(print, AG.getcolorentry(ct2, 200)) == "GDAL.GDALColorEntry(0, 0, 144, 0)"
-                @test sprint(print, AG.getcolorentry(ct2, 255)) == "GDAL.GDALColorEntry(0, 0, 100, 0)"
-            end
-        end
-
         AG.clone(AG.ColorTable(C_NULL)) do ct
             @test sprint(print, ct) == "NULL ColorTable"
         end

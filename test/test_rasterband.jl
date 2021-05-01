@@ -121,30 +121,8 @@ import ArchGDAL; const AG = ArchGDAL
                     AG.getoverview(destband, 2)
                 ])
             end
-
-            AG.createcolortable(AG.GPI_RGB) do ct
-                AG.createcolorramp!(ct,
-                    128, GDAL.GDALColorEntry(0,0,0,0),
-                    255, GDAL.GDALColorEntry(0,0,255,0)
-                )
-                AG.setcolortable!(destband, ct)
-                @test AG.ncolorentry(ct) == 256
-                AG.getcolortable(destband) do ct2
-                    @test AG.ncolorentry(ct) == AG.ncolorentry(ct2)
-                end
-                AG.clearcolortable!(destband)
-                
-                AG.createRAT(ct) do rat
-                    AG.setdefaultRAT!(destband, rat)
-                    @test AG.getdefaultRAT(destband) != C_NULL
-                end
-            end
         end
     end
 end
-
-# untested
-# setcategorynames!(rasterband, names)
-# getcolortable(band) do C_NULL
 
 end

@@ -277,8 +277,7 @@ function Base.show(io::IO, ct::ColorTable)::IO
         return io
     end
     palette = paletteinterp(ct)
-    nentries = ncolorentry(ct)
-    print(io, "ColorTable[$palette] with $nentries entries")
+    print(io, "ColorTable[$palette]")
     return io
 end
 
