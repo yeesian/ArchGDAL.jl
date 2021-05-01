@@ -185,7 +185,4 @@ end
     end
 end
 
-# untested
-# getstyletable
-
 end
