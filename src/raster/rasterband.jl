@@ -233,10 +233,12 @@ maximum(band::AbstractRasterBand)::Real =
 """
     getdefaultRAT(band::AbstractRasterBand)
 
-Fetch default Raster Attribute Table.
+A RAT will be returned if there is a default one associated with the band,
+otherwise NULL is returned. The returned RAT is owned by the band and should not
+be deleted by the application.
 """
-getdefaultRAT(band::AbstractRasterBand)::GDAL.GDALRasterAttributeTableH =
-    GDAL.gdalgetdefaultrat(band.ptr)
+getdefaultRAT(band::AbstractRasterBand)::RasterAttrTable =
+    RasterAttrTable(GDAL.gdalgetdefaultrat(band.ptr))
 
 """
     setdefaultRAT!(band::AbstractRasterBand, rat::RasterAttrTable)

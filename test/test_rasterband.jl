@@ -121,6 +121,24 @@ import ArchGDAL; const AG = ArchGDAL
                     AG.getoverview(destband, 2)
                 ])
             end
+
+            AG.createRAT() do rat
+                AG.setdefaultRAT!(destband, rat)
+                @test AG.getdefaultRAT(destband).ptr != rat.ptr
+            end
+            @test AG.getdefaultRAT(destband).ptr != GDAL.GDALRasterAttributeTableH(C_NULL)
+
+            AG.getcolortable(destband) do ct
+                @test ct.ptr == GDAL.GDALColorTableH(C_NULL)
+            end
+            AG.createcolortable(AG.GPI_RGB) do ct
+                @test ct.ptr != GDAL.GDALColorTableH(C_NULL)
+                AG.setcolortable!(destband, ct)
+            end
+            AG.clearcolortable!(destband)
+            AG.getcolortable(destband) do ct
+                @test ct.ptr == GDAL.GDALColorTableH(C_NULL)
+            end
         end
     end
 end
