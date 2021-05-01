@@ -98,3 +98,9 @@ function imread(dataset::AbstractDataset, indices::Vector{<:Integer})
 end
 
 imread(dataset::AbstractDataset) = imread(dataset, collect(1:nraster(dataset)))
+
+function imread(filename::String)
+    return read(filename) do dataset
+        imread(dataset)
+    end
+end
