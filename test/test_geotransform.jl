@@ -23,8 +23,8 @@ import ArchGDAL; const AG = ArchGDAL
 
     gt3 = AG.composegeotransform(gt1, gt2)
     @test gt3 ≈ [
-    	0.0, 1.0, 0.0,
-    	0.0, 0.0, 1.0,
+        0.0, 1.0, 0.0,
+        0.0, 0.0, 1.0,
     ]
 
     for (pixel, line) in ((0.0, 0.0), (3.0, 2.0), (15.5, 9.9))
