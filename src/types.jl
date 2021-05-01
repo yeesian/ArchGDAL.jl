@@ -147,19 +147,16 @@ mutable struct IFeatureDefnView <: AbstractFeatureDefn
     end
 end
 
-mutable struct RasterBand{T} <: AbstractRasterBand{T}
-    ptr::GDAL.GDALRasterBandH
-end
-
 "Fetch the pixel data type for this band."
 pixeltype(ptr::GDAL.GDALRasterBandH)::DataType =
     convert(GDALDataType, GDAL.gdalgetrasterdatatype(ptr))
 
-function RasterBand(
-        ptr::GDAL.GDALRasterBandH
-    )::RasterBand{pixeltype(ptr)}
-    return RasterBand{pixeltype(ptr)}(ptr)
+mutable struct RasterBand{T} <: AbstractRasterBand{T}
+    ptr::GDAL.GDALRasterBandH
 end
+
+RasterBand(ptr::GDAL.GDALRasterBandH)::RasterBand{pixeltype(ptr)} =
+    RasterBand{pixeltype(ptr)}(ptr)
 
 mutable struct IRasterBand{T} <: AbstractRasterBand{T}
     ptr::GDAL.GDALRasterBandH
@@ -168,7 +165,7 @@ mutable struct IRasterBand{T} <: AbstractRasterBand{T}
     function IRasterBand{T}(
             ptr::GDAL.GDALRasterBandH = C_NULL;
             ownedby::AbstractDataset = Dataset()
-        ) where T
+        )::IRasterBand{T} where T
         rasterband = new(ptr, ownedby)
         finalizer(destroy, rasterband)
         return rasterband
@@ -232,6 +229,12 @@ eval(@convert(GDALDataType::GDAL.GDALDataType,
     GDT_CFloat32::GDAL.GDT_CFloat32,
     GDT_CFloat64::GDAL.GDT_CFloat64,
     GDT_TypeCount::GDAL.GDT_TypeCount,
+))
+
+eval(@convert(GDALDataType::ImageCore.Normed,
+    GDT_Byte::ImageCore.N0f8,
+    GDT_UInt16::ImageCore.N0f16,
+    GDT_UInt32::ImageCore.N0f32,
 ))
 
 eval(@convert(GDALDataType::DataType,

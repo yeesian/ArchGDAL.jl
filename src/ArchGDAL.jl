@@ -5,6 +5,8 @@ module ArchGDAL
     using GeoFormatTypes: GeoFormatTypes
     using GeoInterface: GeoInterface
     using Tables: Tables
+    using ImageCore: ImageCore
+    using ColorTypes: ColorTypes
     
     const GFT = GeoFormatTypes
 
@@ -20,6 +22,7 @@ module ArchGDAL
     include("raster/array.jl")
     include("raster/rasterattributetable.jl")
     include("raster/colortable.jl")
+    include("raster/images.jl")
     include("ogr/geometry.jl")
     include("ogr/feature.jl")
     include("ogr/featurelayer.jl")

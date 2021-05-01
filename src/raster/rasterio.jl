@@ -1,12 +1,12 @@
 
 """
-    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3},
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Any, 3},
         bands; <keyword arguments>)
-    rasterio!(dataset::AbstractDataset, buffer::Array{<:Real, 3}, bands, rows,
+    rasterio!(dataset::AbstractDataset, buffer::Array{<:Any, 3}, bands, rows,
         cols; <keyword arguments>)
-    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real};
+    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Any};
         <keyword arguments>)
-    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Real}, rows,
+    rasterio!(rasterband::AbstractRasterBand, buffer::Matrix{<:Any}, rows,
         cols; <keyword arguments>)
 
 
@@ -15,7 +15,7 @@ Read/write a region of image data from multiple bands.
 This method allows reading a region of one or more `RasterBand`s from this
 dataset into a buffer, or writing data from a buffer into a region of the
 `RasterBand`s. It automatically takes care of data type translation if the
-element type (`<:Real`) of the buffer is different than that of the
+element type (`<:Any`) of the buffer is different than that of the
 `RasterBand`. The method also takes care of image decimation / replication
 if the buffer size (`xsz × ysz`) is different than the size of the
 region being accessed (`xsize × ysize`).
@@ -73,7 +73,7 @@ function rasterio!(
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
         bandspace::Integer  = 0,
-    )::T where {T <: Array{<:Real, 3}}
+    )::T where {T <: Array{<:Any, 3}}
     rasterio!(dataset, buffer, bands, 0, 0, size(buffer, 1), size(buffer, 2),
         access, pxspace, linespace, bandspace)
     return buffer
@@ -135,7 +135,7 @@ function rasterio!(
         access::GDALRWFlag  = GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     rasterio!(rasterband, buffer, 0, 0, width(rasterband), height(rasterband),
         access, pxspace, linespace)
     return buffer
@@ -149,7 +149,7 @@ function rasterio!(
         access::GDALRWFlag  = GF_Read,
         pxspace::Integer    = 0,
         linespace::Integer  = 0,
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     xsize = length(cols); xsize < 1 && error("invalid window width")
     ysize = length(rows); ysize < 1 && error("invalid window height")
     rasterio!(rasterband, buffer, cols[1] - 1, rows[1] - 1, xsize, ysize,
@@ -187,7 +187,7 @@ end
 function read!(
         rb::AbstractRasterBand,
         buffer::T
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     rasterio!(rb, buffer, GF_Read)
     return buffer
 end
@@ -199,7 +199,7 @@ function read!(
         yoffset::Integer,
         xsize::Integer,
         ysize::Integer
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize)
     return buffer
 end
@@ -209,7 +209,7 @@ function read!(
         buffer::T,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     rasterio!(rb, buffer, rows, cols)
     return buffer
 end
@@ -246,7 +246,7 @@ function write!(
         yoffset::Integer,
         xsize::Integer,
         ysize::Integer
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     rasterio!(rb, buffer, xoffset, yoffset, xsize, ysize, GF_Write)
     return buffer
 end
@@ -256,7 +256,7 @@ function write!(
         buffer::T,
         rows::UnitRange{<:Integer} = 1:height(rb),
         cols::UnitRange{<:Integer} = 1:width(rb),
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     rasterio!(rb, buffer, rows, cols, GF_Write)
     return buffer
 end
@@ -265,7 +265,7 @@ function read!(
         dataset::AbstractDataset,
         buffer::T,
         i::Integer
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     read!(getband(dataset, i), buffer)
     return buffer
 end
@@ -274,7 +274,7 @@ function read!(
         dataset::AbstractDataset,
         buffer::T,
         indices
-    )::T where {T <: Array{<:Real, 3}}
+    )::T where {T <: Array{<:Any, 3}}
     rasterio!(dataset, buffer, indices, GF_Read)
     return buffer
 end
@@ -282,7 +282,7 @@ end
 function read!(
         dataset::AbstractDataset,
         buffer::T
-    )::T where {T <: Array{<:Real, 3}}
+    )::T where {T <: Array{<:Any, 3}}
     nband = nraster(dataset)
     @assert size(buffer, 3) == nband
     rasterio!(dataset, buffer, collect(Cint, 1:nband), GF_Read)
@@ -297,7 +297,7 @@ function read!(
         yoffset::Integer,
         xsize::Integer,
         ysize::Integer
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     read!(getband(dataset, i), buffer, xoffset, yoffset, xsize, ysize)
     return buffer
 end
@@ -310,7 +310,7 @@ function read!(
         yoffset::Integer,
         xsize::Integer,
         ysize::Integer
-    )::T where {T <: Array{<:Real, 3}}
+    )::T where {T <: Array{<:Any, 3}}
     rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize)
     return buffer
 end
@@ -321,7 +321,7 @@ function read!(
         i::Integer,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
-    )::T where {T <: Matrix{<:Real}}
+    )::T where {T <: Matrix{<:Any}}
     read!(getband(dataset, i), buffer, rows, cols)
     return buffer
 end
@@ -332,7 +332,7 @@ function read!(
         indices,
         rows::UnitRange{<:Integer},
         cols::UnitRange{<:Integer}
-    )::T where {T <: Array{<:Real, 3}}
+    )::T where {T <: Array{<:Any, 3}}
     rasterio!(dataset, buffer, indices, rows, cols)
     return buffer
 end
@@ -408,7 +408,7 @@ end
 
 function write!(
         dataset::T,
-        buffer::Matrix{<:Real},
+        buffer::Matrix{<:Any},
         i::Integer,
         xoffset::Integer,
         yoffset::Integer,
@@ -421,7 +421,7 @@ end
 
 function write!(
         dataset::T,
-        buffer::Array{<:Real, 3},
+        buffer::Array{<:Any, 3},
         indices,
         xoffset::Integer,
         yoffset::Integer,
@@ -435,7 +435,7 @@ end
 
 function write!(
         dataset::T,
-        buffer::Matrix{<:Real},
+        buffer::Matrix{<:Any},
         i::Integer,
         rows::UnitRange{<:Integer} = 1:height(getband(dataset, i)),
         cols::UnitRange{<:Integer} = 1:width(getband(dataset, i)),
@@ -446,7 +446,7 @@ end
 
 function write!(
         dataset::T,
-        buffer::Array{<:Real, 3},
+        buffer::Array{<:Any, 3},
         indices,
         rows::UnitRange{<:Integer} = 1:height(dataset),
         cols::UnitRange{<:Integer} = 1:width(dataset),
