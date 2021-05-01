@@ -273,6 +273,7 @@ end
     @test AG.getgeomtype(AG.getgeom(geom3, 1)) == AG.wkbPolygon25D
     @test AG.getgeomtype(AG.getgeom(geom3, 2)) == AG.wkbPolygon25D
     @test sprint(print, AG.getgeom(geom3, 3)) == "NULL Geometry"
+    @test sprint(print, AG.getgeom(AG.IGeometry(), 3)) == "NULL Geometry"
     AG.getgeom(geom3, 0) do geom4
         @test AG.getgeomtype(geom4) == AG.wkbPoint25D
     end
@@ -285,9 +286,19 @@ end
     AG.getgeom(geom3, 3) do geom4
         @test sprint(print, geom4) == "NULL Geometry"
     end
+    AG.getgeom(AG.IGeometry(), 0) do geom
+        @test sprint(print, geom) == "NULL Geometry"
+    end
 end
 
 @testset "Spatial Reference Systems" begin
+    AG.createpoint(100,70,0) do geom
+        @test sprint(print, AG.getspatialref(geom)) == "NULL Spatial Reference System"
+        AG.getspatialref(geom) do spatialref
+            @test sprint(print, spatialref) == "NULL Spatial Reference System"
+        end
+    end
+
     AG.read("data/point.geojson") do dataset
         layer = AG.getlayer(dataset, 0)
         AG.nextfeature(layer) do feature
