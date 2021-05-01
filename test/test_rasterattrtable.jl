@@ -90,8 +90,11 @@ end
     AG.createcolortable(AG.GPI_RGB) do ct
         @test sprint(print, ct) == "ColorTable[GPI_RGB]"
         @test AG.paletteinterp(ct) == AG.GPI_RGB
-        AG.clone(AG.ColorTable(C_NULL)) do ct
-            @test sprint(print, ct) == "NULL ColorTable"
+        AG.clone(ct) do ct1
+            @test sprint(print, ct1) == "ColorTable[GPI_RGB]"
+        end
+        AG.clone(AG.ColorTable(C_NULL)) do ct2
+            @test sprint(print, ct2) == "NULL ColorTable"
         end
         AG.createRAT(ct) do rat
             @test sprint(print, AG.toColorTable(rat, 0)) == "ColorTable[GPI_RGB]"
