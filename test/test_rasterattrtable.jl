@@ -93,6 +93,9 @@ end
         AG.clone(AG.ColorTable(C_NULL)) do ct
             @test sprint(print, ct) == "NULL ColorTable"
         end
+        AG.createRAT(ct) do rat
+            @test sprint(print, AG.toColorTable(rat, 0)) == "ColorTable[GPI_RGB]"
+        end
     end
 end
 
