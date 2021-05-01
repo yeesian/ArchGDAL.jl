@@ -198,6 +198,32 @@ end
                 end
             end
         end
+
+        @test startswith(AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT="NO"))), "CURVEPOLYGON (CIRCULARSTRING (")
+        AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT="NO") do lgeom
+            AG.curvegeom(lgeom) do clgeom
+                @test startswith(AG.toWKT(clgeom), "CURVEPOLYGON (CIRCULARSTRING (")
+            end
+            @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
+            AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+                AG.polygonize(mlsgeom) do plgeom
+                    @test AG.ngeom(plgeom) == 2
+                end
+            end
+        end
+
+        @test startswith(AG.toWKT(AG.curvegeom(AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5))), "CURVEPOLYGON (CIRCULARSTRING (")
+        AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5) do lgeom
+            AG.curvegeom(lgeom) do clgeom
+                @test startswith(AG.toWKT(clgeom), "CURVEPOLYGON (CIRCULARSTRING (")
+            end
+            @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
+            AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+                AG.polygonize(mlsgeom) do plgeom
+                    @test AG.ngeom(plgeom) == 2
+                end
+            end
+        end
     end
 end
 

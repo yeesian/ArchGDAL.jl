@@ -1287,15 +1287,34 @@ MULTICURVE or MULTISURFACE in it, by approximating curve geometries.
 * `options`: options as a null-terminated list of strings or NULL.
     See OGRGeometryFactory::curveToLineString() for valid options.
 """
-lineargeom(geom::AbstractGeometry, stepsize::Real = 0)::IGeometry =
-    IGeometry(GDAL.ogr_g_getlineargeometry(geom.ptr, stepsize, C_NULL))
-
-unsafe_lineargeom(geom::AbstractGeometry, stepsize::Real = 0)::Geometry =
-    Geometry(GDAL.ogr_g_getlineargeometry(geom.ptr, stepsize, C_NULL))
 
 function lineargeom(
         geom::AbstractGeometry,
-        options::Vector,
+        stepsize::Real = 0;
+        kwargs...
+    )::IGeometry
+    return lineargeom(
+        geom,
+        String["$k=$v" for (k, v) in kwargs],
+        stepsize
+    )
+end
+
+function unsafe_lineargeom(
+        geom::AbstractGeometry,
+        stepsize::Real = 0;
+        kwargs...
+    )::Geometry
+    return unsafe_lineargeom(
+        geom,
+        String["$k=$v" for (k, v) in kwargs],
+        stepsize
+    )
+end
+
+function lineargeom(
+        geom::AbstractGeometry,
+        options::Vector{String},
         stepsize::Real = 0
     )::IGeometry
     return IGeometry(GDAL.ogr_g_getlineargeometry(geom.ptr, stepsize, options))
@@ -1303,7 +1322,7 @@ end
 
 function unsafe_lineargeom(
         geom::AbstractGeometry,
-        options::Vector,
+        options::Vector{String},
         stepsize::Real = 0
     )::Geometry
     return Geometry(GDAL.ogr_g_getlineargeometry(geom.ptr, stepsize, options))
