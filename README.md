@@ -6,7 +6,7 @@
 
 [GDAL](http://gdal.org/) is a translator library for raster and vector geospatial data formats that is released under an [X/MIT](https://trac.osgeo.org/gdal/wiki/FAQGeneral#WhatlicensedoesGDALOGRuse) license by the [Open Source Geospatial Foundation](http://www.osgeo.org/). As a library, it presents an abstract data model to drivers for various [raster](http://www.gdal.org/formats_list.html) and [vector](http://www.gdal.org/ogr_formats.html) formats.
 
-This package aims to be a complete solution for working with GDAL in Julia, similar in scope to [the SWIG bindings for Python](https://pypi.python.org/pypi/GDAL/). It builds on top of [GDAL.jl](https://github.com/JuliaGeo/GDAL.jl), and provides a high level API for GDAL, espousing the following principles.
+This package aims to be a complete solution for working with GDAL in Julia, similar in scope to [the SWIG bindings for Python](https://pypi.python.org/pypi/GDAL/) and the user-friendliness of [Fiona](https://github.com/Toblerity/Fiona) and [Rasterio](https://github.com/mapbox/rasterio). It builds on top of [GDAL.jl](https://github.com/JuliaGeo/GDAL.jl), and provides a high level API for GDAL, espousing the following principles.
 
 ## Principles (The Arch Way)
 (adapted from: https://wiki.archlinux.org/index.php/Arch_Linux#Principles)
