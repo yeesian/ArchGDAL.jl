@@ -14,7 +14,7 @@ function Base.show(io::IO, dataset::AbstractDataset)::IO
     end
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
     println(io, "File(s): ")
-    for (i,filename) in enumerate(filelist(dataset))
+    for (i, filename) in enumerate(filelist(dataset))
         println(io, "  $filename")
         if i > 5
             println(io, "  ...")
@@ -83,11 +83,10 @@ function Base.show(
         ::MIME"text/plain",
         rasterband::AbstractRasterBand
     )::IO
+    summarize(io, rasterband)
     if rasterband.ptr == C_NULL
-        print(io, "NULL RasterBand")
         return io
     end
-    summarize(io, rasterband)
     (x,y) = blocksize(rasterband)
     sc = getscale(rasterband)
     ofs = getoffset(rasterband)
