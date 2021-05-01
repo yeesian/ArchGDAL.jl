@@ -218,7 +218,7 @@ mutable struct ColorTable
     ptr::GDAL.GDALColorTableH
 end
 
-eval(@gdalenum(GDALDataType::GDAL.GDALDataType,
+eval(@convert(GDALDataType::GDAL.GDALDataType,
     GDT_Unknown::GDAL.GDT_Unknown,
     GDT_Byte::GDAL.GDT_Byte,
     GDT_UInt16::GDAL.GDT_UInt16,
@@ -234,7 +234,7 @@ eval(@gdalenum(GDALDataType::GDAL.GDALDataType,
     GDT_TypeCount::GDAL.GDT_TypeCount,
 ))
 
-eval(@gdalenum(GDALDataType::DataType,
+eval(@convert(GDALDataType::DataType,
     GDT_Unknown::Any,
     GDT_Byte::UInt8,
     GDT_UInt16::UInt16,
@@ -245,7 +245,7 @@ eval(@gdalenum(GDALDataType::DataType,
     GDT_Float64::Float64,
 ))
 
-eval(@gdalenum(OGRFieldType::GDAL.OGRFieldType,
+eval(@convert(OGRFieldType::GDAL.OGRFieldType,
     OFTInteger::GDAL.OFTInteger,
     OFTIntegerList::GDAL.OFTIntegerList,
     OFTReal::GDAL.OFTReal,
@@ -262,7 +262,7 @@ eval(@gdalenum(OGRFieldType::GDAL.OGRFieldType,
     OFTInteger64List::GDAL.OFTInteger64List,
 ))
 
-eval(@gdalenum(OGRFieldType::DataType,
+eval(@convert(OGRFieldType::DataType,
     OFTInteger::Int32,
     OFTIntegerList::Vector{Int32},
     OFTReal::Float64,
@@ -279,7 +279,7 @@ eval(@gdalenum(OGRFieldType::DataType,
     OFTInteger64List::Vector{Int64},
 ))
 
-eval(@gdalenum(OGRFieldSubType::GDAL.OGRFieldSubType,
+eval(@convert(OGRFieldSubType::GDAL.OGRFieldSubType,
     OFSTNone::GDAL.OFSTNone,
     OFSTBoolean::GDAL.OFSTBoolean,
     OFSTInt16::GDAL.OFSTInt16,
@@ -287,7 +287,7 @@ eval(@gdalenum(OGRFieldSubType::GDAL.OGRFieldSubType,
     OFSTJSON::GDAL.OFSTJSON,
 ))
 
-eval(@gdalenum(OGRFieldSubType::DataType,
+eval(@convert(OGRFieldSubType::DataType,
     OFSTNone::Nothing,
     OFSTBoolean::Bool,
     OFSTInt16::Int16,
@@ -295,19 +295,19 @@ eval(@gdalenum(OGRFieldSubType::DataType,
     OFSTJSON::String,
 ))
 
-eval(@gdalenum(OGRJustification::GDAL.OGRJustification,
+eval(@convert(OGRJustification::GDAL.OGRJustification,
     OJUndefined::GDAL.OJUndefined,
     OJLeft::GDAL.OJLeft,
     OJRight::GDAL.OJRight,
 ))
 
-eval(@gdalenum(GDALRATFieldType::GDAL.GDALRATFieldType,
+eval(@convert(GDALRATFieldType::GDAL.GDALRATFieldType,
     GFT_Integer::GDAL.GFT_Integer,
     GFT_Real::GDAL.GFT_Real,
     GFT_String::GDAL.GFT_String,
 ))
 
-eval(@gdalenum(GDALRATFieldUsage::GDAL.GDALRATFieldUsage,
+eval(@convert(GDALRATFieldUsage::GDAL.GDALRATFieldUsage,
     GFU_Generic::GDAL.GFU_Generic,
     GFU_PixelCount::GDAL.GFU_PixelCount,
     GFU_Name::GDAL.GFU_Name,
@@ -329,24 +329,24 @@ eval(@gdalenum(GDALRATFieldUsage::GDAL.GDALRATFieldUsage,
     GFU_MaxCount::GDAL.GFU_MaxCount,
 ))
 
-eval(@gdalenum(GDALAccess::GDAL.GDALAccess,
+eval(@convert(GDALAccess::GDAL.GDALAccess,
     GA_ReadOnly::GDAL.GA_ReadOnly,
     GA_Update::GDAL.GA_Update,
 ))
 
-eval(@gdalenum(GDALRWFlag::GDAL.GDALRWFlag,
+eval(@convert(GDALRWFlag::GDAL.GDALRWFlag,
     GF_Read::GDAL.GF_Read,
     GF_Write::GDAL.GF_Write,
 ))
 
-eval(@gdalenum(GDALPaletteInterp::GDAL.GDALPaletteInterp,
+eval(@convert(GDALPaletteInterp::GDAL.GDALPaletteInterp,
     GPI_Gray::GDAL.GPI_Gray,
     GPI_RGB::GDAL.GPI_RGB,
     GPI_CMYK::GDAL.GPI_CMYK,
     GPI_HLS::GDAL.GPI_HLS,
 ))
 
-eval(@gdalenum(GDALColorInterp::GDAL.GDALColorInterp,
+eval(@convert(GDALColorInterp::GDAL.GDALColorInterp,
     GCI_Undefined::GDAL.GCI_Undefined,
     GCI_GrayIndex::GDAL.GCI_GrayIndex,
     GCI_PaletteIndex::GDAL.GCI_PaletteIndex,
@@ -366,7 +366,7 @@ eval(@gdalenum(GDALColorInterp::GDAL.GDALColorInterp,
     GCI_YCbCr_CrBand::GDAL.GCI_YCbCr_CrBand,
 ))
 
-eval(@gdalenum(GDALAsyncStatusType::GDAL.GDALAsyncStatusType,
+eval(@convert(GDALAsyncStatusType::GDAL.GDALAsyncStatusType,
     GARIO_PENDING::GDAL.GARIO_PENDING,
     GARIO_UPDATE::GDAL.GARIO_UPDATE,
     GARIO_ERROR::GDAL.GARIO_ERROR,
@@ -374,7 +374,7 @@ eval(@gdalenum(GDALAsyncStatusType::GDAL.GDALAsyncStatusType,
     GARIO_TypeCount::GDAL.GARIO_TypeCount,
 ))
 
-eval(@gdalenum(OGRSTClassId::GDAL.OGRSTClassId,
+eval(@convert(OGRSTClassId::GDAL.OGRSTClassId,
     OGRSTCNone::GDAL.OGRSTCNone,
     OGRSTCPen::GDAL.OGRSTCPen,
     OGRSTCBrush::GDAL.OGRSTCBrush,
@@ -383,7 +383,7 @@ eval(@gdalenum(OGRSTClassId::GDAL.OGRSTClassId,
     OGRSTCVector::GDAL.OGRSTCVector,
 ))
 
-eval(@gdalenum(OGRSTUnitId::GDAL.OGRSTUnitId,
+eval(@convert(OGRSTUnitId::GDAL.OGRSTUnitId,
     OGRSTUGround::GDAL.OGRSTUGround,
     OGRSTUPixel::GDAL.OGRSTUPixel,
     OGRSTUPoints::GDAL.OGRSTUPoints,
@@ -392,7 +392,7 @@ eval(@gdalenum(OGRSTUnitId::GDAL.OGRSTUnitId,
     OGRSTUInches::GDAL.OGRSTUInches,
 ))
 
-eval(@gdalenum(OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
+eval(@convert(OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
     wkbUnknown::GDAL.wkbUnknown,
     wkbPoint::GDAL.wkbPoint,
     wkbLineString::GDAL.wkbLineString,
@@ -473,7 +473,7 @@ function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType
     return GDAL.OGRwkbGeometryType(wkbGeomType)
 end
 
-eval(@gdalenum(OGRwkbByteOrder::GDAL.OGRwkbByteOrder,
+eval(@convert(OGRwkbByteOrder::GDAL.OGRwkbByteOrder,
     wkbXDR::GDAL.wkbXDR,
     wkbNDR::GDAL.wkbNDR,
 ))

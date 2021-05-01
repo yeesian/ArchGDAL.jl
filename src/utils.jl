@@ -1,4 +1,26 @@
-macro gdalenum(args...)
+"""
+
+    eval(@convert(GDALRWFlag::GDAL.GDALRWFlag,
+        GF_Read::GDAL.GF_Read,
+        GF_Write::GDAL.GF_Write,
+    ))
+
+does the equivalent of 
+
+    Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
+        Dict{GDALRWFlag, GDAL.GDALRWFlag}(
+            GF_Read => GDAL.GF_Read,
+            GF_Write => GDAL.GF_Write
+        )[ft]
+
+    Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
+        Dict{GDAL.GDALRWFlag, GDALRWFlag}(
+            GDAL.GF_Read => GF_Read,
+            GDAL.GF_Write => GF_Write
+        )[ft]
+
+"""
+macro convert(args...)
     @assert length(args) > 0
     @assert args[1].head == :(::)
     type1 = esc(args[1].args[1])
