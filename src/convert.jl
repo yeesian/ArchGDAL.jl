@@ -17,7 +17,7 @@ To convert a `Mixed` format to crs, `CRS` must be explicitly passed for `mode`.
 
 function Base.convert(
         target::Type{<:GFT.GeoFormat},
-        mode::Union{GFT.FormatMode,Type{GFT.FormatMode}}, 
+        mode::Union{GFT.FormatMode, Type{GFT.FormatMode}}, 
         source::GFT.GeoFormat
     )
     return convert(target, convert(AbstractGeometry, source))
@@ -71,9 +71,13 @@ Base.convert(::Type{<:GFT.KML}, source::AbstractGeometry) =
 Convert `GeoFormat` CRS data to another `GeoFormat` CRS type.
 """
 
-Base.convert(target::Type{<:GFT.GeoFormat}, mode::Union{GFT.CRS,Type{GFT.CRS}}, 
-             source::GFT.GeoFormat) =
-    unsafe_convertcrs(target, importCRS(source))
+function Base.convert(
+        target::Type{<:GFT.GeoFormat},
+        mode::Union{GFT.CRS, Type{GFT.CRS}}, 
+        source::GFT.GeoFormat
+    )
+    return unsafe_convertcrs(target, importCRS(source))
+end
 
 unsafe_convertcrs(::Type{<:GFT.CoordSys}, crsref) = 
     GFT.CoordSys(toMICoordSys(crsref))
