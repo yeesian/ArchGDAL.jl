@@ -45,6 +45,8 @@ end
     AG.getlayer(dataset1, 0) do layer1
         @test AG.nfeature(layer1) == 4
     end
+    # the following test is to cover an example of `macro cplerr(code, message)`
+    @test_throws ErrorException AG.getgeotransform(dataset1)
 
     dataset2 = AG.create(AG.getdriver("Memory"))
     @test AG.nlayer(dataset2) == 0
@@ -68,9 +70,11 @@ end
 
     AG.copy(layer3b, dataset = dataset2)
     @test AG.nlayer(dataset2) == 2
-    @test_throws ErrorException AG.deletelayer!(dataset2, -1)
     AG.deletelayer!(dataset2, 1)
     @test AG.nlayer(dataset2) == 1
+
+    # the following test is to cover an example of `macro ogrerr(code, message)`
+    @test_throws ErrorException AG.deletelayer!(dataset2, -1)
 
     dataset4 = AG.create(tempname(), driver = AG.getdriver("KML"))
     @test AG.nlayer(dataset4) == 0
