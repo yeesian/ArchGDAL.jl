@@ -374,25 +374,29 @@ toKML(geom::AbstractGeometry, altitudemode = C_NULL)::String =
 # ↑ * `altitudemode`: value to write in altitudeMode element, or NULL.
 
 """
-    toJSON(geom::AbstractGeometry)
+    toJSON(geom::AbstractGeometry; kwargs...)
 
 Convert a geometry into GeoJSON format.
-"""
-toJSON(geom::AbstractGeometry)::String = GDAL.ogr_g_exporttojson(geom.ptr)
 
-"""
-    toJSON(geom::AbstractGeometry, options)
-
-Convert a geometry into GeoJSON format.
+ * The following options are supported :
+ * `COORDINATE_PRECISION=number`: maximum number of figures after decimal
+    separator to write in coordinates.
+ * `SIGNIFICANT_FIGURES=number`: maximum number of significant figures.
+ *
+ * If COORDINATE_PRECISION is defined, SIGNIFICANT_FIGURES will be ignored if
+ * specified.
+ * When none are defined, the default is COORDINATE_PRECISION=15.
 
 ### Parameters
 * `geom`: handle to the geometry.
-* `options`: a list of options.
 
 ### Returns
 A GeoJSON fragment or NULL in case of error.
 """
-toJSON(geom::AbstractGeometry, options)::String =
+toJSON(geom::AbstractGeometry; kwargs...)::String =
+    GDAL.ogr_g_exporttojsonex(geom.ptr, String["$k=$v" for (k,v) in kwargs])
+
+toJSON(geom::AbstractGeometry, options::Vector{String})::String =
     GDAL.ogr_g_exporttojsonex(geom.ptr, options)
 
 """
