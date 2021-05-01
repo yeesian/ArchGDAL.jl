@@ -13,21 +13,6 @@ Fetch a driver based on the short name (such as `GTiff`).
 getdriver(name::AbstractString)::Driver = Driver(GDAL.gdalgetdriverbyname(name))
 
 """
-    destroy(drv::Driver)
-
-Destroy a `Driver`.
-
-This is roughly equivalent to deleting the driver, but is guaranteed to take
-place in the GDAL heap. It is important this that function not be called on a
-driver that is registered with the `GDALDriverManager`.
-"""
-function destroy(drv::Driver)::Nothing
-    GDAL.gdaldestroydriver(drv.ptr)
-    drv.ptr = C_NULL
-    return nothing
-end
-
-"""
     register(drv::Driver)
 
 Register a driver for use.
