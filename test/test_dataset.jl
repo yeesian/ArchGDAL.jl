@@ -68,6 +68,7 @@ end
 
     AG.copy(layer3b, dataset = dataset2)
     @test AG.nlayer(dataset2) == 2
+    @test_throws ErrorException AG.deletelayer!(dataset2, -1)
     AG.deletelayer!(dataset2, 1)
     @test AG.nlayer(dataset2) == 1
 
