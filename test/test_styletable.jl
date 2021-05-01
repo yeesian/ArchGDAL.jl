@@ -69,5 +69,4 @@ import ArchGDAL; const AG = ArchGDAL
     end
 end
 
-# Untested: initialize!(stylemanager::StyleManager, feature::Feature)
 end

@@ -27,22 +27,6 @@ function destroy(sm::StyleManager)::Nothing
     return nothing
 end
 
-
-"""
-    initialize!(stylemanager::StyleManager, feature::Feature)
-
-Initialize style manager from the style string of a feature.
-
-### Parameters
-* `stylemanager`: handle to the style manager.
-* `feature`: handle to the new feature from which to read the style.
-
-### Returns
-the style string read from the feature, or NULL in case of error.
-"""
-initialize!(stylemanager::StyleManager, feature::Feature)::String =
-    GDAL.ogr_sm_initfromfeature(stylemanager.ptr, feature.ptr)
-
 """
     initialize!(stylemanager::StyleManager, stylestring = C_NULL)
 
@@ -54,8 +38,11 @@ Initialize style manager from the style string.
 ### Returns
 `true` on success, `false` on error.
 """
-initialize!(stylemanager::StyleManager, stylestring = C_NULL)::Bool =
+initialize!(stylemanager::StyleManager, stylestring::String)::Bool =
     Bool(GDAL.ogr_sm_initstylestring(stylemanager.ptr, stylestring))
+
+initialize!(stylemanager::StyleManager)::Bool =
+    Bool(GDAL.ogr_sm_initstylestring(stylemanager.ptr, C_NULL))
 
 """
     npart(stylemanager::StyleManager)
