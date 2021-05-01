@@ -66,7 +66,9 @@ AG.read("data/point.geojson") do dataset
         @test AG.getstylestring(f) == "NewName"
 
         AG.createstyletable() do st
+            AG.addstyle!(st, "name", "style")
             AG.setstyletable!(f, st)
+            @test AG.findstylestring(AG.getstyletable(f), "name") == "style"
         end
 
         AG.setnativedata!(f, "nativedata1")
@@ -133,6 +135,14 @@ end
             AG.setfield!(feature, 5, ["1", "2.0"])
             AG.setfield!(feature, 6, UInt8[1,2,3,4])
             AG.setfield!(feature, 7, Dates.DateTime(2016,9,25,21,17,0))
+            @test sprint(print, AG.getgeom(feature)) == "NULL Geometry"
+            AG.getgeom(feature) do geom
+                @test sprint(print, geom) == "NULL Geometry"
+            end
+            @test sprint(print, AG.getgeom(feature, 0)) == "NULL Geometry"
+            AG.getgeom(feature, 0) do geom
+                @test sprint(print, geom) == "NULL Geometry"
+            end
 
             AG.addfeature(layer) do newfeature
                 AG.setfrom!(newfeature, feature)
