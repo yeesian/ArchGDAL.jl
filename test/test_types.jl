@@ -21,6 +21,7 @@ import ImageCore
 
         @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
         @test_throws ErrorException Base.convert(AG.GDALDataType, Int64)
+        @test_throws ErrorException Base.convert(DataType, AG.GDT_TypeCount)
         @test_throws MethodError Base.convert(ImageCore.Normed, AG.GDT_Float32)
     end
 
