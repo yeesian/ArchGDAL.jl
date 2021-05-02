@@ -318,6 +318,11 @@ end
 end
 
 @testset "Spatial Reference Systems" begin
+    @test sprint(print, AG.getspatialref(AG.IGeometry())) == "NULL Spatial Reference System"
+    AG.getspatialref(AG.IGeometry()) do spatialref
+        @test sprint(print, spatialref) == "NULL Spatial Reference System"
+    end
+
     AG.createpoint(100,70,0) do geom
         @test sprint(print, AG.getspatialref(geom)) == "NULL Spatial Reference System"
         AG.getspatialref(geom) do spatialref
