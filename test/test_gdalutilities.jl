@@ -49,6 +49,17 @@ AG.read("data/utmsmall.tif") do ds_small
                                                 0  183  181  177  0;
                                                 0    0    0    0  0]
             end
+            AG.gdaldem(
+                    ds_tiny,
+                    "color-relief",
+                    colorfile = "data/color_relief.txt"
+                ) do ds_dempr
+                @test AG.read(ds_dempr, 1) == [ 0x80 0x87 0x80 0x7b 0x7a;
+                                                0x80 0x86 0x83 0x7e 0x7d;
+                                                0x85 0x87 0x88 0x86 0x82;
+                                                0x89 0x8c 0x8c 0x87 0x80;
+                                                0x8a 0x8c 0x8c 0x88 0x80]
+            end
         end
 
         @testset "GDAL Near Black" begin
