@@ -33,6 +33,13 @@ AG.create(
             ColorTypes.RGBA{ImageCore.N0f8}
     end
 
+    @testset "Test HSL colors" begin
+        AG.setcolorinterp!(AG.getband(dataset, 1), AG.GCI_HueBand)
+        AG.setcolorinterp!(AG.getband(dataset, 2), AG.GCI_SaturationBand)
+        AG.setcolorinterp!(AG.getband(dataset, 3), AG.GCI_LightnessBand)
+        @test_throws ErrorException AG.imread(dataset, 1:3)
+    end
+
     @testset "Test ColorTable colors" begin
         AG.setcolorinterp!(AG.getband(dataset, 1), AG.GCI_PaletteIndex)
         AG.setcolorinterp!(AG.getband(dataset, 2), AG.GCI_PaletteIndex)

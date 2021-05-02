@@ -69,10 +69,6 @@ function imread(dataset::AbstractDataset, indices)
         imread(ColorTypes.RGB, dataset, Tuple(indices[sortperm(gci)]))
     elseif gciorder == [GCI_RedBand, GCI_GreenBand, GCI_BlueBand, GCI_AlphaBand]
         imread(ColorTypes.RGBA, dataset, Tuple(indices[sortperm(gci)]))
-    elseif gciorder == [GCI_HueBand, GCI_SaturationBand, GCI_LightnessBand]
-        imread(ColorTypes.HSL, dataset, Tuple(indices[sortperm(gci)]))
-    elseif gciorder == [GCI_YCbCr_YBand, GCI_YCbCr_CbBand, GCI_YCbCr_CrBand]
-        imread(ColorTypes.YCbCr, dataset, Tuple(indices[sortperm(gci)]))
     else
         error("""
         Unknown GCI: $gciorder. Please file an issue at
