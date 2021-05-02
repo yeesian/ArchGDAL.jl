@@ -102,6 +102,27 @@ end
     @test AG.nfeature(layer5) == 0
     @test AG.nfield(layer5) == 0
     @test AG.ngeom(layer5) == 1
+
+    AG.create(AG.getdriver("Memory")) do dataset6
+        for i in 1:20
+            AG.createlayer(name = "layer$(i - 1)", dataset = dataset6)
+        end
+        @test AG.nlayer(dataset6) == 20
+        @test sprint(print, dataset6) == """
+        GDAL Dataset (Driver: Memory/Memory)
+        File(s): 
+
+        Number of feature layers: 20
+          Layer 0: layer0 (wkbUnknown)
+          Layer 1: layer1 (wkbUnknown)
+          Layer 2: layer2 (wkbUnknown)
+          Layer 3: layer3 (wkbUnknown)
+          Layer 4: layer4 (wkbUnknown)
+          Remaining layers:
+            layer5, layer6, layer7, layer8, layer9, 
+            layer10, layer11, layer12, layer13, layer14, 
+            layer15, layer16, layer17, layer18, layer19, """
+    end
 end
 
 end

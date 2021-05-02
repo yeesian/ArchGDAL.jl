@@ -43,11 +43,11 @@ function Base.show(io::IO, dataset::AbstractDataset)::IO
             println(io, "  Layer $(i - 1): $(getname(layer)) ($layergeomtype)")
         end
         if nlayers > 5
-            print(io, "  Remaining layers: ")
+            print(io, "  Remaining layers:\n    ")
             for i in 6:nlayers
-                print(io, "$(getname(getlayer(dataset, i - 1))) ")
+                print(io, "$(getname(getlayer(dataset, i - 1))), ")
                 # display up to 5 layer names per line
-                if i % 5 == 0 println() end
+                if i % 5 == 0 && i < nlayers print(io, "\n    ") end
             end
         end
     end
