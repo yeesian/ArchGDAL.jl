@@ -158,6 +158,17 @@ end
             @test typeof(AG.copywholeraster!(copy1, ds)) == typeof(ds)
         end
     end
+
+    AG.create(
+            AG.getdriver("MEM"),
+            width = 2,
+            height = 2,
+            nbands = 0,
+            dtype = UInt8,
+        ) do dataset
+        @test_throws ArgumentError AG.RasterDataset(dataset)
+        @test_throws DimensionMismatch AG._common_size(dataset)
+    end
 end
 
 end
