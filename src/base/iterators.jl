@@ -1,7 +1,7 @@
 function Base.iterate(
-        layer::AbstractFeatureLayer,
-        state::Integer = 0
-    )::Union{Nothing, Tuple{Feature, Int64}}
+    layer::AbstractFeatureLayer,
+    state::Integer = 0,
+)::Union{Nothing,Tuple{Feature,Int64}}
     layer.ptr == C_NULL && return nothing
     state == 0 && resetreading!(layer)
     ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
@@ -17,7 +17,7 @@ Base.eltype(layer::AbstractFeatureLayer)::DataType = Feature
 
 Base.length(layer::AbstractFeatureLayer)::Integer = nfeature(layer, true)
 
-struct BlockIterator{T <: Integer}
+struct BlockIterator{T<:Integer}
     rows::T
     cols::T
     ni::T
@@ -27,10 +27,7 @@ struct BlockIterator{T <: Integer}
     ybsize::T
 end
 
-function blocks(
-        ::Type{T},
-        raster::AbstractRasterBand
-    )::BlockIterator{T} where {T <: Integer}
+function blocks(::Type{T}, raster::AbstractRasterBand)::BlockIterator{T} where {T<:Integer}
     (xbsize, ybsize) = blocksize(raster)
     rows = T(height(raster))
     cols = T(width(raster))
@@ -44,9 +41,9 @@ function blocks(raster::AbstractRasterBand)::BlockIterator{Int64}
 end
 
 function Base.iterate(
-        obj::BlockIterator{T},
-        iter::T = 0
-    )::Union{Nothing, Tuple{Tuple{Tuple{T, T}, Tuple{T, T}}, T}} where T
+    obj::BlockIterator{T},
+    iter::T = 0,
+)::Union{Nothing,Tuple{Tuple{Tuple{T,T},Tuple{T,T}},T}} where {T}
     iter == obj.n && return nothing
     j = floor(Int, iter / obj.ni)
     i = iter % obj.ni
@@ -63,75 +60,69 @@ function Base.iterate(
     return (((i, j), (nrows, ncols)), iter + 1)
 end
 
-struct WindowIterator{T <: Integer}
+struct WindowIterator{T<:Integer}
     blockiter::BlockIterator{T}
 end
 Base.size(i::WindowIterator) = (i.blockiter.ni, i.blockiter.nj)
 Base.length(i::WindowIterator) = i.blockiter.n
 
-function Base.IteratorSize(::Type{WindowIterator{T}}) where {T <: Integer}
+function Base.IteratorSize(::Type{WindowIterator{T}}) where {T<:Integer}
     return Base.HasShape{2}()
 end
 
-function Base.IteratorEltype(::Type{WindowIterator{T}}) where {T <: Integer}
+function Base.IteratorEltype(::Type{WindowIterator{T}}) where {T<:Integer}
     return Base.HasEltype()
 end
 
-function Base.eltype(::WindowIterator{T})::DataType where {T <: Integer}
-    return Tuple{UnitRange{T}, UnitRange{T}}
+function Base.eltype(::WindowIterator{T})::DataType where {T<:Integer}
+    return Tuple{UnitRange{T},UnitRange{T}}
 end
 
 function windows(
-        ::Type{T},
-        raster::AbstractRasterBand
-    )::WindowIterator{T} where {T <: Integer}
+    ::Type{T},
+    raster::AbstractRasterBand,
+)::WindowIterator{T} where {T<:Integer}
     return WindowIterator{T}(blocks(T, raster))
 end
 
-windows(raster::AbstractRasterBand)::WindowIterator{Int64} =
-    windows(Int64, raster)
+windows(raster::AbstractRasterBand)::WindowIterator{Int64} = windows(Int64, raster)
 
 function Base.iterate(
-        obj::WindowIterator{T},
-        iter::T = 0
-    )::Union{Nothing, Tuple{NTuple{2, UnitRange{T}}, T}} where T <: Integer
+    obj::WindowIterator{T},
+    iter::T = 0,
+)::Union{Nothing,Tuple{NTuple{2,UnitRange{T}},T}} where {T<:Integer}
     handle = obj.blockiter
     next = Base.iterate(handle, iter)
     next == nothing && return nothing
     (((i, j), (nrows, ncols)), iter) = next
-    return (
-        ((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize),
-        iter
-    )
+    return (((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize), iter)
 end
 
-mutable struct BufferIterator{R <: Real, T <: Integer}
+mutable struct BufferIterator{R<:Real,T<:Integer}
     raster::AbstractRasterBand
     w::WindowIterator{T}
     buffer::Matrix{R}
 end
 
 function bufferwindows(
-        ::Type{T},
-        raster::AbstractRasterBand
-    )::BufferIterator{pixeltype(raster), T} where {T <: Integer}
-    return BufferIterator{pixeltype(raster), T}(
+    ::Type{T},
+    raster::AbstractRasterBand,
+)::BufferIterator{pixeltype(raster),T} where {T<:Integer}
+    return BufferIterator{pixeltype(raster),T}(
         raster,
         windows(T, raster),
-        Matrix{pixeltype(raster)}(undef, blocksize(raster)...)
+        Matrix{pixeltype(raster)}(undef, blocksize(raster)...),
     )
 end
 
-function bufferwindows(
-        raster::AbstractRasterBand
-    )::BufferIterator{pixeltype(raster), Int64}
+function bufferwindows(raster::AbstractRasterBand)::BufferIterator{pixeltype(raster),Int64}
     return bufferwindows(Int64, raster)
 end
 
 function Base.iterate(
-        obj::BufferIterator{R, T},
-        iter::T = 0
-    )::Union{Nothing, Tuple{Matrix{R}, T}} where {R <: Real, T <: Integer}
+    obj::BufferIterator{R,T},
+    iter::T = 0,
+)::Union{Nothing,Tuple{Matrix{R},T}} where {R<:Real,T<:Integer}
     next = Base.iterate(obj.w, iter)
     next == nothing && return nothing
     ((cols, rows), iter) = next

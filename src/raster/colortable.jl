@@ -34,5 +34,4 @@ Fetch palette interpretation.
 ### Returns
 palette interpretation enumeration value, usually `GPI_RGB`.
 """
-paletteinterp(ct::ColorTable)::GDALPaletteInterp =
-    GDAL.gdalgetpaletteinterpretation(ct.ptr)
+paletteinterp(ct::ColorTable)::GDALPaletteInterp = GDAL.gdalgetpaletteinterpretation(ct.ptr)

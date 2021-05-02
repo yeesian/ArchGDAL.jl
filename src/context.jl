@@ -1,8 +1,4 @@
-function environment(
-        f::Function;
-        globalconfig::Vector=[],
-        threadconfig::Vector=[]
-    )
+function environment(f::Function; globalconfig::Vector = [], threadconfig::Vector = [])
     # Save the current settings
     #
     # CPLGetConfigOption() will return the value of the config option, be it
@@ -13,25 +9,27 @@ function environment(
     #     CPLSetThreadLocalConfigOption()
     #
     # (ref https://github.com/mapbox/rasterio/pull/997#issuecomment-287117289)
-    globalsettings = Dict(k => getconfigoption(k) for (k,v) in globalconfig)
-    localsettings = Dict(
-        k => getthreadconfigoption(k) for (k,v) in threadconfig
-    )
-    for (k,v) in threadconfig; setthreadconfigoption(k, v) end
-    for (k,v) in globalconfig; setconfigoption(k, v) end
+    globalsettings = Dict(k => getconfigoption(k) for (k, v) in globalconfig)
+    localsettings = Dict(k => getthreadconfigoption(k) for (k, v) in threadconfig)
+    for (k, v) in threadconfig
+        setthreadconfigoption(k, v)
+    end
+    for (k, v) in globalconfig
+        setconfigoption(k, v)
+    end
 
     return try
         f()
     finally
         # Restore previous settings
-        for (k,v) in globalsettings
+        for (k, v) in globalsettings
             if v == ""
                 clearconfigoption(k)
             else
                 setconfigoption(k, v)
             end
         end
-        for (k,v) in localsettings
+        for (k, v) in localsettings
             if v == ""
                 clearthreadconfigoption(k)
             else
@@ -100,17 +98,23 @@ to the layer.
                 format driver.
 """
 function addfielddefn!(
-        layer::T,
-        name::AbstractString,
-        etype::OGRFieldType;
-        nwidth::Integer             = 0,
-        nprecision::Integer         = 0,
-        justify::OGRJustification   = OJUndefined,
-        approx::Bool                = false
-    )::T where {T <: AbstractFeatureLayer}
+    layer::T,
+    name::AbstractString,
+    etype::OGRFieldType;
+    nwidth::Integer = 0,
+    nprecision::Integer = 0,
+    justify::OGRJustification = OJUndefined,
+    approx::Bool = false,
+)::T where {T<:AbstractFeatureLayer}
     fielddefn = unsafe_createfielddefn(name, etype)
-    setparams!(fielddefn, name, etype, nwidth = nwidth, nprecision = nprecision,
-        justify = justify)
+    setparams!(
+        fielddefn,
+        name,
+        etype,
+        nwidth = nwidth,
+        nprecision = nprecision,
+        justify = justify,
+    )
     addfielddefn!(layer, fielddefn)
     destroy(fielddefn)
     return layer
@@ -145,11 +149,11 @@ to the layer.
             slightly different form depending on the limitations of the driver.
 """
 function writegeomdefn!(
-        layer::T,
-        name::AbstractString,
-        etype::OGRwkbGeometryType;
-        approx::Bool = false
-    )::T where {T <: AbstractFeatureLayer}
+    layer::T,
+    name::AbstractString,
+    etype::OGRwkbGeometryType;
+    approx::Bool = false,
+)::T where {T<:AbstractFeatureLayer}
     geomdefn = unsafe_creategeomdefn(name, etype)
     addgeomdefn!(layer, geomdefn)
     destroy(geomdefn)
@@ -157,12 +161,12 @@ function writegeomdefn!(
 end
 
 function writegeomdefn(
-        f::Function,
-        layer::AbstractFeatureLayer,
-        name::AbstractString,
-        etype::OGRwkbGeometryType;
-        approx::Bool = false
-    )
+    f::Function,
+    layer::AbstractFeatureLayer,
+    name::AbstractString,
+    etype::OGRwkbGeometryType;
+    approx::Bool = false,
+)
     geomdefn = unsafe_creategeomdefn(name, etype)
     return try
         f(geomdefn)
@@ -173,25 +177,84 @@ function writegeomdefn(
 end
 
 for gdalfunc in (
-        :boundary, :buffer, :centroid, :clone, :convexhull, :create,
-        :createcolortable, :createcoordtrans, :copy, :createfeaturedefn,
-        :createfielddefn, :creategeom, :creategeomcollection,
-        :creategeomfieldcollection, :creategeomdefn, :createlayer,
-        :createlinearring, :createlinestring, :createmultilinestring,
-        :createmultipoint, :createmultipolygon, :createmultipolygon_noholes,
-        :createpoint, :createpolygon, :createRAT, :createstylemanager,
-        :createstyletable, :createstyletool, :curvegeom, :delaunaytriangulation,
-        :difference, :forceto, :fromGML, :fromJSON, :fromWKB, :fromWKT,
-        :gdalbuildvrt, :gdaldem, :gdalgrid, :gdalnearblack, :gdalrasterize,
-        :gdaltranslate, :gdalvectortranslate, :gdalwarp, :getband,
-        :getcolortable, :getfeature, :getgeom, :getlayer, :getmaskband,
-        :getoverview, :getpart, :getspatialref, :importCRS, :intersection,
-        :importEPSG, :importEPSGA, :importESRI, :importPROJ4, :importWKT,
-        :importXML, :importURL, :lineargeom, :newspatialref, :nextfeature,
-        :pointalongline, :pointonsurface, :polygonfromedges, :polygonize, :read,
-        :sampleoverview, :simplify, :simplifypreservetopology, :symdifference,
-        :union, :update, :readraster,
-    )
+    :boundary,
+    :buffer,
+    :centroid,
+    :clone,
+    :convexhull,
+    :create,
+    :createcolortable,
+    :createcoordtrans,
+    :copy,
+    :createfeaturedefn,
+    :createfielddefn,
+    :creategeom,
+    :creategeomcollection,
+    :creategeomfieldcollection,
+    :creategeomdefn,
+    :createlayer,
+    :createlinearring,
+    :createlinestring,
+    :createmultilinestring,
+    :createmultipoint,
+    :createmultipolygon,
+    :createmultipolygon_noholes,
+    :createpoint,
+    :createpolygon,
+    :createRAT,
+    :createstylemanager,
+    :createstyletable,
+    :createstyletool,
+    :curvegeom,
+    :delaunaytriangulation,
+    :difference,
+    :forceto,
+    :fromGML,
+    :fromJSON,
+    :fromWKB,
+    :fromWKT,
+    :gdalbuildvrt,
+    :gdaldem,
+    :gdalgrid,
+    :gdalnearblack,
+    :gdalrasterize,
+    :gdaltranslate,
+    :gdalvectortranslate,
+    :gdalwarp,
+    :getband,
+    :getcolortable,
+    :getfeature,
+    :getgeom,
+    :getlayer,
+    :getmaskband,
+    :getoverview,
+    :getpart,
+    :getspatialref,
+    :importCRS,
+    :intersection,
+    :importEPSG,
+    :importEPSGA,
+    :importESRI,
+    :importPROJ4,
+    :importWKT,
+    :importXML,
+    :importURL,
+    :lineargeom,
+    :newspatialref,
+    :nextfeature,
+    :pointalongline,
+    :pointonsurface,
+    :polygonfromedges,
+    :polygonize,
+    :read,
+    :sampleoverview,
+    :simplify,
+    :simplifypreservetopology,
+    :symdifference,
+    :union,
+    :update,
+    :readraster,
+)
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
             obj = $(Symbol("unsafe_$gdalfunc"))(args...; kwargs...)

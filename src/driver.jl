@@ -67,9 +67,9 @@ ndriver()::Integer = GDAL.gdalgetdrivercount()
 
 Returns a listing of all registered drivers.
 """
-listdrivers()::Dict{String,String} = Dict{String,String}([
-    shortname(getdriver(i)) => longname(getdriver(i)) for i in 0:(ndriver()-1)
-])
+listdrivers()::Dict{String,String} = Dict{String,String}(
+    [shortname(getdriver(i)) => longname(getdriver(i)) for i = 0:(ndriver()-1)],
+)
 
 """
     identifydriver(filename::AbstractString)
@@ -112,10 +112,7 @@ in the list of creation options are compatible with the capabilities declared
 by the `GDAL_DMD_CREATIONOPTIONLIST` metadata item. In case of incompatibility
 a (non fatal) warning will be emited and ``false`` will be returned.
 """
-function validate(
-        drv::Driver,
-        options::Vector{T}
-    )::Bool where {T <: AbstractString}
+function validate(drv::Driver, options::Vector{T})::Bool where {T<:AbstractString}
     return Bool(GDAL.gdalvalidatecreationoptions(drv.ptr, options))
 end
 
@@ -127,21 +124,17 @@ Copy all the files associated with a dataset.
 """
 function copyfiles end
 
-function copyfiles(
-        drv::Driver,
-        new::AbstractString,
-        old::AbstractString
-    )::Nothing
+function copyfiles(drv::Driver, new::AbstractString, old::AbstractString)::Nothing
     result = GDAL.gdalcopydatasetfiles(drv.ptr, new, old)
     @cplerr result "Failed to copy dataset files"
     return nothing
 end
 
 function copyfiles(
-        drvname::AbstractString,
-        new::AbstractString,
-        old::AbstractString
-    )::Nothing
+    drvname::AbstractString,
+    new::AbstractString,
+    old::AbstractString,
+)::Nothing
     copyfiles(getdriver(drvname), new, old)
     return nothing
 end
@@ -152,9 +145,9 @@ end
 Returns a `Dict{String,String}` of all of the file extensions that can be read
 by GDAL,  with their respective drivers' `shortname`s.
 """
-function extensions()::Dict{String, String}
-    extdict = Dict{String, String}()
-    for i in 1:ndriver()
+function extensions()::Dict{String,String}
+    extdict = Dict{String,String}()
+    for i = 1:ndriver()
         driver = getdriver(i)
         if !(driver.ptr == C_NULL)
             # exts is a space-delimited list in a String, so split it

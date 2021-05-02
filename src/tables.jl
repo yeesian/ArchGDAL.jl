@@ -3,29 +3,23 @@ A tabular representation of a `FeatureLayer`
 
 Every row is a `Feature` consisting of Geometry and attributes.
 """
-struct Table{T <: AbstractFeatureLayer}
+struct Table{T<:AbstractFeatureLayer}
     layer::T
 end
 
 function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
-    field_names, geom_names, featuredefn, fielddefns =
-        schema_names(layerdefn(layer))
+    field_names, geom_names, featuredefn, fielddefns = schema_names(layerdefn(layer))
     ngeom = ArchGDAL.ngeom(featuredefn)
-    geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
-    field_types = (
-        convert(DataType, gettype(fielddefn)) for fielddefn in fielddefns
-    )
-    geom_types = (IGeometry for i in 1:ngeom)
-    Tables.Schema(
-        (field_names..., geom_names...),
-        (field_types..., geom_types...)
-    )
+    geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i = 0:ngeom-1)
+    field_types = (convert(DataType, gettype(fielddefn)) for fielddefn in fielddefns)
+    geom_types = (IGeometry for i = 1:ngeom)
+    Tables.Schema((field_names..., geom_names...), (field_types..., geom_types...))
 end
 
 Tables.istable(::Type{<:Table})::Bool = true
 Tables.rowaccess(::Type{<:Table})::Bool = true
 
-function Tables.rows(t::Table{T})::T where {T <: AbstractFeatureLayer}
+function Tables.rows(t::Table{T})::T where {T<:AbstractFeatureLayer}
     return t.layer
 end
 
@@ -51,20 +45,16 @@ function Tables.getcolumn(row::Feature, name::Symbol)
     return nothing
 end
 
-function Tables.columnnames(
-        row::Feature
-    )::NTuple{Int64(nfield(row) + ngeom(row)), Symbol}
+function Tables.columnnames(row::Feature)::NTuple{Int64(nfield(row) + ngeom(row)),Symbol}
     field_names, geom_names = schema_names(getfeaturedefn(row))
     return (field_names..., geom_names...)
 end
 
 function schema_names(featuredefn::IFeatureDefnView)
-    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(featuredefn)-1)
+    fielddefns = (getfielddefn(featuredefn, i) for i = 0:nfield(featuredefn)-1)
     field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
-    geom_names = (
-        Symbol(getname(getgeomdefn(featuredefn, i - 1)))
-        for i in 1:ngeom(featuredefn)
-    )
+    geom_names =
+        (Symbol(getname(getgeomdefn(featuredefn, i - 1))) for i = 1:ngeom(featuredefn))
     return (field_names, geom_names, featuredefn, fielddefns)
 end
 

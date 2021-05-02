@@ -1,8 +1,4 @@
-function imread(
-        colortable::ColorTable,
-        dataset::AbstractDataset,
-        indices
-    )
+function imread(colortable::ColorTable, dataset::AbstractDataset, indices)
     palette = getcolortable(getband(dataset, indices[1])) do ct
         paletteinterp(ct)
     end
@@ -20,44 +16,51 @@ function imread(
 end
 
 function imread(
-        colortype::Type{<:ColorTypes.Colorant},
-        dataset::AbstractDataset,
-        indices::NTuple{1, <:Integer}
+    colortype::Type{<:ColorTypes.Colorant},
+    dataset::AbstractDataset,
+    indices::NTuple{1,<:Integer},
+)
+    return ImageCore.PermutedDimsArray(
+        ImageCore.colorview(colortype, ImageCore.normedview(read(dataset, indices[1]))),
+        (2, 1),
     )
-    return ImageCore.PermutedDimsArray(ImageCore.colorview(colortype,
-        ImageCore.normedview(read(dataset, indices[1]))
-    ), (2,1))
 end
 
 function imread(
-        colortype::Type{<:ColorTypes.Colorant},
-        dataset::AbstractDataset,
-        indices::NTuple{3,<:Integer}
+    colortype::Type{<:ColorTypes.Colorant},
+    dataset::AbstractDataset,
+    indices::NTuple{3,<:Integer},
+)
+    return ImageCore.PermutedDimsArray(
+        ImageCore.colorview(
+            colortype,
+            ImageCore.normedview(read(dataset, indices[1])),
+            ImageCore.normedview(read(dataset, indices[2])),
+            ImageCore.normedview(read(dataset, indices[3])),
+        ),
+        (2, 1),
     )
-    return ImageCore.PermutedDimsArray(ImageCore.colorview(colortype,
-        ImageCore.normedview(read(dataset, indices[1])),
-        ImageCore.normedview(read(dataset, indices[2])),
-        ImageCore.normedview(read(dataset, indices[3]))
-    ), (2,1))
 end
 
 function imread(
-        colortype::Type{<:ColorTypes.Colorant},
-        dataset::Dataset,
-        indices::NTuple{4,<:Integer}
+    colortype::Type{<:ColorTypes.Colorant},
+    dataset::Dataset,
+    indices::NTuple{4,<:Integer},
+)
+    return ImageCore.PermutedDimsArray(
+        ImageCore.colorview(
+            colortype,
+            ImageCore.normedview(read(dataset, indices[1])),
+            ImageCore.normedview(read(dataset, indices[2])),
+            ImageCore.normedview(read(dataset, indices[3])),
+            ImageCore.normedview(read(dataset, indices[4])),
+        ),
+        (2, 1),
     )
-    return ImageCore.PermutedDimsArray(ImageCore.colorview(colortype,
-        ImageCore.normedview(read(dataset, indices[1])),
-        ImageCore.normedview(read(dataset, indices[2])),
-        ImageCore.normedview(read(dataset, indices[3])),
-        ImageCore.normedview(read(dataset, indices[4]))
-    ), (2,1))
 end
 
 function imread(dataset::AbstractDataset, indices)
-    gci = unique(GDALColorInterp[
-        getcolorinterp(getband(dataset, i)) for i in indices
-    ])
+    gci = unique(GDALColorInterp[getcolorinterp(getband(dataset, i)) for i in indices])
     gciorder = sort(gci)
     return if gciorder == [GCI_GrayIndex]
         imread(ColorTypes.Gray, dataset, Tuple(indices[sortperm(gci)]))

@@ -22,41 +22,32 @@ Import a coordinate reference system from a `GeoFormat` into the spatial ref.
 """
 function importCRS! end
 
-function importCRS!(spref::T, x::GFT.EPSG)::T where {T <: AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.EPSG)::T where {T<:AbstractSpatialRef}
     importEPSG!(spref, GFT.val(x))
     return spref
 end
 
-function importCRS!(
-        spref::T,
-        x::GFT.AbstractWellKnownText
-    )::T where {T <: AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.AbstractWellKnownText)::T where {T<:AbstractSpatialRef}
     importWKT!(spref, GFT.val(x))
     return spref
 end
 
-function importCRS!(
-        spref::T,
-        x::GFT.ESRIWellKnownText
-    )::T where {T <: AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.ESRIWellKnownText)::T where {T<:AbstractSpatialRef}
     importESRI!(spref, GFT.val(x))
     return spref
 end
 
-function importCRS!(
-        spref::T,
-        x::GFT.ProjString
-    )::T where {T <: AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.ProjString)::T where {T<:AbstractSpatialRef}
     importPROJ4!(spref, GFT.val(x))
     return spref
 end
 
-function importCRS!(spref::T, x::GFT.GML)::T where {T <: AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.GML)::T where {T<:AbstractSpatialRef}
     importXML!(spref, GFT.val(x))
     return spref
 end
 
-function importCRS!(spref::T, x::GFT.KML)::T where {T <: AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.KML)::T where {T<:AbstractSpatialRef}
     importCRS!(spref, GFT.EPSG(4326))
     return spref
 end
@@ -93,80 +84,72 @@ julia> ArchGDAL.reproject(
 ```
 """
 function reproject(
-        coord::T,
-        sourcecrs::GFT.GeoFormat,
-        targetcrs::Nothing;
-        kwargs...
-    )::T where {T <: Any}
+    coord::T,
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::Nothing;
+    kwargs...,
+)::T where {T<:Any}
     return coord
 end
 
 # These should be better integrated with geometry packages or follow a standard
-const ReprojectCoord = Union{
-    <:NTuple{2,<:Number},
-    <:NTuple{3,<:Number},
-    AbstractVector{<:Number}
-}
+const ReprojectCoord =
+    Union{<:NTuple{2,<:Number},<:NTuple{3,<:Number},AbstractVector{<:Number}}
 
 # Vector/Tuple coordinate(s)
 function reproject(
-        coord::ReprojectCoord,
-        sourcecrs::GFT.GeoFormat,
-        targetcrs::GFT.GeoFormat;
-        kwargs...
-    )
+    coord::ReprojectCoord,
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
     return GeoInterface.coordinates(
-        reproject(createpoint(coord...), sourcecrs, targetcrs; kwargs...)
+        reproject(createpoint(coord...), sourcecrs, targetcrs; kwargs...),
     )
 end
 
 function reproject(
-        coords::AbstractArray{<:ReprojectCoord},
-        sourcecrs::GFT.GeoFormat, 
-        targetcrs::GFT.GeoFormat;
-        kwargs...
-    )
+    coords::AbstractArray{<:ReprojectCoord},
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
     return GeoInterface.coordinates.(
-        reproject(
-            [createpoint(c...) for c in coords],
-            sourcecrs,
-            targetcrs;
-            kwargs...
-        )
+        reproject([createpoint(c...) for c in coords], sourcecrs, targetcrs; kwargs...),
     )
 end
 
 # GeoFormat
 function reproject(
-        geom::GFT.GeoFormat,
-        sourcecrs::GFT.GeoFormat,
-        targetcrs::GFT.GeoFormat;
-        kwargs...
-    )
+    geom::GFT.GeoFormat,
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
     return convert(
         typeof(geom),
-        reproject(convert(Geometry, geom), sourcecrs, targetcrs; kwargs...)
+        reproject(convert(Geometry, geom), sourcecrs, targetcrs; kwargs...),
     )
 end
 
 # Geometries
 function reproject(
-        geom::AbstractGeometry,
-        sourcecrs::GFT.GeoFormat,
-        targetcrs::GFT.GeoFormat;
-        kwargs...
-    )
+    geom::AbstractGeometry,
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
     return crs2transform(sourcecrs, targetcrs; kwargs...) do transform
         transform!(geom, transform)
     end
 end
 
 function reproject(
-        geoms::AbstractArray{<:AbstractGeometry},
-        sourcecrs::GFT.GeoFormat,
-        targetcrs::GFT.GeoFormat;
-        kwargs...
-    )
+    geoms::AbstractArray{<:AbstractGeometry},
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
     return crs2transform(sourcecrs, targetcrs; kwargs...) do transform
         transform!.(geoms, Ref(transform))
     end
@@ -183,11 +166,11 @@ a coordinate reference system.
 `kwargs` are passed through to `importCRS`.
 """
 function crs2transform(
-        f::Function,
-        sourcecrs::GFT.GeoFormat,
-        targetcrs::GFT.GeoFormat;
-        kwargs...
-    )
+    f::Function,
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
     return importCRS(sourcecrs; kwargs...) do sourcecrs_ref
         importCRS(targetcrs; kwargs...) do targetcrs_ref
             createcoordtrans(sourcecrs_ref, targetcrs_ref) do transform
@@ -213,19 +196,11 @@ newspatialref(wkt::AbstractString = ""; order::Symbol = :compliant) =
 unsafe_newspatialref(wkt::AbstractString = ""; order::Symbol = :compliant) =
     maybesetaxisorder!(SpatialRef(GDAL.osrnewspatialreference(wkt)), order)
 
-function maybesetaxisorder!(
-        spref::T,
-        order::Symbol
-    )::T where {T <: AbstractSpatialRef}
+function maybesetaxisorder!(spref::T, order::Symbol)::T where {T<:AbstractSpatialRef}
     if order == :trad
-        GDAL.osrsetaxismappingstrategy(
-            spref.ptr,
-            GDAL.OAMS_TRADITIONAL_GIS_ORDER
-        )
+        GDAL.osrsetaxismappingstrategy(spref.ptr, GDAL.OAMS_TRADITIONAL_GIS_ORDER)
     elseif order != :compliant
-        throw(ArgumentError(
-            "order $order is not supported. Use :trad or :compliant"
-        ))
+        throw(ArgumentError("order $order is not supported. Use :trad or :compliant"))
     end
     return spref
 end
@@ -282,7 +257,7 @@ These support files are normally searched for in /usr/local/share/gdal or in the
 directory identified by the GDAL_DATA configuration option. See CPLFindFile()
 for details.
 """
-function importEPSG!(spref::T, code::Integer)::T where {T <: AbstractSpatialRef}
+function importEPSG!(spref::T, code::Integer)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromepsg(spref.ptr, code)
     @ogrerr result "Failed to initialize SRS based on EPSG"
     return spref
@@ -316,10 +291,7 @@ are also a few projected coordinate systems that use northing/easting order
 contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
 """
-function importEPSGA!(
-        spref::T,
-        code::Integer
-    )::T where {T <: AbstractSpatialRef}
+function importEPSGA!(spref::T, code::Integer)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromepsga(spref.ptr, code)
     @ogrerr result "Failed to initializ SRS based on EPSGA"
     return spref
@@ -358,10 +330,7 @@ contents of the passed WKT string. Only as much of the input string as needed to
 construct this SRS is consumed from the input string, and the input string
 pointer is then updated to point to the remaining (unused) input.
 """
-function importWKT!(
-        spref::T,
-        wktstr::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+function importWKT!(spref::T, wktstr::AbstractString)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromwkt(spref.ptr, [wktstr])
     @ogrerr result "Failed to initialize SRS based on WKT string"
     return spref
@@ -377,10 +346,9 @@ Create SRS from its WKT string.
     axis  ordering in any actions done with the crs. `:compliant`, will use axis 
     ordering compliant with the relevant CRS authority.
 """
-importWKT(wktstr::AbstractString; kwargs...)::ISpatialRef =
-    newspatialref(wktstr; kwargs...)
+importWKT(wktstr::AbstractString; kwargs...)::ISpatialRef = newspatialref(wktstr; kwargs...)
 
-unsafe_importWKT(wktstr::AbstractString; kwargs...)::SpatialRef = 
+unsafe_importWKT(wktstr::AbstractString; kwargs...)::SpatialRef =
     unsafe_newspatialref(wktstr; kwargs...)
 
 """
@@ -405,10 +373,7 @@ back to PROJ.4 format\".
 For example: `\"+proj=nzmg +lat_0=-41 +lon_0=173 +x_0=2510000 +y_0=6023150
 +ellps=intl +units=m +nadgrids=nzgd2kgrid0005.gsb +wktext\"`
 """
-function importPROJ4!(
-        spref::T,
-        projstr::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+function importPROJ4!(spref::T, projstr::AbstractString)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromproj4(spref.ptr, projstr)
     @ogrerr result "Failed to initialize SRS based on PROJ4 string"
     return spref
@@ -452,10 +417,7 @@ At this time there is no equivalent `exportToESRI()` method. Writing old style
 and `exportToWkt()` methods can be used to generate output suitable to write to
 new style (Arc 8) .prj files.
 """
-function importESRI!(
-        spref::T,
-        esristr::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+function importESRI!(spref::T, esristr::AbstractString)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromesri(spref.ptr, [esristr])
     @ogrerr result "Failed to initialize SRS based on ESRI string"
     return spref
@@ -480,10 +442,7 @@ unsafe_importESRI(esristr::AbstractString; kwargs...)::SpatialRef =
 
 Import SRS from XML format (GML only currently).
 """
-function importXML!(
-        spref::T,
-        xmlstr::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+function importXML!(spref::T, xmlstr::AbstractString)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromxml(spref.ptr, xmlstr)
     @ogrerr result "Failed to initialize SRS based on XML string"
     return spref
@@ -516,10 +475,7 @@ Set spatial reference from a URL.
 This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
 """
-function importURL!(
-        spref::T,
-        url::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+function importURL!(spref::T, url::AbstractString)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrimportfromurl(spref.ptr, url)
     @ogrerr result "Failed to initialize SRS from URL"
     return spref
@@ -538,10 +494,10 @@ SetFromUserInput for you.
     axis ordering in any actions done with the crs. `:compliant`, will use axis 
     ordering compliant with the relevant CRS authority.
 """
-importURL(url::AbstractString; kwargs...)::ISpatialRef = 
+importURL(url::AbstractString; kwargs...)::ISpatialRef =
     importURL!(newspatialref(; kwargs...), url)
 
-unsafe_importURL(url::AbstractString; kwargs...)::SpatialRef = 
+unsafe_importURL(url::AbstractString; kwargs...)::SpatialRef =
     importURL!(unsafe_newspatialref(; kwargs...), url)
 
 """
@@ -623,7 +579,7 @@ closely map onto the ESRI concept of WKT format. This includes renaming a
 variety of projections and arguments, and stripping out nodes note recognised by
 ESRI (like AUTHORITY and AXIS).
 """
-function morphtoESRI!(spref::T)::T where {T <: AbstractSpatialRef}
+function morphtoESRI!(spref::T)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrmorphtoesri(spref.ptr)
     @ogrerr result "Failed to convert in place to ESRI WKT format"
     return spref
@@ -657,7 +613,7 @@ of the following (`TOWGS84` recommended for proper datum shift calculations)
         `importFromEPSG(n)`, using `EPSG` code `n` corresponding to the existing
         `GEOGCS`. Does not impact `PROJCS` values.
 """
-function morphfromESRI!(spref::T)::T where {T <: AbstractSpatialRef}
+function morphfromESRI!(spref::T)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrmorphfromesri(spref.ptr)
     @ogrerr result "Failed to convert in place from ESRI WKT format"
     return spref
@@ -679,19 +635,16 @@ the value otherwise the zeroth child will be assigned the value.
             out if you just want to force creation of the intermediate path.
 """
 function setattrvalue!(
-        spref::T,
-        path::AbstractString,
-        value::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+    spref::T,
+    path::AbstractString,
+    value::AbstractString,
+)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrsetattrvalue(spref.ptr, path, value)
     @ogrerr result "Failed to set attribute path to value"
     return spref
 end
 
-function setattrvalue!(
-        spref::T,
-        path::AbstractString
-    )::T where {T <: AbstractSpatialRef}
+function setattrvalue!(spref::T, path::AbstractString)::T where {T<:AbstractSpatialRef}
     result = GDAL.osrsetattrvalue(spref.ptr, path, C_NULL)
     @ogrerr result "Failed to set attribute path"
     return spref
@@ -715,10 +668,10 @@ Returns
 the requested value, or `nothing` if it fails for any reason.
 """
 function getattrvalue(
-        spref::AbstractSpatialRef,
-        name::AbstractString,
-        i::Integer
-    )::Union{String, Nothing}
+    spref::AbstractSpatialRef,
+    name::AbstractString,
+    i::Integer,
+)::Union{String,Nothing}
     return GDAL.osrgetattrvalue(spref.ptr, name, i)
 end
 
@@ -736,11 +689,10 @@ Create transformation object.
 NULL on failure or a ready to use transformation object.
 """
 function unsafe_createcoordtrans(
-        source::AbstractSpatialRef,
-        target::AbstractSpatialRef
-    )::CoordTransform
-    return CoordTransform(GDAL.octnewcoordinatetransformation(source.ptr,
-        target.ptr))
+    source::AbstractSpatialRef,
+    target::AbstractSpatialRef,
+)::CoordTransform
+    return CoordTransform(GDAL.octnewcoordinatetransformation(source.ptr, target.ptr))
 end
 
 "OGRCoordinateTransformation destructor."
@@ -764,16 +716,23 @@ Transform points from source to destination space.
 `true` on success, or `false` if some or all points fail to transform.
 """
 function transform!(
-        xvertices::Vector{Cdouble},
-        yvertices::Vector{Cdouble},
-        zvertices::Vector{Cdouble},
-        obj::CoordTransform
-    )::Bool
+    xvertices::Vector{Cdouble},
+    yvertices::Vector{Cdouble},
+    zvertices::Vector{Cdouble},
+    obj::CoordTransform,
+)::Bool
     # The method TransformEx() allows extended success information to be
     # captured indicating which points failed to transform.
     n = length(xvertices)
     @assert length(yvertices) == n
     @assert length(zvertices) == n
-    return Bool(GDAL.octtransform(obj.ptr, n, pointer(xvertices),
-        pointer(yvertices), pointer(zvertices)))
+    return Bool(
+        GDAL.octtransform(
+            obj.ptr,
+            n,
+            pointer(xvertices),
+            pointer(yvertices),
+            pointer(zvertices),
+        ),
+    )
 end

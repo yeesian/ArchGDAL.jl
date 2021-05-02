@@ -25,7 +25,7 @@ makedocs(
         "Design Considerations" => "considerations.md",
         "API Reference" => "reference.md",
         # "Naming Conventions" => "conventions.md", # table between GDAL, GDAL.jl, and ArchGDAL.jl
-    ]
+    ],
 )
 
 deploydocs(; repo = "github.com/yeesian/ArchGDAL.jl.git")

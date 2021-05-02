@@ -111,10 +111,7 @@ the field index, or -1 if no matching field is found.
 ### Remarks
 This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 """
-function findfieldindex(
-        feature::Feature,
-        name::Union{AbstractString, Symbol}
-    )::Integer
+function findfieldindex(feature::Feature, name::Union{AbstractString,Symbol})::Integer
     return GDAL.ogr_f_getfieldindex(feature.ptr, name)
 end
 
@@ -127,8 +124,7 @@ Test if a field has ever been assigned a value or not.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-isfieldset(feature::Feature, i::Integer)::Bool =
-    Bool(GDAL.ogr_f_isfieldset(feature.ptr, i))
+isfieldset(feature::Feature, i::Integer)::Bool = Bool(GDAL.ogr_f_isfieldset(feature.ptr, i))
 
 """
     unsetfield!(feature::Feature, i::Integer)
@@ -169,8 +165,7 @@ Fetch field value as integer.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asint(feature::Feature, i::Integer)::Int32 =
-    GDAL.ogr_f_getfieldasinteger(feature.ptr, i)
+asint(feature::Feature, i::Integer)::Int32 = GDAL.ogr_f_getfieldasinteger(feature.ptr, i)
 
 """
     asint64(feature::Feature, i::Integer)
@@ -205,8 +200,7 @@ Fetch field value as a string.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asstring(feature::Feature, i::Integer)::String =
-    GDAL.ogr_f_getfieldasstring(feature.ptr, i)
+asstring(feature::Feature, i::Integer)::String = GDAL.ogr_f_getfieldasstring(feature.ptr, i)
 
 """
     asintlist(feature::Feature, i::Integer)
@@ -320,10 +314,26 @@ OFTDate, OFTTime and OFTDateTime fields.
 `true` on success or `false` on failure.
 """
 function asdatetime(feature::Feature, i::Integer)::DateTime
-    pyr = Ref{Cint}(); pmth = Ref{Cint}(); pday = Ref{Cint}()
-    phr = Ref{Cint}(); pmin = Ref{Cint}(); psec = Ref{Cint}(); ptz=Ref{Cint}()
-    result = Bool(GDAL.ogr_f_getfieldasdatetime(feature.ptr, i, pyr, pmth, pday,
-        phr, pmin, psec, ptz))
+    pyr = Ref{Cint}()
+    pmth = Ref{Cint}()
+    pday = Ref{Cint}()
+    phr = Ref{Cint}()
+    pmin = Ref{Cint}()
+    psec = Ref{Cint}()
+    ptz = Ref{Cint}()
+    result = Bool(
+        GDAL.ogr_f_getfieldasdatetime(
+            feature.ptr,
+            i,
+            pyr,
+            pmth,
+            pday,
+            phr,
+            pmin,
+            psec,
+            ptz,
+        ),
+    )
     (result == false) && error("Failed to fetch datetime at index $i")
     return DateTime(pyr[], pmth[], pday[], phr[], pmin[], psec[])
 end
@@ -365,21 +375,21 @@ function getdefault(feature::Feature, i::Integer)::String
 end
 
 function getfield(feature::Feature, i::Integer)
-    _FETCHFIELD = Dict{OGRFieldType, Function}(
-        OFTInteger         => asint,           #0
-        OFTIntegerList     => asintlist,       #1
-        OFTReal            => asdouble,        #2
-        OFTRealList        => asdoublelist,    #3
-        OFTString          => asstring,        #4
-        OFTStringList      => asstringlist,    #5
-     # const OFTWideString =                (UInt32)(6)
-     # const OFTWideStringList =            (UInt32)(7)
-        OFTBinary          => asbinary,        #8
-        OFTDate            => asdatetime,      #9
-        OFTTime            => asdatetime,      #10
-        OFTDateTime        => asdatetime,      #11
-        OFTInteger64       => asint64,         #12
-        OFTInteger64List   => asint64list,     #13
+    _FETCHFIELD = Dict{OGRFieldType,Function}(
+        OFTInteger => asint,           #0
+        OFTIntegerList => asintlist,       #1
+        OFTReal => asdouble,        #2
+        OFTRealList => asdoublelist,    #3
+        OFTString => asstring,        #4
+        OFTStringList => asstringlist,    #5
+        # const OFTWideString =                (UInt32)(6)
+        # const OFTWideStringList =            (UInt32)(7)
+        OFTBinary => asbinary,        #8
+        OFTDate => asdatetime,      #9
+        OFTTime => asdatetime,      #10
+        OFTDateTime => asdatetime,      #11
+        OFTInteger64 => asint64,         #12
+        OFTInteger64List => asint64list,     #13
     )
     return if isfieldset(feature, i)
         _fieldtype = gettype(getfielddefn(feature, i))
@@ -390,7 +400,7 @@ function getfield(feature::Feature, i::Integer)
     end
 end
 
-function getfield(feature::Feature, name::Union{AbstractString, Symbol})
+function getfield(feature::Feature, name::Union{AbstractString,Symbol})
     i = findfieldindex(feature, name)
     return if i == -1
         nothing
@@ -452,20 +462,16 @@ function setfield!(feature::Feature, i::Integer, value::Vector{Int64})::Feature
     return feature
 end
 
-function setfield!(
-        feature::Feature,
-        i::Integer,
-        value::Vector{Float64}
-    )::Feature
+function setfield!(feature::Feature, i::Integer, value::Vector{Float64})::Feature
     GDAL.ogr_f_setfielddoublelist(feature.ptr, i, length(value), value)
     return feature
 end
 
 function setfield!(
-        feature::Feature,
-        i::Integer,
-        value::Vector{T}
-    )::Feature where T <: AbstractString
+    feature::Feature,
+    i::Integer,
+    value::Vector{T},
+)::Feature where {T<:AbstractString}
     GDAL.ogr_f_setfieldstringlist(feature.ptr, i, value)
     return feature
 end
@@ -490,12 +496,7 @@ function setfield!(feature::Feature, i::Integer, value::Vector{UInt8})::Feature
     return feature
 end
 
-function setfield!(
-        feature::Feature,
-        i::Integer,
-        dt::DateTime,
-        tzflag::Int = 0
-    )::Feature
+function setfield!(feature::Feature, i::Integer, dt::DateTime, tzflag::Int = 0)::Feature
     GDAL.ogr_f_setfielddatetime(
         feature.ptr,
         i,
@@ -505,7 +506,7 @@ function setfield!(
         Dates.hour(dt),
         Dates.minute(dt),
         Dates.second(dt),
-        tzflag
+        tzflag,
     )
     return feature
 end
@@ -551,10 +552,7 @@ the geometry field index, or -1 if no matching geometry field is found.
 ### Remarks
 This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
-function findgeomindex(
-        feature::Feature,
-        name::Union{AbstractString, Symbol} = ""
-    )::Integer
+function findgeomindex(feature::Feature, name::Union{AbstractString,Symbol} = "")::Integer
     return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
 end
 
@@ -585,10 +583,7 @@ function unsafe_getgeom(feature::Feature, i::Integer)::Geometry
     end
 end
 
-function getgeom(
-        feature::Feature,
-        name::Union{AbstractString, Symbol}
-    )::IGeometry
+function getgeom(feature::Feature, name::Union{AbstractString,Symbol})::IGeometry
     i = findgeomindex(feature, name)
     return if i == -1
         IGeometry()
@@ -597,10 +592,7 @@ function getgeom(
     end
 end
 
-function unsafe_getgeom(
-        feature::Feature,
-        name::Union{AbstractString, Symbol}
-    )::Geometry
+function unsafe_getgeom(feature::Feature, name::Union{AbstractString,Symbol})::Geometry
     i = findgeomindex(feature, name)
     return if i == -1
         Geometry()
@@ -685,24 +677,19 @@ otherwise an error code.
 """
 function setfrom! end
 
-function setfrom!(
-        feature1::Feature,
-        feature2::Feature,
-        forgiving::Bool = false
-    )::Feature
+function setfrom!(feature1::Feature, feature2::Feature, forgiving::Bool = false)::Feature
     result = GDAL.ogr_f_setfrom(feature1.ptr, feature2.ptr, forgiving)
     @ogrerr result "OGRErr $result: Failed to set feature"
     return feature1
 end
 
 function setfrom!(
-        feature1::Feature,
-        feature2::Feature,
-        indices::Vector{Cint},
-        forgiving::Bool = false
-    )::Feature
-    result = GDAL.ogr_f_setfromwithmap(feature1.ptr, feature2.ptr, forgiving,
-        indices)
+    feature1::Feature,
+    feature2::Feature,
+    indices::Vector{Cint},
+    forgiving::Bool = false,
+)::Feature
+    result = GDAL.ogr_f_setfromwithmap(feature1.ptr, feature2.ptr, forgiving, indices)
     @ogrerr result "OGRErr $result: Failed to set feature with map"
     return feature1
 end
@@ -713,8 +700,7 @@ end
 
 Fetch style string for this feature.
 """
-getstylestring(feature::Feature)::String =
-    GDAL.ogr_f_getstylestring(feature.ptr)
+getstylestring(feature::Feature)::String = GDAL.ogr_f_getstylestring(feature.ptr)
 
 """
     setstylestring!(feature::Feature, style::AbstractString)
@@ -792,8 +778,7 @@ The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
 e.g. \"application/vnd.geo+json\" for JSON.
 """
-getmediatype(feature::Feature)::String =
-    GDAL.ogr_f_getnativemediatype(feature.ptr)
+getmediatype(feature::Feature)::String = GDAL.ogr_f_getnativemediatype(feature.ptr)
 
 """
     setmediatype!(feature::Feature, mediatype::AbstractString)
@@ -821,10 +806,10 @@ Fill unset fields with default values that might be defined.
 * `papszOptions`: unused currently. Must be set to `NULL`.
 """
 function fillunsetwithdefault!(
-        feature::Feature;
-        notnull::Bool = true,
-        options = StringList(C_NULL)
-    )::Feature
+    feature::Feature;
+    notnull::Bool = true,
+    options = StringList(C_NULL),
+)::Feature
     GDAL.ogr_f_fillunsetwithdefault(feature.ptr, notnull, options)
     return feature
 end

@@ -13,10 +13,7 @@ converts the equation from being pixel to geo to being geo to pixel.
 ### Returns
 `gt_out`
 """
-function invgeotransform!(
-        gt_in::Vector{Float64},
-        gt_out::Vector{Float64}
-    )::Vector{Float64}
+function invgeotransform!(gt_in::Vector{Float64}, gt_out::Vector{Float64})::Vector{Float64}
     result = Bool(GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)))
     result || error("Geotransform coefficients is uninvertable")
     return gt_out
@@ -43,10 +40,10 @@ georeferenced `(geo_x,geo_y)` location.
 * `line`            input line position.
 """
 function applygeotransform(
-        geotransform::Vector{Float64},
-        pixel::Float64,
-        line::Float64
-    )::Vector{Float64}
+    geotransform::Vector{Float64},
+    pixel::Float64,
+    line::Float64,
+)::Vector{Float64}
     geo_xy = Vector{Float64}(undef, 2)
     geo_x = pointer(geo_xy)
     geo_y = geo_x + sizeof(Float64)
@@ -69,17 +66,14 @@ being applied to a point.
 * `gtout`   the output geotransform, six values.
 """
 function composegeotransform!(
-        gt1::Vector{Float64},
-        gt2::Vector{Float64},
-        gtout::Vector{Float64}
-    )::Vector{Float64}
+    gt1::Vector{Float64},
+    gt2::Vector{Float64},
+    gtout::Vector{Float64},
+)::Vector{Float64}
     GDAL.gdalcomposegeotransforms(pointer(gt1), pointer(gt2), pointer(gtout))
     return gtout
 end
 
-function composegeotransform(
-        gt1::Vector{Float64},
-        gt2::Vector{Float64}
-    )::Vector{Float64}
+function composegeotransform(gt1::Vector{Float64}, gt2::Vector{Float64})::Vector{Float64}
     return composegeotransform!(gt1, gt2, Vector{Float64}(undef, 6))
 end
