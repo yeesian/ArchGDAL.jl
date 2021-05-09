@@ -26,19 +26,20 @@ macro convert(args...)
     type1 = esc(args[1].args[1])
     type2 = esc(args[1].args[2])
     forward_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
-    reverse_map = Expr[Expr(:tuple, esc.(reverse(a.args))...) for a in args[2:end]]
+    reverse_map =
+        Expr[Expr(:tuple, esc.(reverse(a.args))...) for a in args[2:end]]
     quote
         function Base.convert(::Type{$type2}, ft::$type1)
             fwd = Dict{$type1,$type2}(Tuple{$type1,$type2}[$(forward_map...)])
             return get(fwd, ft) do
-                error("Unknown type: $ft")
+                return error("Unknown type: $ft")
             end
         end
 
         function Base.convert(::Type{$type1}, ft::$type2)
             rev = Dict{$type2,$type1}(Tuple{$type2,$type1}[$(reverse_map...)])
             return get(rev, ft) do
-                error("Unknown type: $ft")
+                return error("Unknown type: $ft")
             end
         end
     end
@@ -108,7 +109,8 @@ end
 
 Fetch list of (non-empty) metadata domains.
 """
-metadatadomainlist(obj)::Vector{String} = GDAL.gdalgetmetadatadomainlist(obj.ptr)
+metadatadomainlist(obj)::Vector{String} =
+    GDAL.gdalgetmetadatadomainlist(obj.ptr)
 
 """
     metadata(obj; domain::AbstractString = "")
@@ -130,7 +132,11 @@ Fetch single metadata item.
 ### Returns
 The metadata item on success, or an empty string on failure.
 """
-function metadataitem(obj, name::AbstractString; domain::AbstractString = "")::String
+function metadataitem(
+    obj,
+    name::AbstractString;
+    domain::AbstractString = "",
+)::String
     item = GDAL.gdalgetmetadataitem(obj.ptr, name, domain)
     return isnothing(item) ? "" : item
 end
@@ -189,7 +195,8 @@ it in environment variables.
 the value associated to the key, or the default value if not found.
 """
 function getconfigoption(option::AbstractString, default = C_NULL)::String
-    result = @gdal(CPLGetConfigOption::Cstring, option::Cstring, default::Cstring)
+    result =
+        @gdal(CPLGetConfigOption::Cstring, option::Cstring, default::Cstring)
     return (result == C_NULL) ? "" : unsafe_string(result)
 end
 
@@ -233,7 +240,10 @@ end
 Same as `getconfigoption()` but with settings from `setthreadconfigoption()`.
 """
 function getthreadconfigoption(option::AbstractString, default = C_NULL)::String
-    result =
-        @gdal(CPLGetThreadLocalConfigOption::Cstring, option::Cstring, default::Cstring)
+    result = @gdal(
+        CPLGetThreadLocalConfigOption::Cstring,
+        option::Cstring,
+        default::Cstring
+    )
     return (result == C_NULL) ? "" : unsafe_string(result)
 end

@@ -370,7 +370,13 @@ eval(
     )
 )
 
-eval(@convert(GDALRWFlag::GDAL.GDALRWFlag, GF_Read::GDAL.GF_Read, GF_Write::GDAL.GF_Write,))
+eval(
+    @convert(
+        GDALRWFlag::GDAL.GDALRWFlag,
+        GF_Read::GDAL.GF_Read,
+        GF_Write::GDAL.GF_Write,
+    )
+)
 
 eval(
     @convert(
@@ -583,7 +589,8 @@ iscomplex(dtype::GDALDataType)::Bool = Bool(GDAL.gdaldatatypeiscomplex(dtype))
 
 Get name of AsyncStatus data type.
 """
-getname(dtype::GDALAsyncStatusType)::String = GDAL.gdalgetasyncstatustypename(dtype)
+getname(dtype::GDALAsyncStatusType)::String =
+    GDAL.gdalgetasyncstatustypename(dtype)
 
 """
     asyncstatustype(name::AbstractString)
@@ -613,7 +620,8 @@ colorinterp(name::AbstractString)::GDALColorInterp =
 
 Get name of palette interpretation.
 """
-getname(obj::GDALPaletteInterp)::String = GDAL.gdalgetpaletteinterpretationname(obj)
+getname(obj::GDALPaletteInterp)::String =
+    GDAL.gdalgetpaletteinterpretationname(obj)
 
 """
     getname(obj::OGRFieldType)

@@ -282,8 +282,9 @@ function read!(
     return buffer
 end
 
-read(rb::AbstractRasterBand) =
-    rasterio!(rb, Array{pixeltype(rb)}(undef, width(rb), height(rb)))
+function read(rb::AbstractRasterBand)
+    return rasterio!(rb, Array{pixeltype(rb)}(undef, width(rb), height(rb)))
+end
 
 function read(
     rb::AbstractRasterBand,
@@ -329,12 +330,20 @@ function write!(
     return buffer
 end
 
-function read!(dataset::AbstractDataset, buffer::T, i::Integer)::T where {T<:Matrix{<:Any}}
+function read!(
+    dataset::AbstractDataset,
+    buffer::T,
+    i::Integer,
+)::T where {T<:Matrix{<:Any}}
     read!(getband(dataset, i), buffer)
     return buffer
 end
 
-function read!(dataset::AbstractDataset, buffer::T, indices)::T where {T<:Array{<:Any,3}}
+function read!(
+    dataset::AbstractDataset,
+    buffer::T,
+    indices,
+)::T where {T<:Array{<:Any,3}}
     rasterio!(dataset, buffer, indices, GF_Read)
     return buffer
 end
@@ -397,15 +406,23 @@ end
 read(dataset::AbstractDataset, i::Integer) = read(getband(dataset, i))
 
 function read(dataset::AbstractDataset, indices)::Array{pixeltype(dataset),3}
-    buffer =
-        Array{pixeltype(dataset)}(undef, width(dataset), height(dataset), length(indices))
+    buffer = Array{pixeltype(dataset)}(
+        undef,
+        width(dataset),
+        height(dataset),
+        length(indices),
+    )
     rasterio!(dataset, buffer, indices)
     return buffer
 end
 
 function read(dataset::AbstractDataset)::Array{pixeltype(dataset),3}
-    buffer =
-        Array{pixeltype(dataset)}(undef, width(dataset), height(dataset), nraster(dataset))
+    buffer = Array{pixeltype(dataset)}(
+        undef,
+        width(dataset),
+        height(dataset),
+        nraster(dataset),
+    )
     read!(dataset, buffer)
     return buffer
 end
@@ -453,7 +470,12 @@ function read(
     rows::UnitRange{<:Integer},
     cols::UnitRange{<:Integer},
 )::Array{pixeltype(dataset),3}
-    buffer = Array{pixeltype(dataset),3}(undef, length(cols), length(rows), length(indices))
+    buffer = Array{pixeltype(dataset),3}(
+        undef,
+        length(cols),
+        length(rows),
+        length(indices),
+    )
     rasterio!(dataset, buffer, indices, rows, cols)
     return buffer
 end
@@ -480,7 +502,16 @@ function write!(
     xsize::Integer,
     ysize::Integer,
 )::T where {T<:AbstractDataset}
-    rasterio!(dataset, buffer, indices, xoffset, yoffset, xsize, ysize, GF_Write)
+    rasterio!(
+        dataset,
+        buffer,
+        indices,
+        xoffset,
+        yoffset,
+        xsize,
+        ysize,
+        GF_Write,
+    )
     return dataset
 end
 

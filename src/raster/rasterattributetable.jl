@@ -3,14 +3,16 @@
 
 Construct empty table.
 """
-unsafe_createRAT()::RasterAttrTable = RasterAttrTable(GDAL.gdalcreaterasterattributetable())
+unsafe_createRAT()::RasterAttrTable =
+    RasterAttrTable(GDAL.gdalcreaterasterattributetable())
 
 """
     unsafe_createRAT(ct::ColorTable)
 
 Construct table from an existing colortable.
 """
-unsafe_createRAT(ct::ColorTable)::RasterAttrTable = initializeRAT!(unsafe_createRAT(), ct)
+unsafe_createRAT(ct::ColorTable)::RasterAttrTable =
+    initializeRAT!(unsafe_createRAT(), ct)
 
 "Destroys a RAT."
 function destroy(rat::RasterAttrTable)::Nothing
@@ -37,7 +39,8 @@ Fetch name of indicated column.
 ### Returns
 the column name or an empty string for invalid column numbers.
 """
-columnname(rat::RasterAttrTable, i::Integer)::String = GDAL.gdalratgetnameofcol(rat.ptr, i)
+columnname(rat::RasterAttrTable, i::Integer)::String =
+    GDAL.gdalratgetnameofcol(rat.ptr, i)
 
 """
     columnusage(rat::RasterAttrTable, i::Integer)
@@ -208,7 +211,14 @@ function attributeio!(
     nrows::Integer,
     data::Vector{Float64},
 )::Vector{Float64}
-    result = GDAL.gdalratvaluesioasdouble(rat.ptr, access, col, startrow, nrows, data)
+    result = GDAL.gdalratvaluesioasdouble(
+        rat.ptr,
+        access,
+        col,
+        startrow,
+        nrows,
+        data,
+    )
     @cplerr result "Failed to $access at column $col starting at $startrow"
     return data
 end
@@ -221,7 +231,14 @@ function attributeio!(
     nrows::Integer,
     data::Vector{Cint},
 )::Vector{Cint}
-    result = GDAL.gdalratvaluesioasinteger(rat.ptr, access, col, startrow, nrows, data)
+    result = GDAL.gdalratvaluesioasinteger(
+        rat.ptr,
+        access,
+        col,
+        startrow,
+        nrows,
+        data,
+    )
     @cplerr result "Failed to $access at column $col starting at $startrow"
     return data
 end
@@ -234,7 +251,14 @@ function attributeio!(
     nrows::Integer,
     data::Vector{T},
 )::Vector{T} where {T<:AbstractString}
-    result = GDAL.gdalratvaluesioasstring(rat.ptr, access, col, startrow, nrows, data)
+    result = GDAL.gdalratvaluesioasstring(
+        rat.ptr,
+        access,
+        col,
+        startrow,
+        nrows,
+        data,
+    )
     @cplerr result "Failed to $access at column $col starting at $startrow"
     return data
 end
@@ -330,7 +354,10 @@ The raster attribute table must be empty before calling `initializeRAT!()`.
 The Value fields are set based on the implicit assumption with color tables that
 entry 0 applies to pixel value 0, 1 to 1, etc.
 """
-function initializeRAT!(rat::RasterAttrTable, colortable::ColorTable)::RasterAttrTable
+function initializeRAT!(
+    rat::RasterAttrTable,
+    colortable::ColorTable,
+)::RasterAttrTable
     result = GDAL.gdalratinitializefromcolortable(rat.ptr, colortable.ptr)
     @cplerr result "Failed to initialize RAT from color table"
     return rat

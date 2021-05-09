@@ -34,7 +34,13 @@ function createlayer(;
     options = StringList(C_NULL),
 )::IFeatureLayer
     return IFeatureLayer(
-        GDAL.gdaldatasetcreatelayer(dataset.ptr, name, spatialref.ptr, geom, options),
+        GDAL.gdaldatasetcreatelayer(
+            dataset.ptr,
+            name,
+            spatialref.ptr,
+            geom,
+            options,
+        ),
         ownedby = dataset,
         spatialref = spatialref,
     )
@@ -48,7 +54,13 @@ function unsafe_createlayer(;
     options = StringList(C_NULL),
 )::FeatureLayer
     return FeatureLayer(
-        GDAL.gdaldatasetcreatelayer(dataset.ptr, name, spatialref.ptr, geom, options),
+        GDAL.gdaldatasetcreatelayer(
+            dataset.ptr,
+            name,
+            spatialref.ptr,
+            geom,
+            options,
+        ),
     )
 end
 
@@ -86,7 +98,9 @@ function unsafe_copy(
     name::AbstractString = "copy($(getname(layer)))",
     options = StringList(C_NULL),
 )::FeatureLayer
-    return FeatureLayer(GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name, options))
+    return FeatureLayer(
+        GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name, options),
+    )
 end
 
 """
@@ -176,7 +190,10 @@ In the future this may be generalized.
 Note that only the last spatial filter set is applied, even if several
 successive calls are done with different iGeomField values.
 """
-function setspatialfilter!(layer::L, geom::Geometry)::L where {L<:AbstractFeatureLayer}
+function setspatialfilter!(
+    layer::L,
+    geom::Geometry,
+)::L where {L<:AbstractFeatureLayer}
     # This method makes an internal copy of `geom`. The input `geom` remains
     # the responsibility of the caller, and may be safely destroyed.
     GDAL.ogr_l_setspatialfilter(layer.ptr, geom.ptr)
@@ -254,7 +271,10 @@ function setspatialfilter!(
     return layer
 end
 
-function clearspatialfilter!(layer::L, i::Integer)::L where {L<:AbstractFeatureLayer}
+function clearspatialfilter!(
+    layer::L,
+    i::Integer,
+)::L where {L<:AbstractFeatureLayer}
     GDAL.ogr_l_setspatialfilterex(layer.ptr, i, C_NULL)
     return layer
 end
@@ -392,7 +412,10 @@ then calls `nextfeature()` `i` times is used. To determine if fast seeking is
 available on the layer, use the `testcapability()` method with a value of
 `OLCFastSetNextByIndex`.
 """
-function setnextbyindex!(layer::L, i::Integer)::L where {L<:AbstractFeatureLayer}
+function setnextbyindex!(
+    layer::L,
+    i::Integer,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_setnextbyindex(layer.ptr, i)
     @ogrerr result "Failed to move the cursor to index $i"
     return layer
@@ -462,7 +485,10 @@ OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function addfeature!(layer::L, feature::Feature)::L where {L<:AbstractFeatureLayer}
+function addfeature!(
+    layer::L,
+    feature::Feature,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
     return layer
@@ -614,7 +640,10 @@ function envelope(
     return envelope[]
 end
 
-function envelope(layer::AbstractFeatureLayer, force::Bool = false)::GDAL.OGREnvelope
+function envelope(
+    layer::AbstractFeatureLayer,
+    force::Bool = false,
+)::GDAL.OGREnvelope
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
     result = GDAL.ogr_l_getextent(layer.ptr, envelope, force)
     @ogrerr result "Extent not known"
@@ -734,7 +763,9 @@ function listcapability(
         GDAL.OLCMeasuredGeometries,
     ),
 )::Dict{String,Bool}
-    return Dict{String,Bool}([c => testcapability(layer, c) for c in capabilities])
+    return Dict{String,Bool}(
+        [c => testcapability(layer, c) for c in capabilities],
+    )
 end
 
 # TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
@@ -1009,7 +1040,8 @@ Increment layer reference count.
 ### Returns
 The reference count after incrementing.
 """
-reference(layer::AbstractFeatureLayer)::Integer = GDAL.ogr_l_reference(layer.ptr)
+reference(layer::AbstractFeatureLayer)::Integer =
+    GDAL.ogr_l_reference(layer.ptr)
 
 """
     dereference(layer::AbstractFeatureLayer)
@@ -1019,14 +1051,16 @@ Decrement layer reference count.
 ### Returns
 The reference count after decrementing.
 """
-dereference(layer::AbstractFeatureLayer)::Integer = GDAL.ogr_l_dereference(layer.ptr)
+dereference(layer::AbstractFeatureLayer)::Integer =
+    GDAL.ogr_l_dereference(layer.ptr)
 
 """
     nreference(layer::AbstractFeatureLayer)
 
 The current reference count for the layer object itself.
 """
-nreference(layer::AbstractFeatureLayer)::Integer = GDAL.ogr_l_getrefcount(layer.ptr)
+nreference(layer::AbstractFeatureLayer)::Integer =
+    GDAL.ogr_l_getrefcount(layer.ptr)
 
 # """
 # Flush pending changes to disk.
@@ -1064,7 +1098,8 @@ nreference(layer::AbstractFeatureLayer)::Integer = GDAL.ogr_l_getrefcount(layer.
 
 The name of the FID column in the database, or \"\" if not supported.
 """
-fidcolumnname(layer::AbstractFeatureLayer)::String = GDAL.ogr_l_getfidcolumn(layer.ptr)
+fidcolumnname(layer::AbstractFeatureLayer)::String =
+    GDAL.ogr_l_getfidcolumn(layer.ptr)
 
 """
     geomcolumnname(layer::AbstractFeatureLayer)
@@ -1094,14 +1129,16 @@ Besides field names of the layers, the following special fields can be passed:
 
 By default, no fields are ignored.
 """
-function setignoredfields!(layer::L, fieldnames)::L where {L<:AbstractFeatureLayer}
+function setignoredfields!(
+    layer::L,
+    fieldnames,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_setignoredfields(layer.ptr, fieldnames)
     # OGRERR_NONE if all field names have been resolved (even if the driver
     # does not support this method)
     @ogrerr result "Failed to set ignored fields $fieldnames."
     return layer
 end
-
 
 # """
 # Intersection of two layers.

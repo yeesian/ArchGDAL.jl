@@ -13,7 +13,10 @@ converts the equation from being pixel to geo to being geo to pixel.
 ### Returns
 `gt_out`
 """
-function invgeotransform!(gt_in::Vector{Float64}, gt_out::Vector{Float64})::Vector{Float64}
+function invgeotransform!(
+    gt_in::Vector{Float64},
+    gt_out::Vector{Float64},
+)::Vector{Float64}
     result = Bool(GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)))
     result || error("Geotransform coefficients is uninvertable")
     return gt_out
@@ -74,6 +77,9 @@ function composegeotransform!(
     return gtout
 end
 
-function composegeotransform(gt1::Vector{Float64}, gt2::Vector{Float64})::Vector{Float64}
+function composegeotransform(
+    gt1::Vector{Float64},
+    gt2::Vector{Float64},
+)::Vector{Float64}
     return composegeotransform!(gt1, gt2, Vector{Float64}(undef, 6))
 end

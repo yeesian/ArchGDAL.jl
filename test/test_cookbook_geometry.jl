@@ -5,9 +5,7 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_cookbook_geometry.jl" begin
-
     @testset "Create a Point" begin
-
         x, y = 1198054.34, 648493.09
         wktpoint = "POINT (1198054.34 648493.09)"
 
@@ -92,7 +90,6 @@ const AG = ArchGDAL;
     end
 
     @testset "Create a Polygon" begin
-
         wktpoly =
             "POLYGON ((1179091.16469033 712782.883845978,1161053.02182265 667456.268434881," *
             "1214704.9339419 641092.828859039,1228580.42845551 682719.312399842," *
@@ -121,6 +118,7 @@ const AG = ArchGDAL;
                 (1179091.1646903288, 712782.8838459781),
             ])
             AG.addgeom!(poly, ring)
+            return nothing
         end
 
         AG.createlinearring([
@@ -178,7 +176,6 @@ const AG = ArchGDAL;
     end
 
     @testset "Create a Polygon with holes" begin
-
         wktpoly =
             "POLYGON ((1154115.27456585 686419.444270136,1154115.27456585 653118.257437493," *
             "1165678.18666051 653118.257437493,1165678.18666051 686419.444270136," *
@@ -293,7 +290,6 @@ const AG = ArchGDAL;
     end
 
     @testset "Create a MultiPoint" begin
-
         wktpoints =
             "MULTIPOINT (1251243.73616105 598078.795866876," *
             "1240605.85703396 601778.927737169,1250318.70319348 606404.092575036)"
@@ -350,7 +346,6 @@ const AG = ArchGDAL;
     end
 
     @testset "Create a MultiLineString" begin
-
         wktline =
             "MULTILINESTRING ((1214242.41745812 617041.971702131,1234593.14274473 629529.916764372)," *
             "(1184641.36249577 626754.817861651,1219792.61526356 606866.609058823))"
@@ -437,7 +432,6 @@ const AG = ArchGDAL;
     end
 
     @testset "Create a MultiPolygon" begin
-
         wktmultipolygon =
             "MULTIPOLYGON " *
             "(((1204067.05481481 634617.598086025,1204067.05481481 620742.103572424," *
@@ -565,7 +559,6 @@ const AG = ArchGDAL;
     end
 
     @testset "Create a GeometryCollection" begin
-
         wktcollection =
             "GEOMETRYCOLLECTION " *
             "(POINT (-122.23 47.09),LINESTRING (-122.6 47.14,-122.48 47.23))"
@@ -735,7 +728,8 @@ const AG = ArchGDAL;
     @testset "Iterate over Points in a Geometry" begin
         wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
         AG.fromWKT(wkt) do geom
-            @test AG.getpoint(geom, 3) == (1.2248802965852122e6, 665143.6860159477, 0.0)
+            @test AG.getpoint(geom, 3) ==
+                  (1.2248802965852122e6, 665143.6860159477, 0.0)
         end
     end
 
@@ -758,7 +752,8 @@ const AG = ArchGDAL;
         wkt = "LINESTRING (1181866.263593049 615654.4222507705, 1205917.1207499576 623979.7189589312, 1227192.8790041457 643405.4112779726, 1224880.2965852122 665143.6860159477)"
         AG.fromWKT(wkt) do line
             env = AG.envelope(line)
-            @test (env.MaxX - env.MinX) * (env.MaxY - env.MinY) ≈ 2.2431808256625123e9
+            @test (env.MaxX - env.MinX) * (env.MaxY - env.MinY) ≈
+                  2.2431808256625123e9
         end
     end
 
@@ -810,7 +805,6 @@ const AG = ArchGDAL;
         wkt2 = "POLYGON ((1199915.6662253144 633079.3410163528, 1199915.6662253144 614453.958118695, 1219317.1067437078 614453.958118695, 1219317.1067437078 633079.3410163528, 1199915.6662253144 633079.3410163528)))"
         wkt3 = "POLYGON ((1208064.27124304 624154.678377892,1219317.10674371 624154.678377892,1219317.10674371 614453.958118695,1208064.27124304 614453.958118695,1208064.27124304 624154.678377892))"
 
-
         # Method 1
         AG.fromWKT(wkt1) do poly1
             AG.fromWKT(wkt2) do poly2
@@ -821,7 +815,8 @@ const AG = ArchGDAL;
         end
 
         # Method 2
-        @test AG.toWKT(AG.intersection(AG.fromWKT(wkt1), AG.fromWKT(wkt2))) == wkt3
+        @test AG.toWKT(AG.intersection(AG.fromWKT(wkt1), AG.fromWKT(wkt2))) ==
+              wkt3
     end
 
     @testset "Calculate union between two Geometries" begin
@@ -983,5 +978,4 @@ const AG = ArchGDAL;
         @test AG.getgeomtype(AG.forceto(AG.fromWKT(wkt), AG.wkbMultiPolygon)) ==
               AG.wkbMultiPolygon
     end
-
 end

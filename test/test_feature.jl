@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_feature.jl" begin
-
     AG.read("data/point.geojson") do dataset
         layer = AG.getlayer(dataset, 0)
         AG.getfeature(layer, 0) do f1
@@ -58,7 +57,7 @@ const AG = ArchGDAL;
             AG.setgeom!(f, 0, AG.createpoint(0, 100))
             @test AG.toWKT(AG.getgeom(f, 0)) == "POINT (0 100)"
             AG.createpolygon([(0.0, 100.0), (100.0, 0.0)]) do poly
-                AG.setgeom!(f, 0, poly)
+                return AG.setgeom!(f, 0, poly)
             end
             @test AG.toWKT(AG.getgeom(f, 0)) == "POLYGON ((0 100,100 0))"
 
@@ -86,8 +85,10 @@ const AG = ArchGDAL;
             @test AG.validate(f, AG.F_VAL_NULL, false) == true
             @test AG.validate(f, AG.F_VAL_GEOM_TYPE, false) == false
             @test AG.validate(f, AG.F_VAL_WIDTH, false) == true
-            @test AG.validate(f, AG.F_VAL_ALLOW_NULL_WHEN_DEFAULT, false) == true
-            @test AG.validate(f, AG.F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) == true
+            @test AG.validate(f, AG.F_VAL_ALLOW_NULL_WHEN_DEFAULT, false) ==
+                  true
+            @test AG.validate(f, AG.F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) ==
+                  true
 
             @test AG.getfield(f, 1) == "point-a"
             @test AG.getdefault(f, 1) == ""
@@ -105,28 +106,31 @@ const AG = ArchGDAL;
         AG.create(AG.getdriver("MEMORY")) do output
             layer = AG.createlayer(dataset = output, geom = AG.wkbPolygon)
             AG.createfielddefn("int64field", AG.OFTInteger64) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("doublefield", AG.OFTReal) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("intlistfield", AG.OFTIntegerList) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
-            AG.createfielddefn("int64listfield", AG.OFTInteger64List) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+            AG.createfielddefn(
+                "int64listfield",
+                AG.OFTInteger64List,
+            ) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("doublelistfield", AG.OFTRealList) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("stringlistfield", AG.OFTStringList) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("binaryfield", AG.OFTBinary) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("datetimefield", AG.OFTDateTime) do fielddefn
-                AG.addfielddefn!(layer, fielddefn)
+                return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfeature(layer) do feature
                 AG.setfield!(feature, 0, 1)
@@ -168,7 +172,8 @@ const AG = ArchGDAL;
                         @test AG.getfield(lastfeature, 2) == Int32[1, 2]
                         @test AG.getfield(lastfeature, 3) == Int64[1, 2]
                         @test AG.getfield(lastfeature, 4) ≈ Float64[1.0, 2.0]
-                        @test AG.getfield(lastfeature, 5) == String["foo", "bar"]
+                        @test AG.getfield(lastfeature, 5) ==
+                              String["foo", "bar"]
                         @test AG.getfield(lastfeature, 6) == UInt8[1, 2, 3, 4]
                         @test AG.getfield(lastfeature, 7) ==
                               Dates.DateTime(2016, 9, 25, 21, 17, 0)
@@ -188,5 +193,4 @@ const AG = ArchGDAL;
             @test AG.nfeature(layer) == 3
         end
     end
-
 end

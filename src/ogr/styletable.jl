@@ -9,7 +9,9 @@ OGRStyleMgr factory.
 ### Returns
 an handle to the new style manager object.
 """
-function unsafe_createstylemanager(styletable::StyleTable = StyleTable())::StyleManager
+function unsafe_createstylemanager(
+    styletable::StyleTable = StyleTable(),
+)::StyleManager
     return StyleManager(GDAL.ogr_sm_create(styletable.ptr))
 end
 
@@ -84,7 +86,7 @@ function unsafe_getpart(
     id::Integer,
     stylestring = C_NULL,
 )::StyleTool
-    StyleTool(GDAL.ogr_sm_getpart(stylemanager.ptr, id, stylestring))
+    return StyleTool(GDAL.ogr_sm_getpart(stylemanager.ptr, id, stylestring))
 end
 
 """
@@ -191,7 +193,11 @@ Set Style Tool units.
 * `newunit`: the new unit.
 * `scale`: ground to paper scale factor.
 """
-function setunit!(styletool::StyleTool, newunit::OGRSTUnitId, scale::Real)::StyleTool
+function setunit!(
+    styletool::StyleTool,
+    newunit::OGRSTUnitId,
+    scale::Real,
+)::StyleTool
     GDAL.ogr_st_setunit(styletool.ptr, newunit, scale)
     return styletool
 end
@@ -216,7 +222,8 @@ the parameter value as a string and sets `nullflag`.
 asstring(styletool::StyleTool, id::Integer, nullflag::Ref{Cint})::String =
     GDAL.ogr_st_getparamstr(styletool.ptr, id, nullflag)
 
-asstring(styletool::StyleTool, id::Integer)::String = asstring(styletool, id, Ref{Cint}(0))
+asstring(styletool::StyleTool, id::Integer)::String =
+    asstring(styletool, id, Ref{Cint}(0))
 
 """
     asint(styletool::StyleTool, id::Integer, nullflag = Ref{Cint}(0))
@@ -234,7 +241,11 @@ Get Style Tool parameter value as an integer.
 ### Returns
 the parameter value as an integer and sets `nullflag`.
 """
-function asint(styletool::StyleTool, id::Integer, nullflag::Ref{Cint} = Ref{Cint}(0))::Int32
+function asint(
+    styletool::StyleTool,
+    id::Integer,
+    nullflag::Ref{Cint} = Ref{Cint}(0),
+)::Int32
     return GDAL.ogr_st_getparamnum(styletool.ptr, id, nullflag)
 end
 
@@ -276,7 +287,11 @@ Set Style Tool parameter value.
 """
 function setparam! end
 
-function setparam!(styletool::StyleTool, id::Integer, value::AbstractString)::StyleTool
+function setparam!(
+    styletool::StyleTool,
+    id::Integer,
+    value::AbstractString,
+)::StyleTool
     GDAL.ogr_st_setparamstr(styletool.ptr, id, value)
     return styletool
 end
@@ -302,7 +317,8 @@ Get the style string for this Style Tool.
 ### Returns
 the style string for this style tool or "" if the styletool is invalid.
 """
-getstylestring(styletool::StyleTool)::String = GDAL.ogr_st_getstylestring(styletool.ptr)
+getstylestring(styletool::StyleTool)::String =
+    GDAL.ogr_st_getstylestring(styletool.ptr)
 
 """
     toRGBA(styletool::StyleTool, color::AbstractString)
@@ -316,13 +332,24 @@ Return the r,g,b,a components of a color encoded in #RRGGBB[AA] format.
 ### Returns
 (R,G,B,A) tuple of Cints.
 """
-function toRGBA(styletool::StyleTool, color::AbstractString)::Tuple{Int32,Int32,Int32,Int32}
+function toRGBA(
+    styletool::StyleTool,
+    color::AbstractString,
+)::Tuple{Int32,Int32,Int32,Int32}
     red = Ref{Int32}(0)
     green = Ref{Int32}(0)
     blue = Ref{Int32}(0)
     alpha = Ref{Int32}(0)
-    result =
-        Bool(GDAL.ogr_st_getrgbfromstring(styletool.ptr, color, red, green, blue, alpha))
+    result = Bool(
+        GDAL.ogr_st_getrgbfromstring(
+            styletool.ptr,
+            color,
+            red,
+            green,
+            blue,
+            alpha,
+        ),
+    )
     result || error("Error in getting RGBA from Styletool")
     return (red[], green[], blue[], alpha[])
 end
@@ -439,7 +466,8 @@ Get the next style string from the table.
 ### Returns
 the next style string or NULL on error.
 """
-nextstyle(styletable::StyleTable)::String = GDAL.ogr_stbl_getnextstyle(styletable.ptr)
+nextstyle(styletable::StyleTable)::String =
+    GDAL.ogr_stbl_getnextstyle(styletable.ptr)
 
 """
     laststyle(styletable::StyleTable)
@@ -452,4 +480,5 @@ Get the style name of the last style string fetched with OGR_STBL_GetNextStyle.
 ### Returns
 the Name of the last style string or NULL on error.
 """
-laststyle(styletable::StyleTable)::String = GDAL.ogr_stbl_getlaststylename(styletable.ptr)
+laststyle(styletable::StyleTable)::String =
+    GDAL.ogr_stbl_getlaststylename(styletable.ptr)

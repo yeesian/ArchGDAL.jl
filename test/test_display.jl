@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_display.jl" begin
-
     @testset "Testing Displays for NULL objects" begin
         @test sprint(print, AG.Driver(C_NULL)) == "NULL Driver"
         @test sprint(print, AG.IDataset()) == "NULL Dataset"
@@ -48,7 +47,8 @@ const AG = ArchGDAL;
                   (index 0) FID => 0.0
                   (index 1) pointname => a
                 """
-                @test sprint(print, AG.getfielddefn(feature, 1)) == "pointname (OFTString)"
+                @test sprint(print, AG.getfielddefn(feature, 1)) ==
+                      "pointname (OFTString)"
                 @test sprint(print, AG.getgeomdefn(feature, 0)) == " (wkbPoint)"
             end
         end

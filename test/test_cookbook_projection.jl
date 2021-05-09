@@ -4,14 +4,14 @@ const AG = ArchGDAL
 const GFT = GeoFormatTypes
 
 @testset "test_cookbook_projection.jl" begin
-
     @testset "Reproject a Geometry" begin
         @testset "Method 1" begin
             AG.importEPSG(2927) do source
                 AG.importEPSG(4326) do target
                     AG.createcoordtrans(source, target) do transform
                         AG.fromWKT("POINT (1120351.57 741921.42)") do point
-                            @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
+                            @test AG.toWKT(point) ==
+                                  "POINT (1120351.57 741921.42)"
                             AG.transform!(point, transform)
                             @test GeoInterface.coordinates(point) ≈
                                   [47.3488070138318, -122.5981499431438]
@@ -39,20 +39,26 @@ const GFT = GeoFormatTypes
 
         @testset "Use reproject" begin
             @testset "reciprocal reprojection of wkt" begin
-                wktpoint = GFT.WellKnownText(GFT.Geom(), "POINT (1120351.57 741921.42)")
+                wktpoint = GFT.WellKnownText(
+                    GFT.Geom(),
+                    "POINT (1120351.57 741921.42)",
+                )
                 result = GFT.WellKnownText(
                     GFT.Geom(),
                     "POINT (47.3488070138318 -122.598149943144)",
                 )
-                @test AG.reproject(wktpoint, GFT.EPSG(2927), GFT.EPSG(4326)) == result
+                @test AG.reproject(wktpoint, GFT.EPSG(2927), GFT.EPSG(4326)) ==
+                      result
                 @test convert(
                     AG.Geometry,
                     AG.reproject(result, GFT.EPSG(4326), GFT.EPSG(2927)),
-                ) |> GeoInterface.coordinates ≈ [1.12035156999967e6, 741921.420000271]
+                ) |> GeoInterface.coordinates ≈
+                      [1.12035156999967e6, 741921.420000271]
             end
             @testset "reproject vector, vector of vector, or tuple" begin
                 coord = [1120351.57, 741921.42]
-                @test AG.reproject(coord, GFT.EPSG(2927), nothing) ≈ [1120351.57, 741921.42]
+                @test AG.reproject(coord, GFT.EPSG(2927), nothing) ≈
+                      [1120351.57, 741921.42]
                 @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326)) ≈
                       [47.3488070138318, -122.5981499431438]
                 @test AG.reproject([coord], GFT.EPSG(2927), GFT.EPSG(4326)) ≈
@@ -64,8 +70,12 @@ const GFT = GeoFormatTypes
                     GFT.EPSG(4326);
                     order = :compliant,
                 ) ≈ [47.3488070138318, -122.5981499431438]
-                @test AG.reproject(coord, GFT.EPSG(2927), GFT.EPSG(4326); order = :trad) ≈
-                      [-122.5981499431438, 47.3488070138318]
+                @test AG.reproject(
+                    coord,
+                    GFT.EPSG(2927),
+                    GFT.EPSG(4326);
+                    order = :trad,
+                ) ≈ [-122.5981499431438, 47.3488070138318]
                 @test AG.reproject(
                     [coord],
                     GFT.EPSG(2927),
@@ -93,7 +103,6 @@ const GFT = GeoFormatTypes
                 ) ≈ [[-122.5981499431438, 47.3488070138318]]
             end
         end
-
     end
 
     @testset "Get Projection" begin
@@ -122,7 +131,8 @@ const GFT = GeoFormatTypes
             AG.morphfromESRI!(spatialref)
             @test AG.toPROJ4(spatialref) == proj4str
             AG.importEPSGA!(spatialref, 4326)
-            @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
+            @test AG.toPROJ4(spatialref) ==
+                  "+proj=longlat +datum=WGS84 +no_defs"
         end
 
         AG.importEPSGA(4326) do spatialref
@@ -131,8 +141,8 @@ const GFT = GeoFormatTypes
                 @test AG.toWKT(cloneref) == AG.toWKT(cloneref2)
             end
             @test AG.toWKT(cloneref) == AG.toWKT(AG.importEPSGA(4326))
-            @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
+            @test AG.toPROJ4(spatialref) ==
+                  "+proj=longlat +datum=WGS84 +no_defs"
         end
     end
-
 end

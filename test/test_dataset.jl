@@ -3,17 +3,20 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_dataset.jl" begin
-
     @testset "Test methods for raster dataset" begin
         AG.read("data/utmsmall.tif") do dataset
             @testset "Method 1" begin
-                AG.copy(dataset, filename = "/vsimem/utmcopy.tif") do copydataset
+                AG.copy(
+                    dataset,
+                    filename = "/vsimem/utmcopy.tif",
+                ) do copydataset
                     @test AG.ngcp(copydataset) == 0
                     AG.getband(copydataset, 1) do band
                         @test AG.noverview(band) == 0
                         AG.buildoverviews!(copydataset, Cint[2, 4, 8])
                         @test AG.noverview(band) == 3
                         AG.copywholeraster!(dataset, copydataset)
+                        return nothing
                     end
                 end
             end
@@ -29,7 +32,12 @@ const AG = ArchGDAL;
             AG.update("/vsimem/utmcopy2.tif") do copydataset
                 @test AG.ngcp(copydataset) == 0
                 @test AG.noverview(AG.getband(copydataset, 1)) == 3
-                AG.copywholeraster!(dataset, copydataset, options = ["COMPRESS=LZW"])
+                AG.copywholeraster!(
+                    dataset,
+                    copydataset,
+                    options = ["COMPRESS=LZW"],
+                )
+                return nothing
             end
         end
     end
@@ -75,8 +83,11 @@ const AG = ArchGDAL;
 
         dataset4 = AG.create(tempname(), driver = AG.getdriver("KML"))
         @test AG.nlayer(dataset4) == 0
-        layer4 =
-            AG.createlayer(name = "layer4", dataset = dataset4, geom = AG.wkbLineString)
+        layer4 = AG.createlayer(
+            name = "layer4",
+            dataset = dataset4,
+            geom = AG.wkbLineString,
+        )
         @test AG.nlayer(dataset4) == 1
 
         AG.create(tempname(), driver = AG.getdriver("KML")) do dataset5
@@ -98,7 +109,7 @@ const AG = ArchGDAL;
         @test AG.ngeom(layer5) == 1
 
         AG.create(AG.getdriver("Memory")) do dataset6
-            for i = 1:20
+            for i in 1:20
                 AG.createlayer(name = "layer$(i - 1)", dataset = dataset6)
             end
             @test AG.nlayer(dataset6) == 20
@@ -118,5 +129,4 @@ const AG = ArchGDAL;
                 layer15, layer16, layer17, layer18, layer19, """
         end
     end
-
 end

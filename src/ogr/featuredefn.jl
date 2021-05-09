@@ -19,14 +19,16 @@ The count is used to track the number of `Feature`s referencing this definition.
 ### Returns
 The updated reference count.
 """
-reference(featuredefn::FeatureDefn)::Integer = GDAL.ogr_fd_reference(featuredefn.ptr)
+reference(featuredefn::FeatureDefn)::Integer =
+    GDAL.ogr_fd_reference(featuredefn.ptr)
 
 """
     dereference(featuredefn::FeatureDefn)
 
 Decrements the reference count by one, and returns the updated count.
 """
-dereference(featuredefn::FeatureDefn)::Integer = GDAL.ogr_fd_dereference(featuredefn.ptr)
+dereference(featuredefn::FeatureDefn)::Integer =
+    GDAL.ogr_fd_dereference(featuredefn.ptr)
 
 """
     nreference(featuredefn::AbstractFeatureDefn)
@@ -64,7 +66,8 @@ end
 
 Get name of the OGRFeatureDefn passed as an argument.
 """
-getname(featuredefn::AbstractFeatureDefn)::String = GDAL.ogr_fd_getname(featuredefn.ptr)
+getname(featuredefn::AbstractFeatureDefn)::String =
+    GDAL.ogr_fd_getname(featuredefn.ptr)
 
 """
     nfield(featuredefn::AbstractFeatureDefn)
@@ -124,7 +127,10 @@ This function should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn. The OGRFieldDefn passed in is copied,
 and remains the responsibility of the caller.
 """
-function addfielddefn!(featuredefn::FeatureDefn, fielddefn::FieldDefn)::FeatureDefn
+function addfielddefn!(
+    featuredefn::FeatureDefn,
+    fielddefn::FieldDefn,
+)::FeatureDefn
     GDAL.ogr_fd_addfielddefn(featuredefn.ptr, fielddefn.ptr)
     return featuredefn
 end
@@ -164,12 +170,14 @@ existence based on this OGRFeatureDefn.
     at position `i` after reordering, its position before reordering was
     `indices[i]`.
 """
-function reorderfielddefns!(featuredefn::FeatureDefn, indices::Vector{Cint})::FeatureDefn
+function reorderfielddefns!(
+    featuredefn::FeatureDefn,
+    indices::Vector{Cint},
+)::FeatureDefn
     result = GDAL.ogr_fd_reorderfielddefns(featuredefn.ptr, indices)
     @ogrerr result "Failed to reorder $indices in the feature definition"
     return featuredefn
 end
-
 
 """
     getgeomtype(featuredefn::AbstractFeatureDefn)
@@ -199,7 +207,10 @@ type. The default upon creation is `wkbUnknown` which allows for any geometry
 type. The geometry type should generally not be changed after any OGRFeatures
 have been created against this definition.
 """
-function setgeomtype!(featuredefn::FeatureDefn, etype::OGRwkbGeometryType)::FeatureDefn
+function setgeomtype!(
+    featuredefn::FeatureDefn,
+    etype::OGRwkbGeometryType,
+)::FeatureDefn
     GDAL.ogr_fd_setgeomtype(featuredefn.ptr, etype)
     return featuredefn
 end
@@ -277,7 +288,10 @@ name (case insensitively) is returned.
 ### Returns
 the geometry field index, or -1 if no match found.
 """
-function findgeomindex(featuredefn::AbstractFeatureDefn, name::AbstractString = "")::Integer
+function findgeomindex(
+    featuredefn::AbstractFeatureDefn,
+    name::AbstractString = "",
+)::Integer
     return GDAL.ogr_fd_getgeomfieldindex(featuredefn.ptr, name)
 end
 
@@ -327,7 +341,10 @@ end
 
 Test if the feature definition is identical to the other one.
 """
-function issame(featuredefn1::AbstractFeatureDefn, featuredefn2::AbstractFeatureDefn)::Bool
+function issame(
+    featuredefn1::AbstractFeatureDefn,
+    featuredefn2::AbstractFeatureDefn,
+)::Bool
     return Bool(GDAL.ogr_fd_issame(featuredefn1.ptr, featuredefn2.ptr))
 end
 

@@ -10,7 +10,8 @@ const GFT = GeoFormatTypes;
     @testset "convert point format" begin
         point = AG.createpoint(100, 70)
         json = convert(GFT.GeoJSON, point)
-        @test sprint(print, convert(AG.IGeometry, json)) == "Geometry: POINT (100 70)"
+        @test sprint(print, convert(AG.IGeometry, json)) ==
+              "Geometry: POINT (100 70)"
         kml = convert(GFT.KML, point)
         gml = convert(GFT.GML, point)
         wkb = convert(GFT.WellKnownBinary, point)
@@ -42,5 +43,4 @@ const GFT = GeoFormatTypes;
         @test convert(GFT.CoordSys, GFT.CRS(), proj4326) isa GFT.CoordSys
         @test convert(GFT.GML, GFT.CRS(), proj4326) isa GeoFormatTypes.GML
     end
-
 end

@@ -26,7 +26,7 @@ function Base.show(io::IO, dataset::AbstractDataset)::IO
         print(io, "\nDataset (width x height): ")
         println(io, "$(width(dataset)) x $(height(dataset)) (pixels)")
         println(io, "Number of raster bands: $nrasters")
-        for i = 1:min(nrasters, 3)
+        for i in 1:min(nrasters, 3)
             print(io, "  ")
             summarize(io, getband(dataset, i))
         end
@@ -37,14 +37,14 @@ function Base.show(io::IO, dataset::AbstractDataset)::IO
     if nlayers > 0
         println(io, "\nNumber of feature layers: $nlayers")
         ndisplay = min(nlayers, 5) # display up to 5 layers
-        for i = 1:ndisplay
+        for i in 1:ndisplay
             layer = getlayer(dataset, i - 1)
             layergeomtype = getgeomtype(layer)
             println(io, "  Layer $(i - 1): $(getname(layer)) ($layergeomtype)")
         end
         if nlayers > 5
             print(io, "  Remaining layers:\n    ")
-            for i = 6:nlayers
+            for i in 6:nlayers
                 print(io, "$(getname(getlayer(dataset, i - 1))), ")
                 # display up to 5 layer names per line
                 if i % 5 == 0 && i < nlayers
@@ -59,7 +59,8 @@ end
 #Add method to avoid show from DiskArrays
 Base.show(io::IO, raster::RasterDataset)::IO = show(io, raster.ds)
 
-Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset)::IO = show(io, raster.ds)
+Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset)::IO =
+    show(io, raster.ds)
 
 function summarize(io::IO, rasterband::AbstractRasterBand)::IO
     if rasterband.ptr == C_NULL
@@ -76,9 +77,14 @@ function summarize(io::IO, rasterband::AbstractRasterBand)::IO
     return io
 end
 
-Base.show(io::IO, rasterband::AbstractRasterBand)::IO = show(io, "text/plain", rasterband)
+Base.show(io::IO, rasterband::AbstractRasterBand)::IO =
+    show(io, "text/plain", rasterband)
 
-function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)::IO
+function Base.show(
+    io::IO,
+    ::MIME"text/plain",
+    rasterband::AbstractRasterBand,
+)::IO
     summarize(io, rasterband)
     if rasterband.ptr == C_NULL
         return io
@@ -92,7 +98,7 @@ function Base.show(io::IO, ::MIME"text/plain", rasterband::AbstractRasterBand)::
     print(io, "    blocksize: $(x)×$(y), nodata: $nv, ")
     println(io, "units: $(sc)px + $ofs$ut")
     print(io, "    overviews: ")
-    for i = 1:norvw
+    for i in 1:norvw
         ovr_band = getoverview(rasterband, i - 1)
         print(io, "($(i - 1)) $(width(ovr_band))x$(height(ovr_band)) ")
         i % 3 == 0 && print(io, "\n               ")
@@ -113,7 +119,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
     # Print Geometries
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
-    for i = 1:ngeomdisplay
+    for i in 1:ngeomdisplay
         gfd = getgeomdefn(featuredefn, i - 1)
         display = "  Geometry $(i - 1) ($(getname(gfd))): [$(gettype(gfd))]"
         if length(display) > 75
@@ -141,7 +147,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
     # Print Features
     n = nfield(featuredefn)
     nfielddisplay = min(n, 5)
-    for i = 1:nfielddisplay
+    for i in 1:nfielddisplay
         fd = getfielddefn(featuredefn, i - 1)
         display = "     Field $(i - 1) ($(getname(fd))): [$(gettype(fd))]"
         if length(display) > 75
@@ -173,7 +179,7 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::IO
     end
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
-    for i = 1:ngeomdisplay
+    for i in 1:ngeomdisplay
         gfd = getgeomdefn(featuredefn, i - 1)
         println(io, "  Geometry (index $(i - 1)): $gfd")
     end
@@ -181,7 +187,7 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::IO
 
     n = nfield(featuredefn)
     nfielddisplay = min(n, 5)
-    for i = 1:nfielddisplay
+    for i in 1:nfielddisplay
         fd = getfielddefn(featuredefn, i - 1)
         println(io, "     Field (index $(i - 1)): $fd")
     end
@@ -214,13 +220,13 @@ function Base.show(io::IO, feature::Feature)::IO
     end
     println(io, "Feature")
     n = ngeom(feature)
-    for i = 1:min(n, 3)
+    for i in 1:min(n, 3)
         displayname = geomname(getgeom(feature, i - 1))
         println(io, "  (index $(i - 1)) geom => $displayname")
     end
     n > 3 && println(io, "...\n Number of geometries: $n")
     n = nfield(feature)
-    for i = 1:min(n, 10)
+    for i in 1:min(n, 10)
         displayname = getname(getfielddefn(feature, i - 1))
         print(io, "  (index $(i - 1)) $displayname => ")
         println(io, "$(getfield(feature, i - 1))")

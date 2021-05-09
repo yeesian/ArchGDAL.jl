@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_featurelayer.jl" begin
-
     @testset "Testing FeatureLayer Methods" begin
         AG.read("data/point.geojson") do dataset
             AG.copy(dataset) do tmpcopy
@@ -12,11 +11,14 @@ const AG = ArchGDAL;
                 @test sprint(print, AG.getspatialref(tmplayer)) ==
                       "NULL Spatial Reference System"
                 AG.getspatialref(tmplayer) do spref
-                    @test sprint(print, spref) == "NULL Spatial Reference System"
+                    @test sprint(print, spref) ==
+                          "NULL Spatial Reference System"
                 end
-                @test AG.isignored(AG.getgeomdefn(AG.layerdefn(tmplayer), 0)) == false
+                @test AG.isignored(AG.getgeomdefn(AG.layerdefn(tmplayer), 0)) ==
+                      false
                 AG.setignoredfields!(tmplayer, ["OGR_GEOMETRY"])
-                @test AG.isignored(AG.getgeomdefn(AG.layerdefn(tmplayer), 0)) == true
+                @test AG.isignored(AG.getgeomdefn(AG.layerdefn(tmplayer), 0)) ==
+                      true
             end
 
             AG.copy(dataset, driver = AG.getdriver("Memory")) do tmpcopy
@@ -55,6 +57,7 @@ const AG = ArchGDAL;
                 AG.createfeature(newlayer) do newfeature
                     AG.setgeom!(newfeature, 0, AG.createpoint())
                     AG.setgeom!(newfeature, 1, AG.createlinestring())
+                    return nothing
                 end
                 @test AG.nfeature(newlayer) == 1
                 @test sprint(print, newlayer) == """
@@ -84,10 +87,15 @@ const AG = ArchGDAL;
                     AG.setgeom!(
                         newfeature,
                         2,
-                        AG.createpolygon([[[0.0, 0.0], [1.0, 1.0], [0.0, 1.0]]]),
+                        AG.createpolygon([[
+                            [0.0, 0.0],
+                            [1.0, 1.0],
+                            [0.0, 1.0],
+                        ]]),
                     )
 
-                    @test sprint(print, AG.getgeom(newfeature)) == "Geometry: POINT EMPTY"
+                    @test sprint(print, AG.getgeom(newfeature)) ==
+                          "Geometry: POINT EMPTY"
                     @test sprint(print, AG.getgeom(newfeature, 0)) ==
                           "Geometry: POINT EMPTY"
                     @test sprint(print, AG.getgeom(newfeature, 1)) ==
@@ -101,7 +109,8 @@ const AG = ArchGDAL;
                         @test sprint(print, g) == "Geometry: LINESTRING EMPTY"
                     end
                     AG.getgeom(newfeature, 2) do g
-                        @test sprint(print, g) == "Geometry: POLYGON ((0 0,1 1,0 1))"
+                        @test sprint(print, g) ==
+                              "Geometry: POLYGON ((0 0,1 1,0 1))"
                     end
                 end
             end
@@ -142,7 +151,8 @@ const AG = ArchGDAL;
                 end
                 @test n == 2
                 AG.clearspatialfilter!(layer)
-                @test sprint(print, AG.getspatialfilter(layer)) == "NULL Geometry"
+                @test sprint(print, AG.getspatialfilter(layer)) ==
+                      "NULL Geometry"
                 n = 0
                 for feature in layer
                     n += 1

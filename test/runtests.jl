@@ -34,5 +34,6 @@ include("remotefiles.jl")
         include("test_geotransform.jl")
         include("test_images.jl")
         include("test_utils.jl")
+        return nothing
     end
 end

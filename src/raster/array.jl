@@ -26,7 +26,9 @@ struct RasterDataset{T,DS<:AbstractDataset} <: AbstractDiskArray{T,3}
     size::Tuple{Int,Int,Int}
 end
 
-function RasterDataset(ds::AbstractDataset)::RasterDataset{pixeltype(ds),typeof(ds)}
+function RasterDataset(
+    ds::AbstractDataset,
+)::RasterDataset{pixeltype(ds),typeof(ds)}
     if iszero(nraster(ds))
         throw(ArgumentError("The Dataset does not contain any raster bands"))
     end
@@ -58,7 +60,9 @@ for f in (
     :metadata,
     :metadatadomainlist,
 )
-    eval(:($(f)(x::RasterDataset, args...; kwargs...) = $(f)(x.ds, args...; kwargs...)))
+    eval(:(function $(f)(x::RasterDataset, args...; kwargs...)
+        return $(f)(x.ds, args...; kwargs...)
+    end))
 end
 
 # Here we need to special-case, to avoid a method ambiguity
@@ -104,7 +108,7 @@ function _common_size(ds::AbstractDataset)
     nr = nraster(ds)
     allsizes = map(1:nr) do i
         b = getband(ds, i)
-        size(b)
+        return size(b)
     end
     s = unique(allsizes)
     if length(s) != 1
@@ -129,7 +133,8 @@ function returns a `RasterDataset`, which is a subtype of
 `AbstractDiskArray{T,3}`, so that users can operate on the array using direct
 indexing.
 """
-readraster(s::String; kwargs...)::RasterDataset = RasterDataset(read(s; kwargs...))
+readraster(s::String; kwargs...)::RasterDataset =
+    RasterDataset(read(s; kwargs...))
 
 function DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks
     subchunks = DiskArrays.eachchunk(getband(ds, 1))
@@ -137,10 +142,12 @@ function DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks
 end
 
 DiskArrays.haschunks(::RasterDataset)::DiskArrays.Chunked = DiskArrays.Chunked()
-DiskArrays.haschunks(::AbstractRasterBand)::DiskArrays.Chunked = DiskArrays.Chunked()
+DiskArrays.haschunks(::AbstractRasterBand)::DiskArrays.Chunked =
+    DiskArrays.Chunked()
 
-Base.size(band::AbstractRasterBand)::Tuple{T,T} where {T<:Integer} =
-    (width(band), height(band))
+function Base.size(band::AbstractRasterBand)
+    return (width(band), height(band))
+end
 
 function DiskArrays.eachchunk(band::AbstractRasterBand)::DiskArrays.GridChunks
     wI = windows(band)
@@ -171,7 +178,6 @@ function DiskArrays.writeblock!(
     write!(band, buffer, xoffset, yoffset, xsize, ysize)
     return buffer
 end
-
 
 # AbstractDataset indexing
 

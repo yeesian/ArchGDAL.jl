@@ -111,7 +111,10 @@ the field index, or -1 if no matching field is found.
 ### Remarks
 This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 """
-function findfieldindex(feature::Feature, name::Union{AbstractString,Symbol})::Integer
+function findfieldindex(
+    feature::Feature,
+    name::Union{AbstractString,Symbol},
+)::Integer
     return GDAL.ogr_f_getfieldindex(feature.ptr, name)
 end
 
@@ -124,7 +127,8 @@ Test if a field has ever been assigned a value or not.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-isfieldset(feature::Feature, i::Integer)::Bool = Bool(GDAL.ogr_f_isfieldset(feature.ptr, i))
+isfieldset(feature::Feature, i::Integer)::Bool =
+    Bool(GDAL.ogr_f_isfieldset(feature.ptr, i))
 
 """
     unsetfield!(feature::Feature, i::Integer)
@@ -165,7 +169,8 @@ Fetch field value as integer.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asint(feature::Feature, i::Integer)::Int32 = GDAL.ogr_f_getfieldasinteger(feature.ptr, i)
+asint(feature::Feature, i::Integer)::Int32 =
+    GDAL.ogr_f_getfieldasinteger(feature.ptr, i)
 
 """
     asint64(feature::Feature, i::Integer)
@@ -200,7 +205,8 @@ Fetch field value as a string.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asstring(feature::Feature, i::Integer)::String = GDAL.ogr_f_getfieldasstring(feature.ptr, i)
+asstring(feature::Feature, i::Integer)::String =
+    GDAL.ogr_f_getfieldasstring(feature.ptr, i)
 
 """
     asintlist(feature::Feature, i::Integer)
@@ -462,7 +468,11 @@ function setfield!(feature::Feature, i::Integer, value::Vector{Int64})::Feature
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Vector{Float64})::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Vector{Float64},
+)::Feature
     GDAL.ogr_f_setfielddoublelist(feature.ptr, i, length(value), value)
     return feature
 end
@@ -496,7 +506,12 @@ function setfield!(feature::Feature, i::Integer, value::Vector{UInt8})::Feature
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, dt::DateTime, tzflag::Int = 0)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    dt::DateTime,
+    tzflag::Int = 0,
+)::Feature
     GDAL.ogr_f_setfielddatetime(
         feature.ptr,
         i,
@@ -552,7 +567,10 @@ the geometry field index, or -1 if no matching geometry field is found.
 ### Remarks
 This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
-function findgeomindex(feature::Feature, name::Union{AbstractString,Symbol} = "")::Integer
+function findgeomindex(
+    feature::Feature,
+    name::Union{AbstractString,Symbol} = "",
+)::Integer
     return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
 end
 
@@ -583,7 +601,10 @@ function unsafe_getgeom(feature::Feature, i::Integer)::Geometry
     end
 end
 
-function getgeom(feature::Feature, name::Union{AbstractString,Symbol})::IGeometry
+function getgeom(
+    feature::Feature,
+    name::Union{AbstractString,Symbol},
+)::IGeometry
     i = findgeomindex(feature, name)
     return if i == -1
         IGeometry()
@@ -592,7 +613,10 @@ function getgeom(feature::Feature, name::Union{AbstractString,Symbol})::IGeometr
     end
 end
 
-function unsafe_getgeom(feature::Feature, name::Union{AbstractString,Symbol})::Geometry
+function unsafe_getgeom(
+    feature::Feature,
+    name::Union{AbstractString,Symbol},
+)::Geometry
     i = findgeomindex(feature, name)
     return if i == -1
         Geometry()
@@ -677,7 +701,11 @@ otherwise an error code.
 """
 function setfrom! end
 
-function setfrom!(feature1::Feature, feature2::Feature, forgiving::Bool = false)::Feature
+function setfrom!(
+    feature1::Feature,
+    feature2::Feature,
+    forgiving::Bool = false,
+)::Feature
     result = GDAL.ogr_f_setfrom(feature1.ptr, feature2.ptr, forgiving)
     @ogrerr result "OGRErr $result: Failed to set feature"
     return feature1
@@ -689,18 +717,23 @@ function setfrom!(
     indices::Vector{Cint},
     forgiving::Bool = false,
 )::Feature
-    result = GDAL.ogr_f_setfromwithmap(feature1.ptr, feature2.ptr, forgiving, indices)
+    result = GDAL.ogr_f_setfromwithmap(
+        feature1.ptr,
+        feature2.ptr,
+        forgiving,
+        indices,
+    )
     @ogrerr result "OGRErr $result: Failed to set feature with map"
     return feature1
 end
-
 
 """
     getstylestring(feature::Feature)
 
 Fetch style string for this feature.
 """
-getstylestring(feature::Feature)::String = GDAL.ogr_f_getstylestring(feature.ptr)
+getstylestring(feature::Feature)::String =
+    GDAL.ogr_f_getstylestring(feature.ptr)
 
 """
     setstylestring!(feature::Feature, style::AbstractString)
@@ -778,7 +811,8 @@ The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
 e.g. \"application/vnd.geo+json\" for JSON.
 """
-getmediatype(feature::Feature)::String = GDAL.ogr_f_getnativemediatype(feature.ptr)
+getmediatype(feature::Feature)::String =
+    GDAL.ogr_f_getnativemediatype(feature.ptr)
 
 """
     setmediatype!(feature::Feature, mediatype::AbstractString)

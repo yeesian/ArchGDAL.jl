@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_fielddefn.jl" begin
-
     @testset "Tests for field defn" begin
         AG.createfielddefn("fieldname", AG.OFTInteger) do fd
             @test sprint(print, fd) == "fieldname (OFTInteger)"
@@ -72,7 +71,8 @@ const AG = ArchGDAL;
             AG.settype!(gfd, AG.wkbPolyhedralSurface)
             @test AG.gettype(gfd) == AG.wkbPolyhedralSurface
 
-            @test sprint(print, AG.getspatialref(gfd)) == "NULL Spatial Reference System"
+            @test sprint(print, AG.getspatialref(gfd)) ==
+                  "NULL Spatial Reference System"
             AG.getspatialref(gfd) do spref
                 @test sprint(print, spref) == "NULL Spatial Reference System"
             end
@@ -120,23 +120,24 @@ const AG = ArchGDAL;
                 AG.createfielddefn("newfield", AG.OFTInteger) do fielddef2
                     AG.addfielddefn!(fd, fielddef2)
                     @test AG.nfield(fd) == 4
-                    AG.getname(AG.getfielddefn(fd, 0)) == "fieldname"
-                    AG.getname(AG.getfielddefn(fd, 1)) == "fieldname"
-                    AG.getname(AG.getfielddefn(fd, 2)) == "fieldname"
-                    AG.getname(AG.getfielddefn(fd, 3)) == "newfield"
+                    @test AG.getname(AG.getfielddefn(fd, 0)) == "fieldname"
+                    @test AG.getname(AG.getfielddefn(fd, 1)) == "fieldname"
+                    @test AG.getname(AG.getfielddefn(fd, 2)) == "fieldname"
+                    @test AG.getname(AG.getfielddefn(fd, 3)) == "newfield"
+                    return nothing
                 end
             end
             AG.deletefielddefn!(fd, 0)
             @test AG.nfield(fd) == 3
-            AG.getname(AG.getfielddefn(fd, 0)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd, 1)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd, 2)) == "newfield"
+            @test AG.getname(AG.getfielddefn(fd, 0)) == "fieldname"
+            @test AG.getname(AG.getfielddefn(fd, 1)) == "fieldname"
+            @test AG.getname(AG.getfielddefn(fd, 2)) == "newfield"
 
             AG.reorderfielddefns!(fd, Cint[2, 1, 0])
             @test AG.nfield(fd) == 3
-            AG.getname(AG.getfielddefn(fd, 0)) == "newfield"
-            AG.getname(AG.getfielddefn(fd, 1)) == "fieldname"
-            AG.getname(AG.getfielddefn(fd, 2)) == "fieldname"
+            @test AG.getname(AG.getfielddefn(fd, 0)) == "newfield"
+            @test AG.getname(AG.getfielddefn(fd, 1)) == "fieldname"
+            @test AG.getname(AG.getfielddefn(fd, 2)) == "fieldname"
 
             @test AG.ngeom(fd) == 1
             @test AG.getgeomtype(fd) == AG.wkbUnknown
@@ -176,9 +177,9 @@ const AG = ArchGDAL;
             AG.createfeature(fd) do f
                 @test AG.nreference(fd) == 2 # artificially inflated
                 @test AG.issame(AG.getfeaturedefn(f), fd) == true
+                return nothing
             end
             @test AG.nreference(fd) == 0
         end
     end
-
 end

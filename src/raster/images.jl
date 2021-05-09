@@ -1,6 +1,6 @@
 function imread(colortable::ColorTable, dataset::AbstractDataset, indices)
     palette = getcolortable(getband(dataset, indices[1])) do ct
-        paletteinterp(ct)
+        return paletteinterp(ct)
     end
     colortype = if palette == GPI_Gray
         ColorTypes.Gray
@@ -21,7 +21,10 @@ function imread(
     indices::NTuple{1,<:Integer},
 )
     return ImageCore.PermutedDimsArray(
-        ImageCore.colorview(colortype, ImageCore.normedview(read(dataset, indices[1]))),
+        ImageCore.colorview(
+            colortype,
+            ImageCore.normedview(read(dataset, indices[1])),
+        ),
         (2, 1),
     )
 end
@@ -60,13 +63,15 @@ function imread(
 end
 
 function imread(dataset::AbstractDataset, indices)
-    gci = unique(GDALColorInterp[getcolorinterp(getband(dataset, i)) for i in indices])
+    gci = unique(
+        GDALColorInterp[getcolorinterp(getband(dataset, i)) for i in indices],
+    )
     gciorder = sort(gci)
     return if gciorder == [GCI_GrayIndex]
         imread(ColorTypes.Gray, dataset, Tuple(indices[sortperm(gci)]))
     elseif gciorder == [GCI_PaletteIndex]
         getcolortable(getband(dataset, 1)) do ct
-            imread(ct, dataset, indices)
+            return imread(ct, dataset, indices)
         end
     elseif gciorder == [GCI_RedBand, GCI_GreenBand, GCI_BlueBand]
         imread(ColorTypes.RGB, dataset, Tuple(indices[sortperm(gci)]))
@@ -84,6 +89,6 @@ imread(dataset::AbstractDataset) = imread(dataset, 1:nraster(dataset))
 
 function imread(filename::String)
     return read(filename) do dataset
-        imread(dataset)
+        return imread(dataset)
     end
 end

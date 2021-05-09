@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_gdal_tutorials.jl" begin
-
     @testset "Raster Tutorial" begin
         driver = AG.getdriver("GTiff")
 
@@ -16,7 +15,8 @@ const AG = ArchGDAL;
 
             nad27_prefix = "PROJCS[\"NAD27 / UTM zone 11N\",GEOGCS[\"NAD27\",DATUM[\"North_American_Datum_1927\","
             @test startswith(AG.getproj(dataset), nad27_prefix) == true
-            @test AG.getgeotransform(dataset) ≈ [440720.0, 60.0, 0.0, 3.75132e6, 0.0, -60.0]
+            @test AG.getgeotransform(dataset) ≈
+                  [440720.0, 60.0, 0.0, 3.75132e6, 0.0, -60.0]
 
             band = AG.getband(dataset, 1)
             @test AG.blocksize(band) ≈ [100, 81]
@@ -138,7 +138,8 @@ const AG = ArchGDAL;
                   ["IMAGE_STRUCTURE", "", "DERIVED_SUBDATASETS"]
             @test AG.metadata(dataset) == ["AREA_OR_POINT=Area"]
             @test AG.metadataitem(dataset, "AREA_OR_POINT") == "Area"
-            @test AG.metadata(dataset, domain = "IMAGE_STRUCTURE") == ["INTERLEAVE=BAND"]
+            @test AG.metadata(dataset, domain = "IMAGE_STRUCTURE") ==
+                  ["INTERLEAVE=BAND"]
             @test AG.metadata(dataset, domain = "") == ["AREA_OR_POINT=Area"]
             @test AG.metadata(dataset, domain = "DERIVED_SUBDATASETS") == [
                 "DERIVED_SUBDATASET_1_NAME=DERIVED_SUBDATASET:LOGAMPLITUDE:data/utmsmall.tif",
@@ -202,18 +203,25 @@ const AG = ArchGDAL;
         end
 
         AG.create(AG.getdriver("MEMORY")) do dataset
-            layer =
-                AG.createlayer(name = "point_out", dataset = dataset, geom = AG.wkbPoint)
+            layer = AG.createlayer(
+                name = "point_out",
+                dataset = dataset,
+                geom = AG.wkbPoint,
+            )
             AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
             featuredefn = AG.layerdefn(layer)
             @test AG.getname(featuredefn) == "point_out"
             @test AG.nfeature(layer) == 0
             AG.createfeature(layer) do feature
-                AG.setfield!(feature, AG.findfieldindex(feature, "Name"), "myname")
+                AG.setfield!(
+                    feature,
+                    AG.findfieldindex(feature, "Name"),
+                    "myname",
+                )
                 AG.setgeom!(feature, AG.createpoint(100.123, 0.123))
+                return nothing
             end
             @test AG.nfeature(layer) == 1
         end
     end
-
 end

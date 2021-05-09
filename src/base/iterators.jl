@@ -27,7 +27,10 @@ struct BlockIterator{T<:Integer}
     ybsize::T
 end
 
-function blocks(::Type{T}, raster::AbstractRasterBand)::BlockIterator{T} where {T<:Integer}
+function blocks(
+    ::Type{T},
+    raster::AbstractRasterBand,
+)::BlockIterator{T} where {T<:Integer}
     (xbsize, ybsize) = blocksize(raster)
     rows = T(height(raster))
     cols = T(width(raster))
@@ -85,7 +88,8 @@ function windows(
     return WindowIterator{T}(blocks(T, raster))
 end
 
-windows(raster::AbstractRasterBand)::WindowIterator{Int64} = windows(Int64, raster)
+windows(raster::AbstractRasterBand)::WindowIterator{Int64} =
+    windows(Int64, raster)
 
 function Base.iterate(
     obj::WindowIterator{T},
@@ -95,7 +99,10 @@ function Base.iterate(
     next = Base.iterate(handle, iter)
     next == nothing && return nothing
     (((i, j), (nrows, ncols)), iter) = next
-    return (((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize), iter)
+    return (
+        ((1:ncols) .+ j * handle.xbsize, (1:nrows) .+ i * handle.ybsize),
+        iter,
+    )
 end
 
 mutable struct BufferIterator{R<:Real,T<:Integer}
@@ -115,7 +122,9 @@ function bufferwindows(
     )
 end
 
-function bufferwindows(raster::AbstractRasterBand)::BufferIterator{pixeltype(raster),Int64}
+function bufferwindows(
+    raster::AbstractRasterBand,
+)::BufferIterator{pixeltype(raster),Int64}
     return bufferwindows(Int64, raster)
 end
 

@@ -1,4 +1,8 @@
-function environment(f::Function; globalconfig::Vector = [], threadconfig::Vector = [])
+function environment(
+    f::Function;
+    globalconfig::Vector = [],
+    threadconfig::Vector = [],
+)
     # Save the current settings
     #
     # CPLGetConfigOption() will return the value of the config option, be it
@@ -10,7 +14,8 @@ function environment(f::Function; globalconfig::Vector = [], threadconfig::Vecto
     #
     # (ref https://github.com/mapbox/rasterio/pull/997#issuecomment-287117289)
     globalsettings = Dict(k => getconfigoption(k) for (k, v) in globalconfig)
-    localsettings = Dict(k => getthreadconfigoption(k) for (k, v) in threadconfig)
+    localsettings =
+        Dict(k => getthreadconfigoption(k) for (k, v) in threadconfig)
     for (k, v) in threadconfig
         setthreadconfigoption(k, v)
     end

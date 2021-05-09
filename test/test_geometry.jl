@@ -110,12 +110,14 @@ const GFT = GeoFormatTypes
                 0x00,
             ]
             @test AG.toKML(point, "relativeToGround") ==
-                  "<Point><altitudeMode>relativeToGround</altitudeMode><coordinates>100,70,0</coordinates></Point>"
+                  "<Point><altitudeMode>relativeToGround</altitudeMode>" *
+                  "<coordinates>100,70,0</coordinates></Point>"
             @test AG.toKML(point, "clampToGround") ==
-                  "<Point><altitudeMode>clampToGround</altitudeMode><coordinates>100,70,0</coordinates></Point>"
+                  "<Point><altitudeMode>clampToGround</altitudeMode>" *
+                  "<coordinates>100,70,0</coordinates></Point>"
             @test AG.toKML(point) == "<Point><coordinates>100,70,0</coordinates></Point>"
             @test AG.toJSON(point) ==
-                  "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0, 0.0 ] }"
+                  "{ \"type\": \"Point\", \"coordinates\": " * "[ 100.0, 70.0, 0.0 ] }"
             @test startswith(
                 AG.toJSON(point, SIGNIFICANT_FIGURES = 1),
                 "{ \"type\": \"Point\", \"coordinates\": [",
@@ -225,9 +227,11 @@ const GFT = GeoFormatTypes
             0x00,
         ]
         @test AG.toKML(point, "relativeToGround") ==
-              "<Point><altitudeMode>relativeToGround</altitudeMode><coordinates>100,70,0</coordinates></Point>"
+              "<Point><altitudeMode>relativeToGround</altitudeMode>" *
+              "<coordinates>100,70,0</coordinates></Point>"
         @test AG.toKML(point, "clampToGround") ==
-              "<Point><altitudeMode>clampToGround</altitudeMode><coordinates>100,70,0</coordinates></Point>"
+              "<Point><altitudeMode>clampToGround</altitudeMode>" *
+              "<coordinates>100,70,0</coordinates></Point>"
         @test AG.toKML(point) == "<Point><coordinates>100,70,0</coordinates></Point>"
         @test AG.toJSON(point) ==
               "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0, 0.0 ] }"
@@ -337,7 +341,9 @@ const GFT = GeoFormatTypes
                 ],
             ),
         ) ==
-              "MULTIPOLYGON (((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1)),((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
+              "MULTIPOLYGON (" *
+              "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
+              "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
         AG.createmultipolygon(
             Vector{Vector{Tuple{Cdouble,Cdouble}}}[
                 Vector{Tuple{Cdouble,Cdouble}}[
@@ -363,18 +369,26 @@ const GFT = GeoFormatTypes
                 atol = 1e-6,
             )
             @test AG.toWKT(geom) ==
-                  "MULTIPOLYGON (((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1)),((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
+                  "MULTIPOLYGON (" *
+                  "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
+                  "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
         end
 
         AG.fromWKT(
-            "CURVEPOLYGON(CIRCULARSTRING(-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0 0.5,1 0,0 1,-1 0))",
+            "CURVEPOLYGON (" *
+            "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
+            "(-1 0,0 0.5,1 0,0 1,-1 0))",
         ) do geom
             @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) ==
-                  "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+                  "CURVEPOLYGON (" *
+                  "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
+                  "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
             AG.lineargeom(geom, 0.5) do lgeom
                 AG.curvegeom(lgeom) do clgeom
                     @test AG.toWKT(clgeom) ==
-                          "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+                          "CURVEPOLYGON (" *
+                          "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
+                          "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
                 end
                 @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
                 AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
@@ -449,58 +463,188 @@ const GFT = GeoFormatTypes
         end
 
         @test AG.toWKT(AG.union(geom1, geom2)) ==
-              "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
+              "GEOMETRYCOLLECTION (" *
+              "POLYGON (" *
+              "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+              "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+              "POLYGON (" *
+              "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+              "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+              "POINT (2 5 8),POINT (3 6 9))"
         AG.union(geom1, geom2) do result
             @test AG.toWKT(result) ==
-                  "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
+                  "GEOMETRYCOLLECTION (" *
+                  "POLYGON (" *
+                  "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                  "POLYGON (" *
+                  "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+                  "POINT (2 5 8),POINT (3 6 9))"
             @test AG.hascurvegeom(result, true) == false
             @test AG.hascurvegeom(result, false) == false
         end
 
         @test AG.toWKT(AG.difference(geom1, geom2)) ==
-              "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+              "MULTIPOLYGON (" *
+              "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+              "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+              "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+              "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
         AG.difference(geom1, geom2) do result
             @test AG.toWKT(result) ==
-                  "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+                  "MULTIPOLYGON (" *
+                  "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                  "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
             AG.segmentize!(result, 20)
             @test AG.toWKT(result) ==
-                  "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+                  "MULTIPOLYGON (" *
+                  "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                  "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
             AG.segmentize!(result, 2)
             @test AG.toWKT(result) ==
-                  "MULTIPOLYGON (((0 4 8,2 4 8,4 4 8,4 2 8,4 0 8,2 0 8,0 0 8,0 2 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,12 4 8,14 4 8,14 2 8,14 0 8,12 0 8,10 0 8,10 2 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+                  "MULTIPOLYGON (" *
+                  "(" *
+                  "(" *
+                  "0 4 8," *
+                  "2 4 8," *
+                  "4 4 8," *
+                  "4 2 8," *
+                  "4 0 8," *
+                  "2 0 8," *
+                  "0 0 8," *
+                  "0 2 8," *
+                  "0 4 8)," *
+                  "(" *
+                  "3 1 8," *
+                  "3 3 8," *
+                  "1 3 8," *
+                  "1 1 8," *
+                  "3 1 8))," *
+                  "(" *
+                  "(" *
+                  "10 4 8," *
+                  "12 4 8," *
+                  "14 4 8," *
+                  "14 2 8," *
+                  "14 0 8," *
+                  "12 0 8," *
+                  "10 0 8," *
+                  "10 2 8," *
+                  "10 4 8)," *
+                  "(" *
+                  "13 1 8," *
+                  "13 3 8," *
+                  "11 3 8," *
+                  "11 1 8," *
+                  "13 1 8)))"
         end
 
         @test AG.toWKT(AG.symdifference(geom1, geom2)) ==
-              "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
+              "GEOMETRYCOLLECTION (" *
+              "POLYGON (" *
+              "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+              "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+              "POLYGON (" *
+              "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+              "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+              "POINT (2 5 8),POINT (3 6 9))"
         AG.symdifference(geom1, geom2) do result
             @test GeoInterface.geotype(result) == :GeometryCollection
             @test AG.toWKT(result) ==
-                  "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
+                  "GEOMETRYCOLLECTION (" *
+                  "POLYGON (" *
+                  "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                  "POLYGON (" *
+                  "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+                  "POINT (2 5 8)," *
+                  "POINT (3 6 9))"
             AG.removegeom!(result, 1)
             @test AG.toWKT(result) ==
-                  "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POINT (2 5 8),POINT (3 6 9))"
+                  "GEOMETRYCOLLECTION (" *
+                  "POLYGON (" *
+                  "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                  "POINT (2 5 8)," *
+                  "POINT (3 6 9))"
             AG.removeallgeoms!(result)
             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
         end
 
         geom3 = AG.fromWKT(
-            "GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)), POINT EMPTY)",
+            "GEOMETRYCOLLECTION (" *
+            "POINT (2 5 8)," *
+            "POLYGON (" *
+            "(0 0 8,0 4 8,4 4 8,4 0 8,0 0 8)," *
+            "(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8))," *
+            "POLYGON (" *
+            "(10 0 8,10 4 8,14 4 8,14 0 8,10 0 8)," *
+            "(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8))," *
+            "POINT EMPTY)",
         )
         AG.clone(geom3) do geom4
             @test sprint(print, AG.clone(geom3)) ==
-                  "Geometry: GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8, ... MPTY)"
+                  "Geometry: GEOMETRYCOLLECTION (" *
+                  "POINT (2 5 8)," *
+                  "POLYGON ((0 0 8," *
+                  " ... MPTY)"
             @test sprint(print, AG.clone(geom4)) ==
-                  "Geometry: GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8, ... MPTY)"
+                  "Geometry: GEOMETRYCOLLECTION (" *
+                  "POINT (2 5 8)," *
+                  "POLYGON ((0 0 8," *
+                  " ... MPTY)"
         end
         AG.clone(AG.getgeom(geom3, 3)) do geom4
             @test sprint(print, geom4) == "Geometry: POINT EMPTY"
         end
 
         @test AG.toISOWKT(geom3) ==
-              "GEOMETRYCOLLECTION Z (POINT Z (2 5 8),POLYGON Z ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON Z ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)),POINT Z EMPTY)"
-        AG.removegeom!(geom3, AG.ngeom(geom3) - 1) # the JSON driver in GDAL 3.0 does not handle null geometries well yet
+              "GEOMETRYCOLLECTION Z (" *
+              "POINT Z (2 5 8)," *
+              "POLYGON Z (" *
+              "(0 0 8,0 4 8,4 4 8,4 0 8,0 0 8)," *
+              "(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8))," *
+              "POLYGON Z (" *
+              "(10 0 8,10 4 8,14 4 8,14 0 8,10 0 8)," *
+              "(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8))," *
+              "POINT Z EMPTY)"
+        # the JSON driver in GDAL 3.0 does not handle null geometries well yet
+        AG.removegeom!(geom3, AG.ngeom(geom3) - 1)
         @test AG.toJSON(geom3) ==
-              """{ "type": "GeometryCollection", "geometries": [ { "type": "Point", "coordinates": [ 2.0, 5.0, 8.0 ] }, { "type": "Polygon", "coordinates": [ [ [ 0.0, 0.0, 8.0 ], [ 0.0, 4.0, 8.0 ], [ 4.0, 4.0, 8.0 ], [ 4.0, 0.0, 8.0 ], [ 0.0, 0.0, 8.0 ] ], [ [ 1.0, 1.0, 8.0 ], [ 3.0, 1.0, 8.0 ], [ 3.0, 3.0, 8.0 ], [ 1.0, 3.0, 8.0 ], [ 1.0, 1.0, 8.0 ] ] ] }, { "type": "Polygon", "coordinates": [ [ [ 10.0, 0.0, 8.0 ], [ 10.0, 4.0, 8.0 ], [ 14.0, 4.0, 8.0 ], [ 14.0, 0.0, 8.0 ], [ 10.0, 0.0, 8.0 ] ], [ [ 11.0, 1.0, 8.0 ], [ 13.0, 1.0, 8.0 ], [ 13.0, 3.0, 8.0 ], [ 11.0, 3.0, 8.0 ], [ 11.0, 1.0, 8.0 ] ] ] } ] }"""
+              """{ "type": "GeometryCollection", "geometries": [ """ *
+              """{ "type": "Point", "coordinates": [ 2.0, 5.0, 8.0 ] }, """ *
+              """{ "type": "Polygon", "coordinates": [ """ *
+              "[ " *
+              "[ 0.0, 0.0, 8.0 ], " *
+              "[ 0.0, 4.0, 8.0 ], " *
+              "[ 4.0, 4.0, 8.0 ], " *
+              "[ 4.0, 0.0, 8.0 ], " *
+              "[ 0.0, 0.0, 8.0 ] ], " *
+              "[ " *
+              "[ 1.0, 1.0, 8.0 ], " *
+              "[ 3.0, 1.0, 8.0 ], " *
+              "[ 3.0, 3.0, 8.0 ], " *
+              "[ 1.0, 3.0, 8.0 ], " *
+              "[ 1.0, 1.0, 8.0 ] ] ] }, " *
+              """{ "type": "Polygon", "coordinates": [ """ *
+              "[ " *
+              "[ 10.0, 0.0, 8.0 ], " *
+              "[ 10.0, 4.0, 8.0 ], " *
+              "[ 14.0, 4.0, 8.0 ], " *
+              "[ 14.0, 0.0, 8.0 ], " *
+              "[ 10.0, 0.0, 8.0 ] ], " *
+              "[ " *
+              "[ 11.0, 1.0, 8.0 ], " *
+              "[ 13.0, 1.0, 8.0 ], " *
+              "[ 13.0, 3.0, 8.0 ], " *
+              "[ 11.0, 3.0, 8.0 ], " *
+              "[ 11.0, 1.0, 8.0 ] ] ] } ] }"
 
         AG.createmultilinestring([[
             [1.0, 4.0],

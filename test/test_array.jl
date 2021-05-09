@@ -4,7 +4,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_array.jl" begin
-
     @testset "RasterDataset Type" begin
         AG.readraster("ospy/data4/aster.img") do ds
             @testset "Test forwarded methods" begin
@@ -17,8 +16,10 @@ const AG = ArchGDAL;
                 @test AG.width(ds) == 5665
                 @test AG.height(ds) == 5033
                 @test AG.getdriver(ds) isa AG.Driver
-                @test splitpath(AG.filelist(ds)[1]) == ["ospy", "data4", "aster.img"]
-                @test splitpath(AG.filelist(ds)[2]) == ["ospy", "data4", "aster.rrd"]
+                @test splitpath(AG.filelist(ds)[1]) ==
+                      ["ospy", "data4", "aster.img"]
+                @test splitpath(AG.filelist(ds)[2]) ==
+                      ["ospy", "data4", "aster.rrd"]
                 @test AG.listcapability(ds) isa Dict
                 @test AG.ngcp(ds) == 0
                 @test AG.write(ds, tempname()) == nothing
@@ -39,10 +40,6 @@ const AG = ArchGDAL;
         end
     end
 
-
-
-
-
     @testset "Test Array getindex" begin
         AG.readraster("ospy/data4/aster.img") do ds
             @testset "Dataset indexing" begin
@@ -58,14 +55,16 @@ const AG = ArchGDAL;
                     total = sum(buffer)
                     count = sum(buffer .> 0)
                     @test total / count ≈ 76.33891347095299
-                    @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+                    @test total / (AG.height(ds) * AG.width(ds)) ≈
+                          47.55674749653172
                 end
                 @testset "colon indexing" begin
                     buffer = ds[:, :, 1]
                     total = sum(buffer)
                     count = sum(buffer .> 0)
                     @test total / count ≈ 76.33891347095299
-                    @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+                    @test total / (AG.height(ds) * AG.width(ds)) ≈
+                          47.55674749653172
                 end
                 @testset "int indexing" begin
                     @test ds[755, 2107, 1] == 0xff
@@ -84,14 +83,16 @@ const AG = ArchGDAL;
                     total = sum(buffer)
                     count = sum(buffer .> 0)
                     @test total / count ≈ 76.33891347095299
-                    @test total / (AG.height(band) * AG.width(band)) ≈ 47.55674749653172
+                    @test total / (AG.height(band) * AG.width(band)) ≈
+                          47.55674749653172
                 end
                 @testset "colon indexing" begin
                     buffer = band[:, :]
                     total = sum(buffer)
                     count = sum(buffer .> 0)
                     @test total / count ≈ 76.33891347095299
-                    @test total / (AG.height(band) * AG.width(band)) ≈ 47.55674749653172
+                    @test total / (AG.height(band) * AG.width(band)) ≈
+                          47.55674749653172
                 end
                 @testset "int indexing" begin
                     @test band[755, 2107] == 0xff
@@ -156,7 +157,9 @@ const AG = ArchGDAL;
 
             AG.copy(ds) do copy1
                 @test typeof(AG.copywholeraster!(ds, copy1)) == typeof(copy1)
-                @test typeof(AG.copywholeraster!(AG.RasterDataset(copy1), ds)) == typeof(ds)
+                @test typeof(
+                    AG.copywholeraster!(AG.RasterDataset(copy1), ds),
+                ) == typeof(ds)
                 @test typeof(AG.copywholeraster!(copy1, ds)) == typeof(ds)
             end
         end
@@ -172,5 +175,4 @@ const AG = ArchGDAL;
             @test_throws DimensionMismatch AG._common_size(dataset)
         end
     end
-
 end

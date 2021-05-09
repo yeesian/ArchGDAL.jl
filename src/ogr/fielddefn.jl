@@ -27,10 +27,12 @@ function setname!(fielddefn::FieldDefn, name::AbstractString)::FieldDefn
 end
 
 "Fetch the name of this field."
-getname(fielddefn::AbstractFieldDefn)::String = GDAL.ogr_fld_getnameref(fielddefn.ptr)
+getname(fielddefn::AbstractFieldDefn)::String =
+    GDAL.ogr_fld_getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
-gettype(fielddefn::AbstractFieldDefn)::OGRFieldType = GDAL.ogr_fld_gettype(fielddefn.ptr)
+gettype(fielddefn::AbstractFieldDefn)::OGRFieldType =
+    GDAL.ogr_fld_gettype(fielddefn.ptr)
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)::FieldDefn
@@ -86,7 +88,10 @@ Set the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-function setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification)::FieldDefn
+function setjustify!(
+    fielddefn::FieldDefn,
+    ejustify::OGRJustification,
+)::FieldDefn
     GDAL.ogr_fld_setjustify(fielddefn.ptr, ejustify)
     return fielddefn
 end
@@ -99,7 +104,8 @@ Get the formatting width for this field.
 ### Returns
 the width, zero means no specified width.
 """
-getwidth(fielddefn::AbstractFieldDefn)::Integer = GDAL.ogr_fld_getwidth(fielddefn.ptr)
+getwidth(fielddefn::AbstractFieldDefn)::Integer =
+    GDAL.ogr_fld_getwidth(fielddefn.ptr)
 
 """
     setwidth!(fielddefn::FieldDefn, width::Integer)
@@ -166,7 +172,8 @@ end
 
 Return whether this field should be omitted when fetching features.
 """
-isignored(fielddefn::AbstractFieldDefn)::Bool = Bool(GDAL.ogr_fld_isignored(fielddefn.ptr))
+isignored(fielddefn::AbstractFieldDefn)::Bool =
+    Bool(GDAL.ogr_fld_isignored(fielddefn.ptr))
 
 """
     setignored!(fielddefn::FieldDefn, ignore::Bool)
@@ -215,7 +222,8 @@ end
 Get default field value
 """
 function getdefault(fielddefn::AbstractFieldDefn)::String
-    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
+    result =
+        @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
     return if result == C_NULL
         ""
     else
@@ -295,14 +303,18 @@ function setname!(geomdefn::GeomFieldDefn, name::AbstractString)::GeomFieldDefn
 end
 
 "Fetch name of this field."
-getname(geomdefn::AbstractGeomFieldDefn)::String = GDAL.ogr_gfld_getnameref(geomdefn.ptr)
+getname(geomdefn::AbstractGeomFieldDefn)::String =
+    GDAL.ogr_gfld_getnameref(geomdefn.ptr)
 
 "Fetch geometry type of this field."
 gettype(geomdefn::AbstractGeomFieldDefn)::OGRwkbGeometryType =
     GDAL.ogr_gfld_gettype(geomdefn.ptr)
 
 "Set the geometry type of this field."
-function settype!(geomdefn::GeomFieldDefn, etype::OGRwkbGeometryType)::GeomFieldDefn
+function settype!(
+    geomdefn::GeomFieldDefn,
+    etype::OGRwkbGeometryType,
+)::GeomFieldDefn
     GDAL.ogr_gfld_settype(geomdefn.ptr, etype)
     return geomdefn
 end
