@@ -82,7 +82,7 @@ To format code, `cd` to the ArchGDAL.jl directory, then run:
 ```julia
 ] add JuliaFormatter@0.13.10
 using JuliaFormatter
-format(".")
+format("src")
 ```
 
 !!! info

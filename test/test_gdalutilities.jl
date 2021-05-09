@@ -1,5 +1,5 @@
-using ArchGDAL, GDAL;
-AG = ArchGDAL;
+using ArchGDAL, GDAL
+AG = ArchGDAL
 using Test
 
 @testset "test_gdalutilities.jl" begin
