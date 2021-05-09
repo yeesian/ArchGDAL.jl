@@ -30,7 +30,31 @@ To test if it is installed correctly,
 pkg> test ArchGDAL
 ```
 
-## Dependencies
+## Getting Involved
+
+### Community
+
+This package will not be possible without https://github.com/OSGeo/gdal and https://github.com/JuliaGeo/GDAL.jl. They are maintained by the https://www.osgeo.org/ and https://juliageo.org/ communities respectively. In case there is any source of contention or confusion, for support and involvement, we encourage participation and contributions to those libraries and communities over this package.
+
+### Style Guide
+
+ArchGDAL.jl uses [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl) as
+an autoformatting tool.
+
+We use the options contained in [`.JuliaFormatter.toml`](https://github.com/yeesian/ArchGDAL.jl/blob/master/.JuliaFormatter.toml).
+
+To format code, `cd` to the ArchGDAL.jl directory, then run:
+```julia
+] add JuliaFormatter@0.13.10
+using JuliaFormatter
+format("src")
+```
+
+!!! info
+    A continuous integration check verifies that all PRs made to ArchGDAL.jl have
+    passed the formatter.
+
+### Dependencies
 To manage the dependencies of this package, we work with [environments](https://pkgdocs.julialang.org/v1.6/environments/):
 
 1. Navigate to the directory corresponding to the package:
@@ -70,21 +94,3 @@ shell> cd /Users/yeesian/.julia/dev/ArchGDAL
   [cf35fbd7] + GeoInterface v0.5.5
   [bd369af6] + Tables v1.4.2
 ```
-
-## For Developers
-
-ArchGDAL.jl uses [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl) as
-an autoformatting tool.
-
-We use the options contained in [`.JuliaFormatter.toml`](https://github.com/yeesian/ArchGDAL.jl/blob/master/.JuliaFormatter.toml).
-
-To format code, `cd` to the ArchGDAL.jl directory, then run:
-```julia
-] add JuliaFormatter@0.13.10
-using JuliaFormatter
-format("src")
-```
-
-!!! info
-    A continuous integration check verifies that all PRs made to ArchGDAL.jl have
-    passed the formatter.
