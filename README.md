@@ -70,3 +70,21 @@ shell> cd /Users/yeesian/.julia/dev/ArchGDAL
   [cf35fbd7] + GeoInterface v0.5.5
   [bd369af6] + Tables v1.4.2
 ```
+
+## For Developers
+
+ArchGDAL.jl uses [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl) as
+an autoformatting tool.
+
+We use the options contained in [`.JuliaFormatter.toml`](https://github.com/yeesian/ArchGDAL.jl/blob/master/.JuliaFormatter.toml).
+
+To format code, `cd` to the ArchGDAL.jl directory, then run:
+```julia
+] add JuliaFormatter@0.13.10
+using JuliaFormatter
+format(".")
+```
+
+!!! info
+    A continuous integration check verifies that all PRs made to ArchGDAL.jl have
+    passed the formatter.
