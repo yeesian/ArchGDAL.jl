@@ -63,7 +63,7 @@ function schema_names(layer::AbstractFeatureLayer)
     fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(layer)-1)
     field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
     geom_names = collect(Symbol(getname(getgeomdefn(featuredefn, i-1))) for i in 1:ngeom(layer))
-    replace!(geom_names, Symbol("")=>Symbol("geom"), count=1)
+    replace!(geom_names, Symbol("")=>Symbol("geometry"), count=1)
     return (field_names, geom_names, featuredefn, fielddefns)
 end
 

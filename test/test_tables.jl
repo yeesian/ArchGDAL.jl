@@ -44,7 +44,7 @@ using Tables
         @test Base.length(gt2) == 9
         @test Base.IteratorSize(typeof(gt)) == Base.HasLength()
         @test Base.IteratorEltype(typeof(gt1)) == Base.HasEltype()
-        @test propertynames(gt) == (:FID, :pointname, :geom)
+        @test propertynames(gt) == (:FID, :pointname, :geometry)
         @test propertynames(gt1) == (:id, :zoom, :location, :point, :linestring)
         @test propertynames(gt2) == (:id, :zoom, :location, :point, :linestring)
         @test getproperty(gt, :FID) == [iterate(gt, i)[1].FID for i in 0:size(gt)-1]
@@ -60,7 +60,7 @@ using Tables
         AG.resetreading!(layer)
         AG.resetreading!(layer1)
 
-        @test AG.nextnamedtuple(layer) isa NamedTuple{(:FID, :pointname, :geom),Tuple{Float64,String,ArchGDAL.IGeometry{AG.GDAL.wkbPoint}}}
+        @test AG.nextnamedtuple(layer) isa NamedTuple{(:FID, :pointname, :geometry),Tuple{Float64,String,ArchGDAL.IGeometry{AG.GDAL.wkbPoint}}}
         @test AG.nextnamedtuple(layer1) isa NamedTuple{(:id, :zoom, :location, :point, :linestring),Tuple{String,String,String,ArchGDAL.IGeometry{AG.GDAL.wkbPoint},ArchGDAL.IGeometry{AG.GDAL.wkbLineString}}}
         for i in (1,3,4)
             @test AG.schema_names(layer)[i] isa Base.Generator || AG.schema_names(layer)[i] isa ArchGDAL.IFeatureDefnView
