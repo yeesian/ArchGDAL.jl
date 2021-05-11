@@ -19,6 +19,8 @@ import ArchGDAL; const AG = ArchGDAL
              Field 0 (FID): [OFTReal], 2.0, 3.0, 0.0, 3.0
              Field 1 (pointname): [OFTString], point-a, point-b, a, b
         """
+        @test sprint(print, AG.nextnamedtuple(layer), context=:compact => true) == 
+        "(FID = 2.0, pointname = \"point-a\",  = Geometry: wkbPoint)"
         @test sprint(print, AG.layerdefn(layer)) == """
           Geometry (index 0):  (wkbPoint)
              Field (index 0): FID (OFTReal)
@@ -56,7 +58,7 @@ import ArchGDAL; const AG = ArchGDAL
 
         @test sprint(print, AG.getband(dataset, 1)) == """
         [GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
-            blocksize: 256×256, nodata: -1.0e10, units: 1.0px + 0.0
+            blocksize: 256×256, nodata: nothing, units: 1.0px + 0.0
             overviews: (0) 1024x512 (1) 512x256 (2) 256x128 
                        (3) 128x64 (4) 64x32 (5) 32x16 
                        (6) 16x8 """

@@ -1,7 +1,5 @@
 # ArchGDAL
-
-[![Build Status](https://travis-ci.org/yeesian/ArchGDAL.jl.svg?branch=master)](https://travis-ci.org/yeesian/ArchGDAL.jl)
-[![Build status](https://ci.appveyor.com/api/projects/status/github/yeesian/ArchGDAL.jl?svg=true&branch=master)](https://ci.appveyor.com/project/NgYeeSian/archgdal-jl/branch/master)
+[![CI](https://github.com/yeesian/ArchGDAL.jl/workflows/CI/badge.svg)](https://github.com/yeesian/ArchGDAL.jl/actions?query=workflow%3ACI)
 [![Coverage Status](https://coveralls.io/repos/github/yeesian/ArchGDAL.jl/badge.svg?branch=master)](https://coveralls.io/github/yeesian/ArchGDAL.jl?branch=master)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://yeesian.com/ArchGDAL.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://yeesian.com/ArchGDAL.jl/dev)

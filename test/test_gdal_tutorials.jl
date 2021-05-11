@@ -3,8 +3,9 @@ import GDAL
 import ArchGDAL; const AG = ArchGDAL
 
 @testset "Raster Tutorial" begin
+    driver = AG.getdriver("GTiff")
+
     AG.read("data/utmsmall.tif") do dataset
-        driver = AG.getdriver("GTiff")
         @test AG.shortname(driver) == "GTiff"
         @test AG.longname(driver) == "GeoTIFF"
         @test AG.width(dataset) == 100
@@ -47,6 +48,7 @@ import ArchGDAL; const AG = ArchGDAL
 
         @test AG.metadatadomainlist(dataset) == ["IMAGE_STRUCTURE", "", "DERIVED_SUBDATASETS"]
         @test AG.metadata(dataset) == ["AREA_OR_POINT=Area"]
+        @test AG.metadataitem(dataset, "AREA_OR_POINT") == "Area"
         @test AG.metadata(dataset, domain = "IMAGE_STRUCTURE") == ["INTERLEAVE=BAND"]
         @test AG.metadata(dataset, domain = "") == ["AREA_OR_POINT=Area"]
         @test AG.metadata(dataset, domain = "DERIVED_SUBDATASETS") == [
@@ -55,9 +57,17 @@ import ArchGDAL; const AG = ArchGDAL
         ]
     end
 
+    # Get metadata from a RasterDataset
+    AG.readraster("data/utmsmall.tif") do dataset
+        # interestingly the list order below is different from the order above
+        @test AG.metadatadomainlist(dataset) == ["IMAGE_STRUCTURE", "DERIVED_SUBDATASETS", ""]
+        @test AG.metadata(dataset) == ["AREA_OR_POINT=Area"]
+        @test AG.metadataitem(dataset, "AREA_OR_POINT") == "Area"
+    end
+
     # Techniques for Creating Files
-    #@test GDAL.getmetadataitem(driver, "DCAP_CREATE", "") == "YES"
-    #@test GDAL.getmetadataitem(driver, "DCAP_CREATECOPY", "") == "YES"
+    @test GDAL.gdalgetmetadataitem(driver.ptr, "DCAP_CREATE", "") == "YES"
+    @test GDAL.gdalgetmetadataitem(driver.ptr, "DCAP_CREATECOPY", "") == "YES"
 
     AG.read("data/utmsmall.tif") do ds_src
         AG.write(ds_src, "/vsimem/utmsmall.tif")
@@ -72,8 +82,8 @@ end
         @test AG.nlayer(dataset) == 1
         layer = AG.getlayer(dataset, 0)
         @test (AG.getname(layer) in ["point", "OGRGeoJSON"]) == true
-        # layerbyname = AG.getlayer(dataset, "point")
-        # @test layerbyname.ptr == layer.ptr
+        layerbyname = AG.getlayer(dataset, "point")
+        @test layerbyname.ptr == layer.ptr
         AG.resetreading!(layer)
 
         featuredefn = AG.layerdefn(layer)

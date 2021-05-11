@@ -131,25 +131,24 @@ function test_method(f::Function, wkt1::AbstractString,
     end
 end
 
-# TODO: fix #47
-# @testset "Intersection" begin
-#     test_method(AG.intersection,
-#                 "POLYGON EMPTY",
-#                 "POLYGON EMPTY",
-#                 "GEOMETRYCOLLECTION EMPTY")
-#     test_method(AG.intersection,
-#                 "POLYGON((1 1,1 5,5 5,5 1,1 1))",
-#                 "POINT(2 2)",
-#                 "POINT (2 2)")
-#     test_method(AG.intersection,
-#                 "MULTIPOLYGON(((0 0,0 10,10 10,10 0,0 0)))",
-#                 "POLYGON((-1 1,-1 2,2 2,2 1,-1 1))",
-#                 "POLYGON ((0 1,0 2,2 2,2 1,0 1))")
-#     test_method(AG.intersection,
-#                 "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
-#                 "POLYGON((0 1,0 2,10 2,10 1,0 1))",
-#                 "GEOMETRYCOLLECTION (LINESTRING (1 2,2 2),LINESTRING (2 1,1 1),POLYGON ((0.5 1.0,1 2,1 1,0.5 1.0)),POLYGON ((9 2,9.5 1.0,2 1,2 2,9 2)))")
-# end
+@testset "Intersection" begin
+    test_method(AG.intersection,
+                "POLYGON EMPTY",
+                "POLYGON EMPTY",
+                "POLYGON EMPTY")
+    test_method(AG.intersection,
+                "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+                "POINT(2 2)",
+                "POINT (2 2)")
+    test_method(AG.intersection,
+                "MULTIPOLYGON(((0 0,0 10,10 10,10 0,0 0)))",
+                "POLYGON((-1 1,-1 2,2 2,2 1,-1 1))",
+                "POLYGON ((0 2,2 2,2 1,0 1,0 2))")
+    test_method(AG.intersection,
+                "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
+                "POLYGON((0 1,0 2,10 2,10 1,0 1))",
+                "GEOMETRYCOLLECTION (POLYGON ((0.5 1.0,1 2,1 1,0.5 1.0)),POLYGON ((2 2,9 2,9.5 1.0,2 1,2 2)),LINESTRING (2 1,1 1),LINESTRING (1 2,2 2))")
+end
 
 function test_predicate(f::Function, wkt1, wkt2, result::Bool)
     AG.fromWKT(wkt1) do geom1
