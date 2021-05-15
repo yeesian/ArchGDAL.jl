@@ -21,10 +21,7 @@ function imread(
     i::Integer,
 )
     return ImageCore.PermutedDimsArray(
-        ImageCore.colorview(
-            colortype,
-            ImageCore.normedview(read(dataset, i)),
-        ),
+        ImageCore.colorview(colortype, ImageCore.normedview(read(dataset, i))),
         (2, 1),
     )
 end
@@ -84,8 +81,9 @@ end
 
 imread(dataset::AbstractDataset, i::Integer) = imread(getband(dataset, i))
 
-imread(dataset::AbstractDataset, indices::NTuple{1,<:Integer}) =
-    imread(dataset, indices[1])
+function imread(dataset::AbstractDataset, indices::NTuple{1,<:Integer})
+    return imread(dataset, indices[1])
+end
 
 function imread(
     colortype::Type{<:ColorTypes.Colorant},
