@@ -1,3 +1,6 @@
+using Downloads
+using SHA
+
 # this file downloads files which are used during testing the package
 # if they are already present and their checksum matches, they are not downloaded again
 const testdatadir = @__DIR__

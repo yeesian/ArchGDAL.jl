@@ -1,7 +1,5 @@
 using Test
 using Dates
-using Downloads
-using SHA
 
 # ensure all testing files are present
 include("remotefiles.jl")
