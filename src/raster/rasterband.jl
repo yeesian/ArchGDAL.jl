@@ -184,7 +184,7 @@ not be displayed, nor contribute to analysis operations.
 ### Returns
 the nodata value for this band or `nothing`.
 """
-function getnodatavalue(band::AbstractRasterBand)::Union{Cint,Nothing}
+function getnodatavalue(band::AbstractRasterBand)::Union{Float64, Nothing}
     # ### Parameters
     # * `pbSuccess`   pointer to a boolean to use to indicate if a value is
     #     actually associated with this layer. May be `NULL` (default).
