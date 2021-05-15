@@ -169,3 +169,83 @@ using Test
     end
 
 end
+
+@testset "Interactive data/utmsmall.tif" begin
+    ds_small = AG.read("data/utmsmall.tif")
+    @testset "GDAL Error" begin
+        @test_throws GDAL.GDALError AG.gdalinfo(ds_small, ["-novalidoption"])
+        @test_throws GDAL.GDALError AG.unsafe_gdaltranslate(ds_small, ["-novalidoption"])
+        @test_throws GDAL.GDALError AG.unsafe_gdalbuildvrt([ds_small], ["-novalidoption"])
+        @test_throws GDAL.GDALError AG.unsafe_gdaldem(ds_small, "hillshade", ["-novalidoption"])
+        @test_throws GDAL.GDALError AG.unsafe_gdalnearblack(ds_small, ["-novalidoption"])
+        @test_throws GDAL.GDALError AG.unsafe_gdalwarp([ds_small], ["-novalidoption"])
+    end
+
+    @testset "GDAL Info" begin
+        infostr = AG.gdalinfo(ds_small, ["-checksum"])
+        @test occursin("Checksum=50054", infostr)
+        info_default = AG.gdalinfo(ds_small)
+        @test occursin("Driver: GTiff/GeoTIFF", info_default)
+    end
+
+    ds_tiny = AG.unsafe_gdaltranslate(ds_small, # resample to a 5×5 ascii grid
+        ["-of","AAIGrid","-r","cubic","-tr","1200","1200"])
+    @test typeof(ds_tiny) == AG.Dataset
+    @testset "GDAL Translate" begin
+        @test AG.read(ds_tiny, 1) == [128  171  127   93   83;
+                                        126  164  148  114  101;
+                                        161  175  177  164  140;
+                                        185  206  205  172  128;
+                                        193  205  209  181  122]
+    end
+
+    @testset "GDAL Build VRT" begin
+        ds_vrt = AG.unsafe_gdalbuildvrt([ds_tiny])
+        @test AG.read(ds_vrt, 1) == [128  171  127   93   83;
+                                        126  164  148  114  101;
+                                        161  175  177  164  140;
+                                        185  206  205  172  128;
+                                        193  205  209  181  122]
+    end
+
+    @testset "GDAL DEM Processing" begin
+        ds_dempr = AG.unsafe_gdaldem(ds_tiny, "hillshade", ["-of","AAIGrid"])
+        @test AG.read(ds_dempr, 1) == [ 0    0    0    0  0;
+                                        0  183  180  181  0;
+                                        0  184  182  181  0;
+                                        0  183  181  177  0;
+                                        0    0    0    0  0]
+    end
+
+    @testset "GDAL Near Black" begin
+        ds_nearblack = AG.unsafe_gdalnearblack(ds_tiny, ["-of","GTiff","-color","0"])
+        @test AG.read(ds_nearblack, 1) == [ 0  0    0  0  0;
+                                            0  0    0  0  0;
+                                            0  0  177  0  0;
+                                            0  0    0  0  0;
+                                            0  0    0  0  0]
+    end
+
+    # cannot reproject file on AppVeyor yet
+    # GDALError (CE_Failure, code 4):
+    #       Unable to open EPSG support file gcs.csv.  Try setting the
+    #       GDAL_DATA environment variable to point to the directory
+    #       containing EPSG csv files.
+    # @testset "GDAL Warp" begin
+    #     AG.gdalwarp([ds_small], ["-of","MEM","-t_srs","EPSG:4326"]) do ds_warped
+    #         @test AG.width(ds_small) == 100
+    #         @test AG.height(ds_small) == 100
+    #         @test AG.width(ds_warped) == 109
+    #         @test AG.height(ds_warped) == 91
+    #     end
+    # end
+    @testset "GDAL Warp" begin
+        ds_warped = AG.unsafe_gdalwarp([ds_small], ["-of","MEM"])
+        @test AG.width(ds_small) == 100
+        @test AG.height(ds_small) == 100
+        @test AG.shortname(AG.getdriver(ds_small)) == "GTiff"
+        @test AG.width(ds_warped) == 100
+        @test AG.height(ds_warped) == 100
+        @test AG.shortname(AG.getdriver(ds_warped)) == "MEM"
+        end
+end 
