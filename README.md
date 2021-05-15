@@ -39,9 +39,7 @@ This package will not be possible without https://julialang.org/, https://github
 ### Style Guide
 
 ArchGDAL.jl uses [JuliaFormatter.jl](https://github.com/domluna/JuliaFormatter.jl) as
-an autoformatting tool.
-
-We use the options contained in [`.JuliaFormatter.toml`](https://github.com/yeesian/ArchGDAL.jl/blob/master/.JuliaFormatter.toml).
+an autoformatting tool, and uses the options in [`.JuliaFormatter.toml`](https://github.com/yeesian/ArchGDAL.jl/blob/master/.JuliaFormatter.toml).
 
 To format code, `cd` to the ArchGDAL.jl directory, then run:
 ```julia
@@ -50,9 +48,7 @@ using JuliaFormatter
 format("src")
 ```
 
-!!! info
-    A continuous integration check verifies that all PRs made to ArchGDAL.jl have
-    passed the formatter.
+A continuous integration check verifies that all PRs made to ArchGDAL.jl have passed the formatter.
 
 ### Dependencies
 To manage the dependencies of this package, we work with [environments](https://pkgdocs.julialang.org/v1.6/environments/):
