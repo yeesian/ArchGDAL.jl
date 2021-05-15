@@ -1,6 +1,7 @@
 using Test
 using Dates
-using Pkg.PlatformEngines
+using Downloads
+using SHA
 
 # ensure all testing files are present
 include("remotefiles.jl")
