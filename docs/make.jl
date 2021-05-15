@@ -17,6 +17,7 @@ makedocs(
         "GDAL Datasets" => "datasets.md",
         "Feature Data" => "features.md",
         "Raster Data" => "rasters.md",
+        "Working with Images" => "images.md",
         "Tables Interface" => "tables.md",
         "Geometric Operations" => "geometries.md",
         "Spatial Projections" => "projections.md",

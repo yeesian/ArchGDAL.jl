@@ -18,16 +18,74 @@ end
 function imread(
     colortype::Type{<:ColorTypes.Colorant},
     dataset::AbstractDataset,
-    indices::NTuple{1,<:Integer},
+    i::Integer,
 )
     return ImageCore.PermutedDimsArray(
         ImageCore.colorview(
             colortype,
-            ImageCore.normedview(read(dataset, indices[1])),
+            ImageCore.normedview(read(dataset, i)),
         ),
         (2, 1),
     )
 end
+
+function imread(
+    colortype::Type{<:ColorTypes.Colorant},
+    dataset::AbstractDataset,
+    indices::NTuple{1,<:Integer},
+)
+    return imread(colortype, dataset, indices[1])
+end
+
+function imread(band::AbstractRasterBand)
+    gci = getcolorinterp(band)
+    imgvalues = read(band)
+    zerovalues = zeros(eltype(imgvalues), size(imgvalues))
+    return if gci == GCI_RedBand
+        ImageCore.PermutedDimsArray(
+            ImageCore.colorview(
+                ColorTypes.RGB,
+                ImageCore.normedview(imgvalues),
+                ImageCore.normedview(zerovalues),
+                ImageCore.normedview(zerovalues),
+            ),
+            (2, 1),
+        )
+    elseif gci == GCI_GreenBand
+        ImageCore.PermutedDimsArray(
+            ImageCore.colorview(
+                ColorTypes.RGB,
+                ImageCore.normedview(zerovalues),
+                ImageCore.normedview(imgvalues),
+                ImageCore.normedview(zerovalues),
+            ),
+            (2, 1),
+        )
+    elseif gci == GCI_BlueBand
+        ImageCore.PermutedDimsArray(
+            ImageCore.colorview(
+                ColorTypes.RGB,
+                ImageCore.normedview(zerovalues),
+                ImageCore.normedview(zerovalues),
+                ImageCore.normedview(imgvalues),
+            ),
+            (2, 1),
+        )
+    else
+        ImageCore.PermutedDimsArray(
+            ImageCore.colorview(
+                ColorTypes.Gray,
+                ImageCore.normedview(imgvalues),
+            ),
+            (2, 1),
+        )
+    end
+end
+
+imread(dataset::AbstractDataset, i::Integer) = imread(getband(dataset, i))
+
+imread(dataset::AbstractDataset, indices::NTuple{1,<:Integer}) =
+    imread(dataset, indices[1])
 
 function imread(
     colortype::Type{<:ColorTypes.Colorant},
