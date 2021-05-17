@@ -15,7 +15,7 @@ function Tables.schema(layer::AbstractFeatureLayer)
     ngeom = ArchGDAL.ngeom(featuredefn)
     geomtypes = (IGeometry{ArchGDAL.gettype(ArchGDAL.getgeomdefn(featuredefn, i))} for i in 0:ngeom-1)
     field_types = (_FIELDTYPE[gettype(fielddefn)] for fielddefn in fielddefns)
-    Tables.Schema((field_names..., geom_names...), (field_types..., geomtypes...))
+    Tables.Schema((geom_names..., field_names...), (geomtypes..., field_types...))
 end
 
 Tables.istable(::Type{<:Table}) = true
@@ -54,7 +54,7 @@ function nextnamedtuple(layer::IFeatureLayer)
     return nextfeature(layer) do feature
         prop = (getfield(feature, name) for name in field_names)
         geom = (getgeom(feature, idx-1) for idx in 1:length(geom_names))
-        NamedTuple{(field_names..., geom_names...)}((prop..., geom...))
+        NamedTuple{(geom_names..., field_names...)}((geom..., prop...))
     end
 end
 
