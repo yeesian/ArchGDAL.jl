@@ -20,7 +20,7 @@ import ArchGDAL; const AG = ArchGDAL
              Field 1 (pointname): [OFTString], point-a, point-b, a, b
         """
         @test sprint(print, AG.nextnamedtuple(layer), context=:compact => true) == 
-        "(FID = 2.0, pointname = \"point-a\",  = Geometry: wkbPoint)"
+        "(geometry = Geometry: wkbPoint, FID = 2.0, pointname = \"point-a\")"
         @test sprint(print, AG.layerdefn(layer)) == """
           Geometry (index 0):  (wkbPoint)
              Field (index 0): FID (OFTReal)

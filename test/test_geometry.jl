@@ -26,6 +26,7 @@ end
         @test AG.issimple(point) == true
         @test AG.isring(point) == false
         @test AG.getz(point, 0) == 0
+        @test typeof(point) == AG.Geometry{GDAL.wkbPoint}
 
         @test sprint(print, AG.envelope(point)) == "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
         @test sprint(print, AG.envelope3d(point)) == "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
@@ -107,7 +108,8 @@ end
         @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
         AG.setpoint!(geom, 1, 10, 10)
         @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
-        @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)  
+        @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
+        @test typeof(geom) == AG.Geometry{GDAL.wkbLineString}
     end
     AG.createlinestring([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
         @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
@@ -116,7 +118,7 @@ end
         AG.addpoint!(geom, 11, 11, 11)
         @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9,11 11 11)"
     end
-    
+
     @test AG.toWKT(AG.createlinearring([1.,2.,3.], [4.,5.,6.])) == "LINEARRING (1 4,2 5,3 6)"
     AG.createlinearring([1.,2.,3.], [4.,5.,6.]) do geom
         # @test GeoInterface.geotype(geom) == :LinearRing
@@ -126,6 +128,7 @@ end
         @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
         AG.empty!(geom)
         @test AG.toWKT(geom) == "LINEARRING EMPTY"
+        @test typeof(geom) == AG.Geometry{GDAL.wkbLineString}  # this seems odd
     end
     AG.createlinearring([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
         @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
@@ -138,6 +141,7 @@ end
         @test GeoInterface.geotype(geom) == :Polygon
         @test isapprox(GeoInterface.coordinates(geom), [[[1,4],[2,5],[3,6]]], atol=1e-6)
         @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
+        @test typeof(geom) == AG.Geometry{GDAL.wkbPolygon}
     end
     AG.createpolygon([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
         @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
@@ -150,6 +154,7 @@ end
         @test GeoInterface.geotype(geom) == :MultiPoint
         @test isapprox(GeoInterface.coordinates(geom), [[1,4],[2,5],[3,6]], atol=1e-6)
         @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
+        @test typeof(geom) == AG.Geometry{GDAL.wkbMultiPoint}
     end
     AG.createmultipoint([1.,2.,3.], [4.,5.,6.], [7.,8.,9.]) do geom
         @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
@@ -179,18 +184,24 @@ end
             atol=1e-6
         )
         @test AG.toWKT(geom) == "MULTIPOLYGON (((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1)),((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
+        @test typeof(geom) == AG.Geometry{GDAL.wkbMultiPolygon}
     end
 
     AG.fromWKT("CURVEPOLYGON(CIRCULARSTRING(-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0 0.5,1 0,0 1,-1 0))") do geom
+        @test typeof(geom) == AG.Geometry{GDAL.wkbCurvePolygon}
         @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
         AG.lineargeom(geom, 0.5) do lgeom
+            @test typeof(lgeom) == AG.Geometry{GDAL.wkbPolygon}
             AG.curvegeom(lgeom) do clgeom
                 @test AG.toWKT(clgeom) == "CURVEPOLYGON (CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0),(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+                @test typeof(clgeom) == AG.Geometry{GDAL.wkbCurvePolygon}
             end
             @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, GDAL.wkbMultiLineString))) == 2
             AG.forceto(lgeom, GDAL.wkbMultiLineString) do mlsgeom
+                @test typeof(mlsgeom) == AG.Geometry{GDAL.wkbMultiLineString}
                 AG.polygonize(mlsgeom) do plgeom
                     @test AG.ngeom(plgeom) == 2
+                    @test typeof(plgeom) == AG.Geometry{GDAL.wkbGeometryCollection}
                 end
             end
         end
@@ -232,6 +243,7 @@ end
         @test AG.toWKT(result) == "MULTIPOLYGON (((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
         AG.segmentize!(result, 2)
         @test AG.toWKT(result) == "MULTIPOLYGON (((0 4 8,2 4 8,4 4 8,4 2 8,4 0 8,2 0 8,0 0 8,0 2 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),((10 4 8,12 4 8,14 4 8,14 2 8,14 0 8,12 0 8,10 0 8,10 2 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+        @test typeof(result) == AG.Geometry{GDAL.wkbMultiPolygon25D}
     end
 
     @test AG.toWKT(AG.symdifference(geom1, geom2)) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POLYGON ((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8),(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)),POINT (2 5 8),POINT (3 6 9))"
@@ -242,12 +254,14 @@ end
         @test AG.toWKT(result) == "GEOMETRYCOLLECTION (POLYGON ((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8),(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8)),POINT (2 5 8),POINT (3 6 9))"
         AG.removeallgeoms!(result)
         @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
+        @test typeof(result) == AG.Geometry{GDAL.wkbGeometryCollection25D}
     end
 
     geom3 = AG.fromWKT("GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8,0 4 8,4 4 8,4 0 8,0 0 8),(1 1 8,3 1 8,3 3 8,1 3 8,1 1 8)),POLYGON ((10 0 8,10 4 8,14 4 8,14 0 8,10 0 8),(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8)), POINT EMPTY)")
     AG.clone(geom3) do geom4
         @test sprint(print, AG.clone(geom3)) == "Geometry: GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8, ... MPTY)"
         @test sprint(print, AG.clone(geom4)) == "Geometry: GEOMETRYCOLLECTION (POINT (2 5 8),POLYGON ((0 0 8, ... MPTY)"
+        @test typeof(geom4) == AG.Geometry{GDAL.wkbGeometryCollection25D}
     end
     AG.clone(AG.getgeom(geom3, 3)) do geom4
         @test sprint(print, geom4) == "Geometry: POINT EMPTY"

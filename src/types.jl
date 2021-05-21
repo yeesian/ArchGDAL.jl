@@ -205,21 +205,23 @@ mutable struct ISpatialRef <: AbstractSpatialRef
     end
 end
 
-mutable struct Geometry <: AbstractGeometry
+mutable struct Geometry{OGRwkbGeometryType} <: AbstractGeometry
     ptr::GDALGeometry
 
-    Geometry(ptr::GDALGeometry = C_NULL) = new(ptr)
+    Geometry(ptr::GDALGeometry = C_NULL) = new{ptr != C_NULL ? GDAL.ogr_g_getgeometrytype(ptr) : GDAL.wkbUnknown}(ptr)
 end
+_geomtype(::Geometry{T}) where T = T
 
-mutable struct IGeometry <: AbstractGeometry
+mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry
     ptr::GDALGeometry
 
     function IGeometry(ptr::GDALGeometry = C_NULL)
-        geom = new(ptr)
+        geom = new{ptr != C_NULL ? GDAL.ogr_g_getgeometrytype(ptr) : GDAL.wkbUnknown}(ptr)
         finalizer(destroy, geom)
         return geom
     end
 end
+_geomtype(::IGeometry{T}) where T = T
 
 mutable struct ColorTable
     ptr::GDALColorTable
