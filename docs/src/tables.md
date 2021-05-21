@@ -35,7 +35,7 @@ dataset.
 ```@example tables
 dataset1 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
 
-layer = ArchGDAL.getlayer(dataset, 0)
+layer = ArchGDAL.getlayer(dataset1, 0)
 table = ArchGDAL.Table(layer)
 df = DataFrame(table)
 ```
