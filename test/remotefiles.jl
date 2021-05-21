@@ -121,7 +121,7 @@ function verify(path::AbstractString, hash::AbstractString)
     hash = lowercase(hash)
     if isfile(path)
         calc_hash = open(path) do file
-            bytes2hex(sha256(file))
+            return bytes2hex(sha256(file))
         end
         @assert occursin(r"^[0-9a-f]{64}$", calc_hash)
         if calc_hash != hash
@@ -135,7 +135,11 @@ function verify(path::AbstractString, hash::AbstractString)
     end
 end
 
-function download_verify(url::AbstractString, hash::Union{AbstractString, Nothing}, dest::AbstractString)
+function download_verify(
+    url::AbstractString,
+    hash::Union{AbstractString,Nothing},
+    dest::AbstractString,
+)
     file_existed = false
     # verify if file exists
     if isfile(dest)
@@ -145,11 +149,13 @@ function download_verify(url::AbstractString, hash::Union{AbstractString, Nothin
             return true
         else
             # either hash is nothing or couldn't pass the SHA test
-            @error("Failed to verify file: $dest with hash: $hash. Re-downloading file...")
+            @error(
+                "Failed to verify file: $dest with hash: $hash. Re-downloading file..."
+            )
         end
     end
     # if the file exists but some problem exists, we delete it to start from scratch
-    file_existed && Base.rm(dest; force=true)
+    file_existed && Base.rm(dest; force = true)
     # Make sure the containing folder exists
     mkpath(dirname(dest))
     # downloads the file at dest
@@ -158,7 +164,7 @@ function download_verify(url::AbstractString, hash::Union{AbstractString, Nothin
     if hash !== nothing && !verify(dest, hash)
         if file_existed
             # the file might be corrupted so we start from scracth
-            Base.rm(dest; force=true)
+            Base.rm(dest; force = true)
             Downloads.download(url, dest)
             if hash !== nothing && !verify(dest, hash)
                 error("Verification failed")
