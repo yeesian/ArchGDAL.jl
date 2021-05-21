@@ -160,6 +160,7 @@ const GFT = GeoFormatTypes
         @test AG.issimple(point) == true
         @test AG.isring(point) == false
         @test AG.getz(point, 0) == 0
+        @test typeof(point) == AG.IGeometry{AG.wkbPoint}
         @test sprint(print, AG.envelope(point)) ==
               "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
         @test sprint(print, AG.envelope3d(point)) ==
@@ -265,6 +266,7 @@ const GFT = GeoFormatTypes
             AG.setpoint!(geom, 1, 10, 10)
             @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
             @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
+            @test typeof(geom) == AG.Geometry{AG.wkbLineString}
         end
         AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
             @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
@@ -288,6 +290,7 @@ const GFT = GeoFormatTypes
             @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
             AG.empty!(geom)
             @test AG.toWKT(geom) == "LINEARRING EMPTY"
+            @test typeof(geom) == AG.Geometry{AG.wkbLineString} # this seems odd
         end
         AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
@@ -305,6 +308,7 @@ const GFT = GeoFormatTypes
                 atol = 1e-6,
             )
             @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
+            @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
         end
         AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
             @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
@@ -322,6 +326,7 @@ const GFT = GeoFormatTypes
                 atol = 1e-6,
             )
             @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
+            @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint}
         end
         AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
             @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
@@ -372,6 +377,7 @@ const GFT = GeoFormatTypes
                   "MULTIPOLYGON (" *
                   "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
                   "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
+            @test typeof(geom) == AG.Geometry{AG.wkbMultiPolygon}
         end
 
         AG.fromWKT(
@@ -379,21 +385,26 @@ const GFT = GeoFormatTypes
             "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
             "(-1 0,0 0.5,1 0,0 1,-1 0))",
         ) do geom
+            @test typeof(geom) == AG.Geometry{AG.wkbCurvePolygon}
             @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) ==
                   "CURVEPOLYGON (" *
                   "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
                   "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
             AG.lineargeom(geom, 0.5) do lgeom
+                @test typeof(lgeom) == AG.Geometry{AG.wkbPolygon}
                 AG.curvegeom(lgeom) do clgeom
                     @test AG.toWKT(clgeom) ==
                           "CURVEPOLYGON (" *
                           "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
                           "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+                    @test typeof(clgeom) == AG.Geometry{AG.wkbCurvePolygon}
                 end
                 @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
                 AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+                    @test typeof(mlsgeom) == AG.Geometry{AG.wkbMultiLineString}
                     AG.polygonize(mlsgeom) do plgeom
                         @test AG.ngeom(plgeom) == 2
+                        @test typeof(plgeom) == AG.Geometry{AG.wkbGeometryCollection}
                     end
                 end
             end
@@ -542,6 +553,7 @@ const GFT = GeoFormatTypes
                   "11 3 8," *
                   "11 1 8," *
                   "13 1 8)))"
+            @test typeof(result) == AG.Geometry{AG.wkbMultiPolygon25D}
         end
 
         @test AG.toWKT(AG.symdifference(geom1, geom2)) ==
@@ -575,6 +587,7 @@ const GFT = GeoFormatTypes
                   "POINT (3 6 9))"
             AG.removeallgeoms!(result)
             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
+            @test typeof(result) == AG.Geometry{AG.wkbGeometryCollection25D}
         end
 
         geom3 = AG.fromWKT(
@@ -599,6 +612,7 @@ const GFT = GeoFormatTypes
                   "POINT (2 5 8)," *
                   "POLYGON ((0 0 8," *
                   " ... MPTY)"
+            @test typeof(geom4) == AG.Geometry{AG.wkbGeometryCollection25D}
         end
         AG.clone(AG.getgeom(geom3, 3)) do geom4
             @test sprint(print, geom4) == "Geometry: POINT EMPTY"

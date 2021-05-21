@@ -318,8 +318,7 @@ end
 
 Fetch geometry type code
 """
-getgeomtype(geom::AbstractGeometry)::OGRwkbGeometryType =
-    GDAL.ogr_g_getgeometrytype(geom.ptr)
+getgeomtype(geom::AbstractGeometry)::OGRwkbGeometryType = _geomtype(geom)
 
 """
     geomname(geom::AbstractGeometry)

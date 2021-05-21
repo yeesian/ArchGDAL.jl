@@ -195,21 +195,31 @@ mutable struct ISpatialRef <: AbstractSpatialRef
     end
 end
 
-mutable struct Geometry <: AbstractGeometry
-    ptr::GDAL.OGRGeometryH
-
-    Geometry(ptr::GDAL.OGRGeometryH = C_NULL) = new(ptr)
+function _infergeomtype(ptr::GDAL.OGRGeometryH = C_NULL)::OGRwkbGeometryType
+    return if ptr != C_NULL
+        convert(OGRwkbGeometryType, GDAL.ogr_g_getgeometrytype(ptr))
+    else
+        wkbUnknown
+    end
 end
 
-mutable struct IGeometry <: AbstractGeometry
+mutable struct Geometry{OGRwkbGeometryType} <: AbstractGeometry
+    ptr::GDAL.OGRGeometryH
+
+    Geometry(ptr::GDAL.OGRGeometryH = C_NULL) = new{_infergeomtype(ptr)}(ptr)
+end
+_geomtype(::Geometry{T}) where {T} = T
+
+mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry
     ptr::GDAL.OGRGeometryH
 
     function IGeometry(ptr::GDAL.OGRGeometryH = C_NULL)
-        geom = new(ptr)
+        geom = new{_infergeomtype(ptr)}(ptr)
         finalizer(destroy, geom)
         return geom
     end
 end
+_geomtype(::IGeometry{T}) where {T} = T
 
 mutable struct ColorTable
     ptr::GDAL.GDALColorTableH

@@ -14,10 +14,10 @@ function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
     geomdefns = (ArchGDAL.getgeomdefn(featuredefn, i) for i in 0:ngeom-1)
     field_types =
         (convert(DataType, gettype(fielddefn)) for fielddefn in fielddefns)
-    geom_types = (IGeometry for i in 1:ngeom)
+    geom_types = (IGeometry{gettype(geomdefn)} for geomdefn in geomdefns)
     return Tables.Schema(
-        (field_names..., geom_names...),
-        (field_types..., geom_types...),
+        (geom_names..., field_names...),
+        (geom_types..., field_types...),
     )
 end
 
@@ -60,10 +60,11 @@ end
 function schema_names(featuredefn::IFeatureDefnView)
     fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(featuredefn)-1)
     field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
-    geom_names = (
+    geom_names = collect(
         Symbol(getname(getgeomdefn(featuredefn, i - 1))) for
         i in 1:ngeom(featuredefn)
     )
+    replace!(geom_names, Symbol("") => Symbol("geometry"), count = 1)
     return (field_names, geom_names, featuredefn, fielddefns)
 end
 
