@@ -90,4 +90,6 @@ shell> cd /Users/yeesian/.julia/dev/ArchGDAL
   [68eda718] + GeoFormatTypes v0.3.0
   [cf35fbd7] + GeoInterface v0.5.5
   [bd369af6] + Tables v1.4.2
-```
+```4. Add a compat entry into Project.toml so that julia can resolve the versions
+```     Open the Project.toml file in a texteditor and add in the [compat] section the line:
+        CEnum = "0.4"
