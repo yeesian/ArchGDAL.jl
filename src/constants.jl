@@ -86,7 +86,7 @@ const StringList = Ptr{Cstring}
     GCI_PaletteIndex = 2,   # Paletted (see associated color table)
     GCI_RedBand = 3,        # Red band of RGBA image
     GCI_GreenBand = 4,      # Green band of RGBA image
-    GCI_BlueBand = 5,       # Green band of RGBA image
+    GCI_BlueBand = 5,       # Blue band of RGBA image
     GCI_AlphaBand = 6,      # Alpha (0=transparent, 255=opaque)
     GCI_HueBand = 7,        # Hue band of HLS image
     GCI_SaturationBand = 8, # Saturation band of HLS image
