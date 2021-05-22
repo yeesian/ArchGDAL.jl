@@ -191,10 +191,6 @@ function imread(dataset::AbstractDataset, i::Integer)
     return imread(getband(dataset, i))
 end
 
-# function imread(dataset::AbstractDataset, indices::NTuple{1,<:Integer})
-#     return imread(dataset, indices[1])
-# end
-
 function _paletteindices(dataset::AbstractDataset, indices)
     gci = unique(
         GDALColorInterp[getcolorinterp(getband(dataset, i)) for i in indices],
