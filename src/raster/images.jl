@@ -82,25 +82,25 @@ function imview(
 end
 
 function imread(
-    colortype::Type{T},
+    colortype::Union{GDALPaletteInterp, GDALColorInterp},
     rb::AbstractRasterBand,
     xoffset::Integer,
     yoffset::Integer,
     xsize::Integer,
     ysize::Integer,
-) where {T<:Union{GDALPaletteInterp,GDALColorInterp}}
+)
     return imview(colortype, read(rb, xoffset, yoffset, xsize, ysize))
 end
 
 function imread(
-    colortype::Type{T},
+    colortype::Union{GDALPaletteInterp, GDALColorInterp},
     dataset::AbstractDataset,
     i::Integer,
     xoffset::Integer,
     yoffset::Integer,
     xsize::Integer,
     ysize::Integer,
-) where {T<:Union{GDALPaletteInterp,GDALColorInterp}}
+)
     return imread(
         colortype,
         getband(dataset, i),
@@ -112,36 +112,36 @@ function imread(
 end
 
 function imread(
-    colortype::Type{T},
+    colortype::Union{GDALPaletteInterp, GDALColorInterp},
     rb::AbstractRasterBand,
     rows::UnitRange{<:Integer},
     cols::UnitRange{<:Integer},
-) where {T<:Union{GDALPaletteInterp,GDALColorInterp}}
+)
     return imview(colortype, read(rb, rows, cols))
 end
 
 function imread(
-    colortype::Type{T},
+    colortype::Union{GDALPaletteInterp, GDALColorInterp},
     dataset::AbstractDataset,
     i::Integer,
     rows::UnitRange{<:Integer},
     cols::UnitRange{<:Integer},
-) where {T<:Union{GDALPaletteInterp,GDALColorInterp}}
+)
     return imread(colortype, getband(dataset, i), rows, cols)
 end
 
 function imread(
-    colortype::Type{T},
+    colortype::Union{GDALPaletteInterp, GDALColorInterp},
     rb::AbstractRasterBand,
-) where {T<:Union{GDALPaletteInterp,GDALColorInterp}}
+)
     return imview(colortype, read(rb))
 end
 
 function imread(
-    colortype::Type{T},
+    colortype::Union{GDALPaletteInterp, GDALColorInterp},
     dataset::AbstractDataset,
     i::Integer,
-) where {T<:Union{GDALPaletteInterp,GDALColorInterp}}
+)
     return imread(colortype, getband(dataset, i))
 end
 
