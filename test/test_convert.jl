@@ -43,4 +43,12 @@ const GFT = GeoFormatTypes;
         @test convert(GFT.CoordSys, GFT.CRS(), proj4326) isa GFT.CoordSys
         @test convert(GFT.GML, GFT.CRS(), proj4326) isa GeoFormatTypes.GML
     end
+
+    @testset "geometry conversions" begin
+        geom1 = AG.createpoint(1, 2)
+        @test typeof(geom1) == AG.IGeometry{AG.wkbPoint}
+        geom2 = convert(AG.IGeometry{AG.wkbUnknown}, geom1)
+        @test typeof(geom2) == AG.IGeometry{AG.wkbUnknown}
+        @test AG.toWKT(geom1) == AG.toWKT(geom2)
+    end
 end
