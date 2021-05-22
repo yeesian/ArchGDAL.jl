@@ -49,10 +49,7 @@ function Base.convert(::Type{<:AbstractGeometry}, source::GFT.GML)
     return fromGML(GFT.val(source))
 end
 
-function Base.convert(
-    ::Type{IGeometry{wkbUnknown}},
-    source::AbstractGeometry,
-)
+function Base.convert(::Type{IGeometry{wkbUnknown}}, source::AbstractGeometry)
     result = IGeometry(C_NULL)
     result.ptr = unsafe_clone(source).ptr
     return result
