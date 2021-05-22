@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_geos_operations.jl" begin
-
     function equivalent_to_wkt(geom::AG.Geometry, wkt::String)
         fromWKT(wkt) do test_geom
             @test toWKT(geom) == toWKT(test_geom)
@@ -11,9 +10,18 @@ const AG = ArchGDAL;
     end
 
     @testset "Interpolation along a LineString" begin
-        AG.createlinestring([(8.0, 1.0), (9.0, 1.0), (9.0, 2.0), (8.0, 2.0)]) do ls
-            for (dist, dest) in
-                [(1.0, (9, 1)), (2.0, (9, 2)), (1.5, (9.0, 1.5)), (2.5, (8.5, 2.0))]
+        AG.createlinestring([
+            (8.0, 1.0),
+            (9.0, 1.0),
+            (9.0, 2.0),
+            (8.0, 2.0),
+        ]) do ls
+            for (dist, dest) in [
+                (1.0, (9, 1)),
+                (2.0, (9, 2)),
+                (1.5, (9.0, 1.5)),
+                (2.5, (8.5, 2.0)),
+            ]
                 AG.pointalongline(ls, dist) do pt1
                     AG.createpoint(dest) do pt2
                         @test AG.toWKT(pt1) == AG.toWKT(pt2)
@@ -69,7 +77,8 @@ const AG = ArchGDAL;
                 @test AG.isempty(g2) == true
                 @test AG.toWKT(g2) == "MULTILINESTRING EMPTY"
             end
-            @test AG.toWKT(AG.delaunaytriangulation(g1, 0, true)) == "MULTILINESTRING EMPTY"
+            @test AG.toWKT(AG.delaunaytriangulation(g1, 0, true)) ==
+                  "MULTILINESTRING EMPTY"
         end
         AG.fromWKT("POINT(0 0)") do g1
             AG.delaunaytriangulation(g1, 0, false) do g2
@@ -103,7 +112,11 @@ const AG = ArchGDAL;
         end
     end
 
-    function test_method(f::Function, wkt1::AbstractString, wkt2::AbstractString)
+    function test_method(
+        f::Function,
+        wkt1::AbstractString,
+        wkt2::AbstractString,
+    )
         AG.fromWKT(wkt1) do geom
             f(geom) do result
                 @test AG.toWKT(result) == wkt2
@@ -115,13 +128,21 @@ const AG = ArchGDAL;
     @testset "Centroid" begin
         test_method(AG.centroid, "POINT(10 0)", "POINT (10 0)")
         test_method(AG.centroid, "LINESTRING(0 0, 10 0)", "POINT (5 0)")
-        test_method(AG.centroid, "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))", "POINT (5 5)")
+        test_method(
+            AG.centroid,
+            "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))",
+            "POINT (5 5)",
+        )
         test_method(AG.centroid, "LINESTRING EMPTY", "POINT EMPTY")
     end
 
     @testset "Point on Surface" begin
         test_method(AG.pointonsurface, "POINT(10 0)", "POINT (10 0)")
-        test_method(AG.pointonsurface, "LINESTRING(0 0, 5 0, 10 0)", "POINT (5 0)")
+        test_method(
+            AG.pointonsurface,
+            "LINESTRING(0 0, 5 0, 10 0)",
+            "POINT (5 0)",
+        )
         test_method(
             AG.pointonsurface,
             "POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))",
@@ -148,7 +169,12 @@ const AG = ArchGDAL;
     end
 
     @testset "Intersection" begin
-        test_method(AG.intersection, "POLYGON EMPTY", "POLYGON EMPTY", "POLYGON EMPTY")
+        test_method(
+            AG.intersection,
+            "POLYGON EMPTY",
+            "POLYGON EMPTY",
+            "POLYGON EMPTY",
+        )
         test_method(
             AG.intersection,
             "POLYGON((1 1,1 5,5 5,5 1,1 1))",
@@ -179,8 +205,18 @@ const AG = ArchGDAL;
 
     @testset "Intersects" begin
         test_predicate(AG.intersects, "POLYGON EMPTY", "POLYGON EMPTY", false)
-        test_predicate(AG.intersects, "POLYGON((1 1,1 5,5 5,5 1,1 1))", "POINT(2 2)", true)
-        test_predicate(AG.intersects, "POINT(2 2)", "POLYGON((1 1,1 5,5 5,5 1,1 1))", true)
+        test_predicate(
+            AG.intersects,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            true,
+        )
+        test_predicate(
+            AG.intersects,
+            "POINT(2 2)",
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            true,
+        )
         test_predicate(
             AG.intersects,
             "MULTIPOLYGON(((0 0,0 10,10 10,10 0,0 0)))",
@@ -197,8 +233,18 @@ const AG = ArchGDAL;
 
     @testset "Within" begin
         test_predicate(AG.within, "POLYGON EMPTY", "POLYGON EMPTY", false)
-        test_predicate(AG.within, "POLYGON((1 1,1 5,5 5,5 1,1 1))", "POINT(2 2)", false)
-        test_predicate(AG.within, "POINT(2 2)", "POLYGON((1 1,1 5,5 5,5 1,1 1))", true)
+        test_predicate(
+            AG.within,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            false,
+        )
+        test_predicate(
+            AG.within,
+            "POINT(2 2)",
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            true,
+        )
         test_predicate(
             AG.within,
             "MULTIPOLYGON(((0 0,0 10,10 10,10 0,0 0)))",
@@ -234,5 +280,4 @@ const AG = ArchGDAL;
                   "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
         end
     end
-
 end

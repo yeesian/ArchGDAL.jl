@@ -4,7 +4,6 @@ const AG = ArchGDAL;
 import ImageCore
 
 @testset "test_types.jl" begin
-
     @testset "Testing GDAL Type Methods" begin
         @testset "GDAL Open Flags" begin
             @test AG.OF_READONLY | 0x04 == 0x04
@@ -23,7 +22,10 @@ import ImageCore
             @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
             @test_throws ErrorException Base.convert(AG.GDALDataType, Int64)
             @test_throws ErrorException Base.convert(DataType, AG.GDT_TypeCount)
-            @test_throws MethodError Base.convert(ImageCore.Normed, AG.GDT_Float32)
+            @test_throws MethodError Base.convert(
+                ImageCore.Normed,
+                AG.GDT_Float32,
+            )
         end
 
         @testset "GDAL Colors and Palettes" begin
@@ -63,7 +65,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiPoint) == AG.wkbMultiPoint
             @test AG.basetype(AG.wkbMultiLineString) == AG.wkbMultiLineString
             @test AG.basetype(AG.wkbMultiPolygon) == AG.wkbMultiPolygon
-            @test AG.basetype(AG.wkbGeometryCollection) == AG.wkbGeometryCollection
+            @test AG.basetype(AG.wkbGeometryCollection) ==
+                  AG.wkbGeometryCollection
             @test AG.basetype(AG.wkbCircularString) == AG.wkbCircularString
             @test AG.basetype(AG.wkbCompoundCurve) == AG.wkbCompoundCurve
             @test AG.basetype(AG.wkbCurvePolygon) == AG.wkbCurvePolygon
@@ -71,7 +74,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiSurface) == AG.wkbMultiSurface
             @test AG.basetype(AG.wkbCurve) == AG.wkbCurve
             @test AG.basetype(AG.wkbSurface) == AG.wkbSurface
-            @test AG.basetype(AG.wkbPolyhedralSurface) == AG.wkbPolyhedralSurface
+            @test AG.basetype(AG.wkbPolyhedralSurface) ==
+                  AG.wkbPolyhedralSurface
             @test AG.basetype(AG.wkbTIN) == AG.wkbTIN
             @test AG.basetype(AG.wkbTriangle) == AG.wkbTriangle
             @test AG.basetype(AG.wkbNone) == AG.wkbNone
@@ -83,7 +87,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiSurfaceZ) == AG.wkbMultiSurface
             @test AG.basetype(AG.wkbCurveZ) == AG.wkbCurve
             @test AG.basetype(AG.wkbSurfaceZ) == AG.wkbSurface
-            @test AG.basetype(AG.wkbPolyhedralSurfaceZ) == AG.wkbPolyhedralSurface
+            @test AG.basetype(AG.wkbPolyhedralSurfaceZ) ==
+                  AG.wkbPolyhedralSurface
             @test AG.basetype(AG.wkbTINZ) == AG.wkbTIN
             @test AG.basetype(AG.wkbTriangleZ) == AG.wkbTriangle
             @test AG.basetype(AG.wkbPointM) == AG.wkbPoint
@@ -92,7 +97,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiPointM) == AG.wkbMultiPoint
             @test AG.basetype(AG.wkbMultiLineStringM) == AG.wkbMultiLineString
             @test AG.basetype(AG.wkbMultiPolygonM) == AG.wkbMultiPolygon
-            @test AG.basetype(AG.wkbGeometryCollectionM) == AG.wkbGeometryCollection
+            @test AG.basetype(AG.wkbGeometryCollectionM) ==
+                  AG.wkbGeometryCollection
             @test AG.basetype(AG.wkbCircularStringM) == AG.wkbCircularString
             @test AG.basetype(AG.wkbCompoundCurveM) == AG.wkbCompoundCurve
             @test AG.basetype(AG.wkbCurvePolygonM) == AG.wkbCurvePolygon
@@ -100,7 +106,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiSurfaceM) == AG.wkbMultiSurface
             @test AG.basetype(AG.wkbCurveM) == AG.wkbCurve
             @test AG.basetype(AG.wkbSurfaceM) == AG.wkbSurface
-            @test AG.basetype(AG.wkbPolyhedralSurfaceM) == AG.wkbPolyhedralSurface
+            @test AG.basetype(AG.wkbPolyhedralSurfaceM) ==
+                  AG.wkbPolyhedralSurface
             @test AG.basetype(AG.wkbTINM) == AG.wkbTIN
             @test AG.basetype(AG.wkbTriangleM) == AG.wkbTriangle
             @test AG.basetype(AG.wkbPointZM) == AG.wkbPoint
@@ -109,7 +116,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiPointZM) == AG.wkbMultiPoint
             @test AG.basetype(AG.wkbMultiLineStringZM) == AG.wkbMultiLineString
             @test AG.basetype(AG.wkbMultiPolygonZM) == AG.wkbMultiPolygon
-            @test AG.basetype(AG.wkbGeometryCollectionZM) == AG.wkbGeometryCollection
+            @test AG.basetype(AG.wkbGeometryCollectionZM) ==
+                  AG.wkbGeometryCollection
             @test AG.basetype(AG.wkbCircularStringZM) == AG.wkbCircularString
             @test AG.basetype(AG.wkbCompoundCurveZM) == AG.wkbCompoundCurve
             @test AG.basetype(AG.wkbCurvePolygonZM) == AG.wkbCurvePolygon
@@ -117,7 +125,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiSurfaceZM) == AG.wkbMultiSurface
             @test AG.basetype(AG.wkbCurveZM) == AG.wkbCurve
             @test AG.basetype(AG.wkbSurfaceZM) == AG.wkbSurface
-            @test AG.basetype(AG.wkbPolyhedralSurfaceZM) == AG.wkbPolyhedralSurface
+            @test AG.basetype(AG.wkbPolyhedralSurfaceZM) ==
+                  AG.wkbPolyhedralSurface
             @test AG.basetype(AG.wkbTINZM) == AG.wkbTIN
             @test AG.basetype(AG.wkbTriangleZM) == AG.wkbTriangle
             @test AG.basetype(AG.wkbPoint25D) == AG.wkbPoint
@@ -126,8 +135,8 @@ import ImageCore
             @test AG.basetype(AG.wkbMultiPoint25D) == AG.wkbMultiPoint
             @test AG.basetype(AG.wkbMultiLineString25D) == AG.wkbMultiLineString
             @test AG.basetype(AG.wkbMultiPolygon25D) == AG.wkbMultiPolygon
-            @test AG.basetype(AG.wkbGeometryCollection25D) == AG.wkbGeometryCollection
+            @test AG.basetype(AG.wkbGeometryCollection25D) ==
+                  AG.wkbGeometryCollection
         end
     end
-
 end

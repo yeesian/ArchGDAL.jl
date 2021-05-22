@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_iterators.jl" begin
-
     @testset "Iterator interface Window Iterator" begin
         ds = AG.readraster("ospy/data4/aster.img")
         band = AG.getband(ds, 1)
@@ -14,5 +13,4 @@ const AG = ArchGDAL;
         @test size(window) == (79, 89)
         @test length(window) == 7031
     end
-
 end

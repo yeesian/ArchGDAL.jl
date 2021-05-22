@@ -4,7 +4,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_ospy_examples.jl" begin
-
     """
     function to copy fields (not the data) from one layer to another
     parameters:
@@ -13,7 +12,7 @@ const AG = ArchGDAL;
     """
     function copyfields(fromlayer, tolayer)
         featuredefn = AG.layerdefn(fromlayer)
-        for i = 0:(AG.nfield(featuredefn)-1)
+        for i in 0:(AG.nfield(featuredefn)-1)
             fd = AG.getfielddefn(featuredefn, i)
             if AG.gettype(fd) == OFTReal
                 # to deal with errors like
@@ -38,7 +37,7 @@ const AG = ArchGDAL;
       toFeature: feature object that the data is to be copied into
     """
     function copyattributes(fromfeature, tofeature)
-        for i = 0:(AG.nfield(fromfeature)-1)
+        for i in 0:(AG.nfield(fromfeature)-1)
             if AG.isfieldset(fromfeature, i)
                 try
                     AG.setfield!(tofeature, i, AG.getfield(fromfeature, i))
@@ -90,15 +89,19 @@ const AG = ArchGDAL;
                 @test id == i
                 @test 4e5 <= x <= 5e5
                 @test 4.5e6 <= y <= 5e6
-                @test cover in ("shrubs", "trees", "rocks", "grass", "bare", "water")
+                @test cover in
+                      ("shrubs", "trees", "rocks", "grass", "bare", "water")
             end
 
             #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw1b.py
             # version 1
             AG.create(AG.getdriver("MEMORY")) do output
                 inlayer = AG.getlayer(input, 0)
-                outlayer =
-                    AG.createlayer(name = "hw1b", dataset = output, geom = AG.wkbPoint)
+                outlayer = AG.createlayer(
+                    name = "hw1b",
+                    dataset = output,
+                    geom = AG.wkbPoint,
+                )
                 inlayerdefn = AG.layerdefn(inlayer)
                 AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 0))
                 AG.addfielddefn!(outlayer, AG.getfielddefn(inlayerdefn, 1))
@@ -110,7 +113,7 @@ const AG = ArchGDAL;
                         AG.createfeature(outlayer) do outfeature
                             AG.setgeom!(outfeature, AG.getgeom(infeature))
                             AG.setfield!(outfeature, 0, id)
-                            AG.setfield!(outfeature, 1, cover)
+                            return AG.setfield!(outfeature, 1, cover)
                         end
                     end
                 end
@@ -136,7 +139,7 @@ const AG = ArchGDAL;
                          Field 0 (id): [OFTInteger], 2, 6, 9, 14, 19, 20, 22, 26, 34, 36, 41
                          Field 1 (cover): [OFTString], trees, trees, trees, trees, trees, trees, ...
                     """
-                    AG.copy(results, name = "hw1b", dataset = output)
+                    return AG.copy(results, name = "hw1b", dataset = output)
                 end
                 @test sprint(print, output) == """
                 GDAL Dataset (Driver: Memory/Memory)
@@ -153,15 +156,18 @@ const AG = ArchGDAL;
         # http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw2a.py
         open("ospy/data2/ut_counties.txt", "r") do file
             AG.create(AG.getdriver("MEMORY")) do output
-                layer =
-                    AG.createlayer(name = "hw2a", dataset = output, geom = AG.wkbPolygon)
+                layer = AG.createlayer(
+                    name = "hw2a",
+                    dataset = output,
+                    geom = AG.wkbPolygon,
+                )
                 @test sprint(print, layer) == """
                 Layer: hw2a
                   Geometry 0 (): [wkbPolygon]
                 """
                 AG.createfielddefn("name", AG.OFTString) do fielddefn
                     AG.setwidth!(fielddefn, 30)
-                    AG.addfielddefn!(layer, fielddefn)
+                    return AG.addfielddefn!(layer, fielddefn)
                 end
                 @test sprint(print, layer) == """
                 Layer: hw2a
@@ -183,7 +189,7 @@ const AG = ArchGDAL;
                                 )
                             end
                             AG.addgeom!(poly, ring)
-                            AG.setgeom!(feature, poly)
+                            return AG.setgeom!(feature, poly)
                         end
                     end
                 end
@@ -273,7 +279,7 @@ const AG = ArchGDAL;
                     yOffset = round(Int, (y - yOrigin) / pixelHeight)
                     # create a string to print out
                     @test AG.getfield(feature, id) == i
-                    for j = 1:AG.nraster(ds)
+                    for j in 1:AG.nraster(ds)
                         data = AG.read(ds, j, xOffset, yOffset, 1, 1)
                         results[i, j] = data[1, 1]
                     end
@@ -355,7 +361,7 @@ const AG = ArchGDAL;
                         AG.rasterio!(inband3, buffer3, j, i, ncols, nrows)
                         data2 = buffer2[1:nrows, 1:ncols]
                         data3 = buffer3[1:nrows, 1:ncols]
-                        for row = 1:nrows, col = 1:ncols
+                        for row in 1:nrows, col in 1:ncols
                             denominator = data2[row, col] + data3[row, col]
                             if denominator > 0
                                 numerator = data3[row, col] - data2[row, col]
@@ -384,7 +390,7 @@ const AG = ArchGDAL;
                     AG.setnodatavalue!(outband, -99)
                     # georeference the image and set the projection
                     AG.setgeotransform!(outDS, AG.getgeotransform(ds))
-                    AG.setproj!(outDS, AG.getproj(ds))
+                    return AG.setproj!(outDS, AG.getproj(ds))
 
                     # build pyramids
                     # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
@@ -484,7 +490,7 @@ const AG = ArchGDAL;
                     # set the geotransform and projection on the output
                     geotransform = [minX, pixelWidth1, 0, maxY, 0, pixelHeight1]
                     AG.setgeotransform!(dsout, geotransform)
-                    AG.setproj!(dsout, AG.getproj(ds1))
+                    return AG.setproj!(dsout, AG.getproj(ds1))
 
                     # build pyramids for the output
                     # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
@@ -497,5 +503,4 @@ const AG = ArchGDAL;
             end
         end
     end
-
 end

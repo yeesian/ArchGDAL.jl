@@ -5,7 +5,6 @@ import GeoFormatTypes;
 const GFT = GeoFormatTypes;
 
 @testset "test_spatialref.jl" begin
-
     @testset "Test Formats for Spatial Reference Systems" begin
         proj4326 = "+proj=longlat +datum=WGS84 +no_defs"
         proj26912 = "+proj=utm +zone=12 +datum=NAD83 +units=m +no_defs"
@@ -233,26 +232,34 @@ const GFT = GeoFormatTypes;
         end
 
         @testset "generic importCRS" begin
-            @test AG.toWKT(AG.importCRS(GFT.WellKnownText(GFT.CRS(), wkt4326))) ==
-                  AG.toWKT(AG.importWKT(wkt4326))
-            @test AG.toWKT(AG.importCRS(GFT.ESRIWellKnownText(GFT.CRS(), wkt4326))) ==
-                  AG.toWKT(AG.importESRI(wkt4326))
+            @test AG.toWKT(
+                AG.importCRS(GFT.WellKnownText(GFT.CRS(), wkt4326)),
+            ) == AG.toWKT(AG.importWKT(wkt4326))
+            @test AG.toWKT(
+                AG.importCRS(GFT.ESRIWellKnownText(GFT.CRS(), wkt4326)),
+            ) == AG.toWKT(AG.importESRI(wkt4326))
             @test AG.toWKT(AG.importCRS(GFT.ProjString(proj4326))) ==
                   AG.toWKT(AG.importPROJ4(proj4326))
-            @test AG.toWKT(AG.importCRS(GFT.EPSG(4326))) == AG.toWKT(AG.importEPSG(4326))
+            @test AG.toWKT(AG.importCRS(GFT.EPSG(4326))) ==
+                  AG.toWKT(AG.importEPSG(4326))
             @test AG.toWKT(AG.importCRS(GFT.EPSG(4326), order = :trad)) ==
                   AG.toWKT(AG.importEPSG(4326))
             @test AG.toWKT(AG.importCRS(GFT.EPSG(4326), order = :compliant)) ==
                   AG.toWKT(AG.importEPSG(4326))
             @test AG.toWKT(AG.importCRS(GFT.GML(xml4326))) ==
                   AG.toWKT(AG.importXML(xml4326))
-            @test AG.toWKT(AG.importCRS(GFT.KML(""))) == AG.toWKT(AG.importEPSG(4326))
-            @test_throws ArgumentError AG.importCRS(GFT.EPSG(4326), order = :unknown)
+            @test AG.toWKT(AG.importCRS(GFT.KML(""))) ==
+                  AG.toWKT(AG.importEPSG(4326))
+            @test_throws ArgumentError AG.importCRS(
+                GFT.EPSG(4326),
+                order = :unknown,
+            )
         end
     end
 
     @testset "Cloning NULL SRS" begin
-        @test sprint(print, AG.clone(AG.ISpatialRef())) == "NULL Spatial Reference System"
+        @test sprint(print, AG.clone(AG.ISpatialRef())) ==
+              "NULL Spatial Reference System"
         AG.clone(AG.ISpatialRef()) do spatialref
             @test sprint(print, spatialref) == "NULL Spatial Reference System"
         end
@@ -274,5 +281,4 @@ const GFT = GeoFormatTypes;
             @test AG.getattrvalue(spatialref, "AUTHORITY", 1) == "4326"
         end
     end
-
 end

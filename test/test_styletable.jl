@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_styletable.jl" begin
-
     @testset "Testing StyleTable Methods" begin
         AG.createstylemanager() do sm
             @test AG.initialize!(sm) == true
@@ -59,7 +58,7 @@ const AG = ArchGDAL;
                 @test AG.nextstyle(stbl) == "style2"
                 AG.resetreading!(stbl)
                 @test AG.nextstyle(stbl) == "style1"
-                AG.savestyletable(stbl, "tmp/styletable.txt")
+                return AG.savestyletable(stbl, "tmp/styletable.txt")
             end
             AG.createstyletable() do stbl
                 AG.loadstyletable!(stbl, "tmp/styletable.txt")
@@ -70,8 +69,7 @@ const AG = ArchGDAL;
                 AG.resetreading!(stbl)
                 @test AG.nextstyle(stbl) == "style1"
             end
-            rm("tmp/styletable.txt")
+            return rm("tmp/styletable.txt")
         end
     end
-
 end

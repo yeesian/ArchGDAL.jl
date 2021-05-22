@@ -4,7 +4,6 @@ const AG = ArchGDAL;
 using Tables
 
 @testset "test_tables.jl" begin
-
     @testset "Tables Support" begin
         dataset = AG.read(joinpath(@__DIR__, "data/point.geojson"))
         dataset1 = AG.read(
@@ -64,8 +63,7 @@ using Tables
             @test Tables.getcolumn(features[1], 1) == "5.1"
             @test Tables.getcolumn(features[1], 2) == "1.0"
             @test Tables.getcolumn(features[1], 3) == "Mumbai"
-            @test AG.toWKT(Tables.getcolumn(features[1], 4)) ==
-                  "POINT (30 10)"
+            @test AG.toWKT(Tables.getcolumn(features[1], 4)) == "POINT (30 10)"
             @test AG.toWKT(Tables.getcolumn(features[1], 5)) ==
                   "LINESTRING (30 10,10 30,40 40)"
             @test Tables.getcolumn(features[1], :id) == "5.1"
@@ -104,5 +102,4 @@ using Tables
             @test collect(field_names) == [:id, :zoom, :location]
         end
     end
-
 end

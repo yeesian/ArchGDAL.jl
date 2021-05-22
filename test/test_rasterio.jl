@@ -3,7 +3,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_rasterio.jl" begin
-
     AG.read("ospy/data4/aster.img") do ds
         @testset "version 1" begin
             band = AG.getband(ds, 1)
@@ -85,7 +84,8 @@ const AG = ArchGDAL;
 
         @testset "version 6" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+            buffer =
+                Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
             AG.rasterio!(ds, buffer, [1])
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -95,7 +95,8 @@ const AG = ArchGDAL;
 
         @testset "version 7" begin
             band = AG.getband(ds, 1)
-            buffer = Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
+            buffer =
+                Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
             AG.read!(band, buffer)
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -105,7 +106,8 @@ const AG = ArchGDAL;
 
         @testset "version 8" begin
             band = AG.getband(ds, 1)
-            buffer = Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
+            buffer =
+                Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
             AG.read!(ds, buffer, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -115,7 +117,8 @@ const AG = ArchGDAL;
 
         @testset "version 9" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+            buffer =
+                Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
             AG.read!(ds, buffer, [1])
             count = sum(buffer .> 0)
             total = sum(buffer)
@@ -125,7 +128,8 @@ const AG = ArchGDAL;
 
         @testset "version 10" begin
             band = AG.getband(ds, 1)
-            buffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 3)
+            buffer =
+                Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 3)
             AG.read!(ds, buffer)
             count = sum(buffer[:, :, 1] .> 0)
             total = sum(buffer[:, :, 1])
@@ -175,7 +179,12 @@ const AG = ArchGDAL;
                 @testset "writeblock!(rb::RasterBand, xoffset, yoffset, buffer)" begin
                     # We write everything to typemax(UInt8)
                     for ((i, j), (nrows, ncols)) in AG.blocks(bandout)
-                        AG.writeblock!(bandout, j, i, fill(typemax(UInt8), ncols, nrows))
+                        AG.writeblock!(
+                            bandout,
+                            j,
+                            i,
+                            fill(typemax(UInt8), ncols, nrows),
+                        )
                     end
                     buffer = AG.read(bandout)
                     nnzero = sum(buffer .> 0)
@@ -193,7 +202,11 @@ const AG = ArchGDAL;
                     # We write everything to typemax(UInt8)
                     AG.write!(
                         bandout,
-                        fill(typemax(UInt8), AG.height(bandout), AG.width(bandout)),
+                        fill(
+                            typemax(UInt8),
+                            AG.height(bandout),
+                            AG.width(bandout),
+                        ),
                     )
                     buffer = AG.read(bandout)
                     nnzero = sum(buffer .> 0)
@@ -201,7 +214,10 @@ const AG = ArchGDAL;
                     @test sum(buffer) / nnzero ≈ Float64(typemax(UInt8))
 
                     # Now we write everything to 0
-                    AG.write!(bandout, fill(0x00, AG.height(bandout), AG.width(bandout)))
+                    AG.write!(
+                        bandout,
+                        fill(0x00, AG.height(bandout), AG.width(bandout)),
+                    )
                     @test sum(AG.read(bandout) .> 0) == 0
                 end
 
@@ -209,7 +225,11 @@ const AG = ArchGDAL;
                     # We write everything to typemax(UInt8)
                     AG.write!(
                         dsout,
-                        fill(typemax(UInt8), AG.height(bandout), AG.width(bandout)),
+                        fill(
+                            typemax(UInt8),
+                            AG.height(bandout),
+                            AG.width(bandout),
+                        ),
                         1,
                     )
                     buffer = AG.read(bandout)
@@ -218,7 +238,11 @@ const AG = ArchGDAL;
                     @test sum(buffer) / nnzero ≈ Float64(typemax(UInt8))
 
                     # Now we write everything to 0
-                    AG.write!(dsout, fill(0x00, AG.height(bandout), AG.width(bandout)), 1)
+                    AG.write!(
+                        dsout,
+                        fill(0x00, AG.height(bandout), AG.width(bandout)),
+                        1,
+                    )
                     @test sum(AG.read(bandout) .> 0) == 0
                 end
 
@@ -226,7 +250,12 @@ const AG = ArchGDAL;
                     # We write everything to typemax(UInt8)
                     AG.write!(
                         dsout,
-                        fill(typemax(UInt8), AG.height(dsout), AG.width(dsout), 2),
+                        fill(
+                            typemax(UInt8),
+                            AG.height(dsout),
+                            AG.width(dsout),
+                            2,
+                        ),
                         1:2,
                     )
                     buffer = AG.read(dsout)
@@ -235,12 +264,14 @@ const AG = ArchGDAL;
                     @test sum(buffer) / nnzero ≈ Float64(typemax(UInt8))
 
                     # Now we write everything to 0
-                    AG.write!(dsout, fill(0x00, AG.height(dsout), AG.width(dsout), 2), 1:2)
+                    AG.write!(
+                        dsout,
+                        fill(0x00, AG.height(dsout), AG.width(dsout), 2),
+                        1:2,
+                    )
                     @test sum(AG.read(dsout) .> 0) == 0
                 end
             end
         end
-
     end
-
 end

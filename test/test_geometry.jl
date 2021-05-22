@@ -4,7 +4,6 @@ const AG = ArchGDAL
 const GFT = GeoFormatTypes
 
 @testset "test_geometry.jl" begin
-
     @testset "Incomplete GeoInterface geometries" begin
         @test_logs (:warn, "unknown geometry type") GeoInterface.geotype(
             AG.creategeom(AG.wkbCircularString),
@@ -33,7 +32,11 @@ const GFT = GeoFormatTypes
         # Method 1
         AG.createpoint(100, 70) do point
             @test GeoInterface.geotype(point) == :Point
-            @test isapprox(GeoInterface.coordinates(point), [100, 70], atol = 1e-6)
+            @test isapprox(
+                GeoInterface.coordinates(point),
+                [100, 70],
+                atol = 1e-6,
+            )
             @test AG.geomdim(point) == 0
             @test AG.getcoorddim(point) == 2
             AG.setcoorddim!(point, 3)
@@ -115,9 +118,11 @@ const GFT = GeoFormatTypes
             @test AG.toKML(point, "clampToGround") ==
                   "<Point><altitudeMode>clampToGround</altitudeMode>" *
                   "<coordinates>100,70,0</coordinates></Point>"
-            @test AG.toKML(point) == "<Point><coordinates>100,70,0</coordinates></Point>"
+            @test AG.toKML(point) ==
+                  "<Point><coordinates>100,70,0</coordinates></Point>"
             @test AG.toJSON(point) ==
-                  "{ \"type\": \"Point\", \"coordinates\": " * "[ 100.0, 70.0, 0.0 ] }"
+                  "{ \"type\": \"Point\", \"coordinates\": " *
+                  "[ 100.0, 70.0, 0.0 ] }"
             @test startswith(
                 AG.toJSON(point, SIGNIFICANT_FIGURES = 1),
                 "{ \"type\": \"Point\", \"coordinates\": [",
@@ -127,7 +132,11 @@ const GFT = GeoFormatTypes
                 "{ \"type\": \"Point\", \"coordinates\": [",
             )
             AG.createpoint(100, 70, 0) do point2
-                @test isapprox(GeoInterface.coordinates(point2), [100, 70, 0], atol = 1e-6)
+                @test isapprox(
+                    GeoInterface.coordinates(point2),
+                    [100, 70, 0],
+                    atol = 1e-6,
+                )
                 @test AG.equals(point, point2) == true
             end
             AG.createpoint((100, 70, 0)) do point3
@@ -233,7 +242,8 @@ const GFT = GeoFormatTypes
         @test AG.toKML(point, "clampToGround") ==
               "<Point><altitudeMode>clampToGround</altitudeMode>" *
               "<coordinates>100,70,0</coordinates></Point>"
-        @test AG.toKML(point) == "<Point><coordinates>100,70,0</coordinates></Point>"
+        @test AG.toKML(point) ==
+              "<Point><coordinates>100,70,0</coordinates></Point>"
         @test AG.toJSON(point) ==
               "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0, 0.0 ] }"
         @test AG.equals(point, AG.createpoint(100, 70, 0)) == true
@@ -268,7 +278,11 @@ const GFT = GeoFormatTypes
             @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
             @test typeof(geom) == AG.Geometry{AG.wkbLineString}
         end
-        AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
+        AG.createlinestring(
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0],
+        ) do geom
             @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
             AG.setpoint!(geom, 1, 10, 10, 10)
             @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9)"
@@ -292,7 +306,11 @@ const GFT = GeoFormatTypes
             @test AG.toWKT(geom) == "LINEARRING EMPTY"
             @test typeof(geom) == AG.Geometry{AG.wkbLineString} # this seems odd
         end
-        AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
+        AG.createlinearring(
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0],
+        ) do geom
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
             AG.closerings!(geom)
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9,1 4 7)"
@@ -310,7 +328,11 @@ const GFT = GeoFormatTypes
             @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
             @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
         end
-        AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
+        AG.createpolygon(
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0],
+        ) do geom
             @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
             AG.closerings!(geom)
             @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9,1 4 7))"
@@ -328,7 +350,11 @@ const GFT = GeoFormatTypes
             @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
             @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint}
         end
-        AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]) do geom
+        AG.createmultipoint(
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0],
+        ) do geom
             @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
         end
 
@@ -365,7 +391,10 @@ const GFT = GeoFormatTypes
             @test isapprox(
                 GeoInterface.coordinates(geom),
                 [
-                    [[[0, 0], [0, 4], [4, 4], [4, 0]], [[1, 1], [1, 3], [3, 3], [3, 1]]],
+                    [
+                        [[0, 0], [0, 4], [4, 4], [4, 0]],
+                        [[1, 1], [1, 3], [3, 3], [3, 1]],
+                    ],
                     [
                         [[10, 0], [10, 4], [14, 4], [14, 0]],
                         [[11, 1], [11, 3], [13, 3], [13, 1]],
@@ -399,27 +428,37 @@ const GFT = GeoFormatTypes
                           "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
                     @test typeof(clgeom) == AG.Geometry{AG.wkbCurvePolygon}
                 end
-                @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
+                @test AG.ngeom(
+                    AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
+                ) == 2
                 AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
                     @test typeof(mlsgeom) == AG.Geometry{AG.wkbMultiLineString}
                     AG.polygonize(mlsgeom) do plgeom
                         @test AG.ngeom(plgeom) == 2
-                        @test typeof(plgeom) == AG.Geometry{AG.wkbGeometryCollection}
+                        @test typeof(plgeom) ==
+                              AG.Geometry{AG.wkbGeometryCollection}
                     end
                 end
             end
 
             @test startswith(
                 AG.toWKT(
-                    AG.curvegeom(AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO")),
+                    AG.curvegeom(
+                        AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO"),
+                    ),
                 ),
                 "CURVEPOLYGON (CIRCULARSTRING (",
             )
             AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO") do lgeom
                 AG.curvegeom(lgeom) do clgeom
-                    @test startswith(AG.toWKT(clgeom), "CURVEPOLYGON (CIRCULARSTRING (")
+                    @test startswith(
+                        AG.toWKT(clgeom),
+                        "CURVEPOLYGON (CIRCULARSTRING (",
+                    )
                 end
-                @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
+                @test AG.ngeom(
+                    AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
+                ) == 2
                 AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
                     AG.polygonize(mlsgeom) do plgeom
                         @test AG.ngeom(plgeom) == 2
@@ -429,15 +468,22 @@ const GFT = GeoFormatTypes
 
             @test startswith(
                 AG.toWKT(
-                    AG.curvegeom(AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5)),
+                    AG.curvegeom(
+                        AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5),
+                    ),
                 ),
                 "CURVEPOLYGON (CIRCULARSTRING (",
             )
             AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5) do lgeom
                 AG.curvegeom(lgeom) do clgeom
-                    @test startswith(AG.toWKT(clgeom), "CURVEPOLYGON (CIRCULARSTRING (")
+                    @test startswith(
+                        AG.toWKT(clgeom),
+                        "CURVEPOLYGON (CIRCULARSTRING (",
+                    )
                 end
-                @test AG.ngeom(AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString))) == 2
+                @test AG.ngeom(
+                    AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
+                ) == 2
                 AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
                     AG.polygonize(mlsgeom) do plgeom
                         @test AG.ngeom(plgeom) == 2
@@ -460,7 +506,11 @@ const GFT = GeoFormatTypes
                 ],
             ],
         )
-        geom2 = AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0])
+        geom2 = AG.createmultipoint(
+            [1.0, 2.0, 3.0],
+            [4.0, 5.0, 6.0],
+            [7.0, 8.0, 9.0],
+        )
 
         AG.closerings!(geom1)
         @test AG.disjoint(geom1, geom2) == false
@@ -667,7 +717,8 @@ const GFT = GeoFormatTypes
             [1.0, 4.0],
         ]]) do geom4
             @test AG.toWKT(geom4) == "MULTILINESTRING ((1 4,2 5,3 6,1 4))"
-            @test AG.toWKT(AG.polygonfromedges(geom4, 0.1)) == "POLYGON ((1 4,2 5,3 6,1 4))"
+            @test AG.toWKT(AG.polygonfromedges(geom4, 0.1)) ==
+                  "POLYGON ((1 4,2 5,3 6,1 4))"
             AG.polygonfromedges(geom4, 0.1) do geom5
                 @test AG.toWKT(geom5) == "POLYGON ((1 4,2 5,3 6,1 4))"
             end
@@ -703,9 +754,11 @@ const GFT = GeoFormatTypes
         end
 
         AG.createpoint(100, 70, 0) do geom
-            @test sprint(print, AG.getspatialref(geom)) == "NULL Spatial Reference System"
+            @test sprint(print, AG.getspatialref(geom)) ==
+                  "NULL Spatial Reference System"
             AG.getspatialref(geom) do spatialref
-                @test sprint(print, spatialref) == "NULL Spatial Reference System"
+                @test sprint(print, spatialref) ==
+                      "NULL Spatial Reference System"
             end
         end
 
@@ -716,14 +769,16 @@ const GFT = GeoFormatTypes
                 @test AG.toPROJ4(AG.getspatialref(geom)) ==
                       "+proj=longlat +datum=WGS84 +no_defs"
                 AG.getspatialref(geom) do spatialref
-                    @test AG.toPROJ4(spatialref) == "+proj=longlat +datum=WGS84 +no_defs"
+                    @test AG.toPROJ4(spatialref) ==
+                          "+proj=longlat +datum=WGS84 +no_defs"
                 end
             end
             AG.createpoint(1, 2) do point
                 @test sprint(print, AG.getspatialref(point)) ==
                       "NULL Spatial Reference System"
                 AG.getspatialref(point) do spatialref
-                    @test sprint(print, spatialref) == "NULL Spatial Reference System"
+                    @test sprint(print, spatialref) ==
+                          "NULL Spatial Reference System"
                 end
             end
         end
@@ -749,5 +804,4 @@ const GFT = GeoFormatTypes
             @test sprint(print, g) == "NULL Geometry"
         end
     end
-
 end

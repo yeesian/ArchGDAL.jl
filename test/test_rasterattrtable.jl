@@ -4,7 +4,6 @@ import ArchGDAL;
 const AG = ArchGDAL;
 
 @testset "test_rasterattrtable.jl" begin
-
     @testset "Testing Raster Attribute Tables" begin
         AG.createRAT() do rat
             @test AG.ncolumn(rat) == 0
@@ -26,12 +25,30 @@ const AG = ArchGDAL;
             AG.setrowcount!(rat, 5)
             @test AG.nrow(rat) == 5
 
-            @test AG.attributeio!(rat, AG.GF_Read, 0, 0, 5, Array{Cint}(undef, 5)) ==
-                  fill(0, 5)
-            @test AG.attributeio!(rat, AG.GF_Read, 0, 0, 5, Array{Float64}(undef, 5)) ==
-                  fill(0, 5)
-            @test AG.attributeio!(rat, AG.GF_Read, 1, 0, 5, Array{Float64}(undef, 5)) ==
-                  fill(0, 5)
+            @test AG.attributeio!(
+                rat,
+                AG.GF_Read,
+                0,
+                0,
+                5,
+                Array{Cint}(undef, 5),
+            ) == fill(0, 5)
+            @test AG.attributeio!(
+                rat,
+                AG.GF_Read,
+                0,
+                0,
+                5,
+                Array{Float64}(undef, 5),
+            ) == fill(0, 5)
+            @test AG.attributeio!(
+                rat,
+                AG.GF_Read,
+                1,
+                0,
+                5,
+                Array{Float64}(undef, 5),
+            ) == fill(0, 5)
 
             @test AG.asstring(rat, 2, 0) == "0"
             @test AG.asint(rat, 2, 0) == 0
@@ -98,9 +115,9 @@ const AG = ArchGDAL;
                 @test sprint(print, ct2) == "NULL ColorTable"
             end
             AG.createRAT(ct) do rat
-                @test sprint(print, AG.toColorTable(rat, 0)) == "ColorTable[GPI_RGB]"
+                @test sprint(print, AG.toColorTable(rat, 0)) ==
+                      "ColorTable[GPI_RGB]"
             end
         end
     end
-
 end
