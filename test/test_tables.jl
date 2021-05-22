@@ -58,7 +58,7 @@ using Tables
             @test length(features) == 2
 
             @test Tables.columnnames(features[1]) ==
-                  (:id, :zoom, :location, :point, :linestring)
+                  (:point, :linestring, :id, :zoom, :location)
             @test Tables.getcolumn(features[2], -5) == nothing
             @test Tables.getcolumn(features[2], 0) == nothing
             @test Tables.getcolumn(features[1], 1) == "5.1"
@@ -78,7 +78,7 @@ using Tables
             @test isnothing(Tables.getcolumn(features[1], :fake))
 
             @test Tables.columnnames(features[2]) ==
-                  (:id, :zoom, :location, :point, :linestring)
+                  (:point, :linestring, :id, :zoom, :location)
             @test Tables.getcolumn(features[2], -5) == nothing
             @test Tables.getcolumn(features[2], 0) == nothing
             @test Tables.getcolumn(features[2], 1) == "5.2"
@@ -96,10 +96,10 @@ using Tables
                   "LINESTRING (35 15,15 35,45 45)"
             @test isnothing(Tables.getcolumn(features[2], :fake))
 
-            field_names, geom_names = AG.schema_names(AG.layerdefn(layer))
+            geom_names, field_names = AG.schema_names(AG.layerdefn(layer))
             @test collect(geom_names) == [:geometry]
             @test collect(field_names) == [:FID, :pointname]
-            field_names, geom_names = AG.schema_names(AG.layerdefn(layer1))
+            geom_names, field_names = AG.schema_names(AG.layerdefn(layer1))
             @test collect(geom_names) == [:point, :linestring]
             @test collect(field_names) == [:id, :zoom, :location]
         end

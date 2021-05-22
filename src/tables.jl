@@ -8,7 +8,7 @@ struct Table{T<:AbstractFeatureLayer}
 end
 
 function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
-    field_names, geom_names, featuredefn, fielddefns =
+    geom_names, field_names, featuredefn, fielddefns =
         schema_names(layerdefn(layer))
     ngeom = ArchGDAL.ngeom(featuredefn)
     geom_types =
@@ -53,8 +53,8 @@ end
 function Tables.columnnames(
     row::Feature,
 )::NTuple{Int64(nfield(row) + ngeom(row)),Symbol}
-    field_names, geom_names = schema_names(getfeaturedefn(row))
-    return (field_names..., geom_names...)
+    geom_names, field_names = schema_names(getfeaturedefn(row))
+    return (geom_names..., field_names...)
 end
 
 function schema_names(featuredefn::IFeatureDefnView)
@@ -65,7 +65,7 @@ function schema_names(featuredefn::IFeatureDefnView)
         i in 1:ngeom(featuredefn)
     )
     replace!(geom_names, Symbol("") => Symbol("geometry"), count = 1)
-    return (field_names, geom_names, featuredefn, fielddefns)
+    return (geom_names, field_names, featuredefn, fielddefns)
 end
 
 function Base.show(io::IO, t::Table)
