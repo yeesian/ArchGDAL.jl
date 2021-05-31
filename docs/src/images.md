@@ -32,7 +32,7 @@ Or equivalently,
 ```@example rasters
 AG.imread(dataset, 1)
 ```
-It will interpret the color channel (for RGB) correctly there is one. E.g.
+It will interpret the color channel (for RGB) correctly if there is one. E.g.
 ```@example rasters
 AG.imread(dataset, 2)
 ```
@@ -50,4 +50,4 @@ and
 ```@example rasters
 0.5 * AG.imread(dataset, 1) + AG.imread(dataset, 3)
 ```
-See [Colors.jl](http://juliagraphics.github.io/Colors.jl/stable/) for more on what you can do.
+See [Colors.jl](https://juliagraphics.github.io/Colors.jl/stable/) for more on what you can do.
