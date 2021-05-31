@@ -25,7 +25,6 @@ makedocs(
         "Interactive versus Scoped Objects" => "memory.md",
         "Design Considerations" => "considerations.md",
         "API Reference" => "reference.md",
-        # "Naming Conventions" => "conventions.md", # table between GDAL, GDAL.jl, and ArchGDAL.jl
     ],
 )
 
