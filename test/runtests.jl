@@ -7,6 +7,7 @@ include("remotefiles.jl")
 @testset "ArchGDAL" begin
     cd(dirname(@__FILE__)) do
         isdir("tmp") || mkpath("tmp")
+        include("test_doctest.jl")
         include("test_convert.jl")
         include("test_tables.jl")
         include("test_gdal_tutorials.jl")

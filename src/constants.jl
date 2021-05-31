@@ -1,5 +1,17 @@
 const StringList = Ptr{Cstring}
 
+"""
+The value of `GDALDataType` could be different from `GDAL.GDALDataType`.
+
+It maps correctly to `GDAL.GDALDataType` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALDataType, ArchGDAL.GDT_Unknown)
+
+# output
+GDT_Unknown::GDALDataType = 0x00000000
+```
+"""
 @enum(
     GDALDataType,
     GDT_Unknown = 0,
@@ -17,6 +29,18 @@ const StringList = Ptr{Cstring}
     GDT_TypeCount = 12,
 )
 
+"""
+The value of `OGRFieldType` could be different from `GDAL.OGRFieldType`.
+
+It maps correctly to `GDAL.OGRFieldType` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRFieldType, ArchGDAL.OFTInteger)
+
+# output
+OFTInteger::OGRFieldType = 0x00000000
+```
+"""
 @enum(
     OGRFieldType,
     OFTInteger = 0,
@@ -36,6 +60,18 @@ const StringList = Ptr{Cstring}
     OFTMaxType = 14, # 13
 )
 
+"""
+The value of `OGRFieldSubType` could be different from `GDAL.OGRFieldSubType`.
+
+It maps correctly to `GDAL.OGRFieldSubType` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRFieldSubType, ArchGDAL.OFSTNone)
+
+# output
+OFSTNone::OGRFieldSubType = 0x00000000
+```
+"""
 @enum(
     OGRFieldSubType,
     OFSTNone = 0,
@@ -46,10 +82,46 @@ const StringList = Ptr{Cstring}
     OFSTMaxSubType = 5, # 4
 )
 
+"""
+The value of `OGRJustification` could be different from `GDAL.OGRJustification`.
+
+It maps correctly to `GDAL.OGRJustification` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRJustification, ArchGDAL.OJUndefined)
+
+# output
+OJUndefined::OGRJustification = 0x00000000
+```
+"""
 @enum(OGRJustification, OJUndefined = 0, OJLeft = 1, OJRight = 2,)
 
+"""
+The value of `GDALRATFieldType` could be different from `GDAL.GDALRATFieldType`.
+
+It maps correctly to `GDAL.GDALRATFieldType` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALRATFieldType, ArchGDAL.GFT_Integer)
+
+# output
+GFT_Integer::GDALRATFieldType = 0x00000000
+```
+"""
 @enum(GDALRATFieldType, GFT_Integer = 0, GFT_Real = 1, GFT_String = 2,)
 
+"""
+The value of `GDALRATFieldUsage` could be different from `GDAL.GDALRATFieldUsage`.
+
+It maps correctly to `GDAL.GDALRATFieldUsage` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALRATFieldUsage, ArchGDAL.GFU_Generic)
+
+# output
+GFU_Generic::GDALRATFieldUsage = 0x00000000
+```
+"""
 @enum(
     GDALRATFieldUsage,
     GFU_Generic = 0,
@@ -73,12 +145,60 @@ const StringList = Ptr{Cstring}
     GFU_MaxCount = 18,
 )
 
+"""
+The value of `GDALAccess` could be different from `GDAL.GDALAccess`.
+
+It maps correctly to `GDAL.GDALAccess` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALAccess, ArchGDAL.GA_ReadOnly)
+
+# output
+GA_ReadOnly::GDALAccess = 0x00000000
+```
+"""
 @enum(GDALAccess, GA_ReadOnly = 0, GA_Update = 1,)
 
+"""
+The value of `GDALRWFlag` could be different from `GDAL.GDALRWFlag`.
+
+It maps correctly to `GDAL.GDALRWFlag` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALRWFlag, ArchGDAL.GF_Read)
+
+# output
+GF_Read::GDALRWFlag = 0x00000000
+```
+"""
 @enum(GDALRWFlag, GF_Read = 0, GF_Write = 1,)
 
+"""
+The value of `GDALPaletteInterp` could be different from `GDAL.GDALPaletteInterp`.
+
+It maps correctly to `GDAL.GDALPaletteInterp` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALPaletteInterp, ArchGDAL.GPI_Gray)
+
+# output
+GPI_Gray::GDALPaletteInterp = 0x00000000
+```
+"""
 @enum(GDALPaletteInterp, GPI_Gray = 0, GPI_RGB = 1, GPI_CMYK = 2, GPI_HLS = 3,)
 
+"""
+The value of `GDALColorInterp` could be different from `GDAL.GDALColorInterp`.
+
+It maps correctly to `GDAL.GDALColorInterp` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALColorInterp, ArchGDAL.GCI_Undefined)
+
+# output
+GCI_Undefined::GDALColorInterp = 0x00000000
+```
+"""
 @enum(
     GDALColorInterp,
     GCI_Undefined = 0,
@@ -101,6 +221,18 @@ const StringList = Ptr{Cstring}
     GCI_Max = 17,           # Max current value = 16
 )
 
+"""
+The value of `GDALAsyncStatusType` could be different from `GDAL.GDALAsyncStatusType`.
+
+It maps correctly to `GDAL.GDALAsyncStatusType` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.GDALAsyncStatusType, ArchGDAL.GARIO_PENDING)
+
+# output
+GARIO_PENDING::GDALAsyncStatusType = 0x00000000
+```
+"""
 @enum(
     GDALAsyncStatusType,
     GARIO_PENDING = 0,
@@ -110,6 +242,18 @@ const StringList = Ptr{Cstring}
     GARIO_TypeCount = 4,
 )
 
+"""
+The value of `OGRSTClassId` could be different from `GDAL.OGRSTClassId`.
+
+It maps correctly to `GDAL.OGRSTClassId` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRSTClassId, ArchGDAL.OGRSTCNone)
+
+# output
+OGRSTCNone::ogr_style_tool_class_id = 0x00000000
+```
+"""
 @enum(
     OGRSTClassId,
     OGRSTCNone = 0,
@@ -120,6 +264,18 @@ const StringList = Ptr{Cstring}
     OGRSTCVector = 5,
 )
 
+"""
+The value of `OGRSTUnitId` could be different from `GDAL.OGRSTUnitId`.
+
+It maps correctly to `GDAL.OGRSTUnitId` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRSTUnitId, ArchGDAL.OGRSTUGround)
+
+# output
+OGRSTUGround::ogr_style_tool_units_id = 0x00000000
+```
+"""
 @enum(
     OGRSTUnitId,
     OGRSTUGround = 0,
@@ -130,6 +286,18 @@ const StringList = Ptr{Cstring}
     OGRSTUInches = 5,
 )
 
+"""
+The value of `OGRwkbGeometryType` could be different from `GDAL.OGRwkbGeometryType`.
+
+It maps correctly to `GDAL.OGRwkbGeometryType` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRwkbGeometryType, ArchGDAL.wkbUnknown)
+
+# output
+wkbUnknown::OGRwkbGeometryType = 0x00000000
+```
+"""
 @enum(
     OGRwkbGeometryType,
     wkbUnknown = 0,
@@ -205,6 +373,18 @@ const StringList = Ptr{Cstring}
     wkbGeometryCollection25D = 70,
 )
 
+"""
+The value of `OGRwkbByteOrder` could be different from `GDAL.OGRwkbByteOrder`.
+
+It maps correctly to `GDAL.OGRwkbByteOrder` if you do e.g.
+
+```jldoctest; output = false
+convert(GDAL.OGRwkbByteOrder, ArchGDAL.wkbXDR)
+
+# output
+wkbXDR::OGRwkbByteOrder = 0x00000000
+```
+"""
 @enum(OGRwkbByteOrder, wkbXDR = 0, wkbNDR = 1,)
 
 @enum(
