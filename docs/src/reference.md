@@ -7,6 +7,13 @@ Modules = [ArchGDAL]
 Pages   = ["ArchGDAL.jl", "display.jl", "iterators.jl", "types.jl", "utils.jl"]
 ```
 
+## [GDAL Constants](@id API-GDAL-Constants)
+
+```@autodocs
+Modules = [ArchGDAL]
+Pages   = ["constants.jl"]
+```
+
 ## [GDAL Datasets](@id API-GDAL-Datasets)
 
 ```@autodocs
