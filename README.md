@@ -52,7 +52,7 @@ format("src")
 ```
 
 ### Dependencies
-To manage the dependencies of this package, we work with [environments](https://pkgdocs.julialang.org/v1.6/environments/):
+To manage the dependencies of this package, we work with [environments](https://pkgdocs.julialang.org/v1/environments/):
 
 1. Navigate to the directory corresponding to the package:
 
