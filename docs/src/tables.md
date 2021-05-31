@@ -18,7 +18,7 @@ dataset = ArchGDAL.read("data/point.geojson")
 DataFrame(ArchGDAL.getlayer(dataset, 0))
 ```
 
-Here is an example with multiple geometries based on the
+To illustrate multiple geometries, here is a second example based on the
 [`data/multi_geom.csv`](https://github.com/yeesian/ArchGDALDatasets/blob/master/data/multi_geom.csv)
 dataset:
 
