@@ -413,8 +413,9 @@ function getfield(feature::Feature, i::Integer)
     end
 end
 
-getfield(feature::Feature, name::Union{AbstractString,Symbol}) = 
-    getfield(feature, findfieldindex(feature, name))
+function getfield(feature::Feature, name::Union{AbstractString,Symbol})
+    return getfield(feature, findfieldindex(feature, name))
+end
 
 """
     setfield!(feature::Feature, i::Integer, value)
