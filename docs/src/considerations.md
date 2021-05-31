@@ -65,6 +65,29 @@ Dict{ArchGDAL.GDALColorInterp, String} with 2 entries:
 
 To maintain parity with GDAL behavior, ArchGDAL.jl provides conversion methods to map from the enums in ArchGDAL to the corresponding cenums from GDAL.jl when calling the corresponding GDAL functions.
 
+## Colors
+
+Rather than encouraging [operations on colortables](https://gdal.org/python/osgeo.gdal.ColorTable-class.html) (with very limited functionality from GDAL), users are better served by arrays of [ColorTypes](https://github.com/JuliaGraphics/ColorTypes.jl) using [Colors.jl](https://github.com/JuliaGraphics/Colors.jl), [for example](http://juliagraphics.github.io/Colors.jl/stable/colormapsandcolorscales/#Generating-a-range-of-colors)
+
+```julia
+range(startcolor, stop=endcolor, length=15)
+```
+
+instead of
+
+```julia
+createcolorramp!(colortable, startindex, startcolor, startindex+15, endcolor)
+```
+
+## Images
+
+To differentiate 2d arrays of colors from 3d arrays with band as the third dimension:
+
+* For 2D arrays (a single rasterband), if they have a color interpretation, we use the color interpretation. If they don't have a color interpretation, ArchGDAL.jl defaults to "Grey".
+* For >2D arrays (multiple rasterbands), if they have a palette interpretation (or combination of color interpretations) that resolves to a valid colortype, ArchGDAL.jl uses the palette interpretation. If they don't have a palette interpretation, we throw an error.
+
+In general, `read()` will return `Array{UInt8}`, and `imread()` will return `Array{<:Colorant}`.
+
 ## Tables.jl Interface
 
 The interface is implemented in [`src/tables.jl`](https://github.com/yeesian/ArchGDAL.jl/blob/master/src/tables.jl). The current API from GDAL makes it row-based in the conventions of Tables.jl. Therefore,
