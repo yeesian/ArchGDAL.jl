@@ -1,5 +1,5 @@
 function imview(colortype::Type{<:ColorTypes.Colorant}, imgvalues...)
-    return ImageCore.PermutedDimsArray(
+    return PermutedDimsArray(
         ImageCore.colorview(
             colortype,
             (ImageCore.normedview(img) for img in imgvalues)...,
@@ -8,7 +8,7 @@ function imview(colortype::Type{<:ColorTypes.Colorant}, imgvalues...)
     )
 end
 
-function imview(gci::GDALColorInterp, imgvalues::Matrix)
+function imview(gci::GDALColorInterp, imgvalues::AbstractMatrix)
     return if gci == GCI_GrayIndex
         imview(ColorTypes.Gray, imgvalues)
     elseif gci == GCI_Undefined
@@ -25,27 +25,32 @@ function imview(gci::GDALColorInterp, imgvalues::Matrix)
     else
         error(
             """
-      Unknown GCI: $gci. Please file an issue at
-      https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
-      """,
+            Unknown GCI: $gci. Please file an issue at
+            https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
+            """,
         )
     end
 end
 
-function imview(gpi::GDALPaletteInterp, imgvalues::Matrix)
+function imview(gpi::GDALPaletteInterp, imgvalues::AbstractMatrix)
     return if gpi == GPI_Gray
         imview(ColorTypes.Gray, imgvalues)
     else
         error(
             """
-      Unsupported GPI: $gpi. Please file an issue at
-      https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
-      """,
+            Unsupported GPI: $gpi. Please file an issue at
+            https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
+            """,
         )
     end
 end
 
-function imview(gpi::GDALPaletteInterp, c1::Matrix, c2::Matrix, c3::Matrix)
+function imview(
+    gpi::GDALPaletteInterp,
+    c1::AbstractMatrix,
+    c2::AbstractMatrix,
+    c3::AbstractMatrix,
+)
     return if gpi == GPI_Gray
         imview(ColorTypes.Gray, c1, c2, c3)
     elseif gpi == GPI_RGB
@@ -53,19 +58,19 @@ function imview(gpi::GDALPaletteInterp, c1::Matrix, c2::Matrix, c3::Matrix)
     else
         error(
             """
-      Unsupported GPI: $gpi. If it should be supported, please file an issue at
-      https://github.com/yeesian/ArchGDAL.jl/issues with the desired output.
-      """,
+            Unsupported GPI: $gpi. If it should be supported, please file an issue at
+            https://github.com/yeesian/ArchGDAL.jl/issues with the desired output.
+            """,
         )
     end
 end
 
 function imview(
     gpi::GDALPaletteInterp,
-    c1::Matrix,
-    c2::Matrix,
-    c3::Matrix,
-    c4::Matrix,
+    c1::AbstractMatrix,
+    c2::AbstractMatrix,
+    c3::AbstractMatrix,
+    c4::AbstractMatrix,
 )
     return if gpi == GPI_Gray
         imview(ColorTypes.Gray, c1, c2, c3, c4)
@@ -74,9 +79,9 @@ function imview(
     else
         error(
             """
-      Unsupported GPI: $gpi. If it should be supported, please file an issue at
-      https://github.com/yeesian/ArchGDAL.jl/issues with the desired output.
-      """,
+            Unsupported GPI: $gpi. If it should be supported, please file an issue at
+            https://github.com/yeesian/ArchGDAL.jl/issues with the desired output.
+            """,
         )
     end
 end
@@ -210,9 +215,9 @@ function _paletteindices(dataset::AbstractDataset, indices)
     else
         error(
             """
-      Unknown GCI: $gciorder. Please file an issue at
-      https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
-      """,
+            Unknown GCI: $gciorder. Please file an issue at
+            https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
+            """,
         )
     end
 end
@@ -252,7 +257,7 @@ end
 
 imread(dataset::AbstractDataset) = imread(dataset, 1:nraster(dataset))
 
-function imread(filename::String)
+function imread(filename::AbstractString)
     return read(filename) do dataset
         return imread(dataset)
     end
