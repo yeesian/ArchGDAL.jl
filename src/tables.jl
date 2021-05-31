@@ -55,6 +55,5 @@ function schema_names(featuredefn::IFeatureDefnView)
         Symbol(getname(getgeomdefn(featuredefn, i - 1))) for
         i in 1:ngeom(featuredefn)
     )
-    replace!(geom_names, Symbol("") => Symbol("geometry"), count = 1)
     return (geom_names, field_names, featuredefn, fielddefns)
 end

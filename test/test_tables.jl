@@ -83,7 +83,7 @@ using Tables
             @test isnothing(Tables.getcolumn(features[2], :fake))
 
             geom_names, field_names = AG.schema_names(AG.layerdefn(layer))
-            @test collect(geom_names) == [:geometry]
+            @test collect(geom_names) == [Symbol("")]
             @test collect(field_names) == [:FID, :pointname]
             geom_names, field_names = AG.schema_names(AG.layerdefn(layer1))
             @test collect(geom_names) == [:point, :linestring]
