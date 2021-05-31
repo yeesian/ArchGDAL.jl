@@ -552,9 +552,9 @@ import Base.|
 
 for T in (GDALOpenFlag, FieldValidation)
     eval(quote
-        |(x::$T, y::UInt8) = UInt8(x) | y
-        |(x::UInt8, y::$T) = x | UInt8(y)
-        |(x::$T, y::$T) = UInt8(x) | UInt8(y)
+        |(x::$T, y::UInt8)::UInt8 = UInt8(x) | y
+        |(x::UInt8, y::$T)::UInt8 = x | UInt8(y)
+        |(x::$T, y::$T)::UInt8 = UInt8(x) | UInt8(y)
     end)
 end
 
