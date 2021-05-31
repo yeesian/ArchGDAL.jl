@@ -43,25 +43,25 @@ const AG = ArchGDAL;
             AG.setscale!(rb, 1)
             @test AG.getscale(rb) ≈ 1
 
-            @test isnothing(AG.getnodatavalue(rb))
+            @test ismissing(AG.getnodatavalue(rb))
             AG.setnodatavalue!(rb, -100)
             @test AG.getnodatavalue(rb) ≈ -100
             AG.deletenodatavalue!(rb)
-            @test isnothing(AG.getnodatavalue(rb))
+            @test ismissing(AG.getnodatavalue(rb))
 
             AG.copy(dataset) do dest
                 destband = AG.getband(dest, 1)
                 AG.copywholeraster!(rb, destband)
                 @test sprint(print, destband) == """
                 [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
-                    blocksize: 100×81, nodata: nothing, units: 1.0px + 0.0
+                    blocksize: 100×81, nodata: missing, units: 1.0px + 0.0
                     overviews: """
                 @test AG.noverview(destband) == 0
                 AG.buildoverviews!(dest, Cint[2, 4, 8])
                 @test AG.noverview(destband) == 3
                 @test sprint(print, destband) == """
                 [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
-                    blocksize: 100×81, nodata: nothing, units: 1.0px + 0.0
+                    blocksize: 100×81, nodata: missing, units: 1.0px + 0.0
                     overviews: (0) 50x50 (1) 25x25 (2) 13x13 
                                """
                 @test AG.getcolorinterp(destband) == AG.GCI_GrayIndex
@@ -70,25 +70,25 @@ const AG = ArchGDAL;
 
                 @test sprint(print, AG.sampleoverview(destband, 100)) == """
                 [GA_Update] Band 1 (Gray): 13 x 13 (UInt8)
-                    blocksize: 128×128, nodata: nothing, units: 1.0px + 0.0
+                    blocksize: 128×128, nodata: missing, units: 1.0px + 0.0
                     overviews: """
                 @test sprint(print, AG.sampleoverview(destband, 200)) == """
                 [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
-                    blocksize: 128×128, nodata: nothing, units: 1.0px + 0.0
+                    blocksize: 128×128, nodata: missing, units: 1.0px + 0.0
                     overviews: """
                 @test sprint(print, AG.sampleoverview(destband, 500)) == """
                 [GA_Update] Band 1 (Gray): 25 x 25 (UInt8)
-                    blocksize: 128×128, nodata: nothing, units: 1.0px + 0.0
+                    blocksize: 128×128, nodata: missing, units: 1.0px + 0.0
                     overviews: """
                 AG.sampleoverview(destband, 1000) do result
                     @test sprint(print, result) == """
                     [GA_Update] Band 1 (Gray): 50 x 50 (UInt8)
-                        blocksize: 128×128, nodata: nothing, units: 1.0px + 0.0
+                        blocksize: 128×128, nodata: missing, units: 1.0px + 0.0
                         overviews: """
                 end
                 @test sprint(print, AG.getmaskband(destband)) == """
                 [GA_ReadOnly] Band 0 (Undefined): 100 x 100 (UInt8)
-                    blocksize: 100×81, nodata: nothing, units: 1.0px + 0.0
+                    blocksize: 100×81, nodata: missing, units: 1.0px + 0.0
                     overviews: """
                 @test AG.maskflags(destband) == 1
                 @test AG.maskflaginfo(rb) == (
@@ -101,7 +101,7 @@ const AG = ArchGDAL;
                 AG.getmaskband(destband) do maskband
                     @test sprint(print, maskband) == """
                     [GA_Update] Band 1 (Gray): 100 x 100 (UInt8)
-                        blocksize: 100×81, nodata: nothing, units: 1.0px + 0.0
+                        blocksize: 100×81, nodata: missing, units: 1.0px + 0.0
                         overviews: """
                 end
                 @test AG.maskflags(destband) == 3

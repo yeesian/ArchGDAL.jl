@@ -176,15 +176,15 @@ end
 
 Fetch the no data value for this band.
 
-If there is no out of data value, `nothing` will be
-returned instead. The no data value for a band is generally a special marker
-value used to mark pixels that are not valid data. Such pixels should generally
-not be displayed, nor contribute to analysis operations.
+If there is no out of data value, `missing` will be returned instead. The no
+data value for a band is generally a special marker value used to mark pixels
+that are not valid data. Such pixels should generally not be displayed, nor
+contribute to analysis operations.
 
 ### Returns
-the nodata value for this band or `nothing`.
+the nodata value for this band or `missing`.
 """
-function getnodatavalue(band::AbstractRasterBand)::Union{Float64,Nothing}
+function getnodatavalue(band::AbstractRasterBand)::Union{Float64,Missing}
     # ### Parameters
     # * `pbSuccess`   pointer to a boolean to use to indicate if a value is
     #     actually associated with this layer. May be `NULL` (default).
@@ -193,7 +193,7 @@ function getnodatavalue(band::AbstractRasterBand)::Union{Float64,Nothing}
     return if Bool(hasnodatavalue[])
         nodatavalue
     else
-        nothing
+        missing
     end
 end
 
