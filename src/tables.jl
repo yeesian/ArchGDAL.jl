@@ -25,20 +25,20 @@ function Tables.getcolumn(row::Feature, i::Int)
     elseif i > 0
         return getfield(row, i - 1)
     else
-        return nothing
+        return missing
     end
 end
 
 function Tables.getcolumn(row::Feature, name::Symbol)
     field = getfield(row, name)
-    if !isnothing(field)
+    if !ismissing(field)
         return field
     end
     geom = getgeom(row, name)
     if geom.ptr != C_NULL
         return geom
     end
-    return nothing
+    return missing
 end
 
 function Tables.columnnames(

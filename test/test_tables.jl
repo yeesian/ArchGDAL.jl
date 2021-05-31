@@ -46,8 +46,8 @@ using Tables
 
             @test Tables.columnnames(features[1]) ==
                   (:point, :linestring, :id, :zoom, :location)
-            @test Tables.getcolumn(features[2], -5) == nothing
-            @test Tables.getcolumn(features[2], 0) == nothing
+            @test ismissing(Tables.getcolumn(features[2], -5))
+            @test ismissing(Tables.getcolumn(features[2], 0))
             @test Tables.getcolumn(features[1], 1) == "5.1"
             @test Tables.getcolumn(features[1], 2) == "1.0"
             @test Tables.getcolumn(features[1], 3) == "Mumbai"
@@ -61,12 +61,12 @@ using Tables
                   "POINT (30 10)"
             @test AG.toWKT(Tables.getcolumn(features[1], :linestring)) ==
                   "LINESTRING (30 10,10 30,40 40)"
-            @test isnothing(Tables.getcolumn(features[1], :fake))
+            @test ismissing(Tables.getcolumn(features[1], :fake))
 
             @test Tables.columnnames(features[2]) ==
                   (:point, :linestring, :id, :zoom, :location)
-            @test Tables.getcolumn(features[2], -5) == nothing
-            @test Tables.getcolumn(features[2], 0) == nothing
+            @test ismissing(Tables.getcolumn(features[2], -5))
+            @test ismissing(Tables.getcolumn(features[2], 0))
             @test Tables.getcolumn(features[2], 1) == "5.2"
             @test Tables.getcolumn(features[2], 2) == "2.0"
             @test Tables.getcolumn(features[2], 3) == "New Delhi"
@@ -80,7 +80,7 @@ using Tables
                   "POINT (35 15)"
             @test AG.toWKT(Tables.getcolumn(features[2], :linestring)) ==
                   "LINESTRING (35 15,15 35,45 45)"
-            @test isnothing(Tables.getcolumn(features[2], :fake))
+            @test ismissing(Tables.getcolumn(features[2], :fake))
 
             geom_names, field_names = AG.schema_names(AG.layerdefn(layer))
             @test collect(geom_names) == [Symbol("")]
