@@ -163,11 +163,13 @@ using Test
         end
 
         @testset "GDAL Vector Translate" begin
-            AG.destroy(AG.unsafe_gdalvectortranslate(
-                [ds_point],
-                ["-f", "CSV", "-lco", "GEOMETRY=AS_XY"],
-                dest = "data/point.csv",
-            ))
+            AG.destroy(
+                AG.unsafe_gdalvectortranslate(
+                    [ds_point],
+                    ["-f", "CSV", "-lco", "GEOMETRY=AS_XY"],
+                    dest = "data/point.csv",
+                ),
+            )
             @test replace(read("data/point.csv", String), "\r" => "") == """
             X,Y,FID,pointname
             100,0,2,point-a
