@@ -1,12 +1,3 @@
-"""
-A tabular representation of a `FeatureLayer`
-
-Every row is a `Feature` consisting of Geometry and attributes.
-"""
-struct Table{T<:AbstractFeatureLayer}
-    layer::T
-end
-
 function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
     geom_names, field_names, featuredefn, fielddefns =
         schema_names(layerdefn(layer))
@@ -21,11 +12,11 @@ function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
     )
 end
 
-Tables.istable(::Type{<:Table})::Bool = true
-Tables.rowaccess(::Type{<:Table})::Bool = true
+Tables.istable(::Type{<:AbstractFeatureLayer})::Bool = true
+Tables.rowaccess(::Type{<:AbstractFeatureLayer})::Bool = true
 
-function Tables.rows(t::Table{T})::T where {T<:AbstractFeatureLayer}
-    return t.layer
+function Tables.rows(layer::T)::T where {T<:AbstractFeatureLayer}
+    return layer
 end
 
 function Tables.getcolumn(row::Feature, i::Int)
@@ -67,8 +58,3 @@ function schema_names(featuredefn::IFeatureDefnView)
     replace!(geom_names, Symbol("") => Symbol("geometry"), count = 1)
     return (geom_names, field_names, featuredefn, fielddefns)
 end
-
-function Base.show(io::IO, t::Table)
-    return println(io, "Table with $(nfeature(t.layer)) features")
-end
-Base.show(io::IO, ::MIME"text/plain", t::Table) = show(io, t)

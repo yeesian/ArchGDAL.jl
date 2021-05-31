@@ -26,15 +26,6 @@ using Tables
         layer = AG.getlayer(dataset, 0)
         layer1 = AG.getlayer(dataset1, 0)
         layer2 = AG.getlayer(dataset2, 0)
-        gt = AG.Table(layer)
-        gt1 = AG.Table(layer1)
-        gt2 = AG.Table(layer2)
-
-        @testset "read layer to table" begin
-            @test sprint(print, gt) == "Table with 4 features\n"
-            @test sprint(print, gt1) == "Table with 2 features\n"
-            @test sprint(print, gt2) == "Table with 9 features\n"
-        end
 
         @testset "Tables methods" begin
             @test Tables.schema(layer1) == Tables.Schema(
@@ -47,13 +38,10 @@ using Tables
                     String,
                 ),
             )
-            @test Tables.istable(AG.Table) == true
-            @test Tables.rowaccess(AG.Table) == true
-            @test Tables.rows(gt) isa AG.AbstractFeatureLayer
-            @test Tables.rows(gt1) isa AG.AbstractFeatureLayer
-            @test Tables.rows(gt2) isa AG.AbstractFeatureLayer
+            @test Tables.istable(typeof(layer)) == true
+            @test Tables.rowaccess(typeof(layer)) == true
 
-            features = collect(Tables.rows(gt1))
+            features = collect(Tables.rows(layer1))
             @test length(features) == 2
 
             @test Tables.columnnames(features[1]) ==
