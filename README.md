@@ -37,7 +37,7 @@ pkg> test ArchGDAL
 
 ### Community
 
-This package will not be possible without https://julialang.org/, https://github.com/OSGeo/gdal and https://github.com/JuliaGeo/GDAL.jl. They are maintained by https://julialang.org/community/, https://www.osgeo.org/ and https://juliageo.org/. In case of any contention for support and involvement, we encourage participation and contributions to those projects and communities over this package.
+This package will not be possible without [JuliaLang](https://julialang.org/), [GDAL](https://github.com/OSGeo/gdal) and [GDAL.jl](https://github.com/JuliaGeo/GDAL.jl). They are maintained by https://julialang.org/community/, https://www.osgeo.org/ and https://juliageo.org/ respectively. In case of any contention for support and involvement, we encourage participation and contributions to those projects and communities over this package.
 
 ### Style Guide
 
