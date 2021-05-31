@@ -138,7 +138,9 @@ function metadataitem(
     domain::AbstractString = "",
 )::String
     item = GDAL.gdalgetmetadataitem(obj.ptr, name, domain)
-    return isnothing(item) ? "" : item
+    # Use `=== nothing` instead of isnothing() for performance.
+    # See https://github.com/JuliaLang/julia/pull/36444 for context.
+    return item === nothing ? "" : item
 end
 
 """
