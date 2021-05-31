@@ -2,7 +2,6 @@
 
 ```@setup geometries
 using ArchGDAL
-const AG = ArchGDAL
 ```
 
 In this section, we consider some of the common kinds of geometries that arises in applications. These include `Point`, `LineString`, `Polygon`, `GeometryCollection`, `MultiPolygon`, `MultiPoint`, and `MultiLineString`. For brevity in the examples, we will use the prefix `const AG = ArchGDAL`.
@@ -11,53 +10,53 @@ In this section, we consider some of the common kinds of geometries that arises 
 To create geometries of different types, 
 
 ```@example geometries
-point = AG.createpoint(1.0, 2.0)
-linestring = AG.createlinestring([(i,i+1) for i in 1.0:3.0])
-linearring = AG.createlinearring([(0.,0.), (0.,1.), (1.,1.)])
-simplepolygon = AG.createpolygon([(0.,0.), (0.,1.), (1.,1.)])
-complexpolygon = AG.createpolygon([[(0.,0.), (0.,j), (j,j)] for j in 1.0:-0.1:0.9])
-multipoint = AG.createlinearring([(0.,0.), (0.,1.), (1.,1.)])
-multilinestring = AG.createmultilinestring([[(i,i+1) for i in j:j+3] for j in 1.0:5.0:6.0])
-multipolygon = AG.createmultipolygon([[[(0.,0.), (0.,j), (j,j)]] for j in 1.0:-0.1:0.9])
+point = ArchGDAL.createpoint(1.0, 2.0)
+linestring = ArchGDAL.createlinestring([(i,i+1) for i in 1.0:3.0])
+linearring = ArchGDAL.createlinearring([(0.,0.), (0.,1.), (1.,1.)])
+simplepolygon = ArchGDAL.createpolygon([(0.,0.), (0.,1.), (1.,1.)])
+complexpolygon = ArchGDAL.createpolygon([[(0.,0.), (0.,j), (j,j)] for j in 1.0:-0.1:0.9])
+multipoint = ArchGDAL.createlinearring([(0.,0.), (0.,1.), (1.,1.)])
+multilinestring = ArchGDAL.createmultilinestring([[(i,i+1) for i in j:j+3] for j in 1.0:5.0:6.0])
+multipolygon = ArchGDAL.createmultipolygon([[[(0.,0.), (0.,j), (j,j)]] for j in 1.0:-0.1:0.9])
 ```
 
 Alternatively, they can be assembled from their components.
 ```@example geometries
-point = AG.createpoint()
-AG.addpoint!(point, 1.0, 2.0)
+point = ArchGDAL.createpoint()
+ArchGDAL.addpoint!(point, 1.0, 2.0)
 
-linestring = AG.createlinestring()
+linestring = ArchGDAL.createlinestring()
 for i in 1.0:3.0
-    AG.addpoint!(linestring, i, i+1)
+    ArchGDAL.addpoint!(linestring, i, i+1)
 end
 
-linearring = AG.createlinearring()
+linearring = ArchGDAL.createlinearring()
 for i in 1.0:3.0
-    AG.addpoint!(linearring, i, i+1)
+    ArchGDAL.addpoint!(linearring, i, i+1)
 end
 
-polygon = AG.createpolygon()
+polygon = ArchGDAL.createpolygon()
 for j in 1.0:-0.1:0.9
-    ring = AG.createlinearring([(0.,0.), (0.,j), (j,j)])
-    AG.addgeom!(polygon, ring)
+    ring = ArchGDAL.createlinearring([(0.,0.), (0.,j), (j,j)])
+    ArchGDAL.addgeom!(polygon, ring)
 end
 
-multipoint = AG.createmultipoint()
+multipoint = ArchGDAL.createmultipoint()
 for i in 1.0:3.0
-    pt = AG.createpoint(i, i+1)
-    AG.addgeom!(multipoint, pt)
+    pt = ArchGDAL.createpoint(i, i+1)
+    ArchGDAL.addgeom!(multipoint, pt)
 end
 
-multilinestring = AG.createmultilinestring()
+multilinestring = ArchGDAL.createmultilinestring()
 for j in 1.0:5.0:6.0
-    line = AG.createlinestring([(i,i+1) for i in j:j+3])
-    AG.addgeom!(multilinestring, line)
+    line = ArchGDAL.createlinestring([(i,i+1) for i in j:j+3])
+    ArchGDAL.addgeom!(multilinestring, line)
 end
 
-multipolygon = AG.createmultipolygon()
+multipolygon = ArchGDAL.createmultipolygon()
 for j in 1.0:-0.1:0.9
-    poly = AG.createpolygon([(0.,0.), (0.,j), (j,j)])
-    AG.addgeom!(multipolygon, poly)
+    poly = ArchGDAL.createpolygon([(0.,0.), (0.,j), (j,j)])
+    ArchGDAL.addgeom!(multipolygon, poly)
 end
 ```
 

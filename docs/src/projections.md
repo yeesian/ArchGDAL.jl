@@ -2,7 +2,6 @@
 
 ```@setup projections
 using ArchGDAL
-const AG = ArchGDAL
 ```
 
 (This is based entirely on the [GDAL/OSR Tutorial](http://www.gdal.org/osr_tutorial.html) and [Python GDAL/OGR Cookbook](https://pcjericks.github.io/py-gdalogr-cookbook/projection.html).)

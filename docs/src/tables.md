@@ -1,8 +1,7 @@
 # Tabular Interface
 
 ```@setup tables
-using ArchGDAL
-using DataFrames
+using ArchGDAL, DataFrames
 ```
 
 ArchGDAL now brings in greater flexibilty in terms of vector data handling via the
@@ -15,7 +14,7 @@ dataset:
 ```@example tables
 dataset = ArchGDAL.read("data/point.geojson")
 
-DataFrame(ArchGDAL.getlayer(dataset, 0))
+DataFrames.DataFrame(ArchGDAL.getlayer(dataset, 0))
 ```
 
 To illustrate multiple geometries, here is a second example based on the
@@ -25,5 +24,5 @@ dataset:
 ```@example tables
 dataset1 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=point,linestring", "KEEP_GEOM_COLUMNS=NO"])
 
-DataFrame(ArchGDAL.getlayer(dataset1, 0))
+DataFrames.DataFrame(ArchGDAL.getlayer(dataset1, 0))
 ```

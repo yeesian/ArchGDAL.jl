@@ -12,7 +12,6 @@ We will work with the following database:
 
 ```@example spatialite
 import ArchGDAL
-const AG = ArchGDAL
 
 filepath = download("https://github.com/yeesian/ArchGDALDatasets/raw/e0b15dca5ad493c5ebe8111688c5d14b031b7305/spatialite/test-2.3.sqlite", "test.sqlite")
 ```
@@ -20,7 +19,7 @@ filepath = download("https://github.com/yeesian/ArchGDALDatasets/raw/e0b15dca5ad
 Here's a quick summary of `test.sqlite`:
 
 ```@example spatialite
-AG.read(filepath) do dataset
+ArchGDAL.read(filepath) do dataset
     print(dataset)
 end
 ```
@@ -29,8 +28,8 @@ We will display the results of running `query` on the dataset using the followin
 
 ```@example spatialite
 function inspect(query, filename=filepath)
-    AG.read(filename) do dataset
-        AG.executesql(dataset, query) do results
+    ArchGDAL.read(filename) do dataset
+        ArchGDAL.executesql(dataset, query) do results
             print(results)
         end
     end
