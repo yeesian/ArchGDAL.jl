@@ -46,9 +46,9 @@ an autoformatting tool, and uses the options in [`.JuliaFormatter.toml`](https:/
 
 If you wish to format code, `cd` to the ArchGDAL.jl directory, then run:
 ```julia
-] add JuliaFormatter@0.13.10
+] add JuliaFormatter
 using JuliaFormatter
-format("src")
+format(".")
 ```
 
 ### Dependencies
