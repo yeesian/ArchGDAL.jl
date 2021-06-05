@@ -1,16 +1,16 @@
-function Base.show(io::IO, drv::Driver)::IO
+function Base.show(io::IO, drv::Driver)::Nothing
     if drv.ptr == C_NULL
         print(io, "NULL Driver")
     else
         print(io, "Driver: $(shortname(drv))/$(longname(drv))")
     end
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, dataset::AbstractDataset)::IO
+function Base.show(io::IO, dataset::AbstractDataset)::Nothing
     if dataset.ptr == C_NULL
         print(io, "NULL Dataset")
-        return io
+        return nothing
     end
     println(io, "GDAL Dataset ($(getdriver(dataset)))")
     println(io, "File(s): ")
@@ -53,19 +53,19 @@ function Base.show(io::IO, dataset::AbstractDataset)::IO
             end
         end
     end
-    return io
+    return nothing
 end
 
 #Add method to avoid show from DiskArrays
-Base.show(io::IO, raster::RasterDataset)::IO = show(io, raster.ds)
+Base.show(io::IO, raster::RasterDataset)::Nothing = show(io, raster.ds)
 
-Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset)::IO =
+Base.show(io::IO, ::MIME"text/plain", raster::RasterDataset)::Nothing =
     show(io, raster.ds)
 
-function summarize(io::IO, rasterband::AbstractRasterBand)::IO
+function summarize(io::IO, rasterband::AbstractRasterBand)::Nothing
     if rasterband.ptr == C_NULL
         print(io, "NULL RasterBand")
-        return io
+        return nothing
     end
     access = accessflag(rasterband)
     color = getname(getcolorinterp(rasterband))
@@ -74,20 +74,20 @@ function summarize(io::IO, rasterband::AbstractRasterBand)::IO
     i = indexof(rasterband)
     pxtype = pixeltype(rasterband)
     println(io, "[$access] Band $i ($color): $xsize x $ysize ($pxtype)")
-    return io
+    return nothing
 end
 
-Base.show(io::IO, rasterband::AbstractRasterBand)::IO =
+Base.show(io::IO, rasterband::AbstractRasterBand)::Nothing =
     show(io, "text/plain", rasterband)
 
 function Base.show(
     io::IO,
     ::MIME"text/plain",
     rasterband::AbstractRasterBand,
-)::IO
+)::Nothing
     summarize(io, rasterband)
     if rasterband.ptr == C_NULL
-        return io
+        return nothing
     end
     (x, y) = blocksize(rasterband)
     sc = getscale(rasterband)
@@ -103,14 +103,14 @@ function Base.show(
         print(io, "($(i - 1)) $(width(ovr_band))x$(height(ovr_band)) ")
         i % 3 == 0 && print(io, "\n               ")
     end
-    return io
+    return nothing
 end
 
 # assumes that the layer is reset, and will reset it after display
-function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
+function Base.show(io::IO, layer::AbstractFeatureLayer)::Nothing
     if layer.ptr == C_NULL
         print(io, "NULL FeatureLayer")
-        return io
+        return nothing
     end
     layergeomtype = getgeomtype(layer)
     println(io, "Layer: $(getname(layer))")
@@ -169,13 +169,13 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::IO
         resetreading!(layer)
     end
     n > 5 && print(io, "...\n Number of Fields: $n")
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::IO
+function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::Nothing
     if featuredefn.ptr == C_NULL
         print(io, "NULL FeatureDefn")
-        return io
+        return nothing
     end
     n = ngeom(featuredefn)
     ngeomdisplay = min(n, 3)
@@ -192,31 +192,31 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::IO
         println(io, "     Field (index $(i - 1)): $fd")
     end
     n > 5 && print(io, "...\n Number of Fields: $n")
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, fd::AbstractFieldDefn)::IO
+function Base.show(io::IO, fd::AbstractFieldDefn)::Nothing
     if fd.ptr == C_NULL
         print(io, "NULL FieldDefn")
-        return io
+        return nothing
     end
     print(io, "$(getname(fd)) ($(gettype(fd)))")
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, gfd::AbstractGeomFieldDefn)::IO
+function Base.show(io::IO, gfd::AbstractGeomFieldDefn)::Nothing
     if gfd.ptr == C_NULL
         print(io, "NULL GeomFieldDefn")
-        return io
+        return nothing
     end
     print(io, "$(getname(gfd)) ($(gettype(gfd)))")
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, feature::Feature)::IO
+function Base.show(io::IO, feature::Feature)::Nothing
     if feature.ptr == C_NULL
         print(io, "NULL Feature")
-        return io
+        return nothing
     end
     println(io, "Feature")
     n = ngeom(feature)
@@ -232,13 +232,13 @@ function Base.show(io::IO, feature::Feature)::IO
         println(io, "$(getfield(feature, i - 1))")
     end
     n > 10 && print(io, "...\n Number of Fields: $n")
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, spref::AbstractSpatialRef)::IO
+function Base.show(io::IO, spref::AbstractSpatialRef)::Nothing
     if spref.ptr == C_NULL
         print(io, "NULL Spatial Reference System")
-        return io
+        return nothing
     end
     projstr = toPROJ4(spref)
     if length(projstr) > 45
@@ -248,13 +248,13 @@ function Base.show(io::IO, spref::AbstractSpatialRef)::IO
     else
         print(io, "Spatial Reference System: $projstr")
     end
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, geom::AbstractGeometry)::IO
+function Base.show(io::IO, geom::AbstractGeometry)::Nothing
     if geom.ptr == C_NULL
         print(io, "NULL Geometry")
-        return io
+        return nothing
     end
     compact = get(io, :compact, false)
 
@@ -269,17 +269,17 @@ function Base.show(io::IO, geom::AbstractGeometry)::IO
     else
         print(io, "Geometry: $(getgeomtype(geom))")
     end
-    return io
+    return nothing
 end
 
-function Base.show(io::IO, ct::ColorTable)::IO
+function Base.show(io::IO, ct::ColorTable)::Nothing
     if ct.ptr == C_NULL
         print(io, "NULL ColorTable")
-        return io
+        return nothing
     end
     palette = paletteinterp(ct)
     print(io, "ColorTable[$palette]")
-    return io
+    return nothing
 end
 
-Base.show(io::IO, ::MIME"text/plain", ct::ColorTable)::IO = show(io, ct)
+Base.show(io::IO, ::MIME"text/plain", ct::ColorTable)::Nothing = show(io, ct)
