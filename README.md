@@ -57,18 +57,24 @@ To manage the dependencies of this package, we work with [environments](https://
 1. Navigate to the directory corresponding to the package:
 
 ```julia
-shell> cd /Users/yeesian/.julia/dev/ArchGDAL
+$ cd /Users/yeesian/.julia/dev/ArchGDAL
 /Users/yeesian/.julia/dev/ArchGDAL
 ```
 
-2. Activate the environment corresponding to `Project.toml`):
+2. Start a session:
+
+```shell
+$ julia --project
+```
+
+3. Activate the environment corresponding to `Project.toml`):
 
 ```julia
 (@v1.6) pkg> activate .
   Activating environment at `~/.julia/environments/v1.6/Project.toml`
 ```
 
-3. Manage the dependencies using Pkg in https://pkgdocs.julialang.org/v1.6/managing-packages/, e.g.
+4. Manage the dependencies using Pkg in https://pkgdocs.julialang.org/v1.6/managing-packages/, e.g.
 
 ```julia
 (ArchGDAL) pkg> st
@@ -92,7 +98,7 @@ shell> cd /Users/yeesian/.julia/dev/ArchGDAL
   [bd369af6] + Tables v1.4.2
 ```
 
-4. Update the `[compat]` section of `Project.toml` so that julia can resolve the versions, e.g.
+5. Update the `[compat]` section of `Project.toml` so that julia can resolve the versions, e.g.
 
 ```
 [compat]
