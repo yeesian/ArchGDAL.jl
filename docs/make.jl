@@ -23,6 +23,8 @@ makedocs(
         "Tables Interface" => "tables.md",
         "Geometric Operations" => "geometries.md",
         "Spatial Projections" => "projections.md",
+        # TODO: Uncomment the following line once we support Spatialite
+        # See https://github.com/JuliaGeo/GDAL.jl/issues/65#issuecomment-493890448.
         # "Working with Spatialite" => "spatialite.md",
         "Interactive versus Scoped Objects" => "memory.md",
         "Design Considerations" => "considerations.md",
