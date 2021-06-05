@@ -1,9 +1,9 @@
 function Base.show(io::IO, drv::Driver)::IO
     if drv.ptr == C_NULL
         print(io, "NULL Driver")
-        return io
+    else
+        print(io, "Driver: $(shortname(drv))/$(longname(drv))")
     end
-    print(io, "Driver: $(shortname(drv))/$(longname(drv))")
     return io
 end
 
