@@ -90,7 +90,7 @@ In general, `read()` will return `Array{UInt8}`, and `imread()` will return `Arr
 
 ## Tables.jl Interface
 
-The interface is implemented in [`src/tables.jl`](https://github.com/yeesian/ArchGDAL.jl/blob/master/src/tables.jl). The current API from GDAL makes it row-based in the conventions of Tables.jl. Therefore,
+The interface is implemented in [`src/tables.jl`](https://github.com/yeesian/ArchGDAL.jl/blob/master/src/tables.jl), and is only for feature and geometries in OGR (and not for images and rasters). The current API from GDAL makes it row-based in the conventions of Tables.jl. Therefore,
 
 * `ArchGDAL.Feature` meets the criteria for an [`AbstractRow`](https://tables.juliadata.org/dev/#Tables.AbstractRow-1) based on https://github.com/yeesian/ArchGDAL.jl/blob/a665f3407930b8221269f8949c246db022c3a85c/src/tables.jl#L31-L58.
 * `ArchGDAL.FeatureLayer` meets the criteria for an `AbstractRow`-iterator based on the previous bullet and meeting the criteria for [`Iteration`](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-iteration) in [`base/iterators.jl`](https://github.com/yeesian/ArchGDAL.jl/blob/a665f3407930b8221269f8949c246db022c3a85c/src/base/iterators.jl#L1-L18).
