@@ -140,6 +140,11 @@ import ColorTypes
             AG.setcolorinterp!(AG.getband(dataset, 4), AG.GCI_PaletteIndex)
 
             AG.createcolortable(AG.GPI_RGB) do ct
+                AG.setcolorentry!(
+                    ct,
+                    typemax(UInt8),
+                    GDAL.GDALColorEntry(0, 0, 0, 0),
+                )
                 AG.setcolortable!(AG.getband(dataset, 1), ct)
                 AG.setcolortable!(AG.getband(dataset, 2), ct)
                 AG.setcolortable!(AG.getband(dataset, 3), ct)
@@ -148,12 +153,15 @@ import ColorTypes
             @test eltype(AG.imread(dataset)) == ColorTypes.RGBA{ImageCore.N0f8}
 
             AG.createcolortable(AG.GPI_Gray) do ct
-                AG.setcolortable!(AG.getband(dataset, 1), ct)
-                AG.setcolortable!(AG.getband(dataset, 2), ct)
-                AG.setcolortable!(AG.getband(dataset, 3), ct)
+                AG.setcolorentry!(
+                    ct,
+                    typemax(UInt8),
+                    GDAL.GDALColorEntry(0, 0, 0, 0),
+                )
                 return AG.setcolortable!(AG.getband(dataset, 4), ct)
             end
-            @test eltype(AG.imread(dataset)) == ColorTypes.Gray{ImageCore.N0f8}
+            @test eltype(AG.imread(dataset, 4)) ==
+                  ColorTypes.Gray{ImageCore.N0f8}
 
             AG.createcolortable(AG.GPI_CMYK) do ct # CMYK not supported yet
                 AG.setcolortable!(AG.getband(dataset, 1), ct)

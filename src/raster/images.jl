@@ -8,7 +8,11 @@ function imview(colortype::Type{<:ColorTypes.Colorant}, imgvalues...)
     )
 end
 
-function imview(gci::GDALColorInterp, imgvalues::AbstractMatrix)
+function imview(
+    gci::GDALColorInterp,
+    imgvalues::AbstractMatrix;
+    colortable::ColorTable = ColorTable(C_NULL),
+)
     return if gci == GCI_GrayIndex
         imview(ColorTypes.Gray, imgvalues)
     elseif gci == GCI_Undefined
@@ -22,13 +26,47 @@ function imview(gci::GDALColorInterp, imgvalues::AbstractMatrix)
     elseif gci == GCI_BlueBand
         zerovalues = zeros(eltype(imgvalues), size(imgvalues))
         imview(GPI_RGB, zerovalues, zerovalues, imgvalues)
+    elseif gci == GCI_PaletteIndex
+        if colortable.ptr == C_NULL
+            error(
+                """
+                `imview` is only supported for `GCI_PaletteIndex` with non-null
+                colortables.
+                """,
+            )
+        end
+        gpi = paletteinterp(colortable)
+        if gpi == GPI_Gray
+            imview(GPI_Gray, imgvalues)
+        elseif gpi == GPI_RGB
+            colorentries = GDAL.GDALColorEntry[
+                getcolorentryasrgb(colortable, i - 1) for
+                i in 1:GDAL.gdalgetcolorentrycount(colortable.ptr)
+            ]
+            c1 = Matrix{UInt8}(undef, size(imgvalues)...)
+            c2 = Matrix{UInt8}(undef, size(imgvalues)...)
+            c3 = Matrix{UInt8}(undef, size(imgvalues)...)
+            c4 = Matrix{UInt8}(undef, size(imgvalues)...)
+            for i in eachindex(imgvalues)
+                c1[i] = UInt8(colorentries[imgvalues[i]+1].c1)
+                c2[i] = UInt8(colorentries[imgvalues[i]+1].c2)
+                c3[i] = UInt8(colorentries[imgvalues[i]+1].c3)
+                c4[i] = UInt8(colorentries[imgvalues[i]+1].c4)
+            end
+            imview(GPI_RGB, c1, c2, c3, c4)
+        else
+            error("""
+                  Unsupported GPI: $(paletteinterp(colortable)). Please file an
+                  issue at https://github.com/yeesian/ArchGDAL.jl/issues if it
+                  should be supported.
+                  """)
+        end
     else
-        error(
-            """
-            Unknown GCI: $gci. Please file an issue at
-            https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
-            """,
-        )
+        error("""
+              Unknown GCI: $gci. Please file an issue at
+              https://github.com/yeesian/ArchGDAL.jl/issues if it should be
+              supported.
+              """)
     end
 end
 
@@ -36,12 +74,11 @@ function imview(gpi::GDALPaletteInterp, imgvalues::AbstractMatrix)
     return if gpi == GPI_Gray
         imview(ColorTypes.Gray, imgvalues)
     else
-        error(
-            """
-            Unsupported GPI: $gpi. Please file an issue at
-            https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
-            """,
-        )
+        error("""
+              Unsupported GPI: $gpi. Please file an issue at
+              https://github.com/yeesian/ArchGDAL.jl/issues if it should be
+              supported.
+              """)
     end
 end
 
@@ -56,12 +93,11 @@ function imview(
     elseif gpi == GPI_RGB
         imview(ColorTypes.RGB, c1, c2, c3)
     else
-        error(
-            """
-            Unsupported GPI: $gpi. If it should be supported, please file an issue at
-            https://github.com/yeesian/ArchGDAL.jl/issues with the desired output.
-            """,
-        )
+        error("""
+              Unsupported GPI: $gpi. If it should be supported, please file an
+              issue at https://github.com/yeesian/ArchGDAL.jl/issues with the
+              desired output.
+              """)
     end
 end
 
@@ -77,182 +113,79 @@ function imview(
     elseif gpi == GPI_RGB
         imview(ColorTypes.RGBA, c1, c2, c3, c4)
     else
-        error(
-            """
-            Unsupported GPI: $gpi. If it should be supported, please file an issue at
-            https://github.com/yeesian/ArchGDAL.jl/issues with the desired output.
-            """,
-        )
+        error("""
+              Unsupported GPI: $gpi. If it should be supported, please file an
+              issue at https://github.com/yeesian/ArchGDAL.jl/issues with the
+              desired output.
+              """)
     end
 end
 
 function imread(
     colortype::Union{GDALPaletteInterp,GDALColorInterp},
-    rb::AbstractRasterBand,
-    xoffset::Integer,
-    yoffset::Integer,
-    xsize::Integer,
-    ysize::Integer,
-)
-    return imview(colortype, read(rb, xoffset, yoffset, xsize, ysize))
-end
-
-function imread(
-    colortype::Union{GDALPaletteInterp,GDALColorInterp},
     dataset::AbstractDataset,
     i::Integer,
-    xoffset::Integer,
-    yoffset::Integer,
-    xsize::Integer,
-    ysize::Integer,
+    args...,
 )
-    return imread(
-        colortype,
-        getband(dataset, i),
-        xoffset,
-        yoffset,
-        xsize,
-        ysize,
-    )
+    return imread(colortype, getband(dataset, i), args...)
 end
 
-function imread(
-    colortype::Union{GDALPaletteInterp,GDALColorInterp},
-    rb::AbstractRasterBand,
-    rows::UnitRange{<:Integer},
-    cols::UnitRange{<:Integer},
-)
-    return imview(colortype, read(rb, rows, cols))
+function imread(gpi::GDALPaletteInterp, rb::AbstractRasterBand, args...)
+    return imview(gpi, read(rb, args...))
 end
 
-function imread(
-    colortype::Union{GDALPaletteInterp,GDALColorInterp},
-    dataset::AbstractDataset,
-    i::Integer,
-    rows::UnitRange{<:Integer},
-    cols::UnitRange{<:Integer},
-)
-    return imread(colortype, getband(dataset, i), rows, cols)
+function imread(gci::GDALColorInterp, rb::AbstractRasterBand, args...)
+    return getcolortable(rb) do colortable
+        return imview(gci, read(rb, args...), colortable = colortable)
+    end
 end
 
-function imread(
-    colortype::Union{GDALPaletteInterp,GDALColorInterp},
-    rb::AbstractRasterBand,
-)
-    return imview(colortype, read(rb))
+function imread(rb::AbstractRasterBand, args...)
+    return getcolortable(rb) do colortable
+        imview(getcolorinterp(rb), read(rb, args...), colortable = colortable)
+    end
 end
 
-function imread(
-    colortype::Union{GDALPaletteInterp,GDALColorInterp},
-    dataset::AbstractDataset,
-    i::Integer,
-)
-    return imread(colortype, getband(dataset, i))
+function imread(dataset::AbstractDataset, i::Integer, args...)
+    return imread(getband(dataset, i), args...)
 end
 
-function imread(
-    rb::AbstractRasterBand,
-    xoffset::Integer,
-    yoffset::Integer,
-    xsize::Integer,
-    ysize::Integer,
-)
-    return imview(getcolorinterp(rb), read(rb, xoffset, yoffset, xsize, ysize))
-end
-
-function imread(
-    dataset::AbstractDataset,
-    i::Integer,
-    xoffset::Integer,
-    yoffset::Integer,
-    xsize::Integer,
-    ysize::Integer,
-)
-    return imread(getband(dataset, i), xoffset, yoffset, xsize, ysize)
-end
-
-function imread(
-    rb::AbstractRasterBand,
-    rows::UnitRange{<:Integer},
-    cols::UnitRange{<:Integer},
-)
-    return imview(getcolorinterp(rb), read(rb, rows, cols))
-end
-
-function imread(
-    dataset::AbstractDataset,
-    i::Integer,
-    rows::UnitRange{<:Integer},
-    cols::UnitRange{<:Integer},
-)
-    return imread(getband(dataset, i), rows, cols)
-end
-
-function imread(rb::AbstractRasterBand)
-    return imview(getcolorinterp(rb), read(rb))
-end
-
-function imread(dataset::AbstractDataset, i::Integer)
-    return imread(getband(dataset, i))
-end
-
-function _paletteindices(dataset::AbstractDataset, indices)
+function _colorindices(dataset::AbstractDataset, indices)
     gci = unique(
         GDALColorInterp[getcolorinterp(getband(dataset, i)) for i in indices],
     )
     gciorder = sort(gci)
-    return if gciorder == [GCI_GrayIndex]
-        GPI_Gray, Tuple(indices[sortperm(gci)])
+    colortype = if gciorder == [GCI_GrayIndex]
+        GCI_GrayIndex
     elseif gciorder == [GCI_PaletteIndex]
-        gpi = getcolortable(getband(dataset, indices[1])) do ct
-            return paletteinterp(ct)
-        end
-        gpi, Tuple(indices)
+        GCI_PaletteIndex
     elseif gciorder == [GCI_RedBand, GCI_GreenBand, GCI_BlueBand]
-        GPI_RGB, Tuple(indices[sortperm(gci)])
+        GPI_RGB
     elseif gciorder == [GCI_RedBand, GCI_GreenBand, GCI_BlueBand, GCI_AlphaBand]
-        GPI_RGB, Tuple(indices[sortperm(gci)])
+        GPI_RGB
     else
-        error(
-            """
-            Unknown GCI: $gciorder. Please file an issue at
-            https://github.com/yeesian/ArchGDAL.jl/issues if it should be supported.
-            """,
-        )
+        error("""
+              Unknown GCI: $gciorder. Please file an issue at
+              https://github.com/yeesian/ArchGDAL.jl/issues if it should be
+              supported.
+              """)
     end
+    return colortype, Tuple(indices[sortperm(gci)])
 end
 
-function imread(
-    dataset::AbstractDataset,
-    indices,
-    xoffset::Integer,
-    yoffset::Integer,
-    xsize::Integer,
-    ysize::Integer,
-)
-    gpi, idxs = _paletteindices(dataset, indices)
-    return imview(
-        gpi,
-        (
-            read(getband(dataset, i), xoffset, yoffset, xsize, ysize) for
-            i in idxs
-        )...,
-    )
-end
-
-function imread(
-    dataset::AbstractDataset,
-    indices,
-    rows::UnitRange{<:Integer},
-    cols::UnitRange{<:Integer},
-)
-    gpi, idxs = _paletteindices(dataset, indices)
-    return imview(gpi, (read(getband(dataset, i), rows, cols) for i in idxs)...)
-end
-
-function imread(dataset::AbstractDataset, indices)
-    gpi, idxs = _paletteindices(dataset, indices)
-    return imview(gpi, (read(getband(dataset, i)) for i in idxs)...)
+function imread(dataset::AbstractDataset, indices, args...)
+    colortype, idxs = _colorindices(dataset, indices)
+    return if colortype == GCI_PaletteIndex
+        getcolortable(getband(dataset, 1)) do colortable
+            return imview(
+                colortype,
+                (read(getband(dataset, i), args...) for i in idxs)...,
+                colortable = colortable,
+            )
+        end
+    else
+        imview(colortype, (read(getband(dataset, i), args...) for i in idxs)...)
+    end
 end
 
 imread(dataset::AbstractDataset) = imread(dataset, 1:nraster(dataset))
