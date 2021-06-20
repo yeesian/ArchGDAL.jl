@@ -1,6 +1,11 @@
 using Documenter, ArchGDAL
 
-DocMeta.setdocmeta!(ArchGDAL, :DocTestSetup, :(using ArchGDAL, GDAL); recursive=true)
+DocMeta.setdocmeta!(
+    ArchGDAL,
+    :DocTestSetup,
+    :(using ArchGDAL, GDAL);
+    recursive = true,
+)
 
 # make sure you have run the tests before such that the test files are present
 makedocs(
