@@ -142,7 +142,11 @@ end
 
 function imread(rb::AbstractRasterBand, args...)
     return getcolortable(rb) do colortable
-        imview(getcolorinterp(rb), read(rb, args...), colortable = colortable)
+        return imview(
+            getcolorinterp(rb),
+            read(rb, args...),
+            colortable = colortable,
+        )
     end
 end
 
