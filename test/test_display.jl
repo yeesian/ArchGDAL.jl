@@ -68,7 +68,7 @@ const AG = ArchGDAL;
 
             @test sprint(print, AG.getband(dataset, 1)) == """
             [GA_ReadOnly] Band 1 (Red): 2048 x 1024 (UInt8)
-                blocksize: 256×256, nodata: missing, units: 1.0px + 0.0
+                blocksize: 256×256, nodata: nothing, units: 1.0px + 0.0
                 overviews: (0) 1024x512 (1) 512x256 (2) 256x128 
                            (3) 128x64 (4) 64x32 (5) 32x16 
                            (6) 16x8 """
