@@ -106,7 +106,7 @@ Fetch the field index given field name.
 * `name`: the name of the field to search for.
 
 ### Returns
-the field index, or `missing` if no matching field is found.
+the field index, or `nothing` if no matching field is found.
 
 ### Remarks
 This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
@@ -114,10 +114,10 @@ This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 function findfieldindex(
     feature::Feature,
     name::Union{AbstractString,Symbol},
-)::Union{Integer,Missing}
+)::Union{Integer,Nothing}
     i = GDAL.ogr_f_getfieldindex(feature.ptr, name)
     return if i == -1
-        missing
+        nothing
     else
         i
     end
@@ -385,7 +385,7 @@ function getdefault(feature::Feature, i::Integer)::String
     return getdefault(getfielddefn(feature, i))
 end
 
-getfield(feature::Feature, i::Missing)::Missing = missing
+getfield(feature::Feature, i::Nothing)::Missing = missing
 
 function getfield(feature::Feature, i::Integer)
     _FETCHFIELD = Dict{OGRFieldType,Function}(
