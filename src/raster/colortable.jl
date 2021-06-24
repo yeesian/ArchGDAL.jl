@@ -3,13 +3,14 @@
 
 Construct a new color table.
 """
-unsafe_createcolortable(palette::GDALPaletteInterp) =
+unsafe_createcolortable(palette::GDALPaletteInterp)::ColorTable =
     ColorTable(GDAL.gdalcreatecolortable(palette))
 
 "Destroys a color table."
-function destroy(ct::ColorTable)
+function destroy(ct::ColorTable)::Nothing
     GDAL.gdaldestroycolortable(ct.ptr)
     ct.ptr = C_NULL
+    return nothing
 end
 
 """
@@ -17,7 +18,13 @@ end
 
 Make a copy of a color table.
 """
-unsafe_clone(ct::ColorTable) = ColorTable(GDAL.gdalclonecolortable(ct.ptr))
+function unsafe_clone(ct::ColorTable)::ColorTable
+    return if ct.ptr == C_NULL
+        ColorTable(C_NULL)
+    else
+        ColorTable(GDAL.gdalclonecolortable(ct.ptr))
+    end
+end
 
 """
     paletteinterp(ct::ColorTable)
@@ -27,22 +34,8 @@ Fetch palette interpretation.
 ### Returns
 palette interpretation enumeration value, usually `GPI_RGB`.
 """
-paletteinterp(ct::ColorTable) = GDAL.gdalgetpaletteinterpretation(ct.ptr)
-
-"""
-    ncolorentry(ct::ColorTable)
-
-Get number of color entries in table.
-"""
-ncolorentry(ct::ColorTable) = GDAL.gdalgetcolorentrycount(ct.ptr)
-
-"""
-    getcolorentry(ct::ColorTable, i::Integer)
-
-Fetch a color entry from table.
-"""
-getcolorentry(ct::ColorTable, i::Integer) =
-    unsafe_load(GDAL.gdalgetcolorentry(ct.ptr, i))
+paletteinterp(ct::ColorTable)::GDALPaletteInterp =
+    GDAL.gdalgetpaletteinterpretation(ct.ptr)
 
 """
     getcolorentryasrgb(ct::ColorTable, i::Integer)
@@ -59,7 +52,7 @@ tables.
 ### Returns
 `true` on success, or `false` if the conversion isn't supported.
 """
-function getcolorentryasrgb(ct::ColorTable, i::Integer)
+function getcolorentryasrgb(ct::ColorTable, i::Integer)::GDAL.GDALColorEntry
     colorentry = Ref{GDAL.GDALColorEntry}(GDAL.GDALColorEntry(0, 0, 0, 0))
     result = Bool(GDAL.gdalgetcolorentryasrgb(ct.ptr, i, colorentry))
     result || @warn("The conversion to RGB isn't supported.")
@@ -84,38 +77,4 @@ The table is grown as needed to hold the supplied offset.
 function setcolorentry!(ct::ColorTable, i::Integer, entry::GDAL.GDALColorEntry)
     GDAL.gdalsetcolorentry(ct.ptr, i, Ref{GDAL.GDALColorEntry}(entry))
     return ct
-end
-
-"""
-    createcolorramp!(ct::ColorTable, startindex, startcolor::GDAL.GDALColorEntry,
-        endindex, endcolor::GDAL.GDALColorEntry)
-
-Create color ramp.
-
-Automatically creates a color ramp from one color entry to another. It can be
-called several times to create multiples ramps in the same color table.
-
-### Parameters
-* `startindex` index to start the ramp on the color table [0..255]
-* `startcolor` a color entry value to start the ramp
-* `endindex`   index to end the ramp on the color table [0..255]
-* `endcolor`   a color entry value to end the ramp
-
-### Returns
-total number of entries, -1 to report error
-"""
-function createcolorramp!(
-        ct::ColorTable,
-        startindex::Integer,
-        startcolor::GDAL.GDALColorEntry,
-        endindex::Integer,
-        endcolor::GDAL.GDALColorEntry
-    )
-    return GDAL.gdalcreatecolorramp(
-        ct.ptr,
-        startindex,
-        Ref{GDAL.GDALColorEntry}(startcolor),
-        endindex,
-        Ref{GDAL.GDALColorEntry}(endcolor)
-    )
 end

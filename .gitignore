@@ -12,3 +12,6 @@ test/gdalworkshop/
 test/ospy/
 test/pyrasterio/
 test/spatialite/
+.DS_Store
+Manifest.toml
+*.tif

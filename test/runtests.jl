@@ -1,6 +1,5 @@
 using Test
 using Dates
-using Pkg.PlatformEngines
 
 # ensure all testing files are present
 include("remotefiles.jl")
@@ -8,6 +7,7 @@ include("remotefiles.jl")
 @testset "ArchGDAL" begin
     cd(dirname(@__FILE__)) do
         isdir("tmp") || mkpath("tmp")
+        include("test_doctest.jl")
         include("test_convert.jl")
         include("test_tables.jl")
         include("test_gdal_tutorials.jl")
@@ -31,6 +31,9 @@ include("remotefiles.jl")
         include("test_geos_operations.jl")
         include("test_cookbook_geometry.jl")
         include("test_cookbook_projection.jl")
+        include("test_geotransform.jl")
+        include("test_images.jl")
         include("test_utils.jl")
+        return nothing
     end
 end

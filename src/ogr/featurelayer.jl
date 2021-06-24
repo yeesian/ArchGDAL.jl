@@ -1,14 +1,14 @@
 
-function destroy(layer::AbstractFeatureLayer)
-    layer.ptr = GDALFeatureLayer(C_NULL)
-    return layer
+function destroy(layer::AbstractFeatureLayer)::Nothing
+    layer.ptr = C_NULL
+    return nothing
 end
 
-function destroy(layer::IFeatureLayer)
-    layer.ptr = GDALFeatureLayer(C_NULL)
+function destroy(layer::IFeatureLayer)::Nothing
+    layer.ptr = C_NULL
     layer.ownedby = Dataset()
     layer.spatialref = SpatialRef()
-    return layer
+    return nothing
 end
 
 """
@@ -21,35 +21,47 @@ This function attempts to create a new layer on the dataset with the indicated
 * `name`: the name for the new layer. This should ideally not match any
     existing layer on the datasource. Defaults to an empty string.
 * `dataset`: the dataset. Defaults to creating a new in memory dataset.
-* `geom`: the geometry type for the layer. Use wkbUnknown (default) if
+* `geom`: the geometry type for the layer. Use `wkbUnknown` (default) if
     there are no constraints on the types geometry to be written.
 * `spatialref`: the coordinate system to use for the new layer.
 * `options`: a StringList of name=value (driver-specific) options.
 """
 function createlayer(;
-        name::AbstractString            = "",
-        dataset::AbstractDataset        = create(getdriver("Memory")),
-        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
-        spatialref::AbstractSpatialRef  = SpatialRef(),
-        options                         = StringList(C_NULL)
-    )
+    name::AbstractString = "",
+    dataset::AbstractDataset = create(getdriver("Memory")),
+    geom::OGRwkbGeometryType = wkbUnknown,
+    spatialref::AbstractSpatialRef = SpatialRef(),
+    options = StringList(C_NULL),
+)::IFeatureLayer
     return IFeatureLayer(
-        GDAL.gdaldatasetcreatelayer(dataset.ptr, name, spatialref.ptr, geom,
-            options),
+        GDAL.gdaldatasetcreatelayer(
+            dataset.ptr,
+            name,
+            spatialref.ptr,
+            geom,
+            options,
+        ),
         ownedby = dataset,
-        spatialref = spatialref
+        spatialref = spatialref,
     )
 end
 
 function unsafe_createlayer(;
-        name::AbstractString            = "",
-        dataset::AbstractDataset        = create(getdriver("Memory")),
-        geom::OGRwkbGeometryType        = GDAL.wkbUnknown,
-        spatialref::AbstractSpatialRef  = SpatialRef(),
-        options                         = StringList(C_NULL)
+    name::AbstractString = "",
+    dataset::AbstractDataset = create(getdriver("Memory")),
+    geom::OGRwkbGeometryType = wkbUnknown,
+    spatialref::AbstractSpatialRef = SpatialRef(),
+    options = StringList(C_NULL),
+)::FeatureLayer
+    return FeatureLayer(
+        GDAL.gdaldatasetcreatelayer(
+            dataset.ptr,
+            name,
+            spatialref.ptr,
+            geom,
+            options,
+        ),
     )
-    return FeatureLayer(GDAL.gdaldatasetcreatelayer(dataset.ptr, name,
-        spatialref.ptr, geom, options))
 end
 
 """
@@ -69,25 +81,26 @@ layer, and then duplicates each feature of the source layer.
 * `options`: a StringList of name=value (driver-specific) options.
 """
 function copy(
-        layer::AbstractFeatureLayer;
-        dataset::AbstractDataset = create(getdriver("Memory")),
-        name::AbstractString = "copy($(getname(layer)))",
-        options = StringList(C_NULL)
-    )
+    layer::AbstractFeatureLayer;
+    dataset::AbstractDataset = create(getdriver("Memory")),
+    name::AbstractString = "copy($(getname(layer)))",
+    options = StringList(C_NULL),
+)::IFeatureLayer
     return IFeatureLayer(
         GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name, options),
-        ownedby = dataset
+        ownedby = dataset,
     )
 end
 
 function unsafe_copy(
-        layer::AbstractFeatureLayer;
-        dataset::AbstractDataset = create(getdriver("Memory")),
-        name::AbstractString = "copy($(getname(layer)))",
-        options = StringList(C_NULL)
+    layer::AbstractFeatureLayer;
+    dataset::AbstractDataset = create(getdriver("Memory")),
+    name::AbstractString = "copy($(getname(layer)))",
+    options = StringList(C_NULL),
+)::FeatureLayer
+    return FeatureLayer(
+        GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name, options),
     )
-    FeatureLayer(GDAL.gdaldatasetcopylayer(dataset.ptr, layer.ptr, name,
-        options))
 end
 
 """
@@ -95,28 +108,29 @@ end
 
 Return the layer name.
 """
-getname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getname(layer.ptr)
+getname(layer::AbstractFeatureLayer)::String = GDAL.ogr_l_getname(layer.ptr)
 
 """
     getgeomtype(layer::AbstractFeatureLayer)
 
 Return the layer geometry type.
 """
-getgeomtype(layer::AbstractFeatureLayer) = GDAL.ogr_l_getgeomtype(layer.ptr)
+getgeomtype(layer::AbstractFeatureLayer)::OGRwkbGeometryType =
+    GDAL.ogr_l_getgeomtype(layer.ptr)
 
 """
     getspatialfilter(layer::AbstractFeatureLayer)
 
 Returns the current spatial filter for this layer.
 """
-function getspatialfilter(layer::AbstractFeatureLayer)
-    result = GDALGeometry(GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr)))
-    if result == C_NULL
-        return IGeometry(result)
+function getspatialfilter(layer::AbstractFeatureLayer)::IGeometry
+    result = GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer.ptr))
+    return if result == C_NULL
+        IGeometry(result)
     else
         # NOTE(yeesian): we make a clone here so that the geometry does not
         # depend on the FeatureLayer.
-        return IGeometry(GDALGeometry(GDAL.ogr_g_clone(result)))
+        IGeometry(GDAL.ogr_g_clone(result))
     end
 end
 
@@ -125,25 +139,25 @@ end
 
 Returns a clone of the spatial reference system for this layer.
 """
-function getspatialref(layer::AbstractFeatureLayer)
+function getspatialref(layer::AbstractFeatureLayer)::ISpatialRef
     result = GDAL.ogr_l_getspatialref(layer.ptr)
-    if result == C_NULL
-        return ISpatialRef()
+    return if result == C_NULL
+        ISpatialRef()
     else
         # NOTE(yeesian): we make a clone here so that the spatialref does not
         # depend on the FeatureLayer/Dataset.
-        return ISpatialRef(GDAL.osrclone(result))
+        ISpatialRef(GDAL.osrclone(result))
     end
 end
 
-function unsafe_getspatialref(layer::AbstractFeatureLayer)
+function unsafe_getspatialref(layer::AbstractFeatureLayer)::SpatialRef
     result = GDAL.ogr_l_getspatialref(layer.ptr)
-    if result == C_NULL
-        return SpatialRef()
+    return if result == C_NULL
+        SpatialRef()
     else
         # NOTE(yeesian): we make a clone here so that the spatialref does not
         # depend on the FeatureLayer/Dataset.
-        return SpatialRef(GDAL.osrclone(result))
+        SpatialRef(GDAL.osrclone(result))
     end
 end
 
@@ -176,15 +190,18 @@ In the future this may be generalized.
 Note that only the last spatial filter set is applied, even if several
 successive calls are done with different iGeomField values.
 """
-function setspatialfilter!(layer::AbstractFeatureLayer, geom::Geometry)
+function setspatialfilter!(
+    layer::L,
+    geom::Geometry,
+)::L where {L<:AbstractFeatureLayer}
     # This method makes an internal copy of `geom`. The input `geom` remains
     # the responsibility of the caller, and may be safely destroyed.
     GDAL.ogr_l_setspatialfilter(layer.ptr, geom.ptr)
     return layer
 end
 
-function clearspatialfilter!(layer::AbstractFeatureLayer)
-    GDAL.ogr_l_setspatialfilter(layer.ptr, GDALGeometry(C_NULL))
+function clearspatialfilter!(layer::L)::L where {L<:AbstractFeatureLayer}
+    GDAL.ogr_l_setspatialfilter(layer.ptr, C_NULL)
     return layer
 end
 
@@ -206,18 +223,19 @@ The only way to clear a spatial filter set with this method is to call
 `OGRLayer::SetSpatialFilter(NULL)`.
 """
 function setspatialfilter!(
-        layer::AbstractFeatureLayer,
-        xmin::Real,
-        ymin::Real,
-        xmax::Real,
-        ymax::Real
-    )
+    layer::L,
+    xmin::Real,
+    ymin::Real,
+    xmax::Real,
+    ymax::Real,
+)::L where {L<:AbstractFeatureLayer}
     GDAL.ogr_l_setspatialfilterrect(layer.ptr, xmin, ymin, xmax, ymax)
     return layer
 end
 
 """
-    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, geom::AbstractGeometry)
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer,
+        geom::AbstractGeometry)
 
 Set a new spatial filter.
 
@@ -243,23 +261,27 @@ layer (as returned by OGRLayer::GetSpatialRef()). In the future this may be
 generalized.
 """
 function setspatialfilter!(
-        layer::AbstractFeatureLayer,
-        i::Integer,
-        geom::AbstractGeometry
-    )
+    layer::L,
+    i::Integer,
+    geom::AbstractGeometry,
+)::L where {L<:AbstractFeatureLayer}
     # This method makes an internal copy of `geom`. The input `geom` remains
     # the responsibility of the caller, and may be safely destroyed.
     GDAL.ogr_l_setspatialfilterex(layer.ptr, i, geom.ptr)
     return layer
 end
 
-function clearspatialfilter!(layer::AbstractFeatureLayer, i::Integer)
-    GDAL.ogr_l_setspatialfilterex(layer.ptr, i, GDALGeometry(C_NULL))
+function clearspatialfilter!(
+    layer::L,
+    i::Integer,
+)::L where {L<:AbstractFeatureLayer}
+    GDAL.ogr_l_setspatialfilterex(layer.ptr, i, C_NULL)
     return layer
 end
 
 """
-    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, xmin, ymin, xmax, ymax)
+    setspatialfilter!(layer::AbstractFeatureLayer, i::Integer, xmin, ymin, xmax,
+        ymax)
 
 Set a new rectangular spatial filter.
 
@@ -272,13 +294,13 @@ Set a new rectangular spatial filter.
 * `ymax`: the maximum Y coordinate for the rectangular region.
 """
 function setspatialfilter!(
-        layer::AbstractFeatureLayer,
-        i::Integer,
-        xmin::Real,
-        ymin::Real,
-        xmax::Real,
-        ymax::Real
-    )
+    layer::L,
+    i::Integer,
+    xmin::Real,
+    ymin::Real,
+    xmax::Real,
+    ymax::Real,
+)::L where {L<:AbstractFeatureLayer}
     GDAL.ogr_l_setspatialfilterrectex(layer.ptr, i, xmin, ymin, xmax, ymax)
     return layer
 end
@@ -308,14 +330,17 @@ broader than those of OGR SQL.
 Note that installing a query string will generally result in resetting the
 current reading position (ala `resetreading!()`).
 """
-function setattributefilter!(layer::AbstractFeatureLayer, query::AbstractString)
+function setattributefilter!(
+    layer::L,
+    query::AbstractString,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_setattributefilter(layer.ptr, query)
     @ogrerr result """Failed to set a new attribute query. The query expression
     might be in error."""
     return layer
 end
 
-function clearattributefilter!(layer::AbstractFeatureLayer)
+function clearattributefilter!(layer::L)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_setattributefilter(layer.ptr, C_NULL)
     @ogrerr result "OGRErr $result: Failed to clear attribute query."
     return layer
@@ -328,7 +353,7 @@ Reset feature reading to start on the first feature.
 
 This affects `nextfeature()`.
 """
-function resetreading!(layer::AbstractFeatureLayer)
+function resetreading!(layer::L)::L where {L<:AbstractFeatureLayer}
     GDAL.ogr_l_resetreading(layer.ptr)
     return layer
 end
@@ -360,8 +385,8 @@ on drivers. If a transaction is committed/aborted, the current sequential
 reading may or may not be valid after that operation and a call to
 `resetreading!()` might be needed.
 """
-function unsafe_nextfeature(layer::AbstractFeatureLayer)
-    return Feature(GDALFeature(GDAL.ogr_l_getnextfeature(layer.ptr)))
+function unsafe_nextfeature(layer::AbstractFeatureLayer)::Feature
+    return Feature(GDAL.ogr_l_getnextfeature(layer.ptr))
 end
 
 """
@@ -387,7 +412,10 @@ then calls `nextfeature()` `i` times is used. To determine if fast seeking is
 available on the layer, use the `testcapability()` method with a value of
 `OLCFastSetNextByIndex`.
 """
-function setnextbyindex!(layer::AbstractFeatureLayer, i::Integer)
+function setnextbyindex!(
+    layer::L,
+    i::Integer,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_setnextbyindex(layer.ptr, i)
     @ogrerr result "Failed to move the cursor to index $i"
     return layer
@@ -419,10 +447,11 @@ the features in the layer looking for the desired feature.
 Sequential reads (with OGR_L_GetNextFeature()) are generally considered
 interrupted by a OGR_L_GetFeature() call.
 
-The returned feature is now owned by the caller, and should be freed with `destroy()`.
+The returned feature is now owned by the caller, and should be freed with
+`destroy()`.
 """
-unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer) =
-    Feature(GDALFeature(GDAL.ogr_l_getfeature(layer.ptr, i)))
+unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer)::Feature =
+    Feature(GDAL.ogr_l_getfeature(layer.ptr, i))
 
 """
     setfeature!(layer::AbstractFeatureLayer, feature::Feature)
@@ -456,15 +485,18 @@ OGRNullFID, then the native implementation may use that as the feature id of
 the new feature, but not necessarily. Upon successful return the passed feature
 will have been updated with the new feature id.
 """
-function addfeature!(layer::AbstractFeatureLayer, feature::Feature)
+function addfeature!(
+    layer::L,
+    feature::Feature,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."
     return layer
 end
 
-function addfeature(f::Function, layer::AbstractFeatureLayer)
+function addfeature(f::Function, layer::L)::L where {L<:AbstractFeatureLayer}
     feature = unsafe_createfeature(layer)
-    try
+    return try
         f(feature)
         addfeature!(layer, feature)
     finally
@@ -480,12 +512,12 @@ Create and returns a new feature based on the layer definition.
 The newly feature is owned by the layer (it will increase the number of features
 the layer by one), but the feature has not been written to the layer yet.
 """
-unsafe_createfeature(layer::AbstractFeatureLayer) =
+unsafe_createfeature(layer::AbstractFeatureLayer)::Feature =
     unsafe_createfeature(layerdefn(layer))
 
-function createfeature(f::Function, layer::AbstractFeatureLayer)
+function createfeature(f::Function, layer::L)::L where {L<:AbstractFeatureLayer}
     feature = unsafe_createfeature(layer)
-    try
+    return try
         f(feature)
         setfeature!(layer, feature)
     finally
@@ -504,7 +536,7 @@ by the driver. Most drivers do not support feature deletion, and will return
 OGRERR_UNSUPPORTED_OPERATION. The OGR_L_TestCapability() function may be called
 with OLCDeleteFeature to check if the driver supports feature deletion.
 """
-function deletefeature!(layer::AbstractFeatureLayer, i::Integer)
+function deletefeature!(layer::L, i::Integer)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_deletefeature(layer.ptr, i)
     # OGRERR_NONE if the operation works, otherwise an appropriate error code
     # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
@@ -520,11 +552,12 @@ Returns a view of the schema information for this layer.
 ### Remarks
 The `featuredefn` is owned by the `layer` and should not be modified.
 """
-layerdefn(layer::AbstractFeatureLayer) =
+layerdefn(layer::AbstractFeatureLayer)::IFeatureDefnView =
     IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
 
 """
-    findfieldindex(layer::AbstractFeatureLayer, field::Union{AbstractString, Symbol}, exactmatch::Bool)
+    findfieldindex(layer::AbstractFeatureLayer,
+        field::Union{AbstractString, Symbol}, exactmatch::Bool)
 
 Find the index of the field in a layer, or -1 if the field doesn't exist.
 
@@ -533,10 +566,10 @@ the driver might apply some changes to make it match, like those it might do if
 the layer was created (eg. like `LAUNDER` in the OCI driver).
 """
 function findfieldindex(
-        layer::AbstractFeatureLayer,
-        field::Union{AbstractString, Symbol},
-        exactmatch::Bool
-    )
+    layer::AbstractFeatureLayer,
+    field::Union{AbstractString,Symbol},
+    exactmatch::Bool,
+)::Integer
     return GDAL.ogr_l_findfieldindex(layer.ptr, field, exactmatch)
 end
 
@@ -550,7 +583,7 @@ Fetch the feature count in this layer, or `-1` if the count is not known.
 * `force`: flag indicating whether the count should be computed even if it is
     expensive. (`false` by default.)
 """
-nfeature(layer::AbstractFeatureLayer, force::Bool = false) =
+nfeature(layer::AbstractFeatureLayer, force::Bool = false)::Integer =
     GDAL.ogr_l_getfeaturecount(layer.ptr, force)
 
 """
@@ -558,14 +591,14 @@ nfeature(layer::AbstractFeatureLayer, force::Bool = false) =
 
 Fetch number of geometry fields on the feature layer.
 """
-ngeom(layer::AbstractFeatureLayer) = ngeom(layerdefn(layer))
+ngeom(layer::AbstractFeatureLayer)::Integer = ngeom(layerdefn(layer))
 
 """
     nfield(layer::AbstractFeatureLayer)
 
 Fetch number of fields on the feature layer.
 """
-nfield(layer::AbstractFeatureLayer) = nfield(layerdefn(layer))
+nfield(layer::AbstractFeatureLayer)::Integer = nfield(layerdefn(layer))
 
 """
     envelope(layer::AbstractFeatureLayer, force::Bool = false)
@@ -596,14 +629,21 @@ meaningful extents could be collected.
 Note that some implementations of this method may alter the read cursor of the
 layer.
 """
-function envelope(layer::AbstractFeatureLayer, i::Integer, force::Bool = false)
+function envelope(
+    layer::AbstractFeatureLayer,
+    i::Integer,
+    force::Bool = false,
+)::GDAL.OGREnvelope
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
     result = GDAL.ogr_l_getextentex(layer.ptr, i, envelope, force)
     @ogrerr result "Extent not known"
     return envelope[]
 end
 
-function envelope(layer::AbstractFeatureLayer, force::Bool = false)
+function envelope(
+    layer::AbstractFeatureLayer,
+    force::Bool = false,
+)::GDAL.OGREnvelope
     envelope = Ref{GDAL.OGREnvelope}(GDAL.OGREnvelope(0, 0, 0, 0))
     result = GDAL.ogr_l_getextent(layer.ptr, envelope, force)
     @ogrerr result "Extent not known"
@@ -633,8 +673,8 @@ the caller.
     implementation using `resetreading!()` and `nextfeature()` to find the
     requested feature id.
 
-* `OLCSequentialWrite` / \"SequentialWrite\": `true` if the CreateFeature() method
-    works for this layer. Note this means that this particular layer is
+* `OLCSequentialWrite` / \"SequentialWrite\": `true` if the CreateFeature()
+    method works for this layer. Note this means that this particular layer is
     writable. The same OGRLayer class may returned `false` for other layer
     instances that are effectively read-only.
 
@@ -643,19 +683,19 @@ the caller.
     writable. The same OGRLayer class may returned `false` for other layer
     instances that are effectively read-only.
 
-* `OLCFastSpatialFilter` / \"FastSpatialFilter\": `true` if this layer implements
-    spatial filtering efficiently. Layers that effectively read all features,
-    and test them with the OGRFeature intersection methods should return `false`.
-    This can be used as a clue by the application whether it should build and
-    maintain its own spatial index for features in this layer.
+* `OLCFastSpatialFilter` / \"FastSpatialFilter\": `true` if this layer
+    implements spatial filtering efficiently. Layers that effectively read all
+    features, and test them with the OGRFeature intersection methods should
+    return `false`. This can be used as a clue by the application whether it
+    should build and maintain its own spatial index for features in this layer.
 
-* `OLCFastFeatureCount` / \"FastFeatureCount\": `true` if this layer can return a
-    feature count (via GetFeatureCount()) efficiently. i.e. without counting the
-    features. In some cases this will return `true` until a spatial filter is
-    installed after which it will return `false`.
+* `OLCFastFeatureCount` / \"FastFeatureCount\": `true` if this layer can return
+    a feature count (via GetFeatureCount()) efficiently. i.e. without counting
+    the features. In some cases this will return `true` until a spatial filter
+    is installed after which it will return `false`.
 
-* `OLCFastGetExtent` / \"FastGetExtent\": `true` if this layer can return its data
-    extent (via GetExtent()) efficiently, i.e. without scanning all the
+* `OLCFastGetExtent` / \"FastGetExtent\": `true` if this layer can return its
+    data extent (via GetExtent()) efficiently, i.e. without scanning all the
     features. In some cases this will return `true` until a spatial filter is
     installed after which it will return `false`.
 
@@ -665,9 +705,9 @@ the caller.
 * `OLCCreateField` / \"CreateField\": `true` if this layer can create new fields
     on the current layer using CreateField(), otherwise `false`.
 
-* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) `true` if this layer
-    can create new geometry fields on the current layer using CreateGeomField(),
-    otherwise `false`.
+* `OLCCreateGeomField` / \"CreateGeomField\": (GDAL >= 1.11) `true` if this
+    layer can create new geometry fields on the current layer using
+    CreateGeomField(), otherwise `false`.
 
 * `OLCDeleteField` / \"DeleteField\": `true` if this layer can delete existing
     fields on the current layer using DeleteField(), otherwise `false`.
@@ -680,50 +720,52 @@ the caller.
     definition of an existing field on the current layer using AlterFieldDefn(),
     otherwise `false`.
 
-* `OLCDeleteFeature` / \"DeleteFeature\": `true` if the DeleteFeature() method is
-    supported on this layer, otherwise `false`.
+* `OLCDeleteFeature` / \"DeleteFeature\": `true` if the DeleteFeature() method
+    is supported on this layer, otherwise `false`.
 
-* `OLCStringsAsUTF8` / \"StringsAsUTF8\": `true` if values of OFTString fields are
-    assured to be in UTF-8 format. If `false` the encoding of fields is uncertain,
-    though it might still be UTF-8.
+* `OLCStringsAsUTF8` / \"StringsAsUTF8\": `true` if values of OFTString fields
+    are assured to be in UTF-8 format. If `false` the encoding of fields is
+    uncertain, though it might still be UTF-8.
 
 * `OLCTransactions` / \"Transactions\": `true` if the StartTransaction(),
     CommitTransaction() and RollbackTransaction() methods work in a meaningful
     way, otherwise `false`.
 
-* `OLCIgnoreFields` / \"IgnoreFields\": `true` if fields, geometry and style will
-    be omitted when fetching features as set by SetIgnoredFields() method.
+* `OLCIgnoreFields` / \"IgnoreFields\": `true` if fields, geometry and style
+    will be omitted when fetching features as set by SetIgnoredFields() method.
 
 * `OLCCurveGeometries` / \"CurveGeometries\": `true` if this layer supports
     writing curve geometries or may return such geometries. (GDAL 2.0).
 """
-testcapability(layer::AbstractFeatureLayer, capability::AbstractString) =
+testcapability(layer::AbstractFeatureLayer, capability::AbstractString)::Bool =
     Bool(GDAL.ogr_l_testcapability(layer.ptr, capability))
 
 function listcapability(
-        layer::AbstractFeatureLayer,
-        capabilities = (GDAL.OLCRandomRead,
-                        GDAL.OLCSequentialWrite,
-                        GDAL.OLCRandomWrite,
-                        GDAL.OLCFastSpatialFilter,
-                        GDAL.OLCFastFeatureCount,
-                        GDAL.OLCFastGetExtent,
-                        GDAL.OLCCreateField,
-                        GDAL.OLCDeleteField,
-                        GDAL.OLCReorderFields,
-                        GDAL.OLCAlterFieldDefn,
-                        GDAL.OLCTransactions,
-                        GDAL.OLCDeleteFeature,
-                        GDAL.OLCFastSetNextByIndex,
-                        GDAL.OLCStringsAsUTF8,
-                        GDAL.OLCIgnoreFields,
-                        GDAL.OLCCreateGeomField,
-                        GDAL.OLCCurveGeometries,
-                        GDAL.OLCMeasuredGeometries)
+    layer::AbstractFeatureLayer,
+    capabilities = (
+        GDAL.OLCRandomRead,
+        GDAL.OLCSequentialWrite,
+        GDAL.OLCRandomWrite,
+        GDAL.OLCFastSpatialFilter,
+        GDAL.OLCFastFeatureCount,
+        GDAL.OLCFastGetExtent,
+        GDAL.OLCCreateField,
+        GDAL.OLCDeleteField,
+        GDAL.OLCReorderFields,
+        GDAL.OLCAlterFieldDefn,
+        GDAL.OLCTransactions,
+        GDAL.OLCDeleteFeature,
+        GDAL.OLCFastSetNextByIndex,
+        GDAL.OLCStringsAsUTF8,
+        GDAL.OLCIgnoreFields,
+        GDAL.OLCCreateGeomField,
+        GDAL.OLCCurveGeometries,
+        GDAL.OLCMeasuredGeometries,
+    ),
+)::Dict{String,Bool}
+    return Dict{String,Bool}(
+        [c => testcapability(layer, c) for c in capabilities],
     )
-    Dict{String, Bool}([
-        c => testcapability(layer,c) for c in capabilities
-    ])
 end
 
 # TODO use syntax below once v0.4 support is dropped (not in Compat.jl)
@@ -739,7 +781,8 @@ end
 # )
 
 """
-    addfielddefn!(layer::AbstractFeatureLayer, field::AbstractFieldDefn, approx = false)
+    addfielddefn!(layer::AbstractFeatureLayer, field::AbstractFieldDefn,
+        approx = false)
 
 Create a new field on a layer.
 
@@ -768,17 +811,18 @@ fields with not-null constraints, this is generally before creating any feature
 to the layer.
 """
 function addfielddefn!(
-        layer::AbstractFeatureLayer,
-        field::AbstractFieldDefn,
-        approx::Bool = false
-    )
+    layer::L,
+    field::AbstractFieldDefn,
+    approx::Bool = false,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_createfield(layer.ptr, field.ptr, approx)
     @ogrerr result "Failed to create new field"
     return layer
 end
 
 """
-    addgeomdefn!(layer::AbstractFeatureLayer, field::AbstractGeomFieldDefn, approx = false)
+    addgeomdefn!(layer::AbstractFeatureLayer, field::AbstractGeomFieldDefn,
+        approx = false)
 
 Create a new geometry field on a layer.
 
@@ -807,10 +851,10 @@ fields with not-null constraints, this is generally before creating any feature
 to the layer.
 """
 function addgeomdefn!(
-        layer::AbstractFeatureLayer,
-        field::AbstractGeomFieldDefn,
-        approx::Bool = false
-    )
+    layer::L,
+    field::AbstractGeomFieldDefn,
+    approx::Bool = false,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_creategeomfield(layer.ptr, field.ptr, approx)
     # OGRERR_NONE on success.
     @ogrerr result "Failed to create new geometry field"
@@ -996,7 +1040,8 @@ Increment layer reference count.
 ### Returns
 The reference count after incrementing.
 """
-reference(layer::AbstractFeatureLayer) = GDAL.ogr_l_reference(layer.ptr)
+reference(layer::AbstractFeatureLayer)::Integer =
+    GDAL.ogr_l_reference(layer.ptr)
 
 """
     dereference(layer::AbstractFeatureLayer)
@@ -1006,14 +1051,16 @@ Decrement layer reference count.
 ### Returns
 The reference count after decrementing.
 """
-dereference(layer::AbstractFeatureLayer) = GDAL.ogr_l_dereference(layer.ptr)
+dereference(layer::AbstractFeatureLayer)::Integer =
+    GDAL.ogr_l_dereference(layer.ptr)
 
 """
     nreference(layer::AbstractFeatureLayer)
 
 The current reference count for the layer object itself.
 """
-nreference(layer::AbstractFeatureLayer) = GDAL.ogr_l_getrefcount(layer.ptr)
+nreference(layer::AbstractFeatureLayer)::Integer =
+    GDAL.ogr_l_getrefcount(layer.ptr)
 
 # """
 # Flush pending changes to disk.
@@ -1035,7 +1082,7 @@ nreference(layer::AbstractFeatureLayer) = GDAL.ogr_l_getrefcount(layer.ptr)
 # function synctodisk!(layer::AbstractFeatureLayer)
 #     result = GDAL.ogr_l_synctodisk(layer.ptr)
 #     @ogrerr result "Failed to flush pending changes to disk"
-#     layer.ptr = GDALFeatureLayer(C_NULL)
+#     layer.ptr = C_NULL
 # end
 
 # """
@@ -1051,14 +1098,15 @@ nreference(layer::AbstractFeatureLayer) = GDAL.ogr_l_getrefcount(layer.ptr)
 
 The name of the FID column in the database, or \"\" if not supported.
 """
-fidcolumnname(layer::AbstractFeatureLayer) = GDAL.ogr_l_getfidcolumn(layer.ptr)
+fidcolumnname(layer::AbstractFeatureLayer)::String =
+    GDAL.ogr_l_getfidcolumn(layer.ptr)
 
 """
     geomcolumnname(layer::AbstractFeatureLayer)
 
 The name of the geometry column in the database, or \"\" if not supported.
 """
-geomcolumnname(layer::AbstractFeatureLayer) =
+geomcolumnname(layer::AbstractFeatureLayer)::String =
     GDAL.ogr_l_getgeometrycolumn(layer.ptr)
 
 """
@@ -1081,14 +1129,16 @@ Besides field names of the layers, the following special fields can be passed:
 
 By default, no fields are ignored.
 """
-function setignoredfields!(layer::AbstractFeatureLayer, fieldnames)
+function setignoredfields!(
+    layer::L,
+    fieldnames,
+)::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_setignoredfields(layer.ptr, fieldnames)
     # OGRERR_NONE if all field names have been resolved (even if the driver
     # does not support this method)
     @ogrerr result "Failed to set ignored fields $fieldnames."
     return layer
 end
-
 
 # """
 # Intersection of two layers.

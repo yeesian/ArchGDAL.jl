@@ -41,14 +41,14 @@ end
 under the hood (see `src/context.jl`). Therefore, the objects themselves do not have a finalizer registered:
 ```julia
 mutable struct RasterBand <: AbstractRasterBand
-    ptr::GDALRasterBand
+    ptr::GDAL.GDALRasterBandH
 end
 
 unsafe_getband(dataset::AbstractDataset, i::Integer) =
     RasterBand(GDAL.getrasterband(dataset.ptr, i))
 
 function destroy(rb::AbstractRasterBand)
-    rb.ptr = GDALRasterBand(C_NULL)
+    rb.ptr = C_NULL
 end
 ```
 
@@ -65,11 +65,11 @@ rasterband = ArchGDAL.getband(dataset, i)
 returns an interactive rasterband that has `destroy()` registered with its finalizer.
 ```julia
 mutable struct IRasterBand <: AbstractRasterBand
-    ptr::GDALRasterBand
+    ptr::GDAL.GDALRasterBandH
     ownedby::AbstractDataset
 
     function IRasterBand(
-            ptr::GDALRasterBand = GDALRasterBand(C_NULL);
+            ptr::GDAL.GDALRasterBandH = C_NULL;
             ownedby::AbstractDataset = Dataset()
         )
         rasterband = new(ptr, ownedby)
@@ -82,7 +82,7 @@ getband(dataset::AbstractDataset, i::Integer) =
     IRasterBand(GDAL.getrasterband(dataset.ptr, i), ownedby = dataset)
 
 function destroy(rasterband::IRasterBand)
-    rasterband.ptr = GDALRasterBand(C_NULL)
+    rasterband.ptr = C_NULL
     rasterband.ownedby = Dataset()
     return rasterband
 end

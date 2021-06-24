@@ -1,5 +1,12 @@
 using Documenter, ArchGDAL
 
+DocMeta.setdocmeta!(
+    ArchGDAL,
+    :DocTestSetup,
+    :(using ArchGDAL, GDAL);
+    recursive = true,
+)
+
 # make sure you have run the tests before such that the test files are present
 makedocs(
     modules = [ArchGDAL],
@@ -17,15 +24,17 @@ makedocs(
         "GDAL Datasets" => "datasets.md",
         "Feature Data" => "features.md",
         "Raster Data" => "rasters.md",
+        "Working with Images" => "images.md",
         "Tables Interface" => "tables.md",
         "Geometric Operations" => "geometries.md",
         "Spatial Projections" => "projections.md",
+        # TODO: Uncomment the following line once we support Spatialite
+        # See https://github.com/JuliaGeo/GDAL.jl/issues/65#issuecomment-493890448.
         # "Working with Spatialite" => "spatialite.md",
         "Interactive versus Scoped Objects" => "memory.md",
         "Design Considerations" => "considerations.md",
         "API Reference" => "reference.md",
-        # "Naming Conventions" => "conventions.md", # table between GDAL, GDAL.jl, and ArchGDAL.jl
-    ]
+    ],
 )
 
 deploydocs(; repo = "github.com/yeesian/ArchGDAL.jl.git")
