@@ -1,6 +1,6 @@
 # ArchGDAL
 [![CI](https://github.com/yeesian/ArchGDAL.jl/workflows/CI/badge.svg)](https://github.com/yeesian/ArchGDAL.jl/actions?query=workflow%3ACI)
-[![Coverage Status](https://coveralls.io/repos/github/yeesian/ArchGDAL.jl/badge.svg?branch=master)](https://coveralls.io/github/yeesian/ArchGDAL.jl?branch=master)
+[![codecov](https://codecov.io/gh/yeesian/ArchGDAL.jl/branch/master/graph/badge.svg?token=n9JufDpWGH)](https://codecov.io/gh/yeesian/ArchGDAL.jl)
 [![version](https://juliahub.com/docs/ArchGDAL/version.svg)](https://juliahub.com/ui/Packages/ArchGDAL/MCIiB)
 [![Stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://yeesian.com/ArchGDAL.jl/stable)
 [![Dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://yeesian.com/ArchGDAL.jl/dev)
