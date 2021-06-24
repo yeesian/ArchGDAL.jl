@@ -19,6 +19,9 @@ import ImageCore
             @test AG.typeunion(AG.GDT_UInt16, AG.GDT_Byte) == AG.GDT_UInt16
             @test AG.iscomplex(AG.GDT_Float32) == false
 
+            @test AG.iscomplex(AG.GDT_CFloat32) == true
+            @test AG.iscomplex(AG.GDT_CFloat64) == true
+
             @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
             @test_throws ErrorException Base.convert(AG.GDALDataType, Int64)
             @test_throws ErrorException Base.convert(DataType, AG.GDT_TypeCount)

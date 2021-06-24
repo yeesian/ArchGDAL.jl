@@ -275,3 +275,14 @@ const AG = ArchGDAL;
         end
     end
 end
+
+@testset "Complex IO" begin 
+    a = rand(ComplexF32, 10,10)
+    outpath = "/vsimem/" * "testcomplex1.tif"
+    AG.create(outpath, driver=AG.getdriver("GTiff"), width=10, height=10, nbands=1,dtype=ComplexF32)  do ds
+        AG.write!(ds, a, 1)
+    end
+    AG.read(outpath) do ds_copy
+    @test AG.getband(ds_copy,1) == a
+    end
+end
