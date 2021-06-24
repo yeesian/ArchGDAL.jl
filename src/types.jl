@@ -264,6 +264,8 @@ eval(
         GDT_Int32::Int32,
         GDT_Float32::Float32,
         GDT_Float64::Float64,
+        GDT_CFloat32::ComplexF32,
+        GDT_CFloat64::ComplexF64
     )
 )
 
