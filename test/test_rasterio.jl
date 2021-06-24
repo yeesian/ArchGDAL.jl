@@ -288,4 +288,3 @@ end
         @test AG.getband(ds_copy,1) == a
     end
 end
-
