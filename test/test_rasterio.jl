@@ -287,5 +287,5 @@ end
     AG.read(outpath) do ds_copy
         @test AG.getband(ds_copy,1) == a
     end
-    
 end
+
