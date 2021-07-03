@@ -111,6 +111,16 @@ end
 
 mutable struct FeatureLayer <: AbstractFeatureLayer
     ptr::GDAL.OGRLayerH
+    ownedby::AbstractDataset
+    spatialref::AbstractSpatialRef
+end
+
+function FeatureLayer(
+    ptr::GDAL.OGRLayerH = C_NULL;
+    ownedby::AbstractDataset = Dataset(),
+    spatialref::AbstractSpatialRef = SpatialRef(),
+)
+    return FeatureLayer(ptr, ownedby, spatialref)
 end
 
 mutable struct IFeatureLayer <: AbstractFeatureLayer
