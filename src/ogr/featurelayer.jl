@@ -61,6 +61,8 @@ function unsafe_createlayer(;
             geom,
             options,
         ),
+        ownedby = dataset,
+        spatialref = spatialref,
     )
 end
 
