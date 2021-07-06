@@ -303,8 +303,11 @@ eval(
     @convert(
         OGRFieldType::DataType,
         OFTInteger::Int32,
+        OFTInteger::Int16,
+        OFTInteger::Bool,
         OFTIntegerList::Vector{Int32},
         OFTReal::Float64,
+        OFTReal::Float32,
         OFTRealList::Vector{Float64},
         OFTString::String,
         OFTStringList::Vector{String},
