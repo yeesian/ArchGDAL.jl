@@ -51,4 +51,17 @@ const GFT = GeoFormatTypes;
         @test typeof(geom2) == AG.IGeometry{AG.wkbUnknown}
         @test AG.toWKT(geom1) == AG.toWKT(geom2)
     end
+
+    @testset "type conversions" begin
+        @test convert(AG.OGRFieldType, Int32) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, Int16) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, Bool) == AG.OFTInteger
+
+        @test convert(AG.OGRFieldType, Float32) == AG.OFTReal
+        @test convert(AG.OGRFieldType, Float64) == AG.OFTReal
+
+        # Reverse conversion should result in default type, not subtype
+        @test convert(DataType, AG.OFTInteger) == Int32
+        @test convert(DataType, AG.OFTReal) == Float64
+    end
 end
