@@ -445,8 +445,23 @@ function setfield!(feature::Feature, i::Integer, value::Int32)::Feature
     return feature
 end
 
+function setfield!(feature::Feature, i::Integer, value::Int16)::Feature
+    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
+    return feature
+end
+
+function setfield!(feature::Feature, i::Integer, value::Bool)::Feature
+    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
+    return feature
+end
+
 function setfield!(feature::Feature, i::Integer, value::Int64)::Feature
     GDAL.ogr_f_setfieldinteger64(feature.ptr, i, value)
+    return feature
+end
+
+function setfield!(feature::Feature, i::Integer, value::Float32)::Feature
+    GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
     return feature
 end
 
