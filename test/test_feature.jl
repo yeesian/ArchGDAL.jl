@@ -108,7 +108,7 @@ const AG = ArchGDAL;
             AG.createfielddefn("int64field", AG.OFTInteger64) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
-            AG.createfielddefn("doublefield", AG.OFTReal) do fielddefn
+            AG.createfielddefn("float64field", AG.OFTReal) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("intlistfield", AG.OFTIntegerList) do fielddefn
@@ -120,7 +120,7 @@ const AG = ArchGDAL;
             ) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
-            AG.createfielddefn("doublelistfield", AG.OFTRealList) do fielddefn
+            AG.createfielddefn("float64listfield", AG.OFTRealList) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfielddefn("stringlistfield", AG.OFTStringList) do fielddefn
@@ -132,15 +132,31 @@ const AG = ArchGDAL;
             AG.createfielddefn("datetimefield", AG.OFTDateTime) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
+            AG.createfielddefn("booleanfield", AG.OFTInteger) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("int16field", AG.OFTInteger) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("int32field", AG.OFTInteger) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("float32field", AG.OFTReal) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
             AG.createfeature(layer) do feature
-                AG.setfield!(feature, 0, 1)
-                AG.setfield!(feature, 1, 1.0)
+                AG.setfield!(feature, 0, Int64(1))
+                AG.setfield!(feature, 1, Float64(1.0))
                 AG.setfield!(feature, 2, Int32[1, 2])
                 AG.setfield!(feature, 3, Int64[1, 2])
                 AG.setfield!(feature, 4, Float64[1.0, 2.0])
                 AG.setfield!(feature, 5, ["1", "2.0"])
                 AG.setfield!(feature, 6, UInt8[1, 2, 3, 4])
                 AG.setfield!(feature, 7, Dates.DateTime(2016, 9, 25, 21, 17, 0))
+                AG.setfield!(feature, 8, true)
+                AG.setfield!(feature, 9, Int16(1))
+                AG.setfield!(feature, 10, Int32(1))
+                AG.setfield!(feature, 11, Float32(1.0))
                 @test sprint(print, AG.getgeom(feature)) == "NULL Geometry"
                 AG.getgeom(feature) do geom
                     @test sprint(print, geom) == "NULL Geometry"
@@ -161,6 +177,10 @@ const AG = ArchGDAL;
                     @test AG.getfield(newfeature, 6) == UInt8[1, 2, 3, 4]
                     @test AG.getfield(newfeature, 7) ==
                           Dates.DateTime(2016, 9, 25, 21, 17, 0)
+                    @test AG.getfield(newfeature, 8) == true
+                    @test AG.getfield(newfeature, 9) == Int16(1)
+                    @test AG.getfield(newfeature, 10) == Int32(1)
+                    @test AG.getfield(newfeature, 11) == Float32(1.0)
 
                     AG.createfeature(layer) do lastfeature
                         AG.setfrom!(lastfeature, feature)
