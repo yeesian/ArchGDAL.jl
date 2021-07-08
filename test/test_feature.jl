@@ -178,9 +178,9 @@ const AG = ArchGDAL;
                     @test AG.getfield(newfeature, 7) ==
                           Dates.DateTime(2016, 9, 25, 21, 17, 0)
                     @test AG.getfield(newfeature, 8) == true
-                    @test AG.getfield(newfeature, 9) == Int16(1)
-                    @test AG.getfield(newfeature, 10) == Int32(1)
-                    @test AG.getfield(newfeature, 11) == Float32(1.0)
+                    @test AG.getfield(newfeature, 9) == 1
+                    @test AG.getfield(newfeature, 10) == 1
+                    @test AG.getfield(newfeature, 11) == 1.0
 
                     AG.createfeature(layer) do lastfeature
                         AG.setfrom!(lastfeature, feature)
@@ -201,7 +201,7 @@ const AG = ArchGDAL;
                         @test AG.getfield(newfeature, 0) == 1
                         @test AG.getfield(newfeature, 1) ≈ 1.0
                         @test AG.getfield(newfeature, 5) == String["1", "2.0"]
-                        AG.setfrom!(newfeature, lastfeature, collect(Cint, 0:7))
+                        AG.setfrom!(newfeature, lastfeature, collect(Cint, 0:AG.nfield(newfeature)))
                         @test AG.getfield(newfeature, 0) == 45
                         @test AG.getfield(newfeature, 1) ≈ 18.2
                         @test AG.getfield(newfeature, 5) == String["foo", "bar"]
