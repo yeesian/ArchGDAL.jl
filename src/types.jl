@@ -302,9 +302,12 @@ eval(
 eval(
     @convert(
         OGRFieldType::DataType,
-        OFTInteger::Int32,
+        OFTInteger::Bool,
+        OFTInteger::Int16,
+        OFTInteger::Int32,  # default type comes last
         OFTIntegerList::Vector{Int32},
-        OFTReal::Float64,
+        OFTReal::Float32,
+        OFTReal::Float64,  # default type comes last
         OFTRealList::Vector{Float64},
         OFTString::String,
         OFTStringList::Vector{String},
