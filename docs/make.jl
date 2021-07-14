@@ -37,7 +37,4 @@ makedocs(
     ],
 )
 
-deploydocs(
-    repo = "github.com/yeesian/ArchGDAL.jl.git",
-    push_preview = true,
-)
+deploydocs(repo = "github.com/yeesian/ArchGDAL.jl.git", push_preview = true)
