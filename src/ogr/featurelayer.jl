@@ -765,9 +765,9 @@ function listcapability(
         GDAL.OLCMeasuredGeometries,
     ),
 )::Dict{String,Bool}
-    return Dict{String,Bool}(
-        [c => testcapability(layer, c) for c in capabilities],
-    )
+    return Dict{String,Bool}([
+        c => testcapability(layer, c) for c in capabilities
+    ],)
 end
 
 # TODO use syntax below once v0.4 support is dropped (not in Compat.jl)

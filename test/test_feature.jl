@@ -201,7 +201,11 @@ const AG = ArchGDAL;
                         @test AG.getfield(newfeature, 0) == 1
                         @test AG.getfield(newfeature, 1) ≈ 1.0
                         @test AG.getfield(newfeature, 5) == String["1", "2.0"]
-                        AG.setfrom!(newfeature, lastfeature, collect(Cint, 0:AG.nfield(newfeature)))
+                        AG.setfrom!(
+                            newfeature,
+                            lastfeature,
+                            collect(Cint, 0:AG.nfield(newfeature)),
+                        )
                         @test AG.getfield(newfeature, 0) == 45
                         @test AG.getfield(newfeature, 1) ≈ 18.2
                         @test AG.getfield(newfeature, 5) == String["foo", "bar"]
