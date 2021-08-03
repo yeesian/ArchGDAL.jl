@@ -28,16 +28,7 @@ using Tables
         layer2 = AG.getlayer(dataset2, 0)
 
         @testset "Tables methods" begin
-            @test Tables.schema(layer1) == Tables.Schema(
-                (:point, :linestring, :id, :zoom, :location),
-                (
-                    AG.IGeometry{AG.wkbUnknown},
-                    AG.IGeometry{AG.wkbUnknown},
-                    String,
-                    String,
-                    String,
-                ),
-            )
+            @test isnothing(Tables.schema(layer1))
             @test Tables.istable(typeof(layer)) == true
             @test Tables.rowaccess(typeof(layer)) == true
 
