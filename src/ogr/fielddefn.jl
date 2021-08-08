@@ -221,7 +221,7 @@ end
 
 Get default field value
 """
-function getdefault(fielddefn::AbstractFieldDefn)::Union{Sring, Missing}
+function getdefault(fielddefn::AbstractFieldDefn)::Union{String, Missing}
     result =
         @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
     return if result == C_NULL
