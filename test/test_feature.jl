@@ -91,7 +91,7 @@ const AG = ArchGDAL;
                   true
 
             @test AG.getfield(f, 1) == "point-a"
-            @test AG.getdefault(f, 1) == ""
+            @test ismissing(AG.getdefault(f, 1))
             AG.setdefault!(AG.getfielddefn(f, 1), "default value")
             @test AG.getdefault(f, 1) == "default value"
             @test AG.getfield(f, 1) == "point-a"
