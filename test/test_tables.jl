@@ -394,6 +394,7 @@ using Tables
             - names: layer geom and field names
             - types: expected types given by `Tables.buildcolumns`
             - values: expected Tables.columntable result values with geometries converted to WKT
+            This option is a convenience to build new test results
 
             If `testing = true`: test Tables.columntable(::AG.IFeatureLayer) result against `reference_geotable`
 
