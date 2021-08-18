@@ -83,7 +83,8 @@ using Tables
 
         @testset "Conversion to table for drivers: GeoJSON, ESRI Shapefile" begin
             """
-                get_test_dataset(
+                map_on_test_dataset(
+                    f::Function,
                     drvshortname::AbstractString="ESRI shapefile", 
                     geomfamily::String="line"; 
                     withmissinggeom::Bool=true,
@@ -107,15 +108,17 @@ using Tables
             - `withmixedgeomtypes::Bool=true`: a multi geometry value per geom field
 
             # Returns
-            The corresponding dataset
+            The result of `f` applied on the corresponding dataset
+
             """
-            function get_test_dataset(
+            function map_on_test_dataset(
+                f::Function,
                 drvshortname::AbstractString = "ESRI shapefile",
                 geomfamily::String = "line";
                 withmissinggeom::Bool = true,
                 withmissingfield::Bool = true,
                 withmixedgeomtypes::Bool = true,
-            )::AG.IDataset
+            )
 
                 # Build dataset filename
                 ds_file_extension = Dict(
@@ -313,7 +316,7 @@ using Tables
                     end
                 end
 
-                if drvshortname == "GML"
+                ds = if drvshortname == "GML"
                     return AG.read(
                         filename,
                         options = [
@@ -322,7 +325,15 @@ using Tables
                         ],
                     )
                 else
-                    return AG.read(filename)
+                    AG.read(filename)
+                end
+
+                return try
+                    # we are running the code inside the do-block when we call `f`
+                    f(ds)
+                finally
+                    # we close the dataset when we reach the end of the do block
+                    AG.destroy(ds)
                 end
             end
 
@@ -379,24 +390,58 @@ using Tables
             )
 
             """
+                layer_to_columntable_with_WKT(
+                    drvshortname::String, 
+                    geomfamilly::String,
+                    withmissinggeom::Bool,
+                    withmissingfield::Bool,
+                    withmixedgeomtypes::Bool,
+                )::NamedTuple
+
+            Convenience function to build new test results for `test_layer_to_table`  
+            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable  
+            Returns a `NamedTuple` with:
+            - names: layer geom and field names
+            - types: expected types given by `Tables.buildcolumns`
+            - values: expected Tables.columntable result values with geometries converted to WKT
+             
+            """
+            function layer_to_columntable_with_WKT(
+                drvshortname::String,
+                geomfamilly::String,
+                withmissinggeom::Bool,
+                withmissingfield::Bool,
+                withmixedgeomtypes::Bool,
+            )::NamedTuple
+                map_on_test_dataset(
+                    drvshortname,
+                    geomfamilly;
+                    withmissinggeom = withmissinggeom,
+                    withmissingfield = withmissingfield,
+                    withmixedgeomtypes = withmixedgeomtypes,
+                ) do ds
+                    layer = AG.getlayer(ds, 0)
+                    return (
+                        names = keys(Tables.columntable(layer)),
+                        types = eltype.(values(Tables.columntable(layer)),),
+                        values = columntablevalues_toWKT(
+                            values(Tables.columntable(layer)),
+                        ),
+                    )
+                end
+            end
+
+            """
                 test_layer_to_table(
                     drvshortname::String, 
                     geomfamilly::String,
                     withmissinggeom::Bool,
                     withmissingfield::Bool,
                     withmixedgeomtypes::Bool,
-                    reference_geotable::Tuple;
-                    testing::Bool=true)
+                    reference_geotable::Tuple)
 
-            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable
-
-            If `testing = false`: returns a `NamedTuple` with:
-            - names: layer geom and field names
-            - types: expected types given by `Tables.buildcolumns`
-            - values: expected Tables.columntable result values with geometries converted to WKT
-            This option is a convenience to build new test results
-
-            If `testing = true`: test Tables.columntable(::AG.IFeatureLayer) result against `reference_geotable`
+            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable  
+            And test Tables.columntable(::AG.IFeatureLayer) result against `reference_geotable`
 
             """
             function test_layer_to_table(
@@ -405,27 +450,17 @@ using Tables
                 withmissinggeom::Bool,
                 withmissingfield::Bool,
                 withmixedgeomtypes::Bool,
-                reference_geotable::NamedTuple;
-                testing::Bool = true,
-            )
-                ds = get_test_dataset(
+                reference_geotable::NamedTuple,
+            )::Bool
+                map_on_test_dataset(
                     drvshortname,
                     geomfamilly;
                     withmissinggeom = withmissinggeom,
                     withmissingfield = withmissingfield,
                     withmixedgeomtypes = withmixedgeomtypes,
-                )
-                layer = AG.getlayer(ds, 0)
-                if !testing
-                    return (
-                        names = keys(Tables.columntable(layer)),
-                        types = eltype.(values(Tables.columntable(layer))),
-                        values = columntablevalues_toWKT(
-                            values(Tables.columntable(layer)),
-                        ),
-                    )
-                else
-                    all([
+                ) do ds
+                    layer = AG.getlayer(ds, 0)
+                    return all([
                         keys(Tables.columntable(layer)) ==
                         reference_geotable.names,
                         eltype.(values(Tables.columntable(layer))) ==
