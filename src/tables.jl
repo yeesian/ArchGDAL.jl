@@ -1,6 +1,4 @@
-function Tables.schema(
-    layer::AbstractFeatureLayer,
-)::Union{Tables.Schema,Nothing}
+function Tables.schema(layer::AbstractFeatureLayer)::Nothing
     return nothing
 end
 
