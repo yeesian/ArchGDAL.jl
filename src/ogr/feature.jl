@@ -381,7 +381,7 @@ end
 #           pfSecond,pnTZFlag)
 # end
 
-function getdefault(feature::Feature, i::Integer)::Union{String, Missing}
+function getdefault(feature::Feature, i::Integer)::Union{String,Missing}
     return getdefault(getfielddefn(feature, i))
 end
 

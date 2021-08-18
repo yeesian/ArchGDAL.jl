@@ -325,7 +325,7 @@ getgeomtype(geom::AbstractGeometry)::OGRwkbGeometryType = _geomtype(geom)
 
 Fetch WKT name for geometry type.
 """
-function geomname(geom::AbstractGeometry)::Union{String, Missing}
+function geomname(geom::AbstractGeometry)::Union{String,Missing}
     if geom.ptr == C_NULL
         return missing
     else

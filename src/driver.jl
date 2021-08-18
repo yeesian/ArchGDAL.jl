@@ -67,9 +67,9 @@ ndriver()::Integer = GDAL.gdalgetdrivercount()
 
 Returns a listing of all registered drivers.
 """
-listdrivers()::Dict{String,String} = Dict{String,String}(
-    [shortname(getdriver(i)) => longname(getdriver(i)) for i in 0:(ndriver()-1)],
-)
+listdrivers()::Dict{String,String} = Dict{String,String}([
+    shortname(getdriver(i)) => longname(getdriver(i)) for i in 0:(ndriver()-1)
+],)
 
 """
     identifydriver(filename::AbstractString)
