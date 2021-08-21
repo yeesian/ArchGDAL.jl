@@ -171,7 +171,9 @@ const AG = ArchGDAL;
             nbands = 0,
             dtype = UInt8,
         ) do dataset
-            @test_throws Union{ArgumentError,MethodError} AG.RasterDataset(dataset)
+            @test_throws Union{ArgumentError,MethodError} AG.RasterDataset(
+                dataset,
+            )
             @test_throws DimensionMismatch AG._common_size(dataset)
         end
     end
