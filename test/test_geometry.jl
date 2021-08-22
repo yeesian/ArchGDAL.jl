@@ -799,6 +799,7 @@ const GFT = GeoFormatTypes
 
     @testset "Cloning NULL geometries" begin
         geom = AG.IGeometry()
+        @test AG.geomname(geom) === missing
         @test sprint(print, AG.clone(geom)) == "NULL Geometry"
         AG.clone(geom) do g
             @test sprint(print, g) == "NULL Geometry"
