@@ -407,9 +407,19 @@ using Tables
                 end
             end
 
-            toWKT_withmissings = (x -> ismissing(x) ? missing : AG.toWKT(x))
-            columntablevalues_toWKT =
-                (x -> (toWKT_withmissings.(x[1]), x[2], x[3]))
+            # Helper functions
+            function toWKT_withmissings(x)
+                if ismissing(x)
+                    return missing
+                elseif typeof(x) <: AG.AbstractGeometry
+                    return AG.toWKT(x)
+                else
+                    return x
+                end
+            end
+            function columntablevalues_toWKT(x)
+                return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
+            end
             tupleoftuples_equal = (
                 (x, y) ->
                     length(x) == length(y) &&
@@ -502,8 +512,34 @@ using Tables
                 end
             end
 
+            """
+                test_layer_to_table(
+                    layer::AG.AbstractFeatureLayer,
+                    reference_geotable::NamedTuple,
+                )::Bool
+
+            test Tables.columntable(::AG.AbstractFeatureLayer) result against `reference_geotable`
+
+            """
+            function test_layer_to_table(
+                layer::AG.AbstractFeatureLayer,
+                reference_geotable::NamedTuple,
+            )::Bool
+                return all([
+                    keys(Tables.columntable(layer)) == reference_geotable.names,
+                    eltype.(values(Tables.columntable(layer))) ==
+                    reference_geotable.types,
+                    tupleoftuples_equal(
+                        columntablevalues_toWKT(
+                            values(Tables.columntable(layer)),
+                        ),
+                        reference_geotable.values,
+                    ),
+                ])
+            end
+
             @testset "Conversion to table for ESRI Shapefile driver" begin
-                ESRI_Shapefile_polygon_reference_geotable = (
+                ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (Union{Missing,ArchGDAL.IGeometry}, Int64, String),
                     values = (
@@ -523,10 +559,10 @@ using Tables
                     true,
                     true,
                     true,
-                    ESRI_Shapefile_polygon_reference_geotable,
+                    ESRI_Shapefile_test_reference_geotable,
                 )
 
-                ESRI_Shapefile_polygon_reference_geotable = (
+                ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
                         Union{
@@ -553,12 +589,12 @@ using Tables
                     true,
                     true,
                     false,
-                    ESRI_Shapefile_polygon_reference_geotable,
+                    ESRI_Shapefile_test_reference_geotable,
                 )
             end
 
             @testset "Conversion to table for GeoJSON driver" begin
-                GeoJSON_polygon_reference_geotable = (
+                GeoJSON_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
                         Union{Missing,ArchGDAL.IGeometry},
@@ -582,10 +618,10 @@ using Tables
                     true,
                     true,
                     true,
-                    GeoJSON_polygon_reference_geotable,
+                    GeoJSON_test_reference_geotable,
                 )
 
-                GeoJSON_polygon_reference_geotable = (
+                GeoJSON_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
                         Union{
@@ -612,8 +648,161 @@ using Tables
                     true,
                     true,
                     false,
-                    GeoJSON_polygon_reference_geotable,
+                    GeoJSON_test_reference_geotable,
                 )
+            end
+
+            @testset "Conversion to table for GML driver" begin
+                GML_test_reference_geotable = (
+                    names = (:geometryProperty, :fid, :id, :name),
+                    types = (
+                        Union{Missing,ArchGDAL.IGeometry},
+                        String,
+                        Union{Missing,Int64},
+                        String,
+                    ),
+                    values = (
+                        Union{Missing,String}[
+                            "LINESTRING (1 2,2 3,3 4)",
+                            "MULTILINESTRING ((1 2,2 3,3 4,4 5),(6 7,7 8,8 9,9 10))",
+                            missing,
+                            "LINESTRING (5 6,6 7,7 8)",
+                        ],
+                        [
+                            "test_layer.0",
+                            "test_layer.1",
+                            "test_layer.2",
+                            "test_layer.3",
+                        ],
+                        Union{Missing,Int64}[1, 2, 3, missing],
+                        ["line1", "multiline1", "emptygeom", "emptyid"],
+                    ),
+                )
+                @test test_layer_to_table(
+                    "GML",
+                    "line",
+                    true,
+                    true,
+                    true,
+                    GML_test_reference_geotable,
+                )
+            end
+
+            @testset "Conversion to table for GPKG driver" begin
+                GPKG_test_reference_geotable = (
+                    names = (:geom, :id, :name),
+                    types = (Union{Missing,ArchGDAL.IGeometry}, Int64, String),
+                    values = (
+                        Union{Missing,String}[
+                            "LINESTRING (1 2,2 3,3 4)",
+                            "MULTILINESTRING ((1 2,2 3,3 4,4 5),(6 7,7 8,8 9,9 10))",
+                            missing,
+                            "LINESTRING (5 6,6 7,7 8)",
+                        ],
+                        [1, 2, 3, 0],
+                        ["line1", "multiline1", "emptygeom", "emptyid"],
+                    ),
+                )
+                @test test_layer_to_table(
+                    "GPKG",
+                    "line",
+                    true,
+                    true,
+                    true,
+                    GPKG_test_reference_geotable,
+                )
+            end
+
+            @testset "Conversion to table for KML driver" begin
+                KML_test_reference_geotable = (
+                    names = (Symbol(""), :Name, :Description),
+                    types = (ArchGDAL.IGeometry, String, String),
+                    values = (
+                        [
+                            "LINESTRING (1 2,2 3,3 4)",
+                            "MULTILINESTRING ((1 2,2 3,3 4,4 5),(6 7,7 8,8 9,9 10))",
+                            "LINESTRING (5 6,6 7,7 8)",
+                        ],
+                        ["line1", "multiline1", "emptyid"],
+                        ["", "", ""],
+                    ),
+                )
+                @test test_layer_to_table(
+                    "KML",
+                    "line",
+                    true,
+                    true,
+                    true,
+                    KML_test_reference_geotable,
+                )
+            end
+
+            @testset "Conversion to table for FlatGeobuf driver" begin
+                FlatGeobuf_test_reference_geotable = (
+                    names = (Symbol(""), :id, :name),
+                    types = (ArchGDAL.IGeometry, Union{Missing,Int64}, String),
+                    values = (
+                        [
+                            "LINESTRING (5 6,6 7,7 8)",
+                            "MULTILINESTRING ((1 2,2 3,3 4,4 5),(6 7,7 8,8 9,9 10))",
+                            "LINESTRING (1 2,2 3,3 4)",
+                        ],
+                        Union{Missing,Int64}[missing, 2, 1],
+                        ["emptyid", "multiline1", "line1"],
+                    ),
+                )
+                @test test_layer_to_table(
+                    "FlatGeobuf",
+                    "line",
+                    true,
+                    true,
+                    true,
+                    FlatGeobuf_test_reference_geotable,
+                )
+            end
+
+            @testset "Conversion to table for CSV driver" begin
+                @test begin
+                    AG.read(
+                        joinpath(@__DIR__, "data/multi_geom.csv"),
+                        options = [
+                            "GEOM_POSSIBLE_NAMES=point,linestring",
+                            "KEEP_GEOM_COLUMNS=NO",
+                        ],
+                    ) do multigeom_test_ds
+                        multigeom_test_layer = AG.getlayer(multigeom_test_ds, 0)
+                        CSV_multigeom_test_reference_geotable = (
+                            names = (
+                                :point,
+                                :linestring,
+                                :id,
+                                :zoom,
+                                :location,
+                            ),
+                            types = (
+                                ArchGDAL.IGeometry{ArchGDAL.wkbPoint},
+                                ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
+                                String,
+                                String,
+                                String,
+                            ),
+                            values = (
+                                ["POINT (30 10)", "POINT (35 15)"],
+                                [
+                                    "LINESTRING (30 10,10 30,40 40)",
+                                    "LINESTRING (35 15,15 35,45 45)",
+                                ],
+                                ["5.1", "5.2"],
+                                ["1.0", "2.0"],
+                                ["Mumbai", "New Delhi"],
+                            ),
+                        )
+                        return test_layer_to_table(
+                            multigeom_test_layer,
+                            CSV_multigeom_test_reference_geotable,
+                        )
+                    end
+                end
             end
 
             clean_test_dataset_files()
