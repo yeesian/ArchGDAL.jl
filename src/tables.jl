@@ -1,15 +1,5 @@
-function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
-    geom_names, field_names, featuredefn, fielddefns =
-        schema_names(layerdefn(layer))
-    ngeom = ArchGDAL.ngeom(featuredefn)
-    geom_types =
-        (IGeometry{gettype(getgeomdefn(featuredefn, i))} for i in 0:ngeom-1)
-    field_types =
-        (convert(DataType, gettype(fielddefn)) for fielddefn in fielddefns)
-    return Tables.Schema(
-        (geom_names..., field_names...),
-        (geom_types..., field_types...),
-    )
+function Tables.schema(layer::AbstractFeatureLayer)::Nothing
+    return nothing
 end
 
 Tables.istable(::Type{<:AbstractFeatureLayer})::Bool = true

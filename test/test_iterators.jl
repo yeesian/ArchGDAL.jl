@@ -13,4 +13,16 @@ const AG = ArchGDAL;
         @test size(window) == (79, 89)
         @test length(window) == 7031
     end
+
+    @testset "Iterator interface AbstractFeatureLayer Iterator" begin
+        ds = AG.read(
+            joinpath(@__DIR__, "data/multi_geom.csv"),
+            options = [
+                "GEOM_POSSIBLE_NAMES=point,linestring",
+                "KEEP_GEOM_COLUMNS=NO",
+            ],
+        )
+        layer = AG.getlayer(ds, 0)
+        @test length(layer) == 2
+    end
 end

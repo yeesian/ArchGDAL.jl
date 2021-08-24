@@ -15,6 +15,8 @@ end
 
 Base.eltype(layer::AbstractFeatureLayer)::DataType = Feature
 
+Base.IteratorSize(::Type{<:AbstractFeatureLayer}) = Base.SizeUnknown()
+
 Base.length(layer::AbstractFeatureLayer)::Integer = nfeature(layer, true)
 
 struct BlockIterator{T<:Integer}

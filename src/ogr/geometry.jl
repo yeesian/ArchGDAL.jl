@@ -325,7 +325,13 @@ getgeomtype(geom::AbstractGeometry)::OGRwkbGeometryType = _geomtype(geom)
 
 Fetch WKT name for geometry type.
 """
-geomname(geom::AbstractGeometry)::String = GDAL.ogr_g_getgeometryname(geom.ptr)
+function geomname(geom::AbstractGeometry)::Union{String,Missing}
+    return if geom.ptr == C_NULL
+        missing
+    else
+        GDAL.ogr_g_getgeometryname(geom.ptr)
+    end
+end
 
 """
     flattento2d!(geom::AbstractGeometry)
