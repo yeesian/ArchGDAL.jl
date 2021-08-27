@@ -20,7 +20,7 @@ does the equivalent of
         )[ft]
 
 """
-macro convert(args...)
+macro convert_old(args...)
     @assert length(args) > 0
     @assert args[1].head == :(::)
     type1 = esc(args[1].args[1])
@@ -43,6 +43,82 @@ macro convert(args...)
             end
         end
     end
+end
+
+macro convert(args...)
+    @assert length(args) > 0
+    @assert args[1].head == :(::)
+    type1_symbol = args[1].args[1]
+    type2_symbol = args[1].args[2]
+    type1_string = replace(string(type1_symbol), "." => "_")
+    type2_string = replace(string(type2_symbol), "." => "_")
+    type1_isenum_and_type2_equaldatatype = (eval(type1_symbol) <: Enum) && (eval(type2_symbol) == DataType)
+    type2_isenum_and_type1_equaldatatype = (eval(type2_symbol) <: Enum) && (eval(type1_symbol) == DataType)
+    type1 = esc(type1_symbol)
+    type2 = esc(type2_symbol)
+    if type2_isenum_and_type1_equaldatatype
+        fwd_to_enum_map = [Tuple(esc.(a.args)) for a in args[2:end]]
+    else
+        fwd_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
+    end
+    if type1_isenum_and_type2_equaldatatype
+        rev_to_enum_map = [Tuple(esc.(reverse(a.args))) for a in args[2:end]]
+    else
+        rev_map = Expr[Expr(:tuple, esc.(reverse(a.args))...) for a in args[2:end]]
+    end
+
+    result_expr = Expr(:block)
+    # Forward conversion
+    if type2_isenum_and_type1_equaldatatype
+        for stypes in fwd_to_enum_map
+            push!(
+                result_expr.args,
+                :(function Base.convert(::Type{$type2}, ft::Type{$(stypes[1])})
+                    return $(stypes[2])
+                end),
+            )
+        end
+    else
+        type1_to_type2_map_name = esc(Symbol(type1_string * "_to_" * type2_string * "_map"))
+        push!(
+            result_expr.args,
+            :(
+                const $type1_to_type2_map_name =
+                    Dict{$type1,$type2}(Tuple{$type1,$type2}[$(fwd_map...)])
+            ),
+        )
+        push!(result_expr.args, :(function Base.convert(::Type{$type2}, ft::$type1)
+            return get($type1_to_type2_map_name, ft) do
+                return error("Unknown type: $ft")
+            end
+        end))
+    end
+    # Reverse conversion
+    if type1_isenum_and_type2_equaldatatype
+        for stypes in rev_to_enum_map
+            push!(
+                result_expr.args,
+                :(function Base.convert(::Type{$type1}, ft::Type{$(stypes[1])})
+                    return $(stypes[2])
+                end),
+            )
+        end
+    else
+        type2_to_type1_map_name = esc(Symbol(type2_string * "_to_" * type1_string * "_map"))
+        push!(
+            result_expr.args,
+            :(
+                const $type2_to_type1_map_name =
+                    Dict{$type2,$type1}(Tuple{$type2,$type1}[$(rev_map...)])
+            ),
+        )
+        push!(result_expr.args, :(function Base.convert(::Type{$type1}, ft::$type2)
+            return get($type2_to_type1_map_name, ft) do
+                return error("Unknown type: $ft")
+            end
+        end))
+    end
+    return result_expr
 end
 
 macro gdal(args...)

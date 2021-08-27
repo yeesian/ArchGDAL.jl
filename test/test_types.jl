@@ -23,7 +23,7 @@ import ImageCore
             @test AG.iscomplex(AG.GDT_CFloat64) == true
 
             @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
-            @test_throws ErrorException Base.convert(AG.GDALDataType, Int64)
+            @test_throws MethodError Base.convert(AG.GDALDataType, Int64)
             @test_throws ErrorException Base.convert(DataType, AG.GDT_TypeCount)
             @test_throws MethodError Base.convert(
                 ImageCore.Normed,
