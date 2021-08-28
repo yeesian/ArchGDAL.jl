@@ -29,6 +29,7 @@ import ImageCore
                 ImageCore.Normed,
                 AG.GDT_Float32,
             )
+            @test_throws ErrorException Base.convert(DataType, AG.OFSTMaxSubType)
         end
 
         @testset "GDAL Colors and Palettes" begin
