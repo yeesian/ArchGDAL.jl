@@ -1,46 +1,48 @@
 """
+    @convert(args...)
+
 # General case:
-
-    eval(@convert(GDALRWFlag::GDAL.GDALRWFlag,
-        GF_Read::GDAL.GF_Read,
-        GF_Write::GDAL.GF_Write,
-    ))
-
+```
+eval(@convert(GDALRWFlag::GDAL.GDALRWFlag,
+    GF_Read::GDAL.GF_Read,
+    GF_Write::GDAL.GF_Write,
+))
+```
 does the equivalent of 
+```
+const GDALRWFlag_to_GDALRWFlag_map = Dict(
+    GF_Read => GDAL.GF_Read,
+    GF_Write => GDAL.GF_Write
+)
+Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
+    GDALRWFlag_to_GDALRWFlag_map[ft]
 
-    const GDALRWFlag_to_GDALRWFlag_map = Dict(
-        GF_Read => GDAL.GF_Read,
-        GF_Write => GDAL.GF_Write
-    )
-    Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
-        GDALRWFlag_to_GDALRWFlag_map[ft]
-
-    const GDALRWFlag_to_GDALRWFlag_map = Dict(
-        GDAL.GF_Read => GF_Read, 
-        GDAL.GF_Write => GF_Write
-    )
-    Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
-        GDALRWFlag_to_GDALRWFlag_map[ft]
-
+const GDALRWFlag_to_GDALRWFlag_map = Dict(
+    GDAL.GF_Read => GF_Read, 
+    GDAL.GF_Write => GF_Write
+)
+Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
+    GDALRWFlag_to_GDALRWFlag_map[ft]
+```
 # Case where 1st type `<: Enum` and 2nd type `== DataType`:
-
-    eval(@convert(OGRFieldType::DataType,
-        OFTInteger::Bool,
-        OFTInteger::Int16,
-    ))
-
+```
+eval(@convert(OGRFieldType::DataType,
+    OFTInteger::Bool,
+    OFTInteger::Int16,
+))
+```
 does the equivalent of
+```
+const OGRFieldType_to_DataType_map = Dict(
+    OFTInteger => Bool, 
+    OFTInteger => Int16,
+)
+Base.convert(::Type{DataType}, ft::OGRFieldType) =
+    OGRFieldType_to_DataType_map[ft]
 
-    const OGRFieldType_to_DataType_map = Dict(
-        OFTInteger => Bool, 
-        OFTInteger => Int16,
-    )
-    Base.convert(::Type{DataType}, ft::OGRFieldType) =
-        OGRFieldType_to_DataType_map[ft]
-
-    Base.convert(::Type{OGRFieldType}, ft::Type{Bool}) = OFTInteger
-    Base.convert(::Type{OGRFieldType}, ft::Type{Int16}) = OFTInteger
-    
+Base.convert(::Type{OGRFieldType}, ft::Type{Bool}) = OFTInteger
+Base.convert(::Type{OGRFieldType}, ft::Type{Int16}) = OFTInteger
+```
 
 """
 macro convert(args...)
