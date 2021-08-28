@@ -255,7 +255,7 @@ eval(
 )
 
 eval(
-    @convert_old(
+    @convert(
         GDALDataType::ImageCore.Normed,
         GDT_Byte::ImageCore.N0f8,
         GDT_UInt16::ImageCore.N0f16,

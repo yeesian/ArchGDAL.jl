@@ -91,10 +91,7 @@ macro convert(args...)
             esc(Symbol(type1_string * "_to_" * type2_string * "_map"))
         push!(
             result_expr.args,
-            :(
-                const $type1_to_type2_map_name =
-                    Dict{$type1,$type2}(Tuple{$type1,$type2}[$(fwd_map...)])
-            ),
+            :(const $type1_to_type2_map_name = Dict([$(fwd_map...)])),
         )
         push!(
             result_expr.args,
@@ -125,10 +122,7 @@ macro convert(args...)
             esc(Symbol(type2_string * "_to_" * type1_string * "_map"))
         push!(
             result_expr.args,
-            :(
-                const $type2_to_type1_map_name =
-                    Dict{$type2,$type1}(Tuple{$type2,$type1}[$(rev_map...)])
-            ),
+            :(const $type2_to_type1_map_name = Dict([$(rev_map...)])),
         )
         push!(
             result_expr.args,
