@@ -50,7 +50,7 @@ const AG = ArchGDAL;
         AG.getlayer(dataset1, 0) do layer1
             @test AG.nfeature(layer1) == 4
         end
-        @test AG.getgeotransform(dataset1) ≈ [0,1,0,0,0,1]
+        @test AG.getgeotransform(dataset1) ≈ [0, 1, 0, 0, 0, 1]
 
         dataset2 = AG.create(AG.getdriver("Memory"))
         @test AG.nlayer(dataset2) == 0
