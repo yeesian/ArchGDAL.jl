@@ -281,8 +281,8 @@ end
     OFTRealList::GDAL.OFTRealList,
     OFTString::GDAL.OFTString,
     OFTStringList::GDAL.OFTStringList,
-    OFTWideString::GDAL.OFTWideString,
-    OFTWideStringList::GDAL.OFTWideStringList,
+    OFTWideString::GDAL.OFTWideString, # deprecated
+    OFTWideStringList::GDAL.OFTWideStringList, # deprecated
     OFTBinary::GDAL.OFTBinary,
     OFTDate::GDAL.OFTDate,
     OFTTime::GDAL.OFTTime,
@@ -302,8 +302,6 @@ end
     OFTRealList::Vector{Float64},
     OFTString::String,
     OFTStringList::Vector{String},
-    OFTWideString::Nothing,
-    OFTWideStringList::Nothing,
     OFTBinary::Vector{UInt8},
     OFTDate::Dates.Date,
     OFTTime::Dates.Time,

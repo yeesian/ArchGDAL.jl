@@ -388,20 +388,18 @@ end
 getfield(feature::Feature, i::Nothing)::Missing = missing
 
 const _FETCHFIELD = Dict{OGRFieldType,Function}(
-    OFTInteger => asint,           #0
-    OFTIntegerList => asintlist,       #1
-    OFTReal => asdouble,        #2
-    OFTRealList => asdoublelist,    #3
-    OFTString => asstring,        #4
-    OFTStringList => asstringlist,    #5
-    # const OFTWideString =                (UInt32)(6)
-    # const OFTWideStringList =            (UInt32)(7)
-    OFTBinary => asbinary,        #8
-    OFTDate => asdatetime,      #9
-    OFTTime => asdatetime,      #10
-    OFTDateTime => asdatetime,      #11
-    OFTInteger64 => asint64,         #12
-    OFTInteger64List => asint64list,     #13
+    OFTInteger => asint,
+    OFTIntegerList => asintlist,
+    OFTReal => asdouble,
+    OFTRealList => asdoublelist,
+    OFTString => asstring,
+    OFTStringList => asstringlist,
+    OFTBinary => asbinary,
+    OFTDate => asdatetime,
+    OFTTime => asdatetime,
+    OFTDateTime => asdatetime,
+    OFTInteger64 => asint64,
+    OFTInteger64List => asint64list,
 )
 
 function getfield(feature::Feature, i::Integer)
