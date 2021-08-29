@@ -713,7 +713,9 @@ function getgeotransform!(
 )::Vector{Cdouble}
     @assert length(transform) == 6
     result = GDAL.gdalgetgeotransform(dataset.ptr, pointer(transform))
-    @cplerr result "Failed to get geotransform"
+    if result != GDAL.CE_None
+        transform .= (0,1,0,0,0,1)
+    end
     return transform
 end
 
