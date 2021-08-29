@@ -714,7 +714,8 @@ function getgeotransform!(
     @assert length(transform) == 6
     result = GDAL.gdalgetgeotransform(dataset.ptr, pointer(transform))
     if result != GDAL.CE_None
-        transform .= (0, 1, 0, 0, 0, 1)
+        # The default geotransform.
+        transform .= (0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
     end
     return transform
 end
