@@ -253,10 +253,10 @@ end
 )
 
 @convert(
-    GDALDataType::ImageCore.Normed,
-    GDT_Byte::ImageCore.N0f8,
-    GDT_UInt16::ImageCore.N0f16,
-    GDT_UInt32::ImageCore.N0f32,
+    GDALDataType::Normed,
+    GDT_Byte::N0f8,
+    GDT_UInt16::N0f16,
+    GDT_UInt32::N0f32,
 )
 
 @convert(
