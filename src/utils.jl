@@ -24,7 +24,7 @@ const GDALRWFlag_to_GDALRWFlag_map = Dict(
 Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
     GDALRWFlag_to_GDALRWFlag_map[ft]
 ```
-# Case where 1st type `<: Enum` and 2nd type `== DataType`:
+# Case where 1st type `<: Enum` and 2nd type `== DataType` or ìsa UnionAll`:
 ```
 eval(@convert(OGRFieldType::DataType,
     OFTInteger::Bool,
@@ -52,12 +52,15 @@ macro convert(args...)
     type2_symbol = args[1].args[2]
     type1_string = replace(string(type1_symbol), "." => "_")
     type2_string = replace(string(type2_symbol), "." => "_")
-    type1_isenum_and_type2_equaldatatype =
-        (eval(type1_symbol) <: Enum) && (eval(type2_symbol) == DataType)
+    type1_isenum_and_type2_equaldatatype_or_isaunionall =
+        (eval(type1_symbol) <: Enum) && (
+            (eval(type2_symbol) == DataType) ||
+            (eval(type2_symbol) isa UnionAll)
+        )
     type1 = esc(type1_symbol)
     type2 = esc(type2_symbol)
     fwd_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
-    if type1_isenum_and_type2_equaldatatype
+    if type1_isenum_and_type2_equaldatatype_or_isaunionall
         rev_to_enum_map = [Tuple(esc.(reverse(a.args))) for a in args[2:end]]
     else
         rev_map =
@@ -81,8 +84,9 @@ macro convert(args...)
         end),
     )
     # Reverse conversion
-    if type1_isenum_and_type2_equaldatatype
+    if type1_isenum_and_type2_equaldatatype_or_isaunionall
         for stypes in rev_to_enum_map
+            eval(type2_symbol) isa UnionAll && @assert eval(stypes[1].args[1]) <: eval(type2_symbol)
             push!(
                 result_expr.args,
                 :(
