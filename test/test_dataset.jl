@@ -51,6 +51,8 @@ const AG = ArchGDAL;
             @test AG.nfeature(layer1) == 4
         end
         @test AG.getgeotransform(dataset1) ≈ [0, 1, 0, 0, 0, 1]
+        # the following test covers an example of `macro cplerr(code, message)`
+        @test_throws ErrorException AG.setproj!(dataset1, "nonsensestring")
 
         dataset2 = AG.create(AG.getdriver("Memory"))
         @test AG.nlayer(dataset2) == 0
