@@ -157,6 +157,10 @@ const AG = ArchGDAL;
                 AG.setfield!(feature, 9, Int16(1))
                 AG.setfield!(feature, 10, Int32(1))
                 AG.setfield!(feature, 11, Float32(1.0))
+                for i in 1:AG.nfield(feature)
+                    @test !AG.isfieldnull(feature, i-1)
+                    @test AG.isfieldsetandnotnull(feature, i-1)
+                end
                 @test sprint(print, AG.getgeom(feature)) == "NULL Geometry"
                 AG.getgeom(feature) do geom
                     @test sprint(print, geom) == "NULL Geometry"
@@ -169,6 +173,10 @@ const AG = ArchGDAL;
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)
                     @test AG.getfield(newfeature, 0) == 1
+                    for i in 1:AG.nfield(newfeature)
+                        @test !AG.isfieldnull(newfeature, i-1)
+                        @test AG.isfieldsetandnotnull(newfeature, i-1)
+                    end
                     @test AG.getfield(newfeature, 1) ≈ 1.0
                     @test AG.getfield(newfeature, 2) == Int32[1, 2]
                     @test AG.getfield(newfeature, 3) == Int64[1, 2]
@@ -209,6 +217,13 @@ const AG = ArchGDAL;
                         @test AG.getfield(newfeature, 0) == 45
                         @test AG.getfield(newfeature, 1) ≈ 18.2
                         @test AG.getfield(newfeature, 5) == String["foo", "bar"]
+
+                        @test AG.isfieldsetandnotnull(newfeature, 5)
+                        AG.setfieldnull!(newfeature, 5)
+                        @test !AG.isfieldsetandnotnull(newfeature, 5)
+                        @test AG.isfieldset(newfeature, 5)
+                        @test AG.isfieldnull(newfeature, 5)
+                        @test ismissing(AG.getfield(newfeature, 5))
                     end
                     @test AG.nfeature(layer) == 1
                 end

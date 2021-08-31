@@ -149,7 +149,7 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::Nothing
     nfielddisplay = min(n, 5)
     for i in 1:nfielddisplay
         fd = getfielddefn(featuredefn, i - 1)
-        display = "     Field $(i - 1) ($(getname(fd))): [$(gettype(fd))]"
+        display = "     Field $(i - 1) ($(getname(fd))): [$(getfieldtype(fd))]"
         if length(display) > 75
             println(io, "$display[1:70]...")
             continue

@@ -10,14 +10,19 @@ const AG = ArchGDAL;
             AG.setname!(fd, "newname")
             @test AG.getname(fd) == "newname"
             @test AG.gettype(fd) == AG.OFTInteger
+            @test AG.getfieldtype(fd) == AG.OFTInteger
             AG.settype!(fd, AG.OFTDate)
             @test AG.gettype(fd) == AG.OFTDate
+            @test AG.getfieldtype(fd) == AG.OFTDate
             AG.settype!(fd, AG.OFTInteger)
             @test AG.getsubtype(fd) == AG.OFSTNone
+            @test AG.getfieldtype(fd) == ArchGDAL.OFTInteger
             AG.setsubtype!(fd, AG.OFSTInt16)
             @test AG.getsubtype(fd) == AG.OFSTInt16
+            @test AG.getfieldtype(fd) == AG.OFSTInt16
             AG.setsubtype!(fd, AG.OFSTBoolean)
             @test AG.getsubtype(fd) == AG.OFSTBoolean
+            @test AG.getfieldtype(fd) == AG.OFSTBoolean
             AG.setsubtype!(fd, AG.OFSTNone)
             @test AG.getjustify(fd) == AG.OJUndefined
             AG.setjustify!(fd, AG.OJLeft)

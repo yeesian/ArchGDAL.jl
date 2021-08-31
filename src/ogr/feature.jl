@@ -149,6 +149,50 @@ function unsetfield!(feature::Feature, i::Integer)::Feature
     return feature
 end
 
+"""
+    isfieldnull(feature::Feature, i::Integer)
+
+Test if a field is null.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to test, from 0 to GetFieldCount()-1.
+
+### Returns
+`true` if the field is null, otherwise `false`.
+"""
+isfieldnull(feature::Feature, i::Integer)::Bool =
+    Bool(GDAL.ogr_f_isfieldnull(feature.ptr, i))
+
+"""
+    isfieldsetandnotnull(feature::Feature, i::Integer)
+
+Test if a field is set and not null.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to test, from 0 to GetFieldCount()-1.
+
+### Returns
+`true` if the field is null, otherwise `false`.
+"""
+isfieldsetandnotnull(feature::Feature, i::Integer)::Bool =
+    Bool(GDAL.ogr_f_isfieldsetandnotnull(feature.ptr, i))
+
+"""
+    setfieldnull!(feature::Feature, i::Integer)
+
+Clear a field, marking it as null.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to set to null, from 0 to GetFieldCount()-1.
+"""
+function setfieldnull!(feature::Feature, i::Integer)::Feature
+    GDAL.ogr_f_setfieldnull(feature.ptr, i)
+    return feature
+end
+
 # """
 #     OGR_F_GetRawFieldRef(OGRFeatureH hFeat,
 #                          int iField) -> OGRField *
@@ -403,12 +447,14 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
 )
 
 function getfield(feature::Feature, i::Integer)
-    return if isfieldset(feature, i)
-        _fieldtype = gettype(getfielddefn(feature, i))
+    return if !isfieldset(feature, i)
+        getdefault(feature, i)
+    elseif isfieldnull(feature, i)
+        missing
+    else
+        _fieldtype = getfieldtype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
         _fetchfield(feature, i)
-    else
-        getdefault(feature, i)
     end
 end
 

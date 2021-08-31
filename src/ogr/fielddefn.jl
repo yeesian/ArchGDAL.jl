@@ -72,6 +72,26 @@ function setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)::FieldDefn
 end
 
 """
+    getfieldtype(fielddefn::AbstractFieldDefn)
+
+Returns the type or subtype (if any) of this field.
+
+### Parameters
+* `fielddefn`: handle to the field definition.
+
+### Returns
+The field type or subtype.
+"""
+function getfieldtype(fielddefn::AbstractFieldDefn)::Union{OGRFieldType, OGRFieldSubType}
+    fieldsubtype = getsubtype(fielddefn)
+    return if fieldsubtype != OFSTNone
+        fieldsubtype
+    else
+        gettype(fielddefn)
+    end
+end
+
+"""
     getjustify(fielddefn::AbstractFieldDefn)
 
 Get the justification for this field.

@@ -488,7 +488,7 @@ using Tables
                 withmissingfield::Bool,
                 withmixedgeomtypes::Bool,
                 reference_geotable::NamedTuple,
-            )::Bool
+            )
                 map_on_test_dataset(
                     drvshortname,
                     geomfamilly;
@@ -497,18 +497,14 @@ using Tables
                     withmixedgeomtypes = withmixedgeomtypes,
                 ) do ds
                     layer = AG.getlayer(ds, 0)
-                    return all([
-                        keys(Tables.columntable(layer)) ==
-                        reference_geotable.names,
-                        eltype.(values(Tables.columntable(layer))) ==
-                        reference_geotable.types,
-                        tupleoftuples_equal(
-                            columntablevalues_toWKT(
-                                values(Tables.columntable(layer)),
-                            ),
-                            reference_geotable.values,
+                    @test keys(Tables.columntable(layer)) == reference_geotable.names
+                    @test eltype.(values(Tables.columntable(layer))) == reference_geotable.types
+                    @test tupleoftuples_equal(
+                        columntablevalues_toWKT(
+                            values(Tables.columntable(layer)),
                         ),
-                    ])
+                        reference_geotable.values,
+                    )
                 end
             end
 
@@ -524,24 +520,21 @@ using Tables
             function test_layer_to_table(
                 layer::AG.AbstractFeatureLayer,
                 reference_geotable::NamedTuple,
-            )::Bool
-                return all([
-                    keys(Tables.columntable(layer)) == reference_geotable.names,
-                    eltype.(values(Tables.columntable(layer))) ==
-                    reference_geotable.types,
-                    tupleoftuples_equal(
-                        columntablevalues_toWKT(
-                            values(Tables.columntable(layer)),
-                        ),
-                        reference_geotable.values,
+            )
+                @test keys(Tables.columntable(layer)) == reference_geotable.names
+                @test eltype.(values(Tables.columntable(layer))) == reference_geotable.types
+                @test tupleoftuples_equal(
+                    columntablevalues_toWKT(
+                        values(Tables.columntable(layer)),
                     ),
-                ])
+                    reference_geotable.values,
+                )
             end
 
             @testset "Conversion to table for ESRI Shapefile driver" begin
                 ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
-                    types = (Union{Missing,ArchGDAL.IGeometry}, Int64, String),
+                    types = (Union{Missing,ArchGDAL.IGeometry}, Union{Missing,Int64}, String),
                     values = (
                         Union{Missing,String}[
                             "POLYGON ((0 0,0 1,1 1))",
@@ -549,11 +542,11 @@ using Tables
                             missing,
                             "POLYGON ((0 0,-1 0,-1 1))",
                         ],
-                        [1, 2, 3, 0],
+                        [1, 2, 3, missing],
                         ["polygon1", "multipolygon1", "emptygeom", "emptyid"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "ESRI Shapefile",
                     "polygon",
                     true,
@@ -569,7 +562,7 @@ using Tables
                             Missing,
                             ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
                         },
-                        Int64,
+                        Union{Missing,Int64},
                         String,
                     ),
                     values = (
@@ -579,11 +572,11 @@ using Tables
                             missing,
                             "LINESTRING (5 6,6 7,7 8)",
                         ],
-                        [1, 2, 3, 0],
+                        [1, 2, 3, missing],
                         ["line1", "line2", "emptygeom", "emptyid"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "ESRI Shapefile",
                     "line",
                     true,
@@ -612,7 +605,7 @@ using Tables
                         ["polygon1", "multipolygon1", "emptygeom", "emptyid"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "GeoJSON",
                     "polygon",
                     true,
@@ -642,7 +635,7 @@ using Tables
                         ["line1", "line2", "emptygeom", "emptyid"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "GeoJSON",
                     "line",
                     true,
@@ -678,7 +671,7 @@ using Tables
                         ["line1", "multiline1", "emptygeom", "emptyid"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "GML",
                     "line",
                     true,
@@ -691,7 +684,7 @@ using Tables
             @testset "Conversion to table for GPKG driver" begin
                 GPKG_test_reference_geotable = (
                     names = (:geom, :id, :name),
-                    types = (Union{Missing,ArchGDAL.IGeometry}, Int64, String),
+                    types = (Union{Missing,ArchGDAL.IGeometry}, Union{Missing,Int64}, String),
                     values = (
                         Union{Missing,String}[
                             "LINESTRING (1 2,2 3,3 4)",
@@ -699,11 +692,11 @@ using Tables
                             missing,
                             "LINESTRING (5 6,6 7,7 8)",
                         ],
-                        [1, 2, 3, 0],
+                        Union{Missing,Int64}[1, 2, 3, missing],
                         ["line1", "multiline1", "emptygeom", "emptyid"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "GPKG",
                     "line",
                     true,
@@ -727,7 +720,7 @@ using Tables
                         ["", "", ""],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "KML",
                     "line",
                     true,
@@ -751,7 +744,7 @@ using Tables
                         ["emptyid", "multiline1", "line1"],
                     ),
                 )
-                @test test_layer_to_table(
+                test_layer_to_table(
                     "FlatGeobuf",
                     "line",
                     true,
@@ -762,7 +755,6 @@ using Tables
             end
 
             @testset "Conversion to table for CSV driver" begin
-                @test begin
                     AG.read(
                         joinpath(@__DIR__, "data/multi_geom.csv"),
                         options = [
@@ -797,11 +789,10 @@ using Tables
                                 ["Mumbai", "New Delhi"],
                             ),
                         )
-                        return test_layer_to_table(
+                        test_layer_to_table(
                             multigeom_test_layer,
                             CSV_multigeom_test_reference_geotable,
                         )
-                    end
                 end
             end
 
