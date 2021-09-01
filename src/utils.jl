@@ -1,12 +1,42 @@
 """
     @convert(args...)
 
-# General case:
+ArchGDAL uses Enum types, listing typeids of various data container used in GDAL/OGR object model. 
+These types are used (or not) to implement concrete types in julia through parametric composite types 
+based on those Enum of typeids.
+
+@convert generates convert functions between ArchGDAL Enum of typeids (e.g. `ArchGDAL.OGRFieldType`) 
+with other types or typeids such as:
+- GDAL CEnum.Cenum typeids (e.g. `GDAL.OGRFieldType`), 
+- Base primitive DataType types (e.g. `Bool`), 
+- other parametric composite types (e.g. `ImageCore.Normed`)
+`convert` functions are generated both ways
+
+**Note:** In the case where the mapping is not bijective, the last declared typeid of subtype is used. 
+Example: 
 ```
-eval(@convert(GDALRWFlag::GDAL.GDALRWFlag,
+@convert(
+    OGRFieldType::DataType,
+    OFTInteger::Bool,
+    OFTInteger::Int16,
+    OFTInteger::Int32,
+)
+```
+will generate a `convert` functions giving:
+- `Int32` type for `OFTInteger` and not `Ìnt16`
+- `OFTInteger` OGRFieldType typeid for both `Int16` and `Int32`
+
+# Parameters
+- `<type1>::<type2>`
+- list of `<typeid1>::<typeid2|subtype2>`
+
+# Usage
+### General case:
+```
+@convert(GDALRWFlag::GDAL.GDALRWFlag,
     GF_Read::GDAL.GF_Read,
     GF_Write::GDAL.GF_Write,
-))
+)
 ```
 does the equivalent of 
 ```
@@ -24,12 +54,12 @@ const GDALRWFlag_to_GDALRWFlag_map = Dict(
 Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
     GDALRWFlag_to_GDALRWFlag_map[ft]
 ```
-# Case where 1st type `<: Enum` and 2nd type `== DataType` or ìsa UnionAll`:
+### Case where 1st type `<: Enum` and 2nd type `== DataType` or `ìsa UnionAll`:
 ```
-eval(@convert(OGRFieldType::DataType,
+@convert(OGRFieldType::DataType,
     OFTInteger::Bool,
     OFTInteger::Int16,
-))
+)
 ```
 does the equivalent of
 ```
@@ -53,10 +83,8 @@ macro convert(args...)
     type1_string = replace(string(type1_symbol), "." => "_")
     type2_string = replace(string(type2_symbol), "." => "_")
     type1_isenum_and_type2_equaldatatype_or_isaunionall =
-        (eval(type1_symbol) <: Enum) && (
-            (eval(type2_symbol) == DataType) ||
-            (eval(type2_symbol) isa UnionAll)
-        )
+        (eval(type1_symbol) <: Enum) &&
+        ((eval(type2_symbol) == DataType) || (eval(type2_symbol) isa UnionAll))
     type1 = esc(type1_symbol)
     type2 = esc(type2_symbol)
     fwd_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
@@ -86,7 +114,8 @@ macro convert(args...)
     # Reverse conversion
     if type1_isenum_and_type2_equaldatatype_or_isaunionall
         for stypes in rev_to_enum_map
-            eval(type2_symbol) isa UnionAll && @assert eval(stypes[1].args[1]) <: eval(type2_symbol)
+            eval(type2_symbol) isa UnionAll &&
+                @assert eval(stypes[1].args[1]) <: eval(type2_symbol)
             push!(
                 result_expr.args,
                 :(
