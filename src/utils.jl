@@ -1,5 +1,3 @@
-import CEnum
-
 """
     @convert(<T1>::<T2>, 
         <conversions>
