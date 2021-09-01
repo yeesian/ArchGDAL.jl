@@ -160,6 +160,9 @@ Test if a field is null.
 
 ### Returns
 `true` if the field is null, otherwise `false`.
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
 """
 isfieldnull(feature::Feature, i::Integer)::Bool =
     Bool(GDAL.ogr_f_isfieldnull(feature.ptr, i))
@@ -175,6 +178,9 @@ Test if a field is set and not null.
 
 ### Returns
 `true` if the field is null, otherwise `false`.
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
 """
 isfieldsetandnotnull(feature::Feature, i::Integer)::Bool =
     Bool(GDAL.ogr_f_isfieldsetandnotnull(feature.ptr, i))
@@ -187,6 +193,9 @@ Clear a field, marking it as null.
 ### Parameters
 * `feature`: the feature that owned the field.
 * `i`: the field to set to null, from 0 to GetFieldCount()-1.
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
 """
 function setfieldnull!(feature::Feature, i::Integer)::Feature
     GDAL.ogr_f_setfieldnull(feature.ptr, i)
@@ -446,6 +455,12 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTInteger64List => asint64list,
 )
 
+"""
+    getfield(feature, i)
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
+"""
 function getfield(feature::Feature, i::Integer)
     return if !isfieldset(feature, i)
         getdefault(feature, i)
@@ -900,6 +915,9 @@ Fill unset fields with default values that might be defined.
 * `feature`: handle to the feature.
 * `notnull`: if we should fill only unset fields with a not-null constraint.
 * `papszOptions`: unused currently. Must be set to `NULL`.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 function fillunsetwithdefault!(
     feature::Feature;
@@ -931,6 +949,9 @@ fails, then it will fail for all interpretations).
 
 ### Returns
 `true` if all enabled validation tests pass.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 validate(feature::Feature, flags::FieldValidation, emiterror::Bool)::Bool =
     Bool(GDAL.ogr_f_validate(feature.ptr, flags, emiterror))
