@@ -53,10 +53,8 @@ macro convert(args...)
     type1_string = replace(string(type1_symbol), "." => "_")
     type2_string = replace(string(type2_symbol), "." => "_")
     type1_isenum_and_type2_equaldatatype_or_isaunionall =
-        (eval(type1_symbol) <: Enum) && (
-            (eval(type2_symbol) == DataType) ||
-            (eval(type2_symbol) isa UnionAll)
-        )
+        (eval(type1_symbol) <: Enum) &&
+        ((eval(type2_symbol) == DataType) || (eval(type2_symbol) isa UnionAll))
     type1 = esc(type1_symbol)
     type2 = esc(type2_symbol)
     fwd_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
@@ -86,7 +84,8 @@ macro convert(args...)
     # Reverse conversion
     if type1_isenum_and_type2_equaldatatype_or_isaunionall
         for stypes in rev_to_enum_map
-            eval(type2_symbol) isa UnionAll && @assert eval(stypes[1].args[1]) <: eval(type2_symbol)
+            eval(type2_symbol) isa UnionAll &&
+                @assert eval(stypes[1].args[1]) <: eval(type2_symbol)
             push!(
                 result_expr.args,
                 :(
