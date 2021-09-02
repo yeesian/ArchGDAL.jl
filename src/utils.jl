@@ -123,7 +123,6 @@ macro convert(args...)
     # Optimization for conversion from types
     if !(eval(T2) <: CEnum.Cenum)
         for stypes in [Tuple(esc.(reverse(a.args))) for a in args[2:end]]
-            eval(T2) isa UnionAll && @assert eval(stypes[1].args[1]) <: eval(T2)
             push!(
                 result_expr.args,
                 :(
