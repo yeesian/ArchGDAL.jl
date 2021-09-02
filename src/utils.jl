@@ -1,7 +1,7 @@
 # An ImmutableDict constructor based on a list of Pair arguments has been introduced in Julia 1.6.0 and backported to Julia 1.5
 if VERSION < v"1.5"
     function Base.ImmutableDict(KV::Pair, rest::Pair...)
-        return Base.ImmutableDict(ImmutableDict(KV), rest...)
+        return Base.ImmutableDict(Base.ImmutableDict(KV), rest...)
     end
 end
 
