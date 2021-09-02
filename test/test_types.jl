@@ -11,18 +11,9 @@ import ImageCore
 
         @testset "Error on conversion non implemented" begin
             @test_throws MethodError Base.convert(AG.GDALDataType, Int64)
-            @test_throws KeyError Base.convert(
-                DataType,
-                AG.GDT_TypeCount,
-            )
-            @test_throws KeyError Base.convert(
-                ImageCore.Normed,
-                AG.GDT_Float32,
-            )
-            @test_throws KeyError Base.convert(
-                DataType,
-                AG.OFSTMaxSubType,
-            )
+            @test_throws KeyError Base.convert(DataType, AG.GDT_TypeCount)
+            @test_throws KeyError Base.convert(ImageCore.Normed, AG.GDT_Float32)
+            @test_throws KeyError Base.convert(DataType, AG.OFSTMaxSubType)
         end
 
         @testset "Default types for non bijective conversion mapset" begin
