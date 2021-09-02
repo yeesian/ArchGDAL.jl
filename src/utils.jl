@@ -1,3 +1,13 @@
+
+# Helper constructor for building an ImmutableDict from a list of Pair arguments
+function Base.ImmutableDict(KV::Pair{K,V}, KVs::Pair{K,V}...) where {K,V}
+    d = Base.ImmutableDict(KV)
+    for p in KVs
+        d = Base.ImmutableDict(d, p)
+    end
+    return d
+end
+
 """
     @convert(<T1>::<T2>, 
         <conversions>
@@ -47,14 +57,14 @@ will generate a `convert` functions giving:
 ```
 does the equivalent of 
 ```
-const GDALRWFlag_to_GDALRWFlag_map = Dict(
+const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
     GF_Read => GDAL.GF_Read,
     GF_Write => GDAL.GF_Write
 )
 Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
     GDALRWFlag_to_GDALRWFlag_map[ft]
 
-const GDALRWFlag_to_GDALRWFlag_map = Dict(
+const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
     GDAL.GF_Read => GF_Read, 
     GDAL.GF_Write => GF_Write
 )
@@ -70,7 +80,7 @@ Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
 ```
 does the equivalent of
 ```
-const OGRFieldType_to_DataType_map = Dict(
+const OGRFieldType_to_DataType_map = ImmutableDict(
     OFTInteger => Bool, 
     OFTInteger => Int16,
 )
@@ -101,21 +111,23 @@ macro convert(args...)
     (type1, type2) = esc.((T1, T2))
 
     # Subtypes forward and backward mapping
-    fwd_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
-    rev_map = Expr[Expr(:tuple, esc.(reverse(a.args))...) for a in args[2:end]]
+    fwd_map = [Expr(:call, esc(:Pair), esc.(a.args)...) for a in args[2:end]]
+    rev_map =
+        [Expr(:call, esc(:Pair), esc.(reverse(a.args))...) for a in args[2:end]]
 
     #! Convert functions generation
     result_expr = Expr(:block)
 
     #* Forward conversions from ArchGDAL typeids
     T1_to_T2_map_name = esc(Symbol(T1_string * "_to_" * T2_string * "_map"))
-    push!(result_expr.args, :(const $T1_to_T2_map_name = Dict([$(fwd_map...)])))
+    push!(
+        result_expr.args,
+        :(const $T1_to_T2_map_name = Base.ImmutableDict([$(fwd_map...)]...)),
+    )
     push!(
         result_expr.args,
         :(function Base.convert(::Type{$type2}, ft::$type1)
-            return get($T1_to_T2_map_name, ft) do
-                return error("Unknown type: $ft")
-            end
+            return $T1_to_T2_map_name[ft]
         end),
     )
 
@@ -140,14 +152,15 @@ macro convert(args...)
         T2_to_T1_map_name = esc(Symbol(T2_string * "_to_" * T1_string * "_map"))
         push!(
             result_expr.args,
-            :(const $T2_to_T1_map_name = Dict([$(rev_map...)])),
+            :(
+                const $T2_to_T1_map_name =
+                    Base.ImmutableDict([$(rev_map...)]...)
+            ),
         )
         push!(
             result_expr.args,
             :(function Base.convert(::Type{$type1}, ft::$type2)
-                return get($T2_to_T1_map_name, ft) do
-                    return error("Unknown type: $ft")
-                end
+                return $T2_to_T1_map_name[ft]
             end),
         )
     end
