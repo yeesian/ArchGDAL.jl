@@ -1,3 +1,10 @@
+# An ImmutableDict constructor based on a list of Pair arguments has been introduced in Julia 1.6.0 and backported to Julia 1.5
+if VERSION < v"1.5"
+    function ImmutableDict(KV::Pair, rest::Pair...)
+        return ImmutableDict(ImmutableDict(KV), rest...)
+    end
+end
+
 """
     @convert(<T1>::<T2>, 
         <conversions>
