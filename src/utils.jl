@@ -1,13 +1,3 @@
-
-# Helper constructor for building an ImmutableDict from a list of Pair arguments
-function Base.ImmutableDict(KV::Pair{K,V}, KVs::Pair{K,V}...) where {K,V}
-    d = Base.ImmutableDict(KV)
-    for p in KVs
-        d = Base.ImmutableDict(d, p)
-    end
-    return d
-end
-
 """
     @convert(<T1>::<T2>, 
         <conversions>
