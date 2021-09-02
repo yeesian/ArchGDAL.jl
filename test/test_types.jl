@@ -15,10 +15,13 @@ import ImageCore
             @testset "Basic conversions" begin
                 @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
             end
-            
+
             @testset "Error on conversion non implemented" begin
                 @test_throws MethodError Base.convert(AG.GDALDataType, Int64)
-                @test_throws ErrorException Base.convert(DataType, AG.GDT_TypeCount)
+                @test_throws ErrorException Base.convert(
+                    DataType,
+                    AG.GDT_TypeCount,
+                )
                 @test_throws ErrorException Base.convert(
                     ImageCore.Normed,
                     AG.GDT_Float32,
