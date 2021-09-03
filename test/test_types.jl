@@ -4,6 +4,32 @@ const AG = ArchGDAL;
 import ImageCore
 
 @testset "test_types.jl" begin
+    @testset "Testing convert macro" begin
+        @testset "Basic conversions" begin
+            @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
+        end
+
+        @testset "Error on conversion non implemented" begin
+            @test_throws MethodError Base.convert(AG.GDALDataType, Int64)
+            @test_throws KeyError Base.convert(DataType, AG.GDT_TypeCount)
+            @test_throws KeyError Base.convert(ImageCore.Normed, AG.GDT_Float32)
+            @test_throws KeyError Base.convert(DataType, AG.OFSTMaxSubType)
+        end
+
+        @testset "Default types for non bijective conversion mapset" begin
+            # Default type for AG.OFTInteger is Int32
+            @test Base.convert(AG.OGRFieldType, Bool) == AG.OFTInteger
+            @test Base.convert(AG.OGRFieldType, Int16) == AG.OFTInteger
+            @test Base.convert(AG.OGRFieldType, Int32) == AG.OFTInteger
+            @test Base.convert(DataType, AG.OFTInteger) == Int32
+
+            # Default type for AG.OFTReal is Float64 
+            @test Base.convert(AG.OGRFieldType, Float32) == AG.OFTReal
+            @test Base.convert(AG.OGRFieldType, Float64) == AG.OFTReal
+            @test Base.convert(DataType, AG.OFTReal) == Float64
+        end
+    end
+
     @testset "Testing GDAL Type Methods" begin
         @testset "GDAL Open Flags" begin
             @test AG.OF_READONLY | 0x04 == 0x04
@@ -21,18 +47,6 @@ import ImageCore
 
             @test AG.iscomplex(AG.GDT_CFloat32) == true
             @test AG.iscomplex(AG.GDT_CFloat64) == true
-
-            @test Base.convert(AG.GDALDataType, UInt8) == AG.GDT_Byte
-            @test_throws MethodError Base.convert(AG.GDALDataType, Int64)
-            @test_throws ErrorException Base.convert(DataType, AG.GDT_TypeCount)
-            @test_throws ErrorException Base.convert(
-                ImageCore.Normed,
-                AG.GDT_Float32,
-            )
-            @test_throws ErrorException Base.convert(
-                DataType,
-                AG.OFSTMaxSubType,
-            )
         end
 
         @testset "GDAL Colors and Palettes" begin

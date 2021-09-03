@@ -1,39 +1,87 @@
-"""
-    @convert(args...)
+# An ImmutableDict constructor based on a list of Pair arguments has been introduced in Julia 1.6.0 and backported to Julia 1.5
+if VERSION < v"1.5"
+    function Base.ImmutableDict(KV::Pair{K,V}, KVs::Pair{K,V}...) where {K,V}
+        d = Base.ImmutableDict(KV)
+        for p in KVs
+            d = Base.ImmutableDict(d, p)
+        end
+        return d
+    end
+end
 
-# General case:
+"""
+    @convert(<T1>::<T2>, 
+        <conversions>
+    )
+
+Generate `convert` functions both ways between ArchGDAL Enum of typeids (e.g. `ArchGDAL.OGRFieldType`) 
+and other types or typeids.
+
+ArchGDAL uses Enum types, listing typeids of various data container used in GDAL/OGR object model. 
+Some of these types are used to implement concrete types in julia through parametric composite types 
+based on those Enum of typeids (e.g. `Geometry` and `IGeometry` types with `OGRwkbGeometryType`)
+
+Other types or typeids can be:
+- GDAL CEnum.Cenum typeids (e.g. `GDAL.OGRFieldType`), 
+- Base primitive DataType types (e.g. `Bool`), 
+- other parametric composite types (e.g. `ImageCore.Normed`)
+
+# Arguments
+- `(<T1>::<T2>)::Expr`: source and target supertypes, where `T1<:Enum`  and `T2<:CEnum.Cenum || T2::Type{DataType} || T2::UnionAll}``
+- `(<stype1>::<stype2>)::Expr`: source and target subtypes or type ids with `stype1::T1` and 
+    - `stype2::T2 where T2<:CEnum.Cenum` or 
+    - `stype2::T2 where T2::Type{DataType}` or 
+    - `stype2<:T2`where T2<:UnionAll
+- ...
+
+**Note:** In the case where the mapping is not bijective, the last declared typeid of subtype is used. 
+Example: 
 ```
-eval(@convert(GDALRWFlag::GDAL.GDALRWFlag,
+@convert(
+    OGRFieldType::DataType,
+    OFTInteger::Bool,
+    OFTInteger::Int16,
+    OFTInteger::Int32,
+)
+```
+will generate a `convert` functions giving:
+- `Int32` type for `OFTInteger` and not `Ìnt16`
+- `OFTInteger` OGRFieldType typeid for both `Int16` and `Int32`
+
+# Usage
+### General case:
+```
+@convert(GDALRWFlag::GDAL.GDALRWFlag,
     GF_Read::GDAL.GF_Read,
     GF_Write::GDAL.GF_Write,
-))
+)
 ```
 does the equivalent of 
 ```
-const GDALRWFlag_to_GDALRWFlag_map = Dict(
+const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
     GF_Read => GDAL.GF_Read,
     GF_Write => GDAL.GF_Write
 )
 Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
     GDALRWFlag_to_GDALRWFlag_map[ft]
 
-const GDALRWFlag_to_GDALRWFlag_map = Dict(
+const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
     GDAL.GF_Read => GF_Read, 
     GDAL.GF_Write => GF_Write
 )
 Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
     GDALRWFlag_to_GDALRWFlag_map[ft]
 ```
-# Case where 1st type `<: Enum` and 2nd type `== DataType` or ìsa UnionAll`:
+### Case where 1st type `<: Enum` and 2nd type `== DataType` or `ìsa UnionAll`:
 ```
-eval(@convert(OGRFieldType::DataType,
+@convert(OGRFieldType::DataType,
     OFTInteger::Bool,
     OFTInteger::Int16,
-))
+)
 ```
 does the equivalent of
 ```
-const OGRFieldType_to_DataType_map = Dict(
+const OGRFieldType_to_DataType_map = ImmutableDict(
     OFTInteger => Bool, 
     OFTInteger => Int16,
 )
@@ -46,46 +94,48 @@ Base.convert(::Type{OGRFieldType}, ft::Type{Int16}) = OFTInteger
 
 """
 macro convert(args...)
-    @assert length(args) > 0
+    @assert length(args) > 1
     @assert args[1].head == :(::)
-    type1_symbol = args[1].args[1]
-    type2_symbol = args[1].args[2]
-    type1_string = replace(string(type1_symbol), "." => "_")
-    type2_string = replace(string(type2_symbol), "." => "_")
-    type1_isenum_and_type2_equaldatatype_or_isaunionall =
-        (eval(type1_symbol) <: Enum) &&
-        ((eval(type2_symbol) == DataType) || (eval(type2_symbol) isa UnionAll))
-    type1 = esc(type1_symbol)
-    type2 = esc(type2_symbol)
-    fwd_map = Expr[Expr(:tuple, esc.(a.args)...) for a in args[2:end]]
-    if type1_isenum_and_type2_equaldatatype_or_isaunionall
-        rev_to_enum_map = [Tuple(esc.(reverse(a.args))) for a in args[2:end]]
-    else
-        rev_map =
-            Expr[Expr(:tuple, esc.(reverse(a.args))...) for a in args[2:end]]
-    end
+    (T1, T2) = args[1].args
 
+    # Types and type ids / subtypes checks
+    stypes1, stypes2 = zip((eval.(a.args) for a in args[2:end])...)
+    @assert(eval(T1) <: Enum && all(isa.(stypes1, eval(T1))))
+    @assert(
+        ((eval(T2) <: CEnum.Cenum) && all(isa.(stypes2, eval(T2)))) ||
+        ((eval(T2) isa Type{DataType}) && all(isa.(stypes2, eval(T2)))) ||
+        ((eval(T2) isa UnionAll) && all((<:).(stypes2, eval(T2))))
+    )
+
+    # Types other representations
+    (T1_string, T2_string) = replace.(string.((T1, T2)), "." => "_")
+    (type1, type2) = esc.((T1, T2))
+
+    # Subtypes forward and backward mapping
+    fwd_map = [Expr(:call, esc(:Pair), esc.(a.args)...) for a in args[2:end]]
+    rev_map =
+        [Expr(:call, esc(:Pair), esc.(reverse(a.args))...) for a in args[2:end]]
+
+    #! Convert functions generation
     result_expr = Expr(:block)
-    # Forward conversion (no case of 1st type == DataType and 2nd type <: Enum handled)
-    type1_to_type2_map_name =
-        esc(Symbol(type1_string * "_to_" * type2_string * "_map"))
+
+    #* Forward conversions from ArchGDAL typeids
+    T1_to_T2_map_name = esc(Symbol(T1_string * "_to_" * T2_string * "_map"))
     push!(
         result_expr.args,
-        :(const $type1_to_type2_map_name = Dict([$(fwd_map...)])),
+        :(const $T1_to_T2_map_name = Base.ImmutableDict([$(fwd_map...)]...)),
     )
     push!(
         result_expr.args,
         :(function Base.convert(::Type{$type2}, ft::$type1)
-            return get($type1_to_type2_map_name, ft) do
-                return error("Unknown type: $ft")
-            end
+            return $T1_to_T2_map_name[ft]
         end),
     )
-    # Reverse conversion
-    if type1_isenum_and_type2_equaldatatype_or_isaunionall
-        for stypes in rev_to_enum_map
-            eval(type2_symbol) isa UnionAll &&
-                @assert eval(stypes[1].args[1]) <: eval(type2_symbol)
+
+    #* Reverse conversions to ArchGDAL typeids
+    # Optimization for conversion from types
+    if !(eval(T2) <: CEnum.Cenum)
+        for stypes in [Tuple(esc.(reverse(a.args))) for a in args[2:end]]
             push!(
                 result_expr.args,
                 :(
@@ -98,22 +148,24 @@ macro convert(args...)
                 ),
             )
         end
+        # Conversion from typeids
     else
-        type2_to_type1_map_name =
-            esc(Symbol(type2_string * "_to_" * type1_string * "_map"))
+        T2_to_T1_map_name = esc(Symbol(T2_string * "_to_" * T1_string * "_map"))
         push!(
             result_expr.args,
-            :(const $type2_to_type1_map_name = Dict([$(rev_map...)])),
+            :(
+                const $T2_to_T1_map_name =
+                    Base.ImmutableDict([$(rev_map...)]...)
+            ),
         )
         push!(
             result_expr.args,
             :(function Base.convert(::Type{$type1}, ft::$type2)
-                return get($type2_to_type1_map_name, ft) do
-                    return error("Unknown type: $ft")
-                end
+                return $T2_to_T1_map_name[ft]
             end),
         )
     end
+
     return result_expr
 end
 
