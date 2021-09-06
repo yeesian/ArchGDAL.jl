@@ -164,7 +164,7 @@ function unsafe_getspatialref(layer::AbstractFeatureLayer)::SpatialRef
 end
 
 """
-    setspatialfilter!(layer::AbstractFeatureLayer, geom::Geometry)
+    setspatialfilter!(layer::AbstractFeatureLayer, geom::AbstractGeometry)
 
 Set a new spatial filter for the layer, using the geom.
 
@@ -194,7 +194,7 @@ successive calls are done with different iGeomField values.
 """
 function setspatialfilter!(
     layer::L,
-    geom::Geometry,
+    geom::AbstractGeometry,
 )::L where {L<:AbstractFeatureLayer}
     # This method makes an internal copy of `geom`. The input `geom` remains
     # the responsibility of the caller, and may be safely destroyed.
