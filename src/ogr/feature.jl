@@ -464,18 +464,14 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
 """
 function getfield(feature::Feature, i::Integer)
     return if isfieldsetandnotnull(feature, i)
-        @assert isfieldset(feature, i) && !isfieldnull(feature, i)
         _fieldtype = getfieldtype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
         _fetchfield(feature, i)
     elseif isfieldset(feature, i)
-        @assert isfieldnull(feature, i)
         missing
     elseif isfieldnull(feature, i)
-        @assert !isfieldset(feature, i)
         nothing
     else
-        @assert !isfieldset(feature, i) && !isfieldnull(feature, i)
         missing
     end
 end
