@@ -107,32 +107,78 @@ const AG = ArchGDAL;
 
                 # unset & notnull: missing
                 AG.fillunsetwithdefault!(f)
-                @test ismissing(AG.getfield(f, 1)) # nothing has changed
-                @test AG.isnullable(AG.getfielddefn(f, 1)) # because it is a nullable field
-                @test !AG.isfieldnull(f, 1) # even though it is not a null value.
-                @test !AG.isfieldset(f, 1) # the field is still not set.
+                # nothing has changed
+                @test ismissing(AG.getfield(f, 1))
+                # because it is a nullable field
+                @test AG.isnullable(AG.getfielddefn(f, 1))
+                # even though it is not a null value
+                @test !AG.isfieldnull(f, 1)
+                # the field is still not set
+                @test !AG.isfieldset(f, 1)
 
                 # set & notnull: value
-                AG.fillunsetwithdefault!(f, notnull = false) # to set nullable fields
-                @test AG.getfield(f, 1) == AG.getdefault(f, 1) # now the field is set to the default
+                AG.fillunsetwithdefault!(f, notnull = false)
+                # now the field is set to the default
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
                 @test !AG.isfieldnull(f, 1) # still as expected
                 @test AG.isfieldset(f, 1) # the field is now set
 
-                AG.setnullable!(AG.getfielddefn(f, 1), false) # set the field to be notnull.
-                AG.unsetfield!(f, 1) # now if we unset the field
-                @test !AG.isfieldnull(f, 1) && !AG.isfieldset(f, 1) && ismissing(AG.getfield(f, 1)) # to doublecheck
-                AG.fillunsetwithdefault!(f) # and we fill unset with default again
-                @test AG.getfield(f, 1) == AG.getdefault(f, 1) # the field is set to the default
+                # set the field to be notnullable
+                AG.setnullable!(AG.getfielddefn(f, 1), false)
+                # now if we unset the field
+                AG.unsetfield!(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                @test !AG.isfieldset(f, 1)
+                @test ismissing(AG.getfield(f, 1))
+                # and we fill unset with default again
+                AG.fillunsetwithdefault!(f)
+                # the field is set to the default
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
                 
                 # set & null: missing
-                @test !AG.isfieldnull(f, 1) && AG.isfieldset(f, 1) # still as expected from before
+                @test !AG.isfieldnull(f, 1)
+                @test AG.isfieldset(f, 1)
                 AG.setfieldnull!(f, 1)
-                @test AG.isfieldnull(f, 1) && AG.isfieldset(f, 1) && ismissing(AG.getfield(f, 1))
+                @test AG.isfieldnull(f, 1)
+                @test AG.isfieldset(f, 1)
+                @test ismissing(AG.getfield(f, 1))
 
                 # unset & null: N/A (but nothing otherwise)
                 AG.unsetfield!(f, 1)
-                # Observe that OGRUnsetMarker and OGRNullMarkerare are mutually exclusive
-                @test !AG.isfieldset(f, 1) && !AG.isfieldnull(f, 1) # notice the field is notnull
+                # Observe that OGRUnset and OGRNull are mutually exclusive
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1) # notice the field is notnull
+
+                # setting the field for a notnullable column
+                AG.setnullable!(AG.getfielddefn(f, 1), false)
+                AG.setfield!(f, 1, "value")
+                @test AG.getfield(f, 1) == "value"
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                AG.setfield!(f, 1, missing)
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                AG.setfield!(f, 1, nothing)
+                @test ismissing(AG.getfield(f, 1))
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+
+                # setting the field for a nullable column
+                AG.setnullable!(AG.getfielddefn(f, 1), true)
+                AG.setfield!(f, 1, "value")
+                @test AG.getfield(f, 1) == "value"
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                AG.setfield!(f, 1, missing)
+                @test ismissing(AG.getfield(f, 1))
+                @test AG.isfieldset(f, 1)
+                @test AG.isfieldnull(f, 1) # different from that of notnullable
+                AG.setfield!(f, 1, nothing)
+                @test ismissing(AG.getfield(f, 1))
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+
             end
         end
     end

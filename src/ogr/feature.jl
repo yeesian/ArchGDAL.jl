@@ -507,6 +507,20 @@ field types may be unaffected.
 """
 function setfield! end
 
+function setfield!(feature::Feature, i::Integer, value::Nothing)::Feature
+    unsetfield!(feature, i)
+    return feature
+end
+
+function setfield!(feature::Feature, i::Integer, value::Missing)::Feature
+    if isnullable(getfielddefn(feature, i))
+        setfieldnull!(feature, 1)
+    else
+        setfield!(feature, i, getdefault(feature, i))
+    end
+    return feature
+end
+
 function setfield!(feature::Feature, i::Integer, value::Int32)::Feature
     GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
     return feature
