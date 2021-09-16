@@ -459,17 +459,24 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     getfield(feature, i)
 
 ### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 * https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
 """
 function getfield(feature::Feature, i::Integer)
-    return if !isfieldset(feature, i)
-        getdefault(feature, i)
-    elseif isfieldnull(feature, i)
-        missing
-    else
+    return if isfieldsetandnotnull(feature, i)
+        @assert isfieldset(feature, i) && !isfieldnull(feature, i)
         _fieldtype = getfieldtype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
         _fetchfield(feature, i)
+    elseif isfieldset(feature, i)
+        @assert isfieldnull(feature, i)
+        missing
+    elseif isfieldnull(feature, i)
+        @assert !isfieldset(feature, i)
+        nothing
+    else
+        @assert !isfieldset(feature, i) && !isfieldnull(feature, i)
+        missing
     end
 end
 
