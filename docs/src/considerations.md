@@ -98,7 +98,7 @@ The interface is implemented in [`src/tables.jl`](https://github.com/yeesian/Arc
 
 ## Missing and Null Semantics in GDAL
 
-When reading the fields of a feature, ArchGDAL observes the following behavior:
+When reading the fields of a feature using `getfield(feature, i)`, ArchGDAL observes the following behavior:
 
 | Field | null    | notnull |
 |-------|---------|---------|
@@ -106,14 +106,11 @@ When reading the fields of a feature, ArchGDAL observes the following behavior:
 | unset | nothing | missing |
 
 This reflects that
-* a field that is notnull will never return `nothing`.
-  * use `isfieldnull(feature, i)` to determine if a field has been set.
-* a field that is set will never return `nothing`.
-  * use `isfieldset(feature, i)` to determine if a field has been set.
-* a field that is set and not null will always have a concrete value.
-  * use `isfieldsetandnotnull(feature, i)` to test for it.
+* a field that is notnull will never return `nothing`: use `isfieldnull(feature, i)` to determine if a field has been set.
+* a field that is set will never return `nothing`: use `isfieldset(feature, i)` to determine if a field has been set.
+* a field that is set and not null will always have a concrete value: use `isfieldsetandnotnull(feature, i)` to test for it.
 
-When writing the fields of a feature, ArchGDAL observes the following behavior:
+When writing the fields of a feature using `setfield!(feature, i, value)`, ArchGDAL observes the following behavior:
 
 | Field   | nullable | notnullable  |
 |---------|----------|--------------|
