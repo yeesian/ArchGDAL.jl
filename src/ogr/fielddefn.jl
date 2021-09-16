@@ -243,7 +243,7 @@ GDAL_DCAP_NOTNULL_FIELDS driver metadata item.
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-function setnullable!(fielddefn::FieldDefn, nullable::Bool)::FieldDefn
+function setnullable!(fielddefn::T, nullable::Bool)::T where {T <: AbstractFieldDefn}
     GDAL.ogr_fld_setnullable(fielddefn.ptr, nullable)
     return fielddefn
 end

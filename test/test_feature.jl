@@ -90,15 +90,50 @@ const AG = ArchGDAL;
             @test AG.validate(f, AG.F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) ==
                   true
 
-            @test AG.getfield(f, 1) == "point-a"
-            @test ismissing(AG.getdefault(f, 1))
-            AG.setdefault!(AG.getfielddefn(f, 1), "default value")
-            @test AG.getdefault(f, 1) == "default value"
-            @test AG.getfield(f, 1) == "point-a"
-            AG.unsetfield!(f, 1)
-            @test AG.getfield(f, 1) == "default value"
-            AG.fillunsetwithdefault!(f, notnull = false)
-            @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+            @testset "Missing and Null Semantics" begin
+                @test ismissing(AG.getdefault(f, 1))
+                AG.setdefault!(AG.getfielddefn(f, 1), "default value")
+                @test AG.getdefault(f, 1) == "default value"
+
+                @test AG.isfieldsetandnotnull(f, 1)
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                @test AG.getfield(f, 1) == "point-a"
+
+                AG.unsetfield!(f, 1)
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1) # carried over from earlier
+                @test ismissing(AG.getfield(f, 1))
+
+                # unset & notnull: missing
+                AG.fillunsetwithdefault!(f)
+                @test ismissing(AG.getfield(f, 1)) # nothing has changed
+                @test AG.isnullable(AG.getfielddefn(f, 1)) # because it is a nullable field
+                @test !AG.isfieldnull(f, 1) # even though it is not a null value.
+                @test !AG.isfieldset(f, 1) # the field is still not set.
+
+                # set & notnull: value
+                AG.fillunsetwithdefault!(f, notnull = false) # to set nullable fields
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1) # now the field is set to the default
+                @test !AG.isfieldnull(f, 1) # still as expected
+                @test AG.isfieldset(f, 1) # the field is now set
+
+                AG.setnullable!(AG.getfielddefn(f, 1), false) # set the field to be notnull.
+                AG.unsetfield!(f, 1) # now if we unset the field
+                @test !AG.isfieldnull(f, 1) && !AG.isfieldset(f, 1) && ismissing(AG.getfield(f, 1)) # to doublecheck
+                AG.fillunsetwithdefault!(f) # and we fill unset with default again
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1) # the field is set to the default
+                
+                # set & null: missing
+                @test !AG.isfieldnull(f, 1) && AG.isfieldset(f, 1) # still as expected from before
+                AG.setfieldnull!(f, 1)
+                @test AG.isfieldnull(f, 1) && AG.isfieldset(f, 1) && ismissing(AG.getfield(f, 1))
+
+                # unset & null: N/A (but nothing otherwise)
+                AG.unsetfield!(f, 1)
+                # Observe that OGRUnsetMarker and OGRNullMarkerare are mutually exclusive
+                @test !AG.isfieldset(f, 1) && !AG.isfieldnull(f, 1) # notice the field is notnull
+            end
         end
     end
 
