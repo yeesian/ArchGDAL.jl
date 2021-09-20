@@ -208,8 +208,7 @@ using Tables
                         multi1 = (
                             name = "multiline1",
                             geom = AG.createmultilinestring([
-                                [(i, i + 1) for i in j:j+3] for
-                                j in 1.0:5.0:6.0
+                                [(i, i + 1) for i in j:j+3] for j in 1.0:5.0:6.0
                             ]),
                         ),
                         simple2 = (
