@@ -434,7 +434,7 @@ end
 #           pfSecond,pnTZFlag)
 # end
 
-function getdefault(feature::Feature, i::Integer)::Union{String,Missing}
+function getdefault(feature::Feature, i::Integer)::Union{String,Nothing}
     return getdefault(getfielddefn(feature, i))
 end
 
@@ -458,6 +458,9 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
 """
     getfield(feature, i)
 
+When the field is unset, it will return `nothing`. When the field is set but
+null, it will return `missing`.
+
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 * https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
@@ -469,10 +472,8 @@ function getfield(feature::Feature, i::Integer)
         _fetchfield(feature, i)
     elseif isfieldset(feature, i)
         missing
-    elseif isfieldnull(feature, i)
-        nothing
     else
-        missing
+        nothing
     end
 end
 

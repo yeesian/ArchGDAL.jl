@@ -59,7 +59,7 @@ const AG = ArchGDAL;
             AG.setnullable!(fd, true)
             @test AG.isnullable(fd) == true
 
-            @test ismissing(AG.getdefault(fd))
+            @test isnothing(AG.getdefault(fd))
             AG.setdefault!(fd, "0001/01/01 00:00:00")
             @test AG.getdefault(fd) == "0001/01/01 00:00:00"
             @test AG.isdefaultdriverspecific(fd) == true

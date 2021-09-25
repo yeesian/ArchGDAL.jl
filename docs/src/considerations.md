@@ -103,11 +103,11 @@ When reading the fields of a feature using `getfield(feature, i)`, ArchGDAL obse
 | Field | null    | notnull |
 |-------|---------|---------|
 | set   | missing | value   |
-| unset | nothing | missing |
+| unset | nothing | nothing |
 
 This reflects that
-* a field that is notnull will never return `nothing`: use `isfieldnull(feature, i)` to determine if a field has been set.
-* a field that is set will never return `nothing`: use `isfieldset(feature, i)` to determine if a field has been set.
+* a field that is notnull will never return `missing`: use `isfieldnull(feature, i)` to determine if a field has been set.
+* a field is set will never return `nothing` (and a field that unset will always return `nothing`): use `isfieldset(feature, i)` to determine if a field has been set.
 * a field that is set and not null will always have a concrete value: use `isfieldsetandnotnull(feature, i)` to test for it.
 
 When writing the fields of a feature using `setfield!(feature, i, value)`, ArchGDAL observes the following behavior:
@@ -120,7 +120,7 @@ When writing the fields of a feature using `setfield!(feature, i, value)`, ArchG
 
 This reflects that
 * writing `nothing` will cause the field to be unset.
-* writing `missing` will cause the field to be null. In the cause of a notnullable field, it will take the default value (see https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html for details).
+* writing `missing` will cause the field to be null. In the cause of a notnullable field, it will take the default value (see https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html for details). If there is no default value, `getdefault()` will return `nothing`, causing the field to be unset.
 * writing a value will behave in the usual manner.
 
 For additional references, see

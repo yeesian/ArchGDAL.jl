@@ -218,7 +218,7 @@ using Tables
                                 (i, i + 1) for i in 3.0:5.0
                             ]),
                         ),
-                        emptygeom = (name = "emptygeom", geom = nothing),
+                        emptygeom = (name = "emptygeom", geom = missing),
                         emptyfield = (
                             name = "emptyid",
                             geom = AG.createlinestring([
@@ -250,7 +250,7 @@ using Tables
                                 (-1.0, -1.0),
                             ]),
                         ),
-                        emptygeom = (name = "emptygeom", geom = nothing),
+                        emptygeom = (name = "emptygeom", geom = missing),
                         emptyfield = (
                             name = "emptyid",
                             geom = AG.createpolygon([
@@ -334,7 +334,7 @@ using Tables
                         end
                         if withmissingfield
                             AG.addfeature(newlayer) do newfeature
-                                # No Id field set
+                                AG.setfieldnull!(newfeature, id_idx)
                                 AG.setfield!(
                                     newfeature,
                                     name_idx,
@@ -408,17 +408,13 @@ using Tables
             end
 
             # Helper functions
-            function toWKT_withmissings(x)
-                if ismissing(x)
-                    return missing
-                elseif typeof(x) <: AG.AbstractGeometry
-                    return AG.toWKT(x)
-                else
-                    return x
-                end
-            end
-            function columntablevalues_toWKT(x)
-                return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
+            wellknownvalue(obj::Any) = obj
+            wellknownvalue(obj::AG.AbstractGeometry) = AG.toWKT(obj)
+            wellknownvalue(obj::AG.AbstractSpatialRef) = AG.toWKT(obj)
+            wellknownvalue(obj::Missing)::Missing = missing
+            wellknownvalue(obj::Nothing)::Nothing = nothing
+            function wellknownvalues(x)::Tuple
+                return Tuple(wellknownvalue.(x[i]) for i in 1:length(x))
             end
             tupleoftuples_equal = (
                 (x, y) ->
@@ -461,7 +457,7 @@ using Tables
                     return (
                         names = keys(Tables.columntable(layer)),
                         types = eltype.(values(Tables.columntable(layer)),),
-                        values = columntablevalues_toWKT(
+                        values = wellknownvalues(
                             values(Tables.columntable(layer)),
                         ),
                     )
@@ -500,7 +496,7 @@ using Tables
                     @test keys(Tables.columntable(layer)) == reference_geotable.names
                     @test eltype.(values(Tables.columntable(layer))) == reference_geotable.types
                     @test tupleoftuples_equal(
-                        columntablevalues_toWKT(
+                        wellknownvalues(
                             values(Tables.columntable(layer)),
                         ),
                         reference_geotable.values,
@@ -524,7 +520,7 @@ using Tables
                 @test keys(Tables.columntable(layer)) == reference_geotable.names
                 @test eltype.(values(Tables.columntable(layer))) == reference_geotable.types
                 @test tupleoftuples_equal(
-                    columntablevalues_toWKT(
+                    wellknownvalues(
                         values(Tables.columntable(layer)),
                     ),
                     reference_geotable.values,
@@ -733,14 +729,14 @@ using Tables
             @testset "Conversion to table for FlatGeobuf driver" begin
                 FlatGeobuf_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
-                    types = (ArchGDAL.IGeometry, Union{Missing,Int64}, String),
+                    types = (ArchGDAL.IGeometry, Union{Nothing,Int64}, String),
                     values = (
                         [
                             "LINESTRING (5 6,6 7,7 8)",
                             "MULTILINESTRING ((1 2,2 3,3 4,4 5),(6 7,7 8,8 9,9 10))",
                             "LINESTRING (1 2,2 3,3 4)",
                         ],
-                        Union{Missing,Int64}[missing, 2, 1],
+                        Union{Nothing,Int64}[nothing, 2, 1],
                         ["emptyid", "multiline1", "line1"],
                     ),
                 )

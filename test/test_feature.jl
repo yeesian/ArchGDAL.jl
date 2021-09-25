@@ -91,7 +91,7 @@ const AG = ArchGDAL;
                   true
 
             @testset "Missing and Null Semantics" begin
-                @test ismissing(AG.getdefault(f, 1))
+                @test isnothing(AG.getdefault(f, 1))
                 AG.setdefault!(AG.getfielddefn(f, 1), "default value")
                 @test AG.getdefault(f, 1) == "default value"
 
@@ -103,12 +103,12 @@ const AG = ArchGDAL;
                 AG.unsetfield!(f, 1)
                 @test !AG.isfieldset(f, 1)
                 @test !AG.isfieldnull(f, 1) # carried over from earlier
-                @test ismissing(AG.getfield(f, 1))
+                @test isnothing(AG.getfield(f, 1))
 
                 # unset & notnull: missing
                 AG.fillunsetwithdefault!(f)
                 # nothing has changed
-                @test ismissing(AG.getfield(f, 1))
+                @test isnothing(AG.getfield(f, 1))
                 # because it is a nullable field
                 @test AG.isnullable(AG.getfielddefn(f, 1))
                 # even though it is not a null value
@@ -129,7 +129,7 @@ const AG = ArchGDAL;
                 AG.unsetfield!(f, 1)
                 @test !AG.isfieldnull(f, 1)
                 @test !AG.isfieldset(f, 1)
-                @test ismissing(AG.getfield(f, 1))
+                @test isnothing(AG.getfield(f, 1))
                 # and we fill unset with default again
                 AG.fillunsetwithdefault!(f)
                 # the field is set to the default
@@ -160,7 +160,7 @@ const AG = ArchGDAL;
                 @test AG.isfieldset(f, 1)
                 @test !AG.isfieldnull(f, 1)
                 AG.setfield!(f, 1, nothing)
-                @test ismissing(AG.getfield(f, 1))
+                @test isnothing(AG.getfield(f, 1))
                 @test !AG.isfieldset(f, 1)
                 @test !AG.isfieldnull(f, 1)
 
@@ -175,7 +175,7 @@ const AG = ArchGDAL;
                 @test AG.isfieldset(f, 1)
                 @test AG.isfieldnull(f, 1) # different from that of notnullable
                 AG.setfield!(f, 1, nothing)
-                @test ismissing(AG.getfield(f, 1))
+                @test isnothing(AG.getfield(f, 1))
                 @test !AG.isfieldset(f, 1)
                 @test !AG.isfieldnull(f, 1)
 

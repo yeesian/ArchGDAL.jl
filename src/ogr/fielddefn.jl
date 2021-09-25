@@ -256,11 +256,11 @@ Get default field value
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-function getdefault(fielddefn::AbstractFieldDefn)::Union{String,Missing}
+function getdefault(fielddefn::AbstractFieldDefn)::Union{String,Nothing}
     result =
         @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
     return if result == C_NULL
-        missing
+        nothing
     else
         unsafe_string(result)
     end
