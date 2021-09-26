@@ -466,14 +466,14 @@ null, it will return `missing`.
 * https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
 """
 function getfield(feature::Feature, i::Integer)
-    return if isfieldsetandnotnull(feature, i)
+    return if !isfieldset(feature, i)
+        nothing
+    elseif isfieldnull(feature, i)
+        missing
+    else
         _fieldtype = getfieldtype(getfielddefn(feature, i))
         _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
         _fetchfield(feature, i)
-    elseif isfieldset(feature, i)
-        missing
-    else
-        nothing
     end
 end
 
