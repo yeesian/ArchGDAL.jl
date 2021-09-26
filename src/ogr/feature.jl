@@ -177,7 +177,7 @@ Test if a field is set and not null.
 * `i`: the field to test, from 0 to GetFieldCount()-1.
 
 ### Returns
-`true` if the field is null, otherwise `false`.
+`true` if the field is set and not null, otherwise `false`.
 
 ### References
 * https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
