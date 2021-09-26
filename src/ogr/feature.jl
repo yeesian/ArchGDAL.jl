@@ -472,8 +472,16 @@ function getfield(feature::Feature, i::Integer)
         missing
     else
         _fieldtype = getfieldtype(getfielddefn(feature, i))
-        _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
-        _fetchfield(feature, i)
+        try
+            _fetchfield = _FETCHFIELD[_fieldtype]
+            _fetchfield(feature, i)
+        catch e
+            if e isa KeyError
+                error("$_fieldtype not implemented in getfield, please report an issue to https://github.com/yeesian/ArchGDAL.jl/issues")
+            else
+                rethrow(e)
+            end
+        end
     end
 end
 
