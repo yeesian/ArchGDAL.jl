@@ -124,6 +124,6 @@ This reflects that
 * writing a value will behave in the usual manner.
 
 For additional references, see
-* https://docs.julialang.org/en/v1/manual/faq/#faq-nothing
-* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
-* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
+* [JuliaLang: Nothingness and missing values](https://docs.julialang.org/en/v1/manual/faq/#faq-nothing)
+* [GDAL: OGR not-null constraints and default values](https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html)
+* [GDAL: Null values in OGR](https://gdal.org/development/rfc/rfc67_nullfieldvalues.html)
