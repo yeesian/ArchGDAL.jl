@@ -100,10 +100,10 @@ The interface is implemented in [`src/tables.jl`](https://github.com/yeesian/Arc
 
 When reading the fields of a feature using `getfield(feature, i)`, ArchGDAL observes the following behavior:
 
-| Field | null    | notnull |
-|-------|---------|---------|
-| set   | missing | value   |
-| unset | nothing | nothing |
+| Field | null      | notnull   |
+|-------|-----------|-----------|
+| set   | `missing` | value     |
+| unset | N/A       | `nothing` |
 
 This reflects that
 * a field that is notnull will never return `missing`: use `isfieldnull(feature, i)` to determine if a field has been set.
@@ -112,11 +112,11 @@ This reflects that
 
 When writing the fields of a feature using `setfield!(feature, i, value)`, ArchGDAL observes the following behavior:
 
-| Field   | nullable | notnullable  |
-|---------|----------|--------------|
-| nothing | unset    | unset        |
-| missing | null     | getdefault() |
-| value   | value    | value        |
+| Field     | nullable | notnullable    |
+|-----------|----------|----------------|
+| `nothing` | unset    | unset          |
+| `missing` | null     | `getdefault()` |
+| value     | value    | value          |
 
 This reflects that
 * writing `nothing` will cause the field to be unset.
