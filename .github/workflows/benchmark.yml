@@ -17,6 +17,6 @@ jobs:
       - name: Run benchmarks
         run: julia -e 'using BenchmarkCI; BenchmarkCI.judge()'
       - name: Print judgement
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement(; baseline = "2f44b03")'
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
