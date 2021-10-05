@@ -14,7 +14,7 @@ jobs:
       - name: Install dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
       - name: Run benchmarks
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(; target = "175600ee", baseline = "ac838398")'
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge(; target = "175600eef7cb1420176eae0d6d4490ec941727bf", baseline = "ac838398c2255073921755e2655a6396008de681")'
       - name: Print judgement
         run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
         env:
