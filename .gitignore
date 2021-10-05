@@ -15,6 +15,6 @@ test/spatialite/
 .DS_Store
 Manifest.toml
 *.tif
-# benchmark/data/*
+benchmark/data/
 .benchmarkci
 benchmark/*.json
