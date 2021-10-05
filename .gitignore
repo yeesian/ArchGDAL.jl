@@ -15,3 +15,5 @@ test/spatialite/
 .DS_Store
 Manifest.toml
 *.tif
+benchmark/tune.json
+benchmark/data
