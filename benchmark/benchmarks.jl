@@ -5,19 +5,21 @@ const AG = ArchGDAL;
 using Tables
 using Shapefile
 
+include("remotefiles.jl")
+
 const SUITE = BenchmarkGroup()
 
 SUITE["shapefile_to_table"] = BenchmarkGroup()
 
 # Data preparation
-datadir = joinpath(@__DIR__, "data")
-!isdir(datadir) && mkdir(datadir)
+# datadir = joinpath(@__DIR__, "data")
+# !isdir(datadir) && mkdir(datadir)
 
 road_shapefile_ziparchive = joinpath(@__DIR__, "data/road.zip")
-!isfile(road_shapefile_ziparchive) && download(
-    "https://www.data.gouv.fr/fr/datasets/r/ea2b85d7-b29e-4bb4-baa5-ac3bb618c67e",
-    road_shapefile_ziparchive,
-)
+# !isfile(road_shapefile_ziparchive) && download(
+#     "https://www.data.gouv.fr/fr/datasets/r/ea2b85d7-b29e-4bb4-baa5-ac3bb618c67e",
+#     road_shapefile_ziparchive,
+# )
 
 road_shapefile_dir = splitext(road_shapefile_ziparchive)[1]
 !isdir(road_shapefile_dir) && mkdir(road_shapefile_dir)
