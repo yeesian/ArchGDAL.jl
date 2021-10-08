@@ -619,6 +619,9 @@ getname(obj::OGRFieldType)::String = GDAL.ogr_getfieldtypename(obj)
     getname(obj::OGRFieldSubType)
 
 Fetch human readable name for a field subtype.
+
+### References
+* https://gdal.org/development/rfc/rfc50_ogr_field_subtype.html
 """
 getname(obj::OGRFieldSubType)::String = GDAL.ogr_getfieldsubtypename(obj)
 
@@ -626,6 +629,9 @@ getname(obj::OGRFieldSubType)::String = GDAL.ogr_getfieldsubtypename(obj)
     arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType)
 
 Return if type and subtype are compatible.
+
+### References
+* https://gdal.org/development/rfc/rfc50_ogr_field_subtype.html
 """
 arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType)::Bool =
     Bool(GDAL.ogr_aretypesubtypecompatible(dtype, subtype))

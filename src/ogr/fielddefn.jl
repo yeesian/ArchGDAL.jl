@@ -65,10 +65,36 @@ OGRFeatureDefn.
 ### Parameters
 * `fielddefn`: handle to the field definition to set type to.
 * `subtype`: the new field subtype.
+
+### References
+* https://gdal.org/development/rfc/rfc50_ogr_field_subtype.html
 """
 function setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)::FieldDefn
     GDAL.ogr_fld_setsubtype(fielddefn.ptr, subtype)
     return fielddefn
+end
+
+"""
+    getfieldtype(fielddefn::AbstractFieldDefn)
+
+Returns the type or subtype (if any) of this field.
+
+### Parameters
+* `fielddefn`: handle to the field definition.
+
+### Returns
+The field type or subtype.
+
+### References
+* https://gdal.org/development/rfc/rfc50_ogr_field_subtype.html
+"""
+function getfieldtype(fielddefn::AbstractFieldDefn)::Union{OGRFieldType, OGRFieldSubType}
+    fieldsubtype = getsubtype(fielddefn)
+    return if fieldsubtype != OFSTNone
+        fieldsubtype
+    else
+        gettype(fielddefn)
+    end
 end
 
 """
@@ -196,6 +222,9 @@ Even if this method returns `false` (i.e not-nullable field), it doesn't mean
 that OGRFeature::IsFieldSet() will necessarily return `true`, as fields can be
 temporarily unset and null/not-null validation is usually done when
 OGRLayer::CreateFeature()/SetFeature() is called.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 isnullable(fielddefn::AbstractFieldDefn)::Bool =
     Bool(GDAL.ogr_fld_isnullable(fielddefn.ptr))
@@ -210,8 +239,11 @@ to set a not-null constraint.
 
 Drivers that support writing not-null constraint will advertize the
 GDAL_DCAP_NOTNULL_FIELDS driver metadata item.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-function setnullable!(fielddefn::FieldDefn, nullable::Bool)::FieldDefn
+function setnullable!(fielddefn::T, nullable::Bool)::T where {T <: AbstractFieldDefn}
     GDAL.ogr_fld_setnullable(fielddefn.ptr, nullable)
     return fielddefn
 end
@@ -220,12 +252,15 @@ end
     getdefault(fielddefn::AbstractFieldDefn)
 
 Get default field value
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-function getdefault(fielddefn::AbstractFieldDefn)::Union{String,Missing}
+function getdefault(fielddefn::AbstractFieldDefn)::Union{String,Nothing}
     result =
         @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
     return if result == C_NULL
-        missing
+        nothing
     else
         unsafe_string(result)
     end
@@ -252,6 +287,9 @@ datetime literal value, format should be 'YYYY/MM/DD HH:MM:SS[.sss]'
 
 Drivers that support writing DEFAULT clauses will advertize the
 GDAL_DCAP_DEFAULT_FIELDS driver metadata item.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 function setdefault!(fielddefn::T, default)::T where {T<:AbstractFieldDefn}
     GDAL.ogr_fld_setdefault(fielddefn.ptr, default)
@@ -266,6 +304,9 @@ Returns whether the default value is driver specific.
 Driver specific default values are those that are not NULL, a numeric value, a
 literal value enclosed between single quote characters, CURRENT_TIMESTAMP,
 CURRENT_TIME, CURRENT_DATE or datetime literal value.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 isdefaultdriverspecific(fielddefn::AbstractFieldDefn)::Bool =
     Bool(GDAL.ogr_fld_isdefaultdriverspecific(fielddefn.ptr))

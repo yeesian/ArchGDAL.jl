@@ -149,6 +149,59 @@ function unsetfield!(feature::Feature, i::Integer)::Feature
     return feature
 end
 
+"""
+    isfieldnull(feature::Feature, i::Integer)
+
+Test if a field is null.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to test, from 0 to GetFieldCount()-1.
+
+### Returns
+`true` if the field is null, otherwise `false`.
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
+"""
+isfieldnull(feature::Feature, i::Integer)::Bool =
+    Bool(GDAL.ogr_f_isfieldnull(feature.ptr, i))
+
+"""
+    isfieldsetandnotnull(feature::Feature, i::Integer)
+
+Test if a field is set and not null.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to test, from 0 to GetFieldCount()-1.
+
+### Returns
+`true` if the field is set and not null, otherwise `false`.
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
+"""
+isfieldsetandnotnull(feature::Feature, i::Integer)::Bool =
+    Bool(GDAL.ogr_f_isfieldsetandnotnull(feature.ptr, i))
+
+"""
+    setfieldnull!(feature::Feature, i::Integer)
+
+Clear a field, marking it as null.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to set to null, from 0 to GetFieldCount()-1.
+
+### References
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
+"""
+function setfieldnull!(feature::Feature, i::Integer)::Feature
+    GDAL.ogr_f_setfieldnull(feature.ptr, i)
+    return feature
+end
+
 # """
 #     OGR_F_GetRawFieldRef(OGRFeatureH hFeat,
 #                          int iField) -> OGRField *
@@ -381,7 +434,7 @@ end
 #           pfSecond,pnTZFlag)
 # end
 
-function getdefault(feature::Feature, i::Integer)::Union{String,Missing}
+function getdefault(feature::Feature, i::Integer)::Union{String,Nothing}
     return getdefault(getfielddefn(feature, i))
 end
 
@@ -402,13 +455,33 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTInteger64List => asint64list,
 )
 
+"""
+    getfield(feature, i)
+
+When the field is unset, it will return `nothing`. When the field is set but
+null, it will return `missing`.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
+* https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
+"""
 function getfield(feature::Feature, i::Integer)
-    return if isfieldset(feature, i)
-        _fieldtype = gettype(getfielddefn(feature, i))
-        _fetchfield = get(_FETCHFIELD, _fieldtype, getdefault)
-        _fetchfield(feature, i)
+    return if !isfieldset(feature, i)
+        nothing
+    elseif isfieldnull(feature, i)
+        missing
     else
-        getdefault(feature, i)
+        _fieldtype = getfieldtype(getfielddefn(feature, i))
+        try
+            _fetchfield = _FETCHFIELD[_fieldtype]
+            _fetchfield(feature, i)
+        catch e
+            if e isa KeyError
+                error("$_fieldtype not implemented in getfield, please report an issue to https://github.com/yeesian/ArchGDAL.jl/issues")
+            else
+                rethrow(e)
+            end
+        end
     end
 end
 
@@ -438,6 +511,20 @@ field types may be unaffected.
 * `value`: the value to assign.
 """
 function setfield! end
+
+function setfield!(feature::Feature, i::Integer, value::Nothing)::Feature
+    unsetfield!(feature, i)
+    return feature
+end
+
+function setfield!(feature::Feature, i::Integer, value::Missing)::Feature
+    if isnullable(getfielddefn(feature, i))
+        setfieldnull!(feature, 1)
+    else
+        setfield!(feature, i, getdefault(feature, i))
+    end
+    return feature
+end
 
 function setfield!(feature::Feature, i::Integer, value::Int32)::Feature
     GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
@@ -854,6 +941,9 @@ Fill unset fields with default values that might be defined.
 * `feature`: handle to the feature.
 * `notnull`: if we should fill only unset fields with a not-null constraint.
 * `papszOptions`: unused currently. Must be set to `NULL`.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 function fillunsetwithdefault!(
     feature::Feature;
@@ -885,6 +975,9 @@ fails, then it will fail for all interpretations).
 
 ### Returns
 `true` if all enabled validation tests pass.
+
+### References
+* https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 validate(feature::Feature, flags::FieldValidation, emiterror::Bool)::Bool =
     Bool(GDAL.ogr_f_validate(feature.ptr, flags, emiterror))

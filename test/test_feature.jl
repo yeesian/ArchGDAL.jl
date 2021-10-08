@@ -90,15 +90,96 @@ const AG = ArchGDAL;
             @test AG.validate(f, AG.F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) ==
                   true
 
-            @test AG.getfield(f, 1) == "point-a"
-            @test ismissing(AG.getdefault(f, 1))
-            AG.setdefault!(AG.getfielddefn(f, 1), "default value")
-            @test AG.getdefault(f, 1) == "default value"
-            @test AG.getfield(f, 1) == "point-a"
-            AG.unsetfield!(f, 1)
-            @test AG.getfield(f, 1) == "default value"
-            AG.fillunsetwithdefault!(f, notnull = false)
-            @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+            @testset "Missing and Null Semantics" begin
+                @test isnothing(AG.getdefault(f, 1))
+                AG.setdefault!(AG.getfielddefn(f, 1), "default value")
+                @test AG.getdefault(f, 1) == "default value"
+
+                @test AG.isfieldsetandnotnull(f, 1)
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                @test AG.getfield(f, 1) == "point-a"
+
+                AG.unsetfield!(f, 1)
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1) # carried over from earlier
+                @test isnothing(AG.getfield(f, 1))
+
+                # unset & notnull: missing
+                AG.fillunsetwithdefault!(f)
+                # nothing has changed
+                @test isnothing(AG.getfield(f, 1))
+                # because it is a nullable field
+                @test AG.isnullable(AG.getfielddefn(f, 1))
+                # even though it is not a null value
+                @test !AG.isfieldnull(f, 1)
+                # the field is still not set
+                @test !AG.isfieldset(f, 1)
+
+                # set & notnull: value
+                AG.fillunsetwithdefault!(f, notnull = false)
+                # now the field is set to the default
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                @test !AG.isfieldnull(f, 1) # still as expected
+                @test AG.isfieldset(f, 1) # the field is now set
+
+                # set the field to be notnullable
+                AG.setnullable!(AG.getfielddefn(f, 1), false)
+                # now if we unset the field
+                AG.unsetfield!(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                @test !AG.isfieldset(f, 1)
+                @test isnothing(AG.getfield(f, 1))
+                # and we fill unset with default again
+                AG.fillunsetwithdefault!(f)
+                # the field is set to the default
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                
+                # set & null: missing
+                @test !AG.isfieldnull(f, 1)
+                @test AG.isfieldset(f, 1)
+                AG.setfieldnull!(f, 1)
+                @test AG.isfieldnull(f, 1)
+                @test AG.isfieldset(f, 1)
+                @test ismissing(AG.getfield(f, 1))
+
+                # unset & null: N/A (but nothing otherwise)
+                AG.unsetfield!(f, 1)
+                # Observe that OGRUnset and OGRNull are mutually exclusive
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1) # notice the field is notnull
+
+                # setting the field for a notnullable column
+                AG.setnullable!(AG.getfielddefn(f, 1), false)
+                AG.setfield!(f, 1, "value")
+                @test AG.getfield(f, 1) == "value"
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                AG.setfield!(f, 1, missing)
+                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                AG.setfield!(f, 1, nothing)
+                @test isnothing(AG.getfield(f, 1))
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+
+                # setting the field for a nullable column
+                AG.setnullable!(AG.getfielddefn(f, 1), true)
+                AG.setfield!(f, 1, "value")
+                @test AG.getfield(f, 1) == "value"
+                @test AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+                AG.setfield!(f, 1, missing)
+                @test ismissing(AG.getfield(f, 1))
+                @test AG.isfieldset(f, 1)
+                @test AG.isfieldnull(f, 1) # different from that of notnullable
+                AG.setfield!(f, 1, nothing)
+                @test isnothing(AG.getfield(f, 1))
+                @test !AG.isfieldset(f, 1)
+                @test !AG.isfieldnull(f, 1)
+
+            end
         end
     end
 
@@ -157,6 +238,10 @@ const AG = ArchGDAL;
                 AG.setfield!(feature, 9, Int16(1))
                 AG.setfield!(feature, 10, Int32(1))
                 AG.setfield!(feature, 11, Float32(1.0))
+                for i in 1:AG.nfield(feature)
+                    @test !AG.isfieldnull(feature, i-1)
+                    @test AG.isfieldsetandnotnull(feature, i-1)
+                end
                 @test sprint(print, AG.getgeom(feature)) == "NULL Geometry"
                 AG.getgeom(feature) do geom
                     @test sprint(print, geom) == "NULL Geometry"
@@ -169,6 +254,10 @@ const AG = ArchGDAL;
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)
                     @test AG.getfield(newfeature, 0) == 1
+                    for i in 1:AG.nfield(newfeature)
+                        @test !AG.isfieldnull(newfeature, i-1)
+                        @test AG.isfieldsetandnotnull(newfeature, i-1)
+                    end
                     @test AG.getfield(newfeature, 1) ≈ 1.0
                     @test AG.getfield(newfeature, 2) == Int32[1, 2]
                     @test AG.getfield(newfeature, 3) == Int64[1, 2]
@@ -209,6 +298,13 @@ const AG = ArchGDAL;
                         @test AG.getfield(newfeature, 0) == 45
                         @test AG.getfield(newfeature, 1) ≈ 18.2
                         @test AG.getfield(newfeature, 5) == String["foo", "bar"]
+
+                        @test AG.isfieldsetandnotnull(newfeature, 5)
+                        AG.setfieldnull!(newfeature, 5)
+                        @test !AG.isfieldsetandnotnull(newfeature, 5)
+                        @test AG.isfieldset(newfeature, 5)
+                        @test AG.isfieldnull(newfeature, 5)
+                        @test ismissing(AG.getfield(newfeature, 5))
                     end
                     @test AG.nfeature(layer) == 1
                 end
