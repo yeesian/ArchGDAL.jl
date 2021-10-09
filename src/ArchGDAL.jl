@@ -56,15 +56,10 @@ include("convert.jl")
 
 # const DRIVER_MANAGER = Ref{DriverManager}()
 
-function deregister_gdaljl_errorhandler()
-    GDAL.cplseterrorhandler(C_NULL)
-    return nothing
-end
-
 function __init__()
     GDAL.gdalallregister()
     # DRIVER_MANAGER[] = DriverManager(GDAL.getdrivermanager())
-    atexit(deregister_gdaljl_errorhandler)
+    atexit(() -> GDAL.cplseterrorhandler(C_NULL))
     return nothing
 end
 
