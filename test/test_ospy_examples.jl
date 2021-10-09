@@ -336,44 +336,43 @@ const AG = ArchGDAL;
 
         #reference: http://www.gis.usu.edu/~chrisg/python/2009/lectures/ospy_hw5a.py
         @testset "Homework 5a" begin
-            @time begin
-                rows = AG.height(ds)
-                cols = AG.width(ds)
-                bands = AG.nraster(ds)
+            rows = AG.height(ds)
+            cols = AG.width(ds)
+            bands = AG.nraster(ds)
 
-                # get the band and block sizes
-                inband2 = AG.getband(ds, 2)
-                inband3 = AG.getband(ds, 3)
-                (xbsize, ybsize) = AG.blocksize(inband2)
+            # get the band and block sizes
+            inband2 = AG.getband(ds, 2)
+            inband3 = AG.getband(ds, 3)
+            (xbsize, ybsize) = AG.blocksize(inband2)
 
-                buffer2 = Array{Float32}(undef, ybsize, xbsize)
-                buffer3 = Array{Float32}(undef, ybsize, xbsize)
-                ndvi = Array{Float32}(undef, ybsize, xbsize)
-                AG.create(
-                    AG.getdriver("MEM"),
-                    width = cols,
-                    height = rows,
-                    nbands = 1,
-                    dtype = Float32,
-                ) do outDS
-                    for ((i, j), (nrows, ncols)) in AG.blocks(inband2)
-                        AG.rasterio!(inband2, buffer2, j, i, ncols, nrows)
-                        AG.rasterio!(inband3, buffer3, j, i, ncols, nrows)
-                        data2 = buffer2[1:nrows, 1:ncols]
-                        data3 = buffer3[1:nrows, 1:ncols]
-                        for row in 1:nrows, col in 1:ncols
-                            denominator = data2[row, col] + data3[row, col]
-                            if denominator > 0
-                                numerator = data3[row, col] - data2[row, col]
-                                ndvi[row, col] = numerator / denominator
-                            else
-                                ndvi[row, col] = -99
-                            end
+            buffer2 = Array{Float32}(undef, ybsize, xbsize)
+            buffer3 = Array{Float32}(undef, ybsize, xbsize)
+            ndvi = Array{Float32}(undef, ybsize, xbsize)
+            AG.create(
+                AG.getdriver("MEM"),
+                width = cols,
+                height = rows,
+                nbands = 1,
+                dtype = Float32,
+            ) do outDS
+                for ((i, j), (nrows, ncols)) in AG.blocks(inband2)
+                    AG.rasterio!(inband2, buffer2, j, i, ncols, nrows)
+                    AG.rasterio!(inband3, buffer3, j, i, ncols, nrows)
+                    data2 = buffer2[1:nrows, 1:ncols]
+                    data3 = buffer3[1:nrows, 1:ncols]
+                    for row in 1:nrows, col in 1:ncols
+                        denominator = data2[row, col] + data3[row, col]
+                        if denominator > 0
+                            numerator = data3[row, col] - data2[row, col]
+                            ndvi[row, col] = numerator / denominator
+                        else
+                            ndvi[row, col] = -99
                         end
-                        # write the data
-                        AG.write!(outDS, ndvi, 1, j, i, ncols, nrows)
                     end
-                    @test sprint(print, outDS) == """
+                    # write the data
+                    AG.write!(outDS, ndvi, 1, j, i, ncols, nrows)
+                end
+                @test sprint(print, outDS) == """
                     GDAL Dataset (Driver: MEM/In Memory Raster)
                     File(s): 
 
@@ -381,24 +380,23 @@ const AG = ArchGDAL;
                     Number of raster bands: 1
                       [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
                     """
-                    # flush data to disk, set the NoData value and calculate stats
-                    outband = AG.getband(outDS, 1)
-                    @test sprint(print, outband) == """
+                # flush data to disk, set the NoData value and calculate stats
+                outband = AG.getband(outDS, 1)
+                @test sprint(print, outband) == """
                     [GA_Update] Band 1 (Undefined): 5665 x 5033 (Float32)
                         blocksize: 5665×1, nodata: nothing, units: 1.0px + 0.0
                         overviews: """
-                    AG.setnodatavalue!(outband, -99)
-                    # georeference the image and set the projection
-                    AG.setgeotransform!(outDS, AG.getgeotransform(ds))
-                    return AG.setproj!(outDS, AG.getproj(ds))
+                AG.setnodatavalue!(outband, -99)
+                # georeference the image and set the projection
+                AG.setgeotransform!(outDS, AG.getgeotransform(ds))
+                return AG.setproj!(outDS, AG.getproj(ds))
 
-                    # build pyramids
-                    # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
-                    # AG.buildoverviews!(outDS,
-                    #                   Cint[2,4,8,16,32,64,128], # overview list
-                    #                   # bandlist (omit to include all bands)
-                    #                   resampling="NEAREST")     # resampling method
-                end
+                # build pyramids
+                # gdal.SetConfigOption('HFA_USE_RRD', 'YES')
+                # AG.buildoverviews!(outDS,
+                #                   Cint[2,4,8,16,32,64,128], # overview list
+                #                   # bandlist (omit to include all bands)
+                #                   resampling="NEAREST")     # resampling method
             end
         end
     end
