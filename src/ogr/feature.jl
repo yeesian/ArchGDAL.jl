@@ -477,7 +477,9 @@ function getfield(feature::Feature, i::Integer)
             _fetchfield(feature, i)
         catch e
             if e isa KeyError
-                error("$_fieldtype not implemented in getfield, please report an issue to https://github.com/yeesian/ArchGDAL.jl/issues")
+                error(
+                    "$_fieldtype not implemented in getfield, please report an issue to https://github.com/yeesian/ArchGDAL.jl/issues",
+                )
             else
                 rethrow(e)
             end

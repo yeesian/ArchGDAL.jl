@@ -134,7 +134,7 @@ const AG = ArchGDAL;
                 AG.fillunsetwithdefault!(f)
                 # the field is set to the default
                 @test AG.getfield(f, 1) == AG.getdefault(f, 1)
-                
+
                 # set & null: missing
                 @test !AG.isfieldnull(f, 1)
                 @test AG.isfieldset(f, 1)
@@ -178,7 +178,6 @@ const AG = ArchGDAL;
                 @test isnothing(AG.getfield(f, 1))
                 @test !AG.isfieldset(f, 1)
                 @test !AG.isfieldnull(f, 1)
-
             end
         end
     end
@@ -239,8 +238,8 @@ const AG = ArchGDAL;
                 AG.setfield!(feature, 10, Int32(1))
                 AG.setfield!(feature, 11, Float32(1.0))
                 for i in 1:AG.nfield(feature)
-                    @test !AG.isfieldnull(feature, i-1)
-                    @test AG.isfieldsetandnotnull(feature, i-1)
+                    @test !AG.isfieldnull(feature, i - 1)
+                    @test AG.isfieldsetandnotnull(feature, i - 1)
                 end
                 @test sprint(print, AG.getgeom(feature)) == "NULL Geometry"
                 AG.getgeom(feature) do geom
@@ -255,8 +254,8 @@ const AG = ArchGDAL;
                     AG.setfrom!(newfeature, feature)
                     @test AG.getfield(newfeature, 0) == 1
                     for i in 1:AG.nfield(newfeature)
-                        @test !AG.isfieldnull(newfeature, i-1)
-                        @test AG.isfieldsetandnotnull(newfeature, i-1)
+                        @test !AG.isfieldnull(newfeature, i - 1)
+                        @test AG.isfieldsetandnotnull(newfeature, i - 1)
                     end
                     @test AG.getfield(newfeature, 1) ≈ 1.0
                     @test AG.getfield(newfeature, 2) == Int32[1, 2]

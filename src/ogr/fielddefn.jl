@@ -88,7 +88,9 @@ The field type or subtype.
 ### References
 * https://gdal.org/development/rfc/rfc50_ogr_field_subtype.html
 """
-function getfieldtype(fielddefn::AbstractFieldDefn)::Union{OGRFieldType, OGRFieldSubType}
+function getfieldtype(
+    fielddefn::AbstractFieldDefn,
+)::Union{OGRFieldType,OGRFieldSubType}
     fieldsubtype = getsubtype(fielddefn)
     return if fieldsubtype != OFSTNone
         fieldsubtype
@@ -243,7 +245,10 @@ GDAL_DCAP_NOTNULL_FIELDS driver metadata item.
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-function setnullable!(fielddefn::T, nullable::Bool)::T where {T <: AbstractFieldDefn}
+function setnullable!(
+    fielddefn::T,
+    nullable::Bool,
+)::T where {T<:AbstractFieldDefn}
     GDAL.ogr_fld_setnullable(fielddefn.ptr, nullable)
     return fielddefn
 end
