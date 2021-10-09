@@ -40,8 +40,6 @@ include("convert.jl")
 
 function __init__()
     GDAL.gdalallregister()
-    # deregistering of gdaljl_errorhandler (used to error Julia when a GDAL error with level CEFailure is raised) is handled in GDAL.jl via adding this deregitration in Julia exit hooks
-    # destruction of the GDALDriverManager is handled in GDAL.jl via gdaldestroy() registered first in Julia exit hooks
     return nothing
 end
 
