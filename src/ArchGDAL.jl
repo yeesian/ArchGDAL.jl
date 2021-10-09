@@ -40,7 +40,7 @@ include("convert.jl")
 
 function __init__()
     GDAL.gdalallregister()
-    atexit(() -> GDAL.cplseterrorhandler(C_NULL))
+    atexit(() -> GDAL.gdaldestroydrivermanager())
     return nothing
 end
 
