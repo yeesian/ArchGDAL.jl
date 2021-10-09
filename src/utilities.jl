@@ -13,7 +13,7 @@ String corresponding to the information about the raster dataset.
 """
 function gdalinfo(dataset::AbstractDataset, options = String[])::String
     gdal_info_options = GDAL.gdalinfooptionsnew(options, C_NULL)
-    return try 
+    return try
         GDAL.gdalinfo(dataset.ptr, gdal_info_options)
     finally
         GDAL.gdalinfooptionsfree(gdal_info_options)
