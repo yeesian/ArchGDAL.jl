@@ -3,7 +3,7 @@ const AG = ArchGDAL
 using Test
 
 @testset "test_gdalutilities_errors.jl" begin
-    AG.read("Non Interactive data/utmsmall.tif") do ds_small
+    AG.read("data/utmsmall.tif") do ds_small
         @testset "GDAL Error" begin
             @test_throws GDAL.GDALError AG.gdalinfo(
                 ds_small,
