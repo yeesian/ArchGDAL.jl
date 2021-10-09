@@ -492,12 +492,12 @@ using Tables
                     withmixedgeomtypes = withmixedgeomtypes,
                 ) do ds
                     layer = AG.getlayer(ds, 0)
-                    @test keys(Tables.columntable(layer)) == reference_geotable.names
-                    @test eltype.(values(Tables.columntable(layer))) == reference_geotable.types
+                    @test keys(Tables.columntable(layer)) ==
+                          reference_geotable.names
+                    @test eltype.(values(Tables.columntable(layer))) ==
+                          reference_geotable.types
                     @test tupleoftuples_equal(
-                        wellknownvalues(
-                            values(Tables.columntable(layer)),
-                        ),
+                        wellknownvalues(values(Tables.columntable(layer))),
                         reference_geotable.values,
                     )
                 end
@@ -516,12 +516,12 @@ using Tables
                 layer::AG.AbstractFeatureLayer,
                 reference_geotable::NamedTuple,
             )
-                @test keys(Tables.columntable(layer)) == reference_geotable.names
-                @test eltype.(values(Tables.columntable(layer))) == reference_geotable.types
+                @test keys(Tables.columntable(layer)) ==
+                      reference_geotable.names
+                @test eltype.(values(Tables.columntable(layer))) ==
+                      reference_geotable.types
                 @test tupleoftuples_equal(
-                    wellknownvalues(
-                        values(Tables.columntable(layer)),
-                    ),
+                    wellknownvalues(values(Tables.columntable(layer))),
                     reference_geotable.values,
                 )
             end
@@ -529,7 +529,11 @@ using Tables
             @testset "Conversion to table for ESRI Shapefile driver" begin
                 ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
-                    types = (Union{Missing,ArchGDAL.IGeometry}, Union{Missing,Int64}, String),
+                    types = (
+                        Union{Missing,ArchGDAL.IGeometry},
+                        Union{Missing,Int64},
+                        String,
+                    ),
                     values = (
                         Union{Missing,String}[
                             "POLYGON ((0 0,0 1,1 1))",
@@ -679,7 +683,11 @@ using Tables
             @testset "Conversion to table for GPKG driver" begin
                 GPKG_test_reference_geotable = (
                     names = (:geom, :id, :name),
-                    types = (Union{Missing,ArchGDAL.IGeometry}, Union{Missing,Int64}, String),
+                    types = (
+                        Union{Missing,ArchGDAL.IGeometry},
+                        Union{Missing,Int64},
+                        String,
+                    ),
                     values = (
                         Union{Missing,String}[
                             "LINESTRING (1 2,2 3,3 4)",
@@ -750,44 +758,38 @@ using Tables
             end
 
             @testset "Conversion to table for CSV driver" begin
-                    AG.read(
-                        joinpath(@__DIR__, "data/multi_geom.csv"),
-                        options = [
-                            "GEOM_POSSIBLE_NAMES=point,linestring",
-                            "KEEP_GEOM_COLUMNS=NO",
-                        ],
-                    ) do multigeom_test_ds
-                        multigeom_test_layer = AG.getlayer(multigeom_test_ds, 0)
-                        CSV_multigeom_test_reference_geotable = (
-                            names = (
-                                :point,
-                                :linestring,
-                                :id,
-                                :zoom,
-                                :location,
-                            ),
-                            types = (
-                                ArchGDAL.IGeometry{ArchGDAL.wkbPoint},
-                                ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
-                                String,
-                                String,
-                                String,
-                            ),
-                            values = (
-                                ["POINT (30 10)", "POINT (35 15)"],
-                                [
-                                    "LINESTRING (30 10,10 30,40 40)",
-                                    "LINESTRING (35 15,15 35,45 45)",
-                                ],
-                                ["5.1", "5.2"],
-                                ["1.0", "2.0"],
-                                ["Mumbai", "New Delhi"],
-                            ),
-                        )
-                        test_layer_to_table(
-                            multigeom_test_layer,
-                            CSV_multigeom_test_reference_geotable,
-                        )
+                AG.read(
+                    joinpath(@__DIR__, "data/multi_geom.csv"),
+                    options = [
+                        "GEOM_POSSIBLE_NAMES=point,linestring",
+                        "KEEP_GEOM_COLUMNS=NO",
+                    ],
+                ) do multigeom_test_ds
+                    multigeom_test_layer = AG.getlayer(multigeom_test_ds, 0)
+                    CSV_multigeom_test_reference_geotable = (
+                        names = (:point, :linestring, :id, :zoom, :location),
+                        types = (
+                            ArchGDAL.IGeometry{ArchGDAL.wkbPoint},
+                            ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
+                            String,
+                            String,
+                            String,
+                        ),
+                        values = (
+                            ["POINT (30 10)", "POINT (35 15)"],
+                            [
+                                "LINESTRING (30 10,10 30,40 40)",
+                                "LINESTRING (35 15,15 35,45 45)",
+                            ],
+                            ["5.1", "5.2"],
+                            ["1.0", "2.0"],
+                            ["Mumbai", "New Delhi"],
+                        ),
+                    )
+                    return test_layer_to_table(
+                        multigeom_test_layer,
+                        CSV_multigeom_test_reference_geotable,
+                    )
                 end
             end
 
