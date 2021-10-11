@@ -3,6 +3,7 @@ import ArchGDAL;
 const AG = ArchGDAL;
 import ImageCore
 import ColorTypes
+import GDAL
 
 @testset "test_images.jl" begin
     @testset "Test Gray colors" begin

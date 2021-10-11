@@ -12,10 +12,12 @@ List various information about a GDAL supported raster dataset.
 String corresponding to the information about the raster dataset.
 """
 function gdalinfo(dataset::AbstractDataset, options = String[])::String
-    options = GDAL.gdalinfooptionsnew(options, C_NULL)
-    result = GDAL.gdalinfo(dataset.ptr, options)
-    GDAL.gdalinfooptionsfree(options)
-    return result
+    gdal_info_options = GDAL.gdalinfooptionsnew(options, C_NULL)
+    return try
+        GDAL.gdalinfo(dataset.ptr, gdal_info_options)
+    finally
+        GDAL.gdalinfooptionsfree(gdal_info_options)
+    end
 end
 
 """

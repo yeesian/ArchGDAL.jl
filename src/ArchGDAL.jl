@@ -38,19 +38,7 @@ include("tables.jl")
 include("geointerface.jl")
 include("convert.jl")
 
-mutable struct DriverManager
-    function DriverManager()
-        drivermanager = new()
-        GDAL.gdalallregister()
-        finalizer((dm,) -> GDAL.gdaldestroydrivermanager(), drivermanager)
-        return drivermanager
-    end
-end
-
-const DRIVER_MANAGER = Ref{DriverManager}()
-
 function __init__()
-    DRIVER_MANAGER[] = DriverManager()
     return nothing
 end
 

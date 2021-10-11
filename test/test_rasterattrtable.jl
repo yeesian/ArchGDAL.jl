@@ -91,9 +91,15 @@ const AG = ArchGDAL;
             end
 
             AG.setlinearbinning!(rat, 0, 10)
-            @test AG.getlinearbinning(rat) == (0, 10)
+            @test (@test_logs (
+                :warn,
+                "There is no linear binning information.",
+            ) AG.getlinearbinning(rat)) == (0, 10)
             AG.setlinearbinning!(rat, -1.5, 12.0)
-            @test AG.getlinearbinning(rat) == (-1.5, 12.0)
+            @test (@test_logs (
+                :warn,
+                "There is no linear binning information.",
+            ) AG.getlinearbinning(rat)) == (-1.5, 12.0)
 
             @test AG.findrowindex(rat, 0) == 0
             @test AG.findrowindex(rat, -1) == 0
