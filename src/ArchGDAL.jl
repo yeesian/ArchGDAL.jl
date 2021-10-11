@@ -39,7 +39,6 @@ include("geointerface.jl")
 include("convert.jl")
 
 function __init__()
-    GDAL.gdalallregister()
     return nothing
 end
 
