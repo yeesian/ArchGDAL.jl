@@ -140,8 +140,9 @@ function IFeatureLayer(table::T)::IFeatureLayer where {T}
 
     # Populate layer
     for (i, row) in enumerate(rows)
-        rowgeoms = view(row, geomindices)
-        rowfields = view(row, fieldindices)
+        rowvalues = [Tables.getcolumn(row, col) for col in Tables.columnnames(row)]
+        rowgeoms = view(rowvalues, geomindices)
+        rowfields = view(rowvalues, fieldindices)
         addfeature(layer) do feature
             # TODO: optimize once PR #238 is merged define in casse of `missing` 
             # TODO: or `nothing` value, geom or field as to leave unset or set to null
