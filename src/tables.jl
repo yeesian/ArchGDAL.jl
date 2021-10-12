@@ -112,7 +112,7 @@ function _fromtable(
             (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
         catch e
             if e isa MethodError
-                error("Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType. Column types should be T ∈ [",)
+                error("Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",)
             else
                 rethrow()
             end
