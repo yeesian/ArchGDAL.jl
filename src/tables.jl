@@ -71,7 +71,7 @@ function _convert_coltype_to_AGtype(T::Type, colname::String)::Union{OGRwkbGeome
         oft::OGRFieldType = try 
             convert(OGRFieldType, promoted_clean_flattened_T)
         catch e
-            if !(e isa MethodError)
+            if e isa MethodError
                 error("Cannot convert column \"$colname\" (type $T) to OGRFieldType and OGRFieldSubType")
             else
                 rethrow()

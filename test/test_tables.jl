@@ -819,28 +819,35 @@ using Tables
                     all(all.([ctv_in[spidx_in[i]] .=== ctv_out[spidx_out[i]] for i in 1:length(ct_in)])),
                 ])
             end
-            
-            nt_with_mixed_geom_and_float = NamedTuple([
+            # Test with mixed IGeometry and Float
+            nt = NamedTuple([
                 :point => [
                     AG.createpoint(30, 10),
                     1.0,
                 ],
                 :name => ["point1", "point2"]
             ])
-
-            @test_throws ErrorException nt2layer2nt_equals_nt(nt_with_mixed_geom_and_float)
-
-            nt_with_mixed_string_and_float = NamedTuple([
+            @test_throws ErrorException nt2layer2nt_equals_nt(nt)
+            # Test with mixed String and Float64
+            nt = NamedTuple([
                 :point => [
                     AG.createpoint(30, 10),
                     AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
                 ],
                 :name => ["point1", 2.0]
             ])
-
-            @test_throws ErrorException nt2layer2nt_equals_nt(nt_with_mixed_geom_and_float)
-
-            nt_with_missing = NamedTuple([
+            @test_throws ErrorException nt2layer2nt_equals_nt(nt)
+            # Test with Int128 not convertible to OGRFieldType
+            nt = NamedTuple([
+                :point => [
+                    AG.createpoint(30, 10),
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                ],
+                :id => Int128[1, 2]
+            ])
+            @test_throws ErrorException nt2layer2nt_equals_nt(nt)
+            # Test with `missing` and `nothing`values
+            nt = NamedTuple([
                 :point => [
                     AG.createpoint(30, 10),
                     nothing,
@@ -868,10 +875,9 @@ using Tables
                     ]),
                 ],
             ])
-
-            @test_skip nt2layer2nt_equals_nt(nt_with_missing)
-
-            nt_without_nothing = NamedTuple([
+            @test_skip nt2layer2nt_equals_nt(nt)
+            # Test with `missing` values
+            nt = NamedTuple([
                 :point => [
                     AG.createpoint(30, 10),
                     missing,
@@ -899,8 +905,7 @@ using Tables
                     ]),
                 ],
             ])
-
-            @test nt2layer2nt_equals_nt(nt_without_nothing)
+            @test nt2layer2nt_equals_nt(nt)
         end
 
     end
