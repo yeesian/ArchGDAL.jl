@@ -54,7 +54,10 @@ end
 Convert a table column type to ArchGDAL IGeometry or OGRFieldType/OGRFieldSubType
 Conforms GDAL version 3.3 except for OFTSJSON and OFTSUUID
 """
-function _convert_coltype_to_AGtype(T::Type, colname::String)::Union{OGRwkbGeometryType, Tuple{OGRFieldType, OGRFieldSubType}}
+function _convert_coltype_to_AGtype(
+    T::Type,
+    colname::String,
+)::Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}
     flattened_T = Base.uniontypes(T)
     clean_flattened_T = filter(t -> t ∉ [Missing, Nothing], flattened_T)
     promoted_clean_flattened_T = promote_type(clean_flattened_T...)
@@ -65,14 +68,17 @@ function _convert_coltype_to_AGtype(T::Type, colname::String)::Union{OGRwkbGeome
         else
             convert(OGRwkbGeometryType, promoted_clean_flattened_T)
         end
-    elseif (promoted_clean_flattened_T isa DataType) && (promoted_clean_flattened_T != Any)
+    elseif (promoted_clean_flattened_T isa DataType) &&
+           (promoted_clean_flattened_T != Any)
         # OGRFieldType and OGRFieldSubType or error
         # TODO move from try-catch with convert to if-else with collections (to be defined)
-        oft::OGRFieldType = try 
+        oft::OGRFieldType = try
             convert(OGRFieldType, promoted_clean_flattened_T)
         catch e
             if e isa MethodError
-                error("Cannot convert column \"$colname\" (type $T) to OGRFieldType and OGRFieldSubType")
+                error(
+                    "Cannot convert column \"$colname\" (type $T) to OGRFieldType and OGRFieldSubType",
+                )
             else
                 rethrow()
             end
@@ -89,8 +95,10 @@ function _convert_coltype_to_AGtype(T::Type, colname::String)::Union{OGRwkbGeome
 
         return oft, ofst
     else
-        error("Cannot convert column \"$colname\" (type $T) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType")
-    end 
+        error(
+            "Cannot convert column \"$colname\" (type $T) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
+        )
+    end
 end
 
 function IFeatureLayer(table::T)::IFeatureLayer where {T}
@@ -104,7 +112,7 @@ function IFeatureLayer(table::T)::IFeatureLayer where {T}
     names = string.(schema.names)
     types = schema.types
     # TODO consider the case where names == nothing or types == nothing
-    
+
     # Convert types and split types/names between geometries and fields
     AG_types = collect(_convert_coltype_to_AGtype.(types, names))
 
@@ -112,45 +120,53 @@ function IFeatureLayer(table::T)::IFeatureLayer where {T}
     !any(geomindices) && error("No column convertible to geometry")
     geomtypes = AG_types[geomindices] # TODO consider to use a view
     geomnames = names[geomindices]
-    
-    fieldindices = isa.(AG_types, Tuple{OGRFieldType, OGRFieldSubType})
+
+    fieldindices = isa.(AG_types, Tuple{OGRFieldType,OGRFieldSubType})
     fieldtypes = AG_types[fieldindices] # TODO consider to use a view
     fieldnames = names[fieldindices]
-    
+
     # Create layer
-    layer = createlayer(geom=first(geomtypes))
+    layer = createlayer(geom = first(geomtypes))
     # TODO: create setname! for IGeomFieldDefnView. Probably needs first to fix issue #215
     # TODO: "Model and handle relationships between GDAL objects systematically"
-    GDAL.ogr_gfld_setname(getgeomdefn(layerdefn(layer), 0).ptr, first(geomnames))
+    GDAL.ogr_gfld_setname(
+        getgeomdefn(layerdefn(layer), 0).ptr,
+        first(geomnames),
+    )
 
     # Create FeatureDefn
     if length(geomtypes) ≥ 2
         for (j, geomtype) in enumerate(geomtypes[2:end])
             creategeomdefn(geomnames[j+1], geomtype) do geomfielddefn
-                addgeomdefn!(layer, geomfielddefn) # TODO check if necessary/interesting to set approx=true
+                return addgeomdefn!(layer, geomfielddefn) # TODO check if necessary/interesting to set approx=true
             end
         end
     end
-    for (j, (ft, fst)) in enumerate(fieldtypes)    
+    for (j, (ft, fst)) in enumerate(fieldtypes)
         createfielddefn(fieldnames[j], ft) do fielddefn
             setsubtype!(fielddefn, fst)
-            addfielddefn!(layer, fielddefn)
+            return addfielddefn!(layer, fielddefn)
         end
     end
 
     # Populate layer
     for (i, row) in enumerate(rows)
-        rowvalues = [Tables.getcolumn(row, col) for col in Tables.columnnames(row)]
+        rowvalues =
+            [Tables.getcolumn(row, col) for col in Tables.columnnames(row)]
         rowgeoms = view(rowvalues, geomindices)
         rowfields = view(rowvalues, fieldindices)
         addfeature(layer) do feature
             # TODO: optimize once PR #238 is merged define in casse of `missing` 
             # TODO: or `nothing` value, geom or field as to leave unset or set to null
             for (j, val) in enumerate(rowgeoms)
-                val !== missing && val !== nothing && setgeom!(feature, j-1, val)
+                val !== missing &&
+                    val !== nothing &&
+                    setgeom!(feature, j - 1, val)
             end
             for (j, val) in enumerate(rowfields)
-                val !== missing && val !== nothing && setfield!(feature, j-1, val)
+                val !== missing &&
+                    val !== nothing &&
+                    setfield!(feature, j - 1, val)
             end
         end
     end

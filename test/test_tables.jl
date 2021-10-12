@@ -811,41 +811,58 @@ using Tables
                 return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
             end
             function nt2layer2nt_equals_nt(nt::NamedTuple)::Bool
-                (ct_in, ct_out) = Tables.columntable.((nt, AG.IFeatureLayer(nt)))
-                (ctv_in, ctv_out) = columntablevalues_toWKT.(values.((ct_in, ct_out)))
-                (spidx_in, spidx_out) = sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
+                (ct_in, ct_out) =
+                    Tables.columntable.((nt, AG.IFeatureLayer(nt)))
+                (ctv_in, ctv_out) =
+                    columntablevalues_toWKT.(values.((ct_in, ct_out)))
+                (spidx_in, spidx_out) =
+                    sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
                 return all([
                     sort([keys(ct_in)...]) == sort([keys(ct_out)...]),
-                    all(all.([ctv_in[spidx_in[i]] .=== ctv_out[spidx_out[i]] for i in 1:length(ct_in)])),
+                    all(
+                        all.([
+                            ctv_in[spidx_in[i]] .=== ctv_out[spidx_out[i]] for
+                            i in 1:length(ct_in)
+                        ]),
+                    ),
                 ])
             end
+
             # Test with mixed IGeometry and Float
             nt = NamedTuple([
-                :point => [
-                    AG.createpoint(30, 10),
-                    1.0,
-                ],
-                :name => ["point1", "point2"]
+                :point => [AG.createpoint(30, 10), 1.0],
+                :name => ["point1", "point2"],
             ])
             @test_throws ErrorException nt2layer2nt_equals_nt(nt)
+
             # Test with mixed String and Float64
             nt = NamedTuple([
                 :point => [
                     AG.createpoint(30, 10),
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
                 ],
-                :name => ["point1", 2.0]
+                :name => ["point1", 2.0],
             ])
             @test_throws ErrorException nt2layer2nt_equals_nt(nt)
+
             # Test with Int128 not convertible to OGRFieldType
             nt = NamedTuple([
                 :point => [
                     AG.createpoint(30, 10),
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
                 ],
-                :id => Int128[1, 2]
+                :id => Int128[1, 2],
             ])
             @test_throws ErrorException nt2layer2nt_equals_nt(nt)
+
             # Test with `missing` and `nothing`values
             nt = NamedTuple([
                 :point => [
@@ -854,8 +871,16 @@ using Tables
                     AG.createpoint(35, 15),
                 ],
                 :linestring => [
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
-                    AG.createlinestring([(35., 15.), (15., 35.), (45., 45.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
+                    AG.createlinestring([
+                        (35.0, 15.0),
+                        (15.0, 35.0),
+                        (45.0, 45.0),
+                    ]),
                     missing,
                 ],
                 :id => [nothing, "5.1", "5.2"],
@@ -863,19 +888,28 @@ using Tables
                 :location => ["Mumbai", missing, "New Delhi"],
                 :mixedgeom1 => [
                     AG.createpoint(30, 10),
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
                     AG.createpoint(35, 15),
                 ],
                 :mixedgeom2 => [
                     AG.createpoint(30, 10),
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
                     AG.createmultilinestring([
-                        [(25., 5.), (5., 25.), (35., 35.)], 
-                        [(35., 15.), (15., 35.), (45., 45.)],
+                        [(25.0, 5.0), (5.0, 25.0), (35.0, 35.0)],
+                        [(35.0, 15.0), (15.0, 35.0), (45.0, 45.0)],
                     ]),
                 ],
             ])
             @test_skip nt2layer2nt_equals_nt(nt)
+
             # Test with `missing` values
             nt = NamedTuple([
                 :point => [
@@ -884,8 +918,16 @@ using Tables
                     AG.createpoint(35, 15),
                 ],
                 :linestring => [
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
-                    AG.createlinestring([(35., 15.), (15., 35.), (45., 45.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
+                    AG.createlinestring([
+                        (35.0, 15.0),
+                        (15.0, 35.0),
+                        (45.0, 45.0),
+                    ]),
                     missing,
                 ],
                 :id => [missing, "5.1", "5.2"],
@@ -893,20 +935,27 @@ using Tables
                 :location => ["Mumbai", missing, "New Delhi"],
                 :mixedgeom1 => [
                     AG.createpoint(30, 10),
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
                     AG.createpoint(35, 15),
                 ],
                 :mixedgeom2 => [
                     AG.createpoint(30, 10),
-                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([
+                        (30.0, 10.0),
+                        (10.0, 30.0),
+                        (40.0, 40.0),
+                    ]),
                     AG.createmultilinestring([
-                        [(25., 5.), (5., 25.), (35., 35.)], 
-                        [(35., 15.), (15., 35.), (45., 45.)],
+                        [(25.0, 5.0), (5.0, 25.0), (35.0, 35.0)],
+                        [(35.0, 15.0), (15.0, 35.0), (45.0, 45.0)],
                     ]),
                 ],
             ])
             @test nt2layer2nt_equals_nt(nt)
         end
-
     end
 end
