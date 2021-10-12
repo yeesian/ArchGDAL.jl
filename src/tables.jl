@@ -153,17 +153,20 @@ function _fromtable(
         rowgeoms = view(rowvalues, geomindices)
         rowfields = view(rowvalues, fieldindices)
         addfeature(layer) do feature
-            # TODO: optimize once PR #238 is merged define in casse of `missing` 
-            # TODO: or `nothing` value, geom or field as to leave unset or set to null
+            # For geometry fields both `missing` and `nothing` map to not geometry set
+            # since in GDAL <= v"3.3.2", special fields as geometry field cannot be NULL
+            # cf. `OGRFeature::IsFieldNull( int iField )` implemetation
             for (j, val) in enumerate(rowgeoms)
                 val !== missing &&
                     val !== nothing &&
                     setgeom!(feature, j - 1, val)
             end
             for (j, val) in enumerate(rowfields)
-                val !== missing &&
-                    val !== nothing &&
+                if val === missing
+                    setfieldnull!(feature, j - 1)
+                elseif val !== nothing
                     setfield!(feature, j - 1, val)
+                end
             end
         end
     end
@@ -178,7 +181,7 @@ function _fromtable(
 )::IFeatureLayer where {names}
     cols = Tables.columns(rows)
     types = (eltype(collect(col)) for col in cols)
-    return _fromtable(Tables.Schema(names, types), rows; name=name)
+    return _fromtable(Tables.Schema(names, types), rows; name = name)
 end
 
 function _fromtable(::Nothing, rows; name::String = "")::IFeatureLayer
@@ -186,7 +189,7 @@ function _fromtable(::Nothing, rows; name::String = "")::IFeatureLayer
     state === nothing && return IFeatureLayer()
     row, _ = state
     names = Tables.columnnames(row)
-    return _fromtable(Tables.Schema(names, nothing), rows; name=name)
+    return _fromtable(Tables.Schema(names, nothing), rows; name = name)
 end
 
 """
@@ -232,5 +235,5 @@ function IFeatureLayer(table; name::String = "")::IFeatureLayer
     # Extract table data
     rows = Tables.rows(table)
     schema = Tables.schema(table)
-    return _fromtable(schema, rows; name=name)
+    return _fromtable(schema, rows; name = name)
 end

@@ -807,33 +807,53 @@ using Tables
                     return x
                 end
             end
-            function columntablevalues_toWKT(x)
+            function ctv_toWKT(x)
                 return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
             end
+            """
+                nt2layer2nt_equals_nt(nt; force_no_schema=true)
+
+            Takes a NamedTuple, converts it to an IFeatureLayer and compares the NamedTuple
+            to the one obtained from the IFeatureLayer conversion to table
+
+            _Notes:_
+            1. _Table columns have geometry column first and then field columns as
+            enforced by `Tables.columnnames`_
+            2. _`nothing` values in geometry column are returned as `missing` from
+            the NamedTuple roundtrip conversion, since geometry fields do not have the
+            same distinction between NULL and UNSET values the fields have_
+
+            """
             function nt2layer2nt_equals_nt(
                 nt::NamedTuple;
                 force_no_schema::Bool = false,
             )::Bool
-                if force_no_schema
-                    (ct_in, ct_out) =
-                        Tables.columntable.((
-                            nt,
-                            AG._fromtable(nothing, Tables.rows(nt)),
-                        ))
-                else
-                    (ct_in, ct_out) =
-                        Tables.columntable.((nt, AG.IFeatureLayer(nt)))
-                end
-                (ctv_in, ctv_out) =
-                    columntablevalues_toWKT.(values.((ct_in, ct_out)))
+                force_no_schema ?
+                layer = AG._fromtable(nothing, Tables.rows(nt)) :
+                layer = AG.IFeatureLayer(nt)
+                ngeom = AG.ngeom(layer)
+                (ct_in, ct_out) = Tables.columntable.((nt, layer))
+                # we convert IGeometry values to WKT
+                (ctv_in, ctv_out) = ctv_toWKT.(values.((ct_in, ct_out)))
+                # we use two index functions to map ctv_in and ctv_out indices to the 
+                # sorted key list indices
                 (spidx_in, spidx_out) =
                     sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
                 return all([
                     sort([keys(ct_in)...]) == sort([keys(ct_out)...]),
                     all(
                         all.([
-                            ctv_in[spidx_in[i]] .=== ctv_out[spidx_out[i]] for
-                            i in 1:length(ct_in)
+                            (
+                                # if we are comparing two geometry columns values, we
+                                # convert `nothing` values to `missing`, see note #2
+                                spidx_out[i] <= ngeom ?
+                                map(
+                                    val ->
+                                        (val === nothing || val === missing) ?
+                                        missing : val,
+                                    ctv_in[spidx_in[i]],
+                                ) : ctv_in[spidx_in[i]]
+                            ) .=== ctv_out[spidx_out[i]] for i in 1:length(nt)
                         ]),
                     ),
                 ])
@@ -919,8 +939,8 @@ using Tables
                     ]),
                 ],
             ])
-            @test_skip nt2layer2nt_equals_nt(nt; force_no_schema = true)
-            @test_skip nt2layer2nt_equals_nt(nt)
+            @test nt2layer2nt_equals_nt(nt; force_no_schema = true)
+            @test nt2layer2nt_equals_nt(nt)
 
             # Test with `missing` values
             nt = NamedTuple([
