@@ -104,7 +104,7 @@ end
 function _fromtable(
     sch::Tables.Schema{names,types},
     rows;
-    name::String="",
+    name::String = "",
 )::IFeatureLayer where {names,types}
     # TODO maybe constrain `names` and `types` types
     strnames = string.(sch.names)
@@ -173,15 +173,15 @@ end
 
 function _fromtable(
     ::Tables.Schema{names,nothing},
-    rows; 
-    name::String="",
+    rows;
+    name::String = "",
 )::IFeatureLayer where {names}
     cols = Tables.columns(rows)
     types = (eltype(collect(col)) for col in cols)
     return _fromtable(Tables.Schema(names, types), rows; name)
 end
 
-function _fromtable(::Nothing, rows, name::String="")::IFeatureLayer
+function _fromtable(::Nothing, rows, name::String = "")::IFeatureLayer
     state = iterate(rows)
     state === nothing && return IFeatureLayer()
     row, _ = state
@@ -225,7 +225,7 @@ Layer: towns
      Field 2 (location): [OFTString], missing, New Delhi
 ```
 """
-function IFeatureLayer(table; name::String="")::IFeatureLayer
+function IFeatureLayer(table; name::String = "")::IFeatureLayer
     # Check tables interface's conformance
     !Tables.istable(table) &&
         throw(DomainError(table, "$table has not a Table interface"))
