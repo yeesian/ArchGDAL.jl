@@ -178,15 +178,15 @@ function _fromtable(
 )::IFeatureLayer where {names}
     cols = Tables.columns(rows)
     types = (eltype(collect(col)) for col in cols)
-    return _fromtable(Tables.Schema(names, types), rows; name)
+    return _fromtable(Tables.Schema(names, types), rows; name=name)
 end
 
-function _fromtable(::Nothing, rows, name::String = "")::IFeatureLayer
+function _fromtable(::Nothing, rows; name::String = "")::IFeatureLayer
     state = iterate(rows)
     state === nothing && return IFeatureLayer()
     row, _ = state
     names = Tables.columnnames(row)
-    return _fromtable(Tables.Schema(names, nothing), rows; name)
+    return _fromtable(Tables.Schema(names, nothing), rows; name=name)
 end
 
 """
@@ -232,5 +232,5 @@ function IFeatureLayer(table; name::String = "")::IFeatureLayer
     # Extract table data
     rows = Tables.rows(table)
     schema = Tables.schema(table)
-    return _fromtable(schema, rows; name)
+    return _fromtable(schema, rows; name=name)
 end
