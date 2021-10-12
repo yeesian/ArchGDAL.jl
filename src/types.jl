@@ -237,6 +237,7 @@ end
 
 @convert(
     GDALDataType::GDAL.GDALDataType,
+
     GDT_Unknown::GDAL.GDT_Unknown,
     GDT_Byte::GDAL.GDT_Byte,
     GDT_UInt16::GDAL.GDT_UInt16,
@@ -254,6 +255,7 @@ end
 
 @convert(
     GDALDataType::Normed,
+    
     GDT_Byte::N0f8,
     GDT_UInt16::N0f16,
     GDT_UInt32::N0f32,
@@ -261,6 +263,7 @@ end
 
 @convert(
     GDALDataType::DataType,
+    
     GDT_Unknown::Any,
     GDT_Byte::UInt8,
     GDT_UInt16::UInt16,
@@ -275,6 +278,7 @@ end
 
 @convert(
     OGRFieldType::GDAL.OGRFieldType,
+    
     OFTInteger::GDAL.OFTInteger,
     OFTIntegerList::GDAL.OFTIntegerList,
     OFTReal::GDAL.OFTReal,
@@ -293,6 +297,7 @@ end
 
 @convert(
     OGRFieldType::DataType,
+    
     OFTInteger::Bool,
     OFTInteger::Int8,
     OFTInteger::Int16,
@@ -303,6 +308,7 @@ end
     OFTReal::Float16,
     OFTReal::Float32,
     OFTReal::Float64,  # default type comes last
+    OFTRealList::Vector{Float16},
     OFTRealList::Vector{Float32},
     OFTRealList::Vector{Float64}, # default type comes last
     OFTString::String,
@@ -317,6 +323,7 @@ end
 
 @convert(
     OGRFieldSubType::GDAL.OGRFieldSubType,
+    
     OFSTNone::GDAL.OFSTNone,
     OFSTBoolean::GDAL.OFSTBoolean,
     OFSTInt16::GDAL.OFSTInt16,
@@ -326,19 +333,35 @@ end
 
 @convert(
     OGRFieldSubType::DataType,
-    OFSTNone::Nothing,
+
+    OFSTNone::Int8,
+    OFSTNone::Int32,
     OFSTBoolean::Vector{Bool},
     OFSTBoolean::Bool, # default type comes last
     OFSTInt16::Vector{Int16},
     OFSTInt16::Int16, # default type comes last
+    OFSTNone::Vector{Int32},
+    OFSTInt16::Float16,
+    OFSTNone::Float64,
+    OFSTInt16::Vector{Float16},
     OFSTFloat32::Vector{Float32},
     OFSTFloat32::Float32, # default type comes last
-    OFSTJSON::String,
-    # Lacking OFSTUUID defined in GDAL ≥ v"3.3"
+    OFSTNone::Vector{Float64},
+    OFSTNone::String,
+    OFSTNone::Vector{String},
+    OFSTNone::Vector{UInt8},
+    OFSTNone::Dates.Date,
+    OFSTNone::Dates.Time,
+    OFSTNone::Dates.DateTime,
+    OFSTNone::Int64,
+    OFSTNone::Vector{Int64},
+    # Lacking OFSTUUID and OFSTJSON defined in GDAL ≥ v"3.3"
+    OFSTNone::Nothing, # default type comes last
 )
 
 @convert(
     OGRJustification::GDAL.OGRJustification,
+    
     OJUndefined::GDAL.OJUndefined,
     OJLeft::GDAL.OJLeft,
     OJRight::GDAL.OJRight,
@@ -346,6 +369,7 @@ end
 
 @convert(
     GDALRATFieldType::GDAL.GDALRATFieldType,
+    
     GFT_Integer::GDAL.GFT_Integer,
     GFT_Real::GDAL.GFT_Real,
     GFT_String::GDAL.GFT_String,
@@ -353,6 +377,7 @@ end
 
 @convert(
     GDALRATFieldUsage::GDAL.GDALRATFieldUsage,
+    
     GFU_Generic::GDAL.GFU_Generic,
     GFU_PixelCount::GDAL.GFU_PixelCount,
     GFU_Name::GDAL.GFU_Name,
@@ -376,18 +401,21 @@ end
 
 @convert(
     GDALAccess::GDAL.GDALAccess,
+    
     GA_ReadOnly::GDAL.GA_ReadOnly,
     GA_Update::GDAL.GA_Update,
 )
 
 @convert(
     GDALRWFlag::GDAL.GDALRWFlag,
+    
     GF_Read::GDAL.GF_Read,
     GF_Write::GDAL.GF_Write,
 )
 
 @convert(
     GDALPaletteInterp::GDAL.GDALPaletteInterp,
+    
     GPI_Gray::GDAL.GPI_Gray,
     GPI_RGB::GDAL.GPI_RGB,
     GPI_CMYK::GDAL.GPI_CMYK,
@@ -396,6 +424,7 @@ end
 
 @convert(
     GDALColorInterp::GDAL.GDALColorInterp,
+    
     GCI_Undefined::GDAL.GCI_Undefined,
     GCI_GrayIndex::GDAL.GCI_GrayIndex,
     GCI_PaletteIndex::GDAL.GCI_PaletteIndex,
@@ -417,6 +446,7 @@ end
 
 @convert(
     GDALAsyncStatusType::GDAL.GDALAsyncStatusType,
+    
     GARIO_PENDING::GDAL.GARIO_PENDING,
     GARIO_UPDATE::GDAL.GARIO_UPDATE,
     GARIO_ERROR::GDAL.GARIO_ERROR,
@@ -426,6 +456,7 @@ end
 
 @convert(
     OGRSTClassId::GDAL.OGRSTClassId,
+    
     OGRSTCNone::GDAL.OGRSTCNone,
     OGRSTCPen::GDAL.OGRSTCPen,
     OGRSTCBrush::GDAL.OGRSTCBrush,
@@ -436,6 +467,7 @@ end
 
 @convert(
     OGRSTUnitId::GDAL.OGRSTUnitId,
+    
     OGRSTUGround::GDAL.OGRSTUGround,
     OGRSTUPixel::GDAL.OGRSTUPixel,
     OGRSTUPoints::GDAL.OGRSTUPoints,
@@ -446,6 +478,7 @@ end
 
 @convert(
     OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
+    
     wkbUnknown::GDAL.wkbUnknown,
     wkbPoint::GDAL.wkbPoint,
     wkbLineString::GDAL.wkbLineString,
@@ -521,6 +554,7 @@ end
 
 @convert(
     OGRwkbGeometryType::IGeometry,
+    
     wkbUnknown::IGeometry{wkbUnknown},
     wkbPoint::IGeometry{wkbPoint},
     wkbLineString::IGeometry{wkbLineString},
@@ -603,6 +637,7 @@ end
 
 @convert(
     OGRwkbByteOrder::GDAL.OGRwkbByteOrder,
+    
     wkbXDR::GDAL.wkbXDR,
     wkbNDR::GDAL.wkbNDR,
 )

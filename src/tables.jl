@@ -49,68 +49,75 @@ function schema_names(featuredefn::IFeatureDefnView)
 end
 
 """
-    convert_coltype_to_AGtype(T, colidx)
+    _convert_cleantype_to_AGtype(T)
 
-Convert a table column type to ArchGDAL IGeometry or OGRFieldType/OGRFieldSubType
-Conforms GDAL version 3.3 except for OFTSJSON and OFTSUUID
+Converts type `T` into either:
+- a `OGRwkbGeometryType` or
+- a tuple of `OGRFieldType` and `OGRFieldSubType`
+
 """
-function _convert_coltype_to_AGtype(
-    T::Type,
-    colname::String,
-)::Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}
+function _convert_cleantype_to_AGtype end
+_convert_cleantype_to_AGtype(::Type{IGeometry}) = wkbUnknown
+@generated _convert_cleantype_to_AGtype(::Type{IGeometry{U}}) where U = :($U)
+@generated _convert_cleantype_to_AGtype(T::Type{U}) where U = :(convert(OGRFieldType, T), convert(OGRFieldSubType, T))
+
+
+"""
+    _convert_coltype_to_cleantype(T)
+
+Convert a table column type to a "clean" type:
+- Unions are flattened
+- Missing and Nothing are dropped
+- Resulting mixed types are approximated by their tightest common supertype
+
+"""
+function _convert_coltype_to_cleantype(T::Type)
     flattened_T = Base.uniontypes(T)
     clean_flattened_T = filter(t -> t ∉ [Missing, Nothing], flattened_T)
-    promoted_clean_flattened_T = promote_type(clean_flattened_T...)
-    if promoted_clean_flattened_T <: IGeometry
-        # IGeometry
-        return if promoted_clean_flattened_T == IGeometry
-            wkbUnknown
-        else
-            convert(OGRwkbGeometryType, promoted_clean_flattened_T)
-        end
-    elseif (promoted_clean_flattened_T isa DataType) &&
-           (promoted_clean_flattened_T != Any)
-        # OGRFieldType and OGRFieldSubType or error
-        # TODO move from try-catch with convert to if-else with collections (to be defined)
-        oft::OGRFieldType = try
-            convert(OGRFieldType, promoted_clean_flattened_T)
-        catch e
-            if e isa MethodError
-                error(
-                    "Cannot convert column \"$colname\" (type $T) to OGRFieldType and OGRFieldSubType",
-                )
-            else
-                rethrow()
-            end
-        end
-        if oft ∉ [OFTInteger, OFTIntegerList, OFTReal, OFTRealList] # TODO consider extension to OFTSJSON and OFTSUUID
-            ofst = OFSTNone
-        else
-            ofst::OGRFieldSubType = try
-                convert(OGRFieldSubType, promoted_clean_flattened_T)
-            catch e
-                e isa MethodError ? OFSTNone : rethrow()
-            end
-        end
-
-        return oft, ofst
-    else
-        error(
-            "Cannot convert column \"$colname\" (type $T) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
-        )
-    end
+    return promote_type(clean_flattened_T...)
 end
 
+"""
+    _fromtable(sch, rows; name)
+
+Converts a row table `rows` with schema `sch` to a layer (optionally named `name`) within a MEMORY dataset
+
+"""
+function _fromtable end
+
+"""
+    _fromtable(sch::Tables.Schema{names,types}, rows; name::String = "")
+
+Handles the case where names and types in `sch` are different from `nothing`
+
+# Implementation
+1. convert `rows`'s column types given in `sch` to either geometry types or field types and subtypes
+2. split `rows`'s columns into geometry typed columns and field typed columns
+3. create layer named `name` in a MEMORY dataset geomfields and fields types inferred from `rows`'s column types
+4. populate layer with `rows` values
+
+"""
 function _fromtable(
     sch::Tables.Schema{names,types},
     rows;
     name::String = "",
 )::IFeatureLayer where {names,types}
-    # TODO maybe constrain `names` and `types` types
+    # TODO maybe constrain `names`
     strnames = string.(sch.names)
 
-    # Convert types and split types/names between geometries and fields
-    AG_types = collect(_convert_coltype_to_AGtype.(sch.types, strnames))
+    # Convert column types to either geometry types or field types and subtypes
+    AG_types = Vector{Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}(undef, length(Tables.columnnames(rows)))
+    for (i, (coltype, colname)) in enumerate(zip(sch.types, strnames))
+        AG_types[i] = try
+            (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
+        catch e
+            if e isa MethodError
+                error("Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType. Column types should be T ∈ [",)
+            else
+                rethrow()
+            end
+        end
+    end
 
     # Split names and types: between geometry type columns and field type columns
     geomindices = isa.(AG_types, OGRwkbGeometryType)
@@ -174,6 +181,15 @@ function _fromtable(
     return layer
 end
 
+"""
+    _fromtable(::Tables.Schema{names,nothing}, rows; name::String = "")
+
+Handles the case where types in schema is `nothing`
+
+# Implementation
+Tables.Schema types are extracted from `rows`'s columns element types before calling `_fromtable(Tables.Schema(names, types), rows; name = name)`
+
+"""
 function _fromtable(
     ::Tables.Schema{names,nothing},
     rows;
@@ -184,6 +200,15 @@ function _fromtable(
     return _fromtable(Tables.Schema(names, types), rows; name = name)
 end
 
+"""
+    _fromtable(::Tables.Schema{names,nothing}, rows; name::String = "")
+
+Handles the case where schema is `nothing`
+
+# Implementation
+Tables.Schema names are extracted from `rows`'s columns names before calling `_fromtable(Tables.Schema(names, types), rows; name = name)`
+
+"""
 function _fromtable(::Nothing, rows; name::String = "")::IFeatureLayer
     state = iterate(rows)
     state === nothing && return IFeatureLayer()
