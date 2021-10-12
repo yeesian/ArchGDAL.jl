@@ -33,7 +33,7 @@ A table-like source implementing Tables.jl interface can be converted to a layer
 - Object contains at least one column of geometries 
 - Non geometry columns contain types handled by GDAL (e.g. not `Int128` nor composite type)
 
-_Note: As geometries and fields are stored separately in GDAL features, the backward conversion of the layer won't have the same column ordering. Geometry columns will be the first columns._
+**Note**: As geometries and fields are stored separately in GDAL features, the backward conversion of the layer won't have the same column ordering. Geometry columns will be the first columns.
 
 ```@repl tables
 df = DataFrame([
@@ -67,4 +67,4 @@ ds = AG.write(layer.ownedby, "test.gml", driver=AG.getdriver("GML"), options=["F
 DataFrame(AG.getlayer(AG.read("test.gml", options=["EXPOSE_GML_ID=NO"]), 0))
 rm.(["test.gml", "test.xsd"]) # hide
 ```
-_Note: [OGR GML driver](https://gdal.org/drivers/vector/gml.html#open-options) option `EXPOSE_GML_ID=NO` avoids to read the `gml_id` field, mandatory in GML 3.x format and automatically created by the OGR GML driver_
+**Note:** [OGR GML driver](https://gdal.org/drivers/vector/gml.html#open-options) option **EXPOSE\_GML\_ID=NO** avoids to read the `gml_id` field, mandatory in GML 3.x format and automatically created by the OGR GML driver
