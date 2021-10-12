@@ -795,5 +795,93 @@ using Tables
 
             clean_test_dataset_files()
         end
+
+        @testset "Table to layer conversion" begin
+            # Helper functions
+            function toWKT_withmissings(x)
+                if ismissing(x)
+                    return missing
+                elseif typeof(x) <: AG.AbstractGeometry
+                    return AG.toWKT(x)
+                else
+                    return x
+                end
+            end
+            function columntablevalues_toWKT(x)
+                return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
+            end
+            function nt2layer2nt_equals_nt(nt::NamedTuple)::Bool
+                (ct_in, ct_out) = Tables.columntable.((nt_without_nothing, AG.IFeatureLayer(nt_without_nothing)))
+                (ctv_in, ctv_out) = columntablevalues_toWKT.(values.((ct_in, ct_out)))
+                (spidx_in, spidx_out) = sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
+                return all([
+                    sort([keys(ct_in)...]) == sort([keys(ct_out)...]),
+                    all(all.([ctv_in[spidx_in[i]] .=== ctv_out[spidx_out[i]] for i in 1:length(ct_in)])),
+                ])
+            end
+
+            nt_with_missing = NamedTuple([
+                :point => [
+                    AG.createpoint(30, 10),
+                    nothing,
+                    AG.createpoint(35, 15),
+                ],
+                :linestring => [
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([(35., 15.), (15., 35.), (45., 45.)]),
+                    missing,
+                ],
+                :id => [nothing, "5.1", "5.2"],
+                :zoom => [1.0, 2.0, 3],
+                :location => ["Mumbai", missing, "New Delhi"],
+                :mixedgeom1 => [
+                    AG.createpoint(30, 10),
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createpoint(35, 15),
+                ],
+                :mixedgeom2 => [
+                    AG.createpoint(30, 10),
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createmultilinestring([
+                        [(25., 5.), (5., 25.), (35., 35.)], 
+                        [(35., 15.), (15., 35.), (45., 45.)],
+                    ]),
+                ],
+            ])
+
+            @test_skip nt2layer2nt_equals_nt(nt_with_missing)
+
+            nt_without_nothing = NamedTuple([
+                :point => [
+                    AG.createpoint(30, 10),
+                    missing,
+                    AG.createpoint(35, 15),
+                ],
+                :linestring => [
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createlinestring([(35., 15.), (15., 35.), (45., 45.)]),
+                    missing,
+                ],
+                :id => [missing, "5.1", "5.2"],
+                :zoom => [1.0, 2.0, 3],
+                :location => ["Mumbai", missing, "New Delhi"],
+                :mixedgeom1 => [
+                    AG.createpoint(30, 10),
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createpoint(35, 15),
+                ],
+                :mixedgeom2 => [
+                    AG.createpoint(30, 10),
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                    AG.createmultilinestring([
+                        [(25., 5.), (5., 25.), (35., 35.)], 
+                        [(35., 15.), (15., 35.), (45., 45.)],
+                    ]),
+                ],
+            ])
+
+            @test nt2layer2nt_equals_nt(nt_without_nothing)
+        end
+
     end
 end
