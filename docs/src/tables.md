@@ -31,9 +31,9 @@ DataFrame(AG.getlayer(ds, 0))
 A table-like source implementing Tables.jl interface can be converted to a layer, provided that:
 - Geometry columns are of type `<: Union{IGeometry, Nothing,  Missing}`
 - Object contains at least one column of geometries 
-- Non geometry columns contains types handled by GDAL (e.g. not `Int128` nor composite type)
+- Non geometry columns contain types handled by GDAL (e.g. not `Int128` nor composite type)
 
-_Note: as geometries and fields are stored separately in GDAL features, the backward conversion of the layer won't have the same column ordering. Geometry columns will be the first columns._
+_Note: As geometries and fields are stored separately in GDAL features, the backward conversion of the layer won't have the same column ordering. Geometry columns will be the first columns._
 
 ```@repl tables
 df = DataFrame([
@@ -46,16 +46,25 @@ df = DataFrame([
 layer = AG.IFeatureLayer(df)
 ```
 
-The layer converted from a source implementing the Tables.jl interface, will be in a memory dataset. Hence you can:
+The layer, converted from a source implementing the Tables.jl interface, will be in a memory dataset.  
+Hence you can:
 - Add other layers to it
 - Copy it to a dataset with another driver
 - Write it to a file
-
+### Example of writing with ESRI Shapefile driver
 ```@repl tables
 ds = AG.write(layer.ownedby, "test.shp", driver=AG.getdriver("ESRI Shapefile"))
 DataFrame(AG.getlayer(AG.read("test.shp"), 0))
 rm.(["test.shp", "test.shx", "test.dbf"]) # hide
 ```
-_Note: As GDAL "ESRI Shapefile" driver_
-- _does not support multi geometries, the second geometry has been dropped_
-- _does not support nullable fields, the `missing` location has been replaced by `""`_
+As OGR ESRI Shapefile driver
+- [does not support multi geometries](https://gdal.org/development/rfc/rfc41_multiple_geometry_fields.html#drivers), the second geometry has been dropped
+- does not support nullable fields, the `missing` location has been replaced by `""`
+### Example of writing with GML driver
+Using the GML 3.2.1 more capable driver/format, you can write more information to the file
+```@repl tables
+ds = AG.write(layer.ownedby, "test.gml", driver=AG.getdriver("GML"), options=["FORMAT=GML3.2"])
+DataFrame(AG.getlayer(AG.read("test.gml", options=["EXPOSE_GML_ID=NO"]), 0))
+rm.(["test.gml", "test.xsd"]) # hide
+```
+_Note: [OGR GML driver](https://gdal.org/drivers/vector/gml.html#open-options) option `EXPOSE_GML_ID=NO` avoids to read the `gml_id` field, mandatory in GML 3.x format and automatically created by the OGR GML driver_
