@@ -811,7 +811,7 @@ using Tables
                 return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
             end
             function nt2layer2nt_equals_nt(nt::NamedTuple)::Bool
-                (ct_in, ct_out) = Tables.columntable.((nt_without_nothing, AG.IFeatureLayer(nt_without_nothing)))
+                (ct_in, ct_out) = Tables.columntable.((nt, AG.IFeatureLayer(nt)))
                 (ctv_in, ctv_out) = columntablevalues_toWKT.(values.((ct_in, ct_out)))
                 (spidx_in, spidx_out) = sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
                 return all([
@@ -819,6 +819,26 @@ using Tables
                     all(all.([ctv_in[spidx_in[i]] .=== ctv_out[spidx_out[i]] for i in 1:length(ct_in)])),
                 ])
             end
+            
+            nt_with_mixed_geom_and_float = NamedTuple([
+                :point => [
+                    AG.createpoint(30, 10),
+                    1.0,
+                ],
+                :name => ["point1", "point2"]
+            ])
+
+            @test_throws ErrorException nt2layer2nt_equals_nt(nt_with_mixed_geom_and_float)
+
+            nt_with_mixed_string_and_float = NamedTuple([
+                :point => [
+                    AG.createpoint(30, 10),
+                    AG.createlinestring([(30., 10.), (10., 30.), (40., 40.)]),
+                ],
+                :name => ["point1", 2.0]
+            ])
+
+            @test_throws ErrorException nt2layer2nt_equals_nt(nt_with_mixed_geom_and_float)
 
             nt_with_missing = NamedTuple([
                 :point => [

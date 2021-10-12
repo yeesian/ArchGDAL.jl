@@ -54,7 +54,7 @@ end
 Convert a table column type to ArchGDAL IGeometry or OGRFieldType/OGRFieldSubType
 Conforms GDAL version 3.3 except for OFTSJSON and OFTSUUID
 """
-function _convert_coltype_to_AGtype(T::Type, colidx::Int64)::Union{OGRwkbGeometryType, Tuple{OGRFieldType, OGRFieldSubType}}
+function _convert_coltype_to_AGtype(T::Type, colname::String)::Union{OGRwkbGeometryType, Tuple{OGRFieldType, OGRFieldSubType}}
     flattened_T = Base.uniontypes(T)
     clean_flattened_T = filter(t -> t ∉ [Missing, Nothing], flattened_T)
     promoted_clean_flattened_T = promote_type(clean_flattened_T...)
@@ -65,14 +65,14 @@ function _convert_coltype_to_AGtype(T::Type, colidx::Int64)::Union{OGRwkbGeometr
         else
             convert(OGRwkbGeometryType, promoted_clean_flattened_T)
         end
-    elseif promoted_clean_flattened_T isa DataType
+    elseif (promoted_clean_flattened_T isa DataType) && (promoted_clean_flattened_T != Any)
         # OGRFieldType and OGRFieldSubType or error
         # TODO move from try-catch with convert to if-else with collections (to be defined)
         oft::OGRFieldType = try 
             convert(OGRFieldType, promoted_clean_flattened_T)
         catch e
             if !(e isa MethodError)
-                error("Cannot convert type: $T of column $colidx to OGRFieldType and OGRFieldSubType")
+                error("Cannot convert column \"$colname\" (type $T) to OGRFieldType and OGRFieldSubType")
             else
                 rethrow()
             end
@@ -89,7 +89,7 @@ function _convert_coltype_to_AGtype(T::Type, colidx::Int64)::Union{OGRwkbGeometr
 
         return oft, ofst
     else
-        error("Cannot convert type: $T of column $colidx to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType")
+        error("Cannot convert column \"$colname\" (type $T) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType")
     end 
 end
 
@@ -106,7 +106,7 @@ function IFeatureLayer(table::T)::IFeatureLayer where {T}
     # TODO consider the case where names == nothing or types == nothing
     
     # Convert types and split types/names between geometries and fields
-    AG_types = _convert_coltype_to_AGtype.(types, 1:length(types))
+    AG_types = collect(_convert_coltype_to_AGtype.(types, names))
 
     geomindices = isa.(AG_types, OGRwkbGeometryType)
     !any(geomindices) && error("No column convertible to geometry")
