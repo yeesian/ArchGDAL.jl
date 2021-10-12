@@ -810,9 +810,20 @@ using Tables
             function columntablevalues_toWKT(x)
                 return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
             end
-            function nt2layer2nt_equals_nt(nt::NamedTuple)::Bool
-                (ct_in, ct_out) =
-                    Tables.columntable.((nt, AG.IFeatureLayer(nt)))
+            function nt2layer2nt_equals_nt(
+                nt::NamedTuple;
+                force_no_schema::Bool = false,
+            )::Bool
+                if force_no_schema
+                    (ct_in, ct_out) =
+                        Tables.columntable.((
+                            nt,
+                            AG._fromtable(nothing, Tables.rows(nt)),
+                        ))
+                else
+                    (ct_in, ct_out) =
+                        Tables.columntable.((nt, AG.IFeatureLayer(nt)))
+                end
                 (ctv_in, ctv_out) =
                     columntablevalues_toWKT.(values.((ct_in, ct_out)))
                 (spidx_in, spidx_out) =
@@ -908,6 +919,7 @@ using Tables
                     ]),
                 ],
             ])
+            @test_skip nt2layer2nt_equals_nt(nt; force_no_schema = true)
             @test_skip nt2layer2nt_equals_nt(nt)
 
             # Test with `missing` values
@@ -955,6 +967,7 @@ using Tables
                     ]),
                 ],
             ])
+            @test nt2layer2nt_equals_nt(nt; force_no_schema = true)
             @test nt2layer2nt_equals_nt(nt)
         end
     end

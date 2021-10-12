@@ -101,29 +101,25 @@ function _convert_coltype_to_AGtype(
     end
 end
 
-function IFeatureLayer(table::T)::IFeatureLayer where {T}
-    # Check tables interface's conformance
-    !Tables.istable(table) &&
-        throw(DomainError(table, "$table has not a Table interface"))
-    # Extract table data
-    rows = Tables.rows(table)
-    schema = Tables.schema(table)
-    schema === nothing && error("$table has no Schema")
-    names = string.(schema.names)
-    types = schema.types
-    # TODO consider the case where names == nothing or types == nothing
+function _fromtable(
+    sch::Tables.Schema{names,types},
+    rows,
+)::IFeatureLayer where {names,types}
+    # TODO maybe constrain `names` and `types` types
+    strnames = string.(sch.names)
 
     # Convert types and split types/names between geometries and fields
-    AG_types = collect(_convert_coltype_to_AGtype.(types, names))
+    AG_types = collect(_convert_coltype_to_AGtype.(sch.types, strnames))
 
+    # Split names and types: between geometry type columns and field type columns
     geomindices = isa.(AG_types, OGRwkbGeometryType)
     !any(geomindices) && error("No column convertible to geometry")
     geomtypes = AG_types[geomindices] # TODO consider to use a view
-    geomnames = names[geomindices]
+    geomnames = strnames[geomindices]
 
     fieldindices = isa.(AG_types, Tuple{OGRFieldType,OGRFieldSubType})
     fieldtypes = AG_types[fieldindices] # TODO consider to use a view
-    fieldnames = names[fieldindices]
+    fieldnames = strnames[fieldindices]
 
     # Create layer
     layer = createlayer(geom = first(geomtypes))
@@ -172,4 +168,31 @@ function IFeatureLayer(table::T)::IFeatureLayer where {T}
     end
 
     return layer
+end
+
+function _fromtable(
+    ::Tables.Schema{names,nothing},
+    rows,
+)::IFeatureLayer where {names}
+    cols = Tables.columns(rows)
+    types = (eltype(collect(col)) for col in cols)
+    return _fromtable(Tables.Schema(names, types), rows)
+end
+
+function _fromtable(::Nothing, rows)::IFeatureLayer
+    state = iterate(rows)
+    state === nothing && return IFeatureLayer()
+    row, _ = state
+    names = Tables.columnnames(row)
+    return _fromtable(Tables.Schema(names, nothing), rows)
+end
+
+function IFeatureLayer(table)::IFeatureLayer
+    # Check tables interface's conformance
+    !Tables.istable(table) &&
+        throw(DomainError(table, "$table has not a Table interface"))
+    # Extract table data
+    rows = Tables.rows(table)
+    schema = Tables.schema(table)
+    return _fromtable(schema, rows)
 end
