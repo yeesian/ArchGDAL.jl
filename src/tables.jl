@@ -103,7 +103,8 @@ end
 
 function _fromtable(
     sch::Tables.Schema{names,types},
-    rows,
+    rows;
+    name::String="",
 )::IFeatureLayer where {names,types}
     # TODO maybe constrain `names` and `types` types
     strnames = string.(sch.names)
@@ -122,7 +123,7 @@ function _fromtable(
     fieldnames = strnames[fieldindices]
 
     # Create layer
-    layer = createlayer(geom = first(geomtypes))
+    layer = createlayer(name = name, geom = first(geomtypes))
     # TODO: create setname! for IGeomFieldDefnView. Probably needs first to fix issue #215
     # TODO: "Model and handle relationships between GDAL objects systematically"
     GDAL.ogr_gfld_setname(
@@ -172,27 +173,64 @@ end
 
 function _fromtable(
     ::Tables.Schema{names,nothing},
-    rows,
+    rows; 
+    name::String="",
 )::IFeatureLayer where {names}
     cols = Tables.columns(rows)
     types = (eltype(collect(col)) for col in cols)
-    return _fromtable(Tables.Schema(names, types), rows)
+    return _fromtable(Tables.Schema(names, types), rows; name)
 end
 
-function _fromtable(::Nothing, rows)::IFeatureLayer
+function _fromtable(::Nothing, rows, name::String="")::IFeatureLayer
     state = iterate(rows)
     state === nothing && return IFeatureLayer()
     row, _ = state
     names = Tables.columnnames(row)
-    return _fromtable(Tables.Schema(names, nothing), rows)
+    return _fromtable(Tables.Schema(names, nothing), rows; name)
 end
 
-function IFeatureLayer(table)::IFeatureLayer
+"""
+    IFeatureLayer(table; name="")
+
+Construct an IFeatureLayer from a source implementing Tables.jl interface
+
+## Restrictions
+- Source must contains at least one geometry column
+- Geometry columns are recognized by their element type being a subtype of `Union{IGeometry, Nothing,  Missing}`
+- Non geometry columns must contain types handled by GDAL/OGR (e.g. not `Int128` nor composite type)
+
+## Returns
+An IFeatureLayer within a **MEMORY** driver dataset
+
+## Examples
+```jldoctest
+julia> using ArchGDAL; AG = ArchGDAL
+ArchGDAL
+
+julia> nt = NamedTuple([
+           :point => [AG.createpoint(30, 10), missing],
+           :mixedgeom => [AG.createpoint(5, 10), AG.createlinestring([(30.0, 10.0), (10.0, 30.0)])],
+           :id => ["5.1", "5.2"],
+           :zoom => [1.0, 2],
+           :location => [missing, "New Delhi"],
+       ])
+(point = Union{Missing, ArchGDAL.IGeometry{ArchGDAL.wkbPoint}}[Geometry: POINT (30 10), missing], mixedgeom = ArchGDAL.IGeometry[Geometry: POINT (5 10), Geometry: LINESTRING (30 10,10 30)], id = ["5.1", "5.2"], zoom = [1.0, 2.0], location = Union{Missing, String}[missing, "New Delhi"])
+
+julia> layer = AG.IFeatureLayer(nt; name="towns")
+Layer: towns
+  Geometry 0 (point): [wkbPoint]
+  Geometry 1 (mixedgeom): [wkbUnknown]
+     Field 0 (id): [OFTString], 5.1, 5.2
+     Field 1 (zoom): [OFTReal], 1.0, 2.0
+     Field 2 (location): [OFTString], missing, New Delhi
+```
+"""
+function IFeatureLayer(table; name::String="")::IFeatureLayer
     # Check tables interface's conformance
     !Tables.istable(table) &&
         throw(DomainError(table, "$table has not a Table interface"))
     # Extract table data
     rows = Tables.rows(table)
     schema = Tables.schema(table)
-    return _fromtable(schema, rows)
+    return _fromtable(schema, rows; name)
 end

@@ -29,9 +29,9 @@ DataFrame(AG.getlayer(ds, 0))
 ```
 ## Conversion to layer
 A table-like source implementing Tables.jl interface can be converted to a layer, provided that:
-- Geometry columns are of type `<: Union{IGeometry, Nothing,  Missing}`
-- Object contains at least one column of geometries 
-- Non geometry columns contain types handled by GDAL (e.g. not `Int128` nor composite type)
+- Source must contains at least one geometry column
+- Geometry columns are recognized by their element type being a subtype of `Union{IGeometry, Nothing,  Missing}`
+- Non geometry columns must contain types handled by GDAL/OGR (e.g. not `Int128` nor composite type)
 
 **Note**: As geometries and fields are stored separately in GDAL features, the backward conversion of the layer won't have the same column ordering. Geometry columns will be the first columns.
 
