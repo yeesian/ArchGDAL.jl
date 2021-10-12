@@ -184,7 +184,7 @@ end
 macro ogrerr(code, message)
     return quote
         if $(esc(code)) != GDAL.OGRERR_NONE
-            error($message)
+            error($(esc(message)))
         end
     end
 end
