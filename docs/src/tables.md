@@ -29,7 +29,7 @@ DataFrame(AG.getlayer(ds, 0))
 ```
 ## Conversion to layer
 A table-like source implementing Tables.jl interface can be converted to a layer, provided that:
-- Source must contains at least one geometry column
+- Source contains at least one geometry column
 - Geometry columns are recognized by their element type being a subtype of `Union{IGeometry, Nothing,  Missing}`
 - Non geometry columns must contain types handled by GDAL/OGR (e.g. not `Int128` nor composite type)
 
@@ -46,7 +46,7 @@ df = DataFrame([
 layer = AG.IFeatureLayer(df)
 ```
 
-The layer, converted from a source implementing the Tables.jl interface, will be in a memory dataset.  
+The layer, converted from a source implementing the Tables.jl interface, will be in a [memory](https://gdal.org/drivers/vector/memory.html) dataset.  
 Hence you can:
 - Add other layers to it
 - Copy it to a dataset with another driver

@@ -798,18 +798,14 @@ using Tables
 
         @testset "Table to layer conversion" begin
             # Helper functions
-            function toWKT_withmissings(x)
-                if ismissing(x)
-                    return missing
-                elseif typeof(x) <: AG.AbstractGeometry
-                    return AG.toWKT(x)
-                else
-                    return x
-                end
-            end
-            function ctv_toWKT(x)
+            toWKT_withmissings(x::Missing) = missing
+            toWKT_withmissings(x::AG.AbstractGeometry) = AG.toWKT(x)
+            toWKT_withmissings(x::Any) = x
+
+            function ctv_toWKT(x::Tables.ColumnTable)
                 return Tuple(toWKT_withmissings.(x[i]) for i in 1:length(x))
             end
+
             """
                 nt2layer2nt_equals_nt(nt; force_no_schema=true)
 

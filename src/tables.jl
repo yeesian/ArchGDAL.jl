@@ -58,9 +58,10 @@ Converts type `T` into either:
 """
 function _convert_cleantype_to_AGtype end
 _convert_cleantype_to_AGtype(::Type{IGeometry}) = wkbUnknown
-@generated _convert_cleantype_to_AGtype(::Type{IGeometry{U}}) where U = :($U)
-@generated _convert_cleantype_to_AGtype(T::Type{U}) where U = :(convert(OGRFieldType, T), convert(OGRFieldSubType, T))
-
+@generated _convert_cleantype_to_AGtype(::Type{IGeometry{U}}) where {U} = :($U)
+@generated function _convert_cleantype_to_AGtype(T::Type{U}) where {U}
+    return :(convert(OGRFieldType, T), convert(OGRFieldSubType, T))
+end
 
 """
     _convert_coltype_to_cleantype(T)
@@ -106,13 +107,20 @@ function _fromtable(
     strnames = string.(sch.names)
 
     # Convert column types to either geometry types or field types and subtypes
-    AG_types = Vector{Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}(undef, length(Tables.columnnames(rows)))
+    AG_types =
+        Vector{Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}(
+            undef,
+            length(Tables.columnnames(rows)),
+        )
     for (i, (coltype, colname)) in enumerate(zip(sch.types, strnames))
+        # we wrap the following in a try-catch block to surface the original column type (rather than clean/converted type) in the error message
         AG_types[i] = try
             (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
         catch e
             if e isa MethodError
-                error("Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",)
+                error(
+                    "Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
+                )
             else
                 rethrow()
             end
@@ -139,22 +147,22 @@ function _fromtable(
     )
 
     # Create FeatureDefn
-    if length(geomtypes) ≥ 2
-        for (j, geomtype) in enumerate(geomtypes[2:end])
-            creategeomdefn(geomnames[j+1], geomtype) do geomfielddefn
+    if length(geomtypes) >= 2
+        for (geomtype, geomname) in zip(geomtypes[2:end], geomnames[2:end])
+            creategeomdefn(geomname, geomtype) do geomfielddefn
                 return addgeomdefn!(layer, geomfielddefn) # TODO check if necessary/interesting to set approx=true
             end
         end
     end
-    for (j, (ft, fst)) in enumerate(fieldtypes)
-        createfielddefn(fieldnames[j], ft) do fielddefn
-            setsubtype!(fielddefn, fst)
+    for (fieldname, (fieldtype, fieldsubtype)) in zip(fieldnames, fieldtypes)
+        createfielddefn(fieldname, fieldtype) do fielddefn
+            setsubtype!(fielddefn, fieldsubtype)
             return addfielddefn!(layer, fielddefn)
         end
     end
 
     # Populate layer
-    for (i, row) in enumerate(rows)
+    for row in rows
         rowvalues =
             [Tables.getcolumn(row, col) for col in Tables.columnnames(row)]
         rowgeoms = view(rowvalues, geomindices)
@@ -164,9 +172,9 @@ function _fromtable(
             # since in GDAL <= v"3.3.2", special fields as geometry field cannot be NULL
             # cf. `OGRFeature::IsFieldNull( int iField )` implemetation
             for (j, val) in enumerate(rowgeoms)
-                val !== missing &&
-                    val !== nothing &&
+                if val !== missing && val !== nothing
                     setgeom!(feature, j - 1, val)
+                end
             end
             for (j, val) in enumerate(rowfields)
                 if val === missing
