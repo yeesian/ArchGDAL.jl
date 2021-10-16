@@ -1653,7 +1653,7 @@ end
     elseif g <: GeoInterface.AbstractPolygon
         return :(createpolygon(GeoInterface.coordinates(g)))
     elseif g <: GeoInterface.AbstractMultiPolygon
-        return :(createmultipoylygon(GeoInterface.coordinates(g)))
+        return :(createmultipolygon(GeoInterface.coordinates(g)))
     else
         return :(error("No convert method to convert $g to $T"))
     end

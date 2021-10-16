@@ -2,6 +2,7 @@ using Test
 import GeoInterface, GeoFormatTypes, ArchGDAL;
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
+using LibGEOS
 
 @testset "test_geometry.jl" begin
     @testset "Incomplete GeoInterface geometries" begin
@@ -805,4 +806,20 @@ const GFT = GeoFormatTypes
             @test sprint(print, g) == "NULL Geometry"
         end
     end
+end
+
+@testset "GeoInterface to IGeometry conversions" begin
+    wktgeoms = [
+        "POINT(0.12345 2.000 0.1)",
+        "MULTIPOINT (130 240, 130 240, 130 240, 570 240, 570 240, 570 240, 650 240)",
+        "LINESTRING (130 240, 650 240)",
+        "MULTILINESTRING ((0 0, 10 10), (0 0, 10 0), (10 0, 10 10))",
+        "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+        "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
+    ]
+    for wktgeom in wktgeoms
+        @test (AG.toWKT ∘ convert)(AG.IGeometry, readgeom(wktgeom)) == (AG.toWKT ∘ AG.fromWKT)(wktgeom)
+    end
+    wktgeomcoll = "GEOMETRYCOLLECTION(MULTIPOINT(0 0, 0 0, 1 1),LINESTRING(1 1, 2 2, 2 2, 0 0),POLYGON((5 5, 0 0, 0 2, 2 2, 5 5)))"
+    @test_throws ErrorException convert(AG.IGeometry, readgeom(wktgeomcoll))
 end
