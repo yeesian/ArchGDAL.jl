@@ -104,8 +104,7 @@ macro convert(args...)
     @assert(
         ((eval(T2) <: CEnum.Cenum) && all(isa.(stypes2, eval(T2)))) ||
         ((eval(T2) isa Type{DataType}) && all(isa.(stypes2, eval(T2)))) ||
-        ((eval(T2) isa UnionAll) && all((<:).(stypes2, eval(T2)))) #||
-        # ((eval(T2) isa Type{GeoInterface.AbstractGeometry}) && all((<:).(stypes2, eval(T2))))
+        ((eval(T2) isa UnionAll) && all((<:).(stypes2, eval(T2))))
     )
 
     # Types other representations

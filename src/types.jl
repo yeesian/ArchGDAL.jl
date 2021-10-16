@@ -534,7 +534,10 @@ end
     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
 )
 
-@generated function convert(T1::Type{OGRwkbGeometryType}, T2::Type{U}) where U <: GeoInterface.AbstractGeometry
+@generated function convert(
+    T1::Type{OGRwkbGeometryType},
+    T2::Type{U},
+) where {U<:GeoInterface.AbstractGeometry}
     U <: GeoInterface.AbstractPoint && return :(wkbPoint)
     U <: GeoInterface.AbstractMultiPoint && return :(wkbMultiPoint)
     U <: GeoInterface.AbstractLineString && return :(wkbLineString)

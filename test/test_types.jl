@@ -32,13 +32,22 @@ import ImageCore
 
     @testset "Convert GeoInterface.AbstractGeometry types to OGRwkbGeometryType" begin
         @test convert(AG.OGRwkbGeometryType, GeoInterface.Point) == AG.wkbPoint
-        @test convert(AG.OGRwkbGeometryType, GeoInterface.MultiPoint) == AG.wkbMultiPoint
-        @test convert(AG.OGRwkbGeometryType, GeoInterface.LineString) == AG.wkbLineString
-        @test convert(AG.OGRwkbGeometryType, GeoInterface.MultiLineString) == AG.wkbMultiLineString
-        @test convert(AG.OGRwkbGeometryType, GeoInterface.Polygon) == AG.wkbPolygon
-        @test convert(AG.OGRwkbGeometryType, GeoInterface.MultiPolygon) == AG.wkbMultiPolygon
-        @test convert(AG.OGRwkbGeometryType, GeoInterface.AbstractGeometry) == AG.wkbUnknown
-        @test_throws ErrorException convert(AG.OGRwkbGeometryType, GeoInterface.GeometryCollection)
+        @test convert(AG.OGRwkbGeometryType, GeoInterface.MultiPoint) ==
+              AG.wkbMultiPoint
+        @test convert(AG.OGRwkbGeometryType, GeoInterface.LineString) ==
+              AG.wkbLineString
+        @test convert(AG.OGRwkbGeometryType, GeoInterface.MultiLineString) ==
+              AG.wkbMultiLineString
+        @test convert(AG.OGRwkbGeometryType, GeoInterface.Polygon) ==
+              AG.wkbPolygon
+        @test convert(AG.OGRwkbGeometryType, GeoInterface.MultiPolygon) ==
+              AG.wkbMultiPolygon
+        @test convert(AG.OGRwkbGeometryType, GeoInterface.AbstractGeometry) ==
+              AG.wkbUnknown
+        @test_throws ErrorException convert(
+            AG.OGRwkbGeometryType,
+            GeoInterface.GeometryCollection,
+        )
     end
 
     @testset "Testing GDAL Type Methods" begin

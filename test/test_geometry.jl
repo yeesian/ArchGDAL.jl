@@ -817,10 +817,10 @@ using LibGEOS
             "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
         ]
         for wktgeom in wktgeoms
-            @test (AG.toWKT ∘ convert)(AG.IGeometry, readgeom(wktgeom)) == (AG.toWKT ∘ AG.fromWKT)(wktgeom)
+            @test (AG.toWKT ∘ convert)(AG.IGeometry, readgeom(wktgeom)) ==
+                  (AG.toWKT ∘ AG.fromWKT)(wktgeom)
         end
         wktgeomcoll = "GEOMETRYCOLLECTION(MULTIPOINT(0 0, 0 0, 1 1),LINESTRING(1 1, 2 2, 2 2, 0 0),POLYGON((5 5, 0 0, 0 2, 2 2, 5 5)))"
         @test_throws ErrorException convert(AG.IGeometry, readgeom(wktgeomcoll))
     end
 end
-

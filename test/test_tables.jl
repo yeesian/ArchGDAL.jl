@@ -802,7 +802,9 @@ using Tables
             toWKT_withmissings(x::AG.AbstractGeometry) = AG.toWKT(x)
             toWKT_withmissings(x::Any) = x
 
-            function ctv_toWKT(x::T) where {T <: NTuple{N, AbstractArray{S, D} where S}} where {N, D}
+            function ctv_toWKT(
+                x::T,
+            ) where {T<:NTuple{N,AbstractArray{S,D} where S}} where {N,D}
                 return Tuple(toWKT_withmissings.(x[i]) for i in 1:N)
             end
 

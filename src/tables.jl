@@ -57,11 +57,11 @@ Converts type `T` into either:
 
 """
 function _convert_cleantype_to_AGtype end
-@generated function _convert_cleantype_to_AGtype(T::Type{U}) where U <: GeoInterface.AbstractGeometry
+@generated function _convert_cleantype_to_AGtype(
+    T::Type{U},
+) where {U<:GeoInterface.AbstractGeometry}
     return :(convert(OGRwkbGeometryType, T))
 end
-# _convert_cleantype_to_AGtype(::Type{IGeometry}) = wkbUnknown
-# @generated _convert_cleantype_to_AGtype(::Type{IGeometry{U}}) where {U} = :($U)
 @generated function _convert_cleantype_to_AGtype(T::Type{U}) where {U}
     return :(convert(OGRFieldType, T), convert(OGRFieldSubType, T))
 end
@@ -106,7 +106,6 @@ function _fromtable(
     rows;
     name::String = "",
 )::IFeatureLayer where {names,types}
-    # TODO maybe constrain `names`
     strnames = string.(sch.names)
 
     # Convert column types to either geometry types or field types and subtypes

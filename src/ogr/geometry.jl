@@ -1639,7 +1639,10 @@ end
 
 # Conversion from GeoInterface geometry
 # TODO handle the case of geometry collections
-@generated function convert(T::Type{IGeometry}, g::U) where U <: GeoInterface.AbstractGeometry
+@generated function convert(
+    T::Type{IGeometry},
+    g::U,
+) where {U<:GeoInterface.AbstractGeometry}
     if g <: IGeometry
         return :(g)
     elseif g <: GeoInterface.AbstractPoint
@@ -1658,4 +1661,3 @@ end
         return :(error("No convert method to convert $g to $T"))
     end
 end
-
