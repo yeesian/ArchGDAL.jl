@@ -534,6 +534,17 @@ end
     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
 )
 
+@generated function convert(T1::Type{OGRwkbGeometryType}, T2::Type{U}) where U <: GeoInterface.AbstractGeometry
+    U <: GeoInterface.AbstractPoint && return :(wkbPoint)
+    U <: GeoInterface.AbstractMultiPoint && return :(wkbMultiPoint)
+    U <: GeoInterface.AbstractLineString && return :(wkbLineString)
+    U <: GeoInterface.AbstractMultiLineString && return :(wkbMultiLineString)
+    U <: GeoInterface.AbstractPolygon && return :(wkbPolygon)
+    U <: GeoInterface.AbstractMultiPolygon && return :(wkbMultiPolygon)
+    U == GeoInterface.AbstractGeometry && return :(wkbUnknown)
+    return :(error("No convert method to convert $T2 to $T1"))
+end
+
 @convert(
     OGRwkbGeometryType::IGeometry,
     wkbUnknown::IGeometry{wkbUnknown},
@@ -607,6 +618,7 @@ end
     wkbMultiLineString25D::IGeometry{wkbMultiLineString25D},
     wkbMultiPolygon25D::IGeometry{wkbMultiPolygon25D},
     wkbGeometryCollection25D::IGeometry{wkbGeometryCollection25D},
+    wkbUnknown::IGeometry
 )
 
 function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType

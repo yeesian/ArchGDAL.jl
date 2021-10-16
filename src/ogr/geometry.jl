@@ -1636,3 +1636,26 @@ for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
         end
     end
 end
+
+# Conversion from GeoInterface geometry
+# TODO handle the case of geometry collections
+@generated function convert(T::Type{IGeometry}, g::U) where U <: GeoInterface.AbstractGeometry
+    if g <: IGeometry
+        return :(g)
+    elseif g <: GeoInterface.AbstractPoint
+        return :(createpoint(GeoInterface.coordinates(g)))
+    elseif g <: GeoInterface.AbstractMultiPoint
+        return :(createmultipoint(GeoInterface.coordinates(g)))
+    elseif g <: GeoInterface.AbstractLineString
+        return :(createlinestring(GeoInterface.coordinates(g)))
+    elseif g <: GeoInterface.AbstractMultiLineString
+        return :(createmultilinestring(GeoInterface.coordinates(g)))
+    elseif g <: GeoInterface.AbstractPolygon
+        return :(createpolygon(GeoInterface.coordinates(g)))
+    elseif g <: GeoInterface.AbstractMultiPolygon
+        return :(createmultipoylygon(GeoInterface.coordinates(g)))
+    else
+        return :(error("No convert method to convert $g to $T"))
+    end
+end
+

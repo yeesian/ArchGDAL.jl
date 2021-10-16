@@ -18,3 +18,4 @@ Manifest.toml
 benchmark/data/
 .benchmarkci
 benchmark/*.json
+lcov.info

@@ -57,8 +57,11 @@ Converts type `T` into either:
 
 """
 function _convert_cleantype_to_AGtype end
-_convert_cleantype_to_AGtype(::Type{IGeometry}) = wkbUnknown
-@generated _convert_cleantype_to_AGtype(::Type{IGeometry{U}}) where {U} = :($U)
+@generated function _convert_cleantype_to_AGtype(T::Type{U}) where U <: GeoInterface.AbstractGeometry
+    return :(convert(OGRwkbGeometryType, T))
+end
+# _convert_cleantype_to_AGtype(::Type{IGeometry}) = wkbUnknown
+# @generated _convert_cleantype_to_AGtype(::Type{IGeometry{U}}) where {U} = :($U)
 @generated function _convert_cleantype_to_AGtype(T::Type{U}) where {U}
     return :(convert(OGRFieldType, T), convert(OGRFieldSubType, T))
 end
@@ -122,7 +125,7 @@ function _fromtable(
                     "Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
                 )
             else
-                rethrow()
+                throw(e)
             end
         end
     end
@@ -173,7 +176,7 @@ function _fromtable(
             # cf. `OGRFeature::IsFieldNull( int iField )` implemetation
             for (j, val) in enumerate(rowgeoms)
                 if val !== missing && val !== nothing
-                    setgeom!(feature, j - 1, val)
+                    setgeom!(feature, j - 1, convert(IGeometry, val))
                 end
             end
             for (j, val) in enumerate(rowfields)
