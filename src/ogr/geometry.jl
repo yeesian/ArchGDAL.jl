@@ -232,11 +232,11 @@ function boundingbox(geom::AbstractGeometry)::IGeometry
     MinY, MaxY = coordinates.MinY, coordinates.MaxY
     # creates a CW closed ring polygon
     return createpolygon([
-        [MaxY, MinX],
-        [MaxY, MaxX],
-        [MinY, MaxX],
-        [MinY, MinX],
-        [MaxY, MinX],
+        [MinX, MaxY],
+        [MaxX, MaxY],
+        [MaxX, MinY],
+        [MinX, MinY],
+        [MinX, MaxY],
     ])
 end
 
