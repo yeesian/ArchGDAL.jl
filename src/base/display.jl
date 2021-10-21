@@ -128,7 +128,8 @@ function Base.show(io::IO, layer::AbstractFeatureLayer)::Nothing
         end
         if ngeomdisplay == 1 # only support printing of a single geom column
             for f in layer
-                geomwkt = toWKT(getgeom(f))
+                geom = getgeom(f)
+                geomwkt = geom.ptr != C_NULL ? toWKT(geom) : "NULL Geometry"
                 length(geomwkt) > 25 && (geomwkt = "$(geomwkt[1:20])...)")
                 newdisplay = "$display, $geomwkt"
                 if length(newdisplay) > 75

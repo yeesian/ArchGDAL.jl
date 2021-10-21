@@ -81,62 +81,21 @@ function _convert_coltype_to_cleantype(T::Type)
     return promote_type(clean_flattened_T...)
 end
 
-"""
-    _fromtable(sch, rows; name)
-
-Converts a row table `rows` with schema `sch` to a layer (optionally named `name`) within a MEMORY dataset
-
-"""
-function _fromtable end
-
-"""
-    _fromtable(sch::Tables.Schema{names,types}, rows; name::String = "")
-
-Handles the case where names and types in `sch` are different from `nothing`
-
-# Implementation
-1. convert `rows`'s column types given in `sch` to either geometry types or field types and subtypes
-2. split `rows`'s columns into geometry typed columns and field typed columns
-3. create layer named `name` in a MEMORY dataset geomfields and fields types inferred from `rows`'s column types
-4. populate layer with `rows` values
-
-"""
-function _fromtable(
-    sch::Tables.Schema{names,types},
-    rows;
-    name::String = "",
-)::IFeatureLayer where {names,types}
-    strnames = string.(sch.names)
-
-    # Convert column types to either geometry types or field types and subtypes
-    AG_types =
-        Vector{Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}(
-            undef,
-            length(Tables.columnnames(rows)),
-        )
-    for (i, (coltype, colname)) in enumerate(zip(sch.types, strnames))
-        # we wrap the following in a try-catch block to surface the original column type (rather than clean/converted type) in the error message
-        AG_types[i] = try
-            (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
-        catch e
-            if e isa MethodError
-                error(
-                    "Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
-                )
-            else
-                throw(e)
-            end
-        end
-    end
-
+function _create_empty_layer_from_AGtypes(
+    strnames::NTuple{N,String},
+    AGtypes::Vector{
+        Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}},
+    },
+    name::String,
+) where {N}
     # Split names and types: between geometry type columns and field type columns
-    geomindices = isa.(AG_types, OGRwkbGeometryType)
+    geomindices = isa.(AGtypes, OGRwkbGeometryType)
     !any(geomindices) && error("No column convertible to geometry")
-    geomtypes = AG_types[geomindices] # TODO consider to use a view
+    geomtypes = AGtypes[geomindices] # TODO consider to use a view
     geomnames = strnames[geomindices]
 
-    fieldindices = isa.(AG_types, Tuple{OGRFieldType,OGRFieldSubType})
-    fieldtypes = AG_types[fieldindices] # TODO consider to use a view
+    fieldindices = isa.(AGtypes, Tuple{OGRFieldType,OGRFieldSubType})
+    fieldtypes = AGtypes[fieldindices] # TODO consider to use a view
     fieldnames = strnames[fieldindices]
 
     # Create layer
@@ -162,6 +121,159 @@ function _fromtable(
             return addfielddefn!(layer, fielddefn)
         end
     end
+
+    return layer, geomindices, fieldindices
+end
+
+"""
+    _fromtable(sch, rows; name)
+
+Converts a row table `rows` with schema `sch` to a layer (optionally named `name`) within a MEMORY dataset
+
+"""
+function _fromtable end
+
+"""
+    _fromtable(sch::Tables.Schema{names,types}, rows; name::String = "")
+
+Handles the case where names and types in `sch` are different from `nothing`
+
+# Implementation
+1. convert `rows`'s column types given in `sch` to either geometry types or field types and subtypes
+2. split `rows`'s columns into geometry typed columns and field typed columns
+3. create layer named `name` in a MEMORY dataset geomfields and fields types inferred from `rows`'s column types
+4. populate layer with `rows` values
+
+"""
+function _fromtable(
+    sch::Tables.Schema{names,types},
+    rows;
+    name::String,
+    parseWKT::Bool,
+    parseWKB::Bool,
+)::IFeatureLayer where {names,types}
+    strnames = string.(sch.names)
+
+    # Convert column types to either geometry types or field types and subtypes
+    AGtypes =
+        Vector{Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}(
+            undef,
+            length(Tables.columnnames(rows)),
+        )
+    for (j, (coltype, colname)) in enumerate(zip(sch.types, strnames))
+        # we wrap the following in a try-catch block to surface the original column type (rather than clean/converted type) in the error message
+        AGtypes[j] = try
+            (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
+        catch e
+            if e isa MethodError
+                error(
+                    "Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
+                )
+            else
+                throw(e)
+            end
+        end
+    end
+
+    # Return layer with FeatureDefn without any feature if table is empty, even
+    # if it has a full featured schema
+    state = iterate(rows)
+    if state === nothing
+        (layer, _, _) =
+            _create_empty_layer_from_AGtypes(strnames, AGtypes, name)
+        return layer
+    end
+
+    # Search in first rows for WKT strings or WKB binary data until for each
+    # columns with a comptible type (`String` or `Vector{UInt8}` tested
+    # through their converted value to `OGRFieldType`, namely: `OFTString` or 
+    # `OFTBinary`), a non `missing` nor `nothing` value is found
+    if parseWKT || parseWKB
+        maybeWKTcolinds =
+            parseWKT ?
+            findall(
+                T ->
+                    T isa Tuple{OGRFieldType,OGRFieldSubType} &&
+                        T[1] == OFTString,
+                AGtypes,
+            ) : []
+        maybeWKBcolinds =
+            parseWKB ?
+            findall(
+                T ->
+                    T isa Tuple{OGRFieldType,OGRFieldSubType} &&
+                        T[1] == OFTBinary,
+                AGtypes,
+            ) : []
+        maybegeomcolinds = maybeWKTcolinds ∪ maybeWKBcolinds
+        if !Base.isempty(maybegeomcolinds)
+            @assert Base.isempty(maybeWKTcolinds ∩ maybeWKBcolinds)
+            testWKT = !Base.isempty(maybeWKTcolinds)
+            testWKB = !Base.isempty(maybeWKBcolinds)
+            maybegeomtypes = Dict(
+                zip(
+                    maybegeomcolinds,
+                    fill!(
+                        Vector{Type}(undef, length(maybegeomcolinds)),
+                        Union{},
+                    ),
+                ),
+            )
+            row, st = state
+            while testWKT || testWKB
+                if testWKT
+                    for j in maybeWKTcolinds
+                        if (val = row[j]) !== nothing && val !== missing
+                            try
+                                maybegeomtypes[j] = promote_type(
+                                    maybegeomtypes[j],
+                                    typeof(fromWKT(val)),
+                                )
+                            catch
+                                pop!(maybegeomtypes, j)
+                            end
+                        end
+                    end
+                    maybeWKTcolinds = maybeWKTcolinds ∩ keys(maybegeomtypes)
+                    testWKT = !Base.isempty(maybeWKTcolinds)
+                end
+                if testWKB
+                    for j in maybeWKBcolinds
+                        if (val = row[j]) !== nothing && val !== missing
+                            try
+                                maybegeomtypes[j] = promote_type(
+                                    maybegeomtypes[j],
+                                    typeof(fromWKB(val)),
+                                )
+                            catch
+                                pop!(maybegeomtypes, j)
+                            end
+                        end
+                    end
+                    maybeWKBcolinds = maybeWKBcolinds ∩ keys(maybegeomtypes)
+                    testWKB = !Base.isempty(maybeWKBcolinds)
+                end
+                state = iterate(rows, st)
+                state === nothing && break
+                row, st = state
+            end
+            state === nothing && begin
+                WKxgeomcolinds = findall(T -> T != Union{}, maybegeomtypes)
+                for j in WKxgeomcolinds
+                    AGtypes[j] = (
+                        _convert_cleantype_to_AGtype ∘
+                        _convert_coltype_to_cleantype
+                    )(
+                        maybegeomtypes[j],
+                    )
+                end
+            end
+        end
+    end
+
+    # Create layer
+    (layer, geomindices, fieldindices) =
+        _create_empty_layer_from_AGtypes(strnames, AGtypes, name)
 
     # Populate layer
     for row in rows
@@ -203,11 +315,11 @@ Tables.Schema types are extracted from `rows`'s columns element types before cal
 function _fromtable(
     ::Tables.Schema{names,nothing},
     rows;
-    name::String = "",
+    kwargs...,
 )::IFeatureLayer where {names}
     cols = Tables.columns(rows)
     types = (eltype(collect(col)) for col in cols)
-    return _fromtable(Tables.Schema(names, types), rows; name = name)
+    return _fromtable(Tables.Schema(names, types), rows; kwargs...)
 end
 
 """
@@ -219,12 +331,12 @@ Handles the case where schema is `nothing`
 Tables.Schema names are extracted from `rows`'s columns names before calling `_fromtable(Tables.Schema(names, types), rows; name = name)`
 
 """
-function _fromtable(::Nothing, rows; name::String = "")::IFeatureLayer
+function _fromtable(::Nothing, rows; kwargs...)::IFeatureLayer
     state = iterate(rows)
     state === nothing && return IFeatureLayer()
     row, _ = state
     names = Tables.columnnames(row)
-    return _fromtable(Tables.Schema(names, nothing), rows; name = name)
+    return _fromtable(Tables.Schema(names, nothing), rows; kwargs...)
 end
 
 """
@@ -263,12 +375,23 @@ Layer: towns
      Field 2 (location): [OFTString], missing, New Delhi
 ```
 """
-function IFeatureLayer(table; name::String = "")::IFeatureLayer
+function IFeatureLayer(
+    table;
+    name::String = "layer",
+    parseWKT::Bool = false,
+    parseWKB::Bool = false,
+)::IFeatureLayer
     # Check tables interface's conformance
     !Tables.istable(table) &&
         throw(DomainError(table, "$table has not a Table interface"))
     # Extract table data
     rows = Tables.rows(table)
     schema = Tables.schema(table)
-    return _fromtable(schema, rows; name = name)
+    return _fromtable(
+        schema,
+        rows;
+        name = name,
+        parseWKT = parseWKT,
+        parseWKB = parseWKB,
+    )
 end
