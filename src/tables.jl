@@ -178,7 +178,7 @@ function _fromtable(
     #* CANNOT FIND A CASE WHERE IT COULD HAPPEN
     # # Return layer with FeatureDefn without any feature if table is empty, even
     # # if it has a full featured schema
-    # state = iterate(rows)
+    state = iterate(rows)
     # if state === nothing
     #     (layer, _, _) =
     #         _create_empty_layer_from_AGtypes(strnames, AGtypes, name)
