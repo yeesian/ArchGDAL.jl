@@ -76,7 +76,6 @@ fromWKT(data::String, args...)::IGeometry = fromWKT([data], args...)
 unsafe_fromWKT(data::String, args...)::Geometry =
     unsafe_fromWKT([data], args...)
 
-convert(::Type{IGeometry}, s::Vector{String}) = fromWKT(s)
 convert(::Type{IGeometry}, s::String) = fromWKT(s)
 
 """
