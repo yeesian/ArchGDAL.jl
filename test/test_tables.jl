@@ -1045,6 +1045,88 @@ using LibGEOS
                     ],
                 ])
 
+                # Test a table conversion with geometries as `GeoInterface.AbstractGeometry` only
+                nt_native = (;
+                    zip(Symbol.((.*)(String.(keys(nt)), "_GI")), values(nt))...,
+                )
+                nt_GI = (;
+                    zip(
+                        Symbol.((.*)(String.(keys(nt)), "_GI")),
+                        map.(
+                            x ->
+                                typeof(x) <: AG.IGeometry ?
+                                LibGEOS.readgeom(AG.toWKT(x)) : x,
+                            values(nt),
+                        ),
+                    )...,
+                )
+                @test all([
+                    string(
+                        Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
+                    ) == string(
+                        Tables.columntable(AG.IFeatureLayer(nt_GI))[colname],
+                    ) for colname in keys(nt_native)
+                ])
+
+                # Test a table conversion with geometries as WKT only
+                nt_native = (;
+                    zip(
+                        Symbol.((.*)(String.(keys(nt)), "_WKT")),
+                        values(nt),
+                    )...,
+                )
+                nt_WKT = (;
+                    zip(
+                        Symbol.((.*)(String.(keys(nt)), "_WKT")),
+                        map.(
+                            x ->
+                                typeof(x) <: AG.IGeometry ? AG.toWKT(x) : x,
+                            values(nt),
+                        ),
+                    )...,
+                )
+                @test all([
+                    string(
+                        Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
+                    ) == string(
+                        Tables.columntable(
+                            AG.IFeatureLayer(nt_WKT; parseWKT = true),
+                        )[colname],
+                    ) for colname in keys(nt_native)
+                ])
+
+                # Test a table conversion with geometries as WKB only
+                nt_native = (;
+                    zip(
+                        Symbol.((.*)(String.(keys(nt)), "_WKB")),
+                        values(nt),
+                    )...,
+                )
+                nt_WKB = (;
+                    zip(
+                        Symbol.((.*)(String.(keys(nt)), "_WKB")),
+                        map.(
+                            x ->
+                                typeof(x) <: AG.IGeometry ? AG.toWKB(x) : x,
+                            values(nt),
+                        ),
+                    )...,
+                )
+                @test all([
+                    string(
+                        Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
+                    ) == string(
+                        Tables.columntable(
+                            AG.IFeatureLayer(nt_WKB; parseWKB = true),
+                        )[colname],
+                    ) for colname in keys(nt_native)
+                ])
+
+                # Test a table conversion with geometries as:
+                # -`IGeometry`, 
+                # - `GeoInterface.AbstractGeometry`,
+                # - WKT,
+                # - WKB.
                 nt_pure = merge(
                     nt,
                     (;
