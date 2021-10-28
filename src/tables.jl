@@ -148,7 +148,7 @@ Handles the case where names and types in `sch` are different from `nothing`
 function _fromtable(
     sch::Tables.Schema{names,types},
     rows;
-    name::String,
+    layer_name::String,
     parseWKT::Bool,
     parseWKB::Bool,
 )::IFeatureLayer where {names,types}
@@ -186,7 +186,7 @@ function _fromtable(
     # end
 
     # Search in first rows for WKT strings or WKB binary data until for each
-    # columns with a comptible type (`String` or `Vector{UInt8}` tested
+    # columns with a compatible type (`String` or `Vector{UInt8}` tested
     # through their converted value to `OGRFieldType`, namely: `OFTString` or 
     # `OFTBinary`), a non `missing` nor `nothing` value is found
     if parseWKT || parseWKB
@@ -274,7 +274,7 @@ function _fromtable(
 
     # Create layer
     (layer, geomindices, fieldindices) =
-        _create_empty_layer_from_AGtypes(strnames, AGtypes, name)
+        _create_empty_layer_from_AGtypes(strnames, AGtypes, layer_name)
 
     # Populate layer
     for row in rows
@@ -347,7 +347,11 @@ Construct an IFeatureLayer from a source implementing Tables.jl interface
 
 ## Restrictions
 - Source must contains at least one geometry column
-- Geometry columns are recognized by their element type being a subtype of `Union{IGeometry, Nothing,  Missing}`
+- Geometry columns are recognized by their element type being a subtype of:
+  - `Union{IGeometry, Nothing,  Missing}` or
+  - `Union{GeoInterface.AbstractGeometry, Nothing,  Missing}` or
+  - `Union{String, Nothing,  Missing}` provided that String values can be decoded as WKT or
+  - `Union{Vector{UInt8}, Nothing,  Missing}` provided that Vector{UInt8} values can be decoded as WKB
 - Non geometry columns must contain types handled by GDAL/OGR (e.g. not `Int128` nor composite type)
 
 ## Returns
@@ -367,7 +371,7 @@ julia> nt = NamedTuple([
        ])
 (point = Union{Missing, ArchGDAL.IGeometry{ArchGDAL.wkbPoint}}[Geometry: POINT (30 10), missing], mixedgeom = ArchGDAL.IGeometry[Geometry: POINT (5 10), Geometry: LINESTRING (30 10,10 30)], id = ["5.1", "5.2"], zoom = [1.0, 2.0], location = Union{Missing, String}[missing, "New Delhi"])
 
-julia> layer = AG.IFeatureLayer(nt; name="towns")
+julia> layer = AG.IFeatureLayer(nt; layer_name="towns")
 Layer: towns
   Geometry 0 (point): [wkbPoint]
   Geometry 1 (mixedgeom): [wkbUnknown]
@@ -378,7 +382,7 @@ Layer: towns
 """
 function IFeatureLayer(
     table;
-    name::String = "layer",
+    layer_name::String = "layer",
     parseWKT::Bool = false,
     parseWKB::Bool = false,
 )::IFeatureLayer
@@ -391,7 +395,7 @@ function IFeatureLayer(
     return _fromtable(
         schema,
         rows;
-        name = name,
+        layer_name = layer_name,
         parseWKT = parseWKT,
         parseWKB = parseWKB,
     )

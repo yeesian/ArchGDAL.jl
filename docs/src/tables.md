@@ -57,9 +57,10 @@ ds = AG.write(layer.ownedby, "test.shp", driver=AG.getdriver("ESRI Shapefile"))
 DataFrame(AG.getlayer(AG.read("test.shp"), 0))
 rm.(["test.shp", "test.shx", "test.dbf"]) # hide
 ```
-As OGR ESRI Shapefile driver
-- [does not support multi geometries](https://gdal.org/development/rfc/rfc41_multiple_geometry_fields.html#drivers), the second geometry has been dropped
-- does not support nullable fields, the `missing` location has been replaced by `""`
+!!! warning
+    As OGR ESRI Shapefile driver [does not support multi geometries](https://gdal.org/development/rfc/rfc41_multiple_geometry_fields.html#drivers), the second geometry has been dropped
+!!! warning
+    As OGR ESRI Shapefile driver does not support nullable fields, the `missing` location has been replaced by `""`
 ### Example of writing with GML driver
 Using the GML 3.2.1 more capable driver/format, you can write more information to the file
 ```@repl tables
