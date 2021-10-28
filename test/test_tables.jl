@@ -832,7 +832,7 @@ using LibGEOS
                     layer = AG._fromtable(
                         nothing,
                         Tables.rows(nt);
-                        name = "layer",
+                        layer_name = "layer",
                         parseWKT = false,
                         parseWKB = false,
                     ) : layer = AG.IFeatureLayer(nt)
