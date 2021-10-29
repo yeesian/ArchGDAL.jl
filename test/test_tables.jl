@@ -833,8 +833,8 @@ using LibGEOS
                         nothing,
                         Tables.rows(nt);
                         layer_name = "layer",
-                        parseWKT = false,
-                        parseWKB = false,
+                        # parseWKT = false,
+                        # parseWKB = false,
                     ) : layer = AG.IFeatureLayer(nt)
                     ngeom = AG.ngeom(layer)
                     (ct_in, ct_out) = Tables.columntable.((nt, layer))
@@ -1090,7 +1090,7 @@ using LibGEOS
                         Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
                     ) == string(
                         Tables.columntable(
-                            AG.IFeatureLayer(nt_WKT; parseWKT = true),
+                            AG.IFeatureLayer(nt_WKT),#; parseWKT = true),
                         )[colname],
                     ) for colname in keys(nt_native)
                 ])
@@ -1117,7 +1117,7 @@ using LibGEOS
                         Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
                     ) == string(
                         Tables.columntable(
-                            AG.IFeatureLayer(nt_WKB; parseWKB = true),
+                            AG.IFeatureLayer(nt_WKB),#; parseWKB = true),
                         )[colname],
                     ) for colname in keys(nt_native)
                 ])
@@ -1188,13 +1188,11 @@ using LibGEOS
                     string(
                         Tables.columntable(AG.IFeatureLayer(nt_pure))[colname],
                     ) == string(
-                        Tables.columntable(
-                            AG.IFeatureLayer(
-                                nt_mixed;
-                                parseWKT = true,
-                                parseWKB = true,
-                            ),
-                        )[colname],
+                        Tables.columntable(AG.IFeatureLayer(
+                            nt_mixed,
+                            # parseWKT = true,
+                            # parseWKB = true,
+                        ))[colname],
                     ) for colname in keys(nt_pure)
                 ])
             end

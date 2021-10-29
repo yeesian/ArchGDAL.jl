@@ -125,6 +125,169 @@ function _create_empty_layer_from_AGtypes(
     return layer, geomindices, fieldindices
 end
 
+const GeometryOrFieldType =
+    Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}
+
+"""
+    _infergeometryorfieldtypes(sch, rows; geom_cols)
+
+Infer ArchGDAL field and geometry types from schema, rows' values and designated geometry columns 
+"""
+function _infergeometryorfieldtypes(
+    sch::Tables.Schema{names,types},
+    rows;
+    geom_cols::Union{Nothing,Vector{String},Vector{Int}} = nothing,
+) where {names,types}
+    strnames = string.(sch.names)
+    if geom_cols === nothing
+        shouldbegeomcolinds = nothing
+    elseif geom_cols isa Vector{String}
+        if geom_cols ⊈ Vector(1:length(sch.names))
+            error(
+                "Specified geometry column names is not a subset of table column names",
+            )
+        else
+            shouldbegeomcolinds = findall(s -> s ∈ geom_cols, strnames)
+        end
+    elseif geom_cols isa Vector{Int}
+        if geom_cols ⊈ strnames
+            error(
+                "Specified geometry column indices is not a subset of table column indices",
+            )
+        else
+            shouldbegeomcolinds = geom_cols
+        end
+    else
+        error("Should not be here")
+    end
+
+    # Convert column types to either geometry types or field types and subtypes
+    AGtypes =
+        Vector{GeometryOrFieldType}(undef, length(Tables.columnnames(rows)))
+    for (j, (coltype, colname)) in enumerate(zip(sch.types, strnames))
+        # we wrap the following in a try-catch block to surface the original column type (rather than clean/converted type) in the error message
+        AGtypes[j] = try
+            (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
+        catch e
+            if e isa MethodError
+                error(
+                    "Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
+                )
+            else
+                throw(e)
+            end
+        end
+    end
+
+    #* CANNOT FIND A TESTCASE WHERE `state === nothing` COULD HAPPEN => COMMENTED FOR NOW
+    # # Return layer with FeatureDefn without any feature if table is empty, even
+    # # if it has a full featured schema
+    state = iterate(rows)
+    # if state === nothing
+    #     (layer, _, _) =
+    #         _create_empty_layer_from_AGtypes(strnames, AGtypes, name)
+    #     return layer
+    # end
+
+    # Search in first rows for WKT strings or WKB binary data until for each
+    # columns with a compatible type (`String` or `Vector{UInt8}` tested
+    # through their converted value to `OGRFieldType`, namely: `OFTString` or 
+    # `OFTBinary`), a non `missing` nor `nothing` value is found
+    maybeWKTcolinds = findall(
+        T -> T isa Tuple{OGRFieldType,OGRFieldSubType} && T[1] == OFTString,
+        AGtypes,
+    )
+    maybeWKBcolinds = findall(
+        T -> T isa Tuple{OGRFieldType,OGRFieldSubType} && T[1] == OFTBinary,
+        AGtypes,
+    )
+    if shouldbegeomcolinds !== nothing
+        maybeWKTcolinds = maybeWKTcolinds ∩ shouldbegeomcolinds
+        maybeWKBcolinds = maybeWKBcolinds ∩ shouldbegeomcolinds
+    end
+    maybegeomcolinds = maybeWKTcolinds ∪ maybeWKBcolinds
+    if !Base.isempty(maybegeomcolinds)
+        @assert Base.isempty(maybeWKTcolinds ∩ maybeWKBcolinds)
+        testWKT = !Base.isempty(maybeWKTcolinds)
+        testWKB = !Base.isempty(maybeWKBcolinds)
+        maybegeomtypes = Dict(
+            zip(
+                maybegeomcolinds,
+                fill!(Vector{Type}(undef, length(maybegeomcolinds)), Union{}),
+            ),
+        )
+        row, st = state
+        while testWKT || testWKB
+            if testWKT
+                for j in maybeWKTcolinds
+                    if (val = row[j]) !== nothing && val !== missing
+                        try
+                            maybegeomtypes[j] = promote_type(
+                                maybegeomtypes[j],
+                                typeof(fromWKT(val)),
+                            )
+                        catch
+                            pop!(maybegeomtypes, j)
+                        end
+                    end
+                end
+                maybeWKTcolinds = maybeWKTcolinds ∩ keys(maybegeomtypes)
+                testWKT = !Base.isempty(maybeWKTcolinds)
+            end
+            if testWKB
+                for j in maybeWKBcolinds
+                    if (val = row[j]) !== nothing && val !== missing
+                        try
+                            maybegeomtypes[j] = promote_type(
+                                maybegeomtypes[j],
+                                typeof(fromWKB(val)),
+                            )
+                        catch
+                            pop!(maybegeomtypes, j)
+                        end
+                    end
+                end
+                maybeWKBcolinds = maybeWKBcolinds ∩ keys(maybegeomtypes)
+                testWKB = !Base.isempty(maybeWKBcolinds)
+            end
+            state = iterate(rows, st)
+            state === nothing && break
+            row, st = state
+        end
+        state === nothing && begin
+            WKxgeomcolinds = findall(T -> T != Union{}, maybegeomtypes)
+            for j in WKxgeomcolinds
+                AGtypes[j] = (
+                    _convert_cleantype_to_AGtype ∘
+                    _convert_coltype_to_cleantype
+                )(
+                    maybegeomtypes[j],
+                )
+            end
+        end
+    end
+
+    if shouldbegeomcolinds !== nothing
+        foundgeomcolinds = findall(T -> T isa OGRwkbGeometryType, AGtypes)
+        if Set(shouldbegeomcolinds) != Set(foundgeomcolinds)
+            diff = setdiff(shouldbegeomcolinds, foundgeomcolinds)
+            if !isempty(diff)
+                error(
+                    "The following columns could not be parsed as geometry columns: $diff",
+                )
+            end
+            diff = setdiff(foundgeomcolinds, shouldbegeomcolinds)
+            if !isempty(diff)
+                error(
+                    "The following columns are composed of geometry objects and have not been converted to a field type:$diff. Consider adding these columns to geometry columns or convert their values to WKT/WKB",
+                )
+            end
+        end
+    end
+
+    return AGtypes
+end
+
 """
     _fromtable(sch, rows; name)
 
@@ -149,132 +312,19 @@ function _fromtable(
     sch::Tables.Schema{names,types},
     rows;
     layer_name::String,
-    parseWKT::Bool,
-    parseWKB::Bool,
+    geom_cols::Union{Nothing,Vector{String},Vector{Int}} = nothing,
+    # parseWKT::Bool,
+    # parseWKB::Bool,
 )::IFeatureLayer where {names,types}
-    strnames = string.(sch.names)
-
-    # Convert column types to either geometry types or field types and subtypes
-    AGtypes =
-        Vector{Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}(
-            undef,
-            length(Tables.columnnames(rows)),
-        )
-    for (j, (coltype, colname)) in enumerate(zip(sch.types, strnames))
-        # we wrap the following in a try-catch block to surface the original column type (rather than clean/converted type) in the error message
-        AGtypes[j] = try
-            (_convert_cleantype_to_AGtype ∘ _convert_coltype_to_cleantype)(coltype)
-        catch e
-            if e isa MethodError
-                error(
-                    "Cannot convert column \"$colname\" (type $coltype) to neither IGeometry{::OGRwkbGeometryType} or OGRFieldType and OGRFieldSubType",
-                )
-            else
-                throw(e)
-            end
-        end
-    end
-
-    #* CANNOT FIND A CASE WHERE IT COULD HAPPEN
-    # # Return layer with FeatureDefn without any feature if table is empty, even
-    # # if it has a full featured schema
-    state = iterate(rows)
-    # if state === nothing
-    #     (layer, _, _) =
-    #         _create_empty_layer_from_AGtypes(strnames, AGtypes, name)
-    #     return layer
-    # end
-
-    # Search in first rows for WKT strings or WKB binary data until for each
-    # columns with a compatible type (`String` or `Vector{UInt8}` tested
-    # through their converted value to `OGRFieldType`, namely: `OFTString` or 
-    # `OFTBinary`), a non `missing` nor `nothing` value is found
-    if parseWKT || parseWKB
-        maybeWKTcolinds =
-            parseWKT ?
-            findall(
-                T ->
-                    T isa Tuple{OGRFieldType,OGRFieldSubType} &&
-                        T[1] == OFTString,
-                AGtypes,
-            ) : []
-        maybeWKBcolinds =
-            parseWKB ?
-            findall(
-                T ->
-                    T isa Tuple{OGRFieldType,OGRFieldSubType} &&
-                        T[1] == OFTBinary,
-                AGtypes,
-            ) : []
-        maybegeomcolinds = maybeWKTcolinds ∪ maybeWKBcolinds
-        if !Base.isempty(maybegeomcolinds)
-            @assert Base.isempty(maybeWKTcolinds ∩ maybeWKBcolinds)
-            testWKT = !Base.isempty(maybeWKTcolinds)
-            testWKB = !Base.isempty(maybeWKBcolinds)
-            maybegeomtypes = Dict(
-                zip(
-                    maybegeomcolinds,
-                    fill!(
-                        Vector{Type}(undef, length(maybegeomcolinds)),
-                        Union{},
-                    ),
-                ),
-            )
-            row, st = state
-            while testWKT || testWKB
-                if testWKT
-                    for j in maybeWKTcolinds
-                        if (val = row[j]) !== nothing && val !== missing
-                            try
-                                maybegeomtypes[j] = promote_type(
-                                    maybegeomtypes[j],
-                                    typeof(fromWKT(val)),
-                                )
-                            catch
-                                pop!(maybegeomtypes, j)
-                            end
-                        end
-                    end
-                    maybeWKTcolinds = maybeWKTcolinds ∩ keys(maybegeomtypes)
-                    testWKT = !Base.isempty(maybeWKTcolinds)
-                end
-                if testWKB
-                    for j in maybeWKBcolinds
-                        if (val = row[j]) !== nothing && val !== missing
-                            try
-                                maybegeomtypes[j] = promote_type(
-                                    maybegeomtypes[j],
-                                    typeof(fromWKB(val)),
-                                )
-                            catch
-                                pop!(maybegeomtypes, j)
-                            end
-                        end
-                    end
-                    maybeWKBcolinds = maybeWKBcolinds ∩ keys(maybegeomtypes)
-                    testWKB = !Base.isempty(maybeWKBcolinds)
-                end
-                state = iterate(rows, st)
-                state === nothing && break
-                row, st = state
-            end
-            state === nothing && begin
-                WKxgeomcolinds = findall(T -> T != Union{}, maybegeomtypes)
-                for j in WKxgeomcolinds
-                    AGtypes[j] = (
-                        _convert_cleantype_to_AGtype ∘
-                        _convert_coltype_to_cleantype
-                    )(
-                        maybegeomtypes[j],
-                    )
-                end
-            end
-        end
-    end
+    # Infer geometry and field types
+    AGtypes = _infergeometryorfieldtypes(sch, rows; geom_cols = geom_cols)
 
     # Create layer
-    (layer, geomindices, fieldindices) =
-        _create_empty_layer_from_AGtypes(strnames, AGtypes, layer_name)
+    (layer, geomindices, fieldindices) = _create_empty_layer_from_AGtypes(
+        string.(sch.names),
+        AGtypes,
+        layer_name,
+    )
 
     # Populate layer
     for row in rows
@@ -341,9 +391,13 @@ function _fromtable(::Nothing, rows; kwargs...)::IFeatureLayer
 end
 
 """
-    IFeatureLayer(table; name="")
+    IFeatureLayer(table; kwargs...)
 
 Construct an IFeatureLayer from a source implementing Tables.jl interface
+
+## Keyword arguments
+- `layer_name::String = ""`: name of the layer
+- `geom_cols::Union{Nothing, Vector{String}, Vector{Int}} = nothing`: if different from nothing, will only try to parse specified columns (by names or number) when looking for geometry columns
 
 ## Restrictions
 - Source must contains at least one geometry column
@@ -357,7 +411,7 @@ Construct an IFeatureLayer from a source implementing Tables.jl interface
 ## Returns
 An IFeatureLayer within a **MEMORY** driver dataset
 
-## Examples
+## Example
 ```jldoctest
 julia> using ArchGDAL; AG = ArchGDAL
 ArchGDAL
@@ -383,8 +437,9 @@ Layer: towns
 function IFeatureLayer(
     table;
     layer_name::String = "layer",
-    parseWKT::Bool = false,
-    parseWKB::Bool = false,
+    geom_cols::Union{Nothing,Vector{String},Vector{Int}} = nothing,
+    # parseWKT::Bool = false,
+    # parseWKB::Bool = false,
 )::IFeatureLayer
     # Check tables interface's conformance
     !Tables.istable(table) &&
@@ -396,7 +451,8 @@ function IFeatureLayer(
         schema,
         rows;
         layer_name = layer_name,
-        parseWKT = parseWKT,
-        parseWKB = parseWKB,
+        geom_cols = geom_cols,
+        # parseWKT = parseWKT,
+        # parseWKB = parseWKB,
     )
 end
