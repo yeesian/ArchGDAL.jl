@@ -510,23 +510,35 @@ filelist(dataset::AbstractDataset)::Vector{String} =
 
 Fetch the layer at index `i` (between `0` and `nlayer(dataset)-1`)
 
-The returned layer remains owned by the `Dataset` and should not be deleted by
+The returned layer remains owned by the `dataset` and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
     IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i), ownedby = dataset)
+
+    """
+    getlayer(dataset::AbstractDataset)
+
+Fetch the first layer and raise a waning if `dataset` contains more than one layer
+
+The returned layer remains owned by the `dataset` and should not be deleted by
+the application.
+"""
+function getlayer(dataset::AbstractDataset)::IFeatureLayer
+    layer = IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0), ownedby = dataset)
+    nlayer(dataset) == 1 || @warn "Dataset has multiple layers, getting the first layer"
+    return layer
+end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
     FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i))
 
 """
     getlayer(dataset::AbstractDataset, name::AbstractString)
-    getlayer(table::Table)
 
-Fetch the feature layer corresponding to the given name. If it is called on a
-Table, which supports only one layer, a name is not needed.
+Fetch the feature layer corresponding to the given name
 
-The returned layer remains owned by the `Dataset` and should not be deleted by
+The returned layer remains owned by the `dataset` and should not be deleted by
 the application.
 """
 function getlayer(dataset::AbstractDataset, name::AbstractString)::IFeatureLayer
