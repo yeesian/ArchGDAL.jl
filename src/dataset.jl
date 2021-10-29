@@ -532,6 +532,11 @@ end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
     FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i))
+function unsafe_getlayer(dataset::AbstractDataset)::FeatureLayer
+    layer = FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0))
+    nlayer(dataset) == 1 || @warn "Dataset has multiple layers, getting the first layer"
+    return layer
+end
 
 """
     getlayer(dataset::AbstractDataset, name::AbstractString)
