@@ -49,7 +49,7 @@ const AG = ArchGDAL;
             AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
             @test_logs (
                 :warn,
-                "Dataset has multiple layers, getting the first layer",
+                "Dataset has multiple layers, getting the first layer\nSpecify the layer number or name to avoid the warning",
             ) AG.getlayer(new_ds)
         end
 
@@ -59,7 +59,7 @@ const AG = ArchGDAL;
             AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
             @test_logs (
                 :warn,
-                "Dataset has multiple layers, getting the first layer",
+                "Dataset has multiple layers, getting the first layer\nSpecify the layer number or name to avoid the warning",
             ) AG.getlayer(new_ds) do layer
                 return nothing
             end

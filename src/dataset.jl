@@ -530,7 +530,7 @@ function getlayer(dataset::AbstractDataset)::IFeatureLayer
         ownedby = dataset,
     )
     nlayer(dataset) == 1 ||
-        @warn "Dataset has multiple layers, getting the first layer"
+        @warn "Dataset has multiple layers, getting the first layer\nSpecify the layer number or name to avoid the warning"
     return layer
 end
 
@@ -539,7 +539,7 @@ unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
 function unsafe_getlayer(dataset::AbstractDataset)::FeatureLayer
     layer = FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0))
     nlayer(dataset) == 1 ||
-        @warn "Dataset has multiple layers, getting the first layer"
+        @warn "Dataset has multiple layers, getting the first layer\nSpecify the layer number or name to avoid the warning"
     return layer
 end
 
