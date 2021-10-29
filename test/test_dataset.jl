@@ -45,17 +45,23 @@ const AG = ArchGDAL;
     @testset "Test methods for vector dataset" begin
         AG.read("data/point.geojson") do ds
             layer = AG.getlayer(ds)
-            new_ds = AG.copy(layer; name="duplicated layer 1").ownedby
-            AG.copy(layer; dataset = new_ds, name="duplicated layer 2")
-            @test_logs (:warn, "Dataset has multiple layers, getting the first layer") AG.getlayer(new_ds)
+            new_ds = AG.copy(layer; name = "duplicated layer 1").ownedby
+            AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
+            @test_logs (
+                :warn,
+                "Dataset has multiple layers, getting the first layer",
+            ) AG.getlayer(new_ds)
         end
 
         AG.read("data/point.geojson") do ds
             layer = AG.getlayer(ds)
-            new_ds = AG.copy(layer; name="duplicated layer 1").ownedby
-            AG.copy(layer; dataset = new_ds, name="duplicated layer 2")
-            @test_logs (:warn, "Dataset has multiple layers, getting the first layer") AG.getlayer(new_ds) do layer
-                nothing
+            new_ds = AG.copy(layer; name = "duplicated layer 1").ownedby
+            AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
+            @test_logs (
+                :warn,
+                "Dataset has multiple layers, getting the first layer",
+            ) AG.getlayer(new_ds) do layer
+                return nothing
             end
         end
 
