@@ -798,75 +798,70 @@ using LibGEOS
         end
 
         @testset "Table to layer conversion" begin
-            @testset "Table with IGeometry" begin
-                # Helper functions
-                toWKT_withmissings(x::Missing) = missing
-                toWKT_withmissings(x::AG.AbstractGeometry) = AG.toWKT(x)
-                toWKT_withmissings(x::Any) = x
+            # Helper functions
+            toWKT_withmissings(x::Missing) = missing
+            toWKT_withmissings(x::AG.AbstractGeometry) = AG.toWKT(x)
+            toWKT_withmissings(x::Any) = x
 
-                function ctv_toWKT(
-                    x::T,
-                ) where {T<:NTuple{N,AbstractArray{S,D} where S}} where {N,D}
-                    return Tuple(toWKT_withmissings.(x[i]) for i in 1:N)
-                end
+            function ctv_toWKT(
+                x::T,
+            ) where {T<:NTuple{N,AbstractArray{S,D} where S}} where {N,D}
+                return Tuple(toWKT_withmissings.(x[i]) for i in 1:N)
+            end
 
-                """
-                    nt2layer2nt_equals_nt(nt; force_no_schema=true)
+            """
+                nt2layer2nt_equals_nt(nt; force_no_schema=true)
 
-                Takes a NamedTuple, converts it to an IFeatureLayer and compares the NamedTuple
-                to the one obtained from the IFeatureLayer conversion to table
+            Takes a NamedTuple, converts it to an IFeatureLayer and compares the NamedTuple
+            to the one obtained from the IFeatureLayer conversion to table
 
-                _Notes:_
-                1. _Table columns have geometry column first and then field columns as
-                enforced by `Tables.columnnames`_
-                2. _`nothing` values in geometry column are returned as `missing` from
-                the NamedTuple roundtrip conversion, since geometry fields do not have the
-                same distinction between NULL and UNSET values the fields have_
+            _Notes:_
+            1. _Table columns have geometry column first and then field columns as
+            enforced by `Tables.columnnames`_
+            2. _`nothing` values in geometry column are returned as `missing` from
+            the NamedTuple roundtrip conversion, since geometry fields do not have the
+            same distinction between NULL and UNSET values the fields have_
 
-                """
-                function nt2layer2nt_equals_nt(
-                    nt::NamedTuple;
-                    force_no_schema::Bool = false,
-                )::Bool
-                    force_no_schema ?
-                    layer = AG._fromtable(
-                        nothing,
-                        Tables.rows(nt);
-                        layer_name = "layer",
-                        # parseWKT = false,
-                        # parseWKB = false,
-                    ) : layer = AG.IFeatureLayer(nt)
-                    ngeom = AG.ngeom(layer)
-                    (ct_in, ct_out) = Tables.columntable.((nt, layer))
-                    # we convert IGeometry values to WKT
-                    (ctv_in, ctv_out) = ctv_toWKT.(values.((ct_in, ct_out)))
-                    # we use two index functions to map ctv_in and ctv_out indices to the 
-                    # sorted key list indices
-                    (spidx_in, spidx_out) =
-                        sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
-                    return all([
-                        sort([keys(ct_in)...]) == sort([keys(ct_out)...]),
-                        all(
-                            all.([
-                                (
-                                    # if we are comparing two geometry columns values, we
-                                    # convert `nothing` values to `missing`, see note #2
-                                    spidx_out[i] <= ngeom ?
-                                    map(
-                                        val ->
-                                            (
-                                                val === nothing ||
-                                                val === missing
-                                            ) ? missing : val,
-                                        ctv_in[spidx_in[i]],
-                                    ) : ctv_in[spidx_in[i]]
-                                ) .=== ctv_out[spidx_out[i]] for
-                                i in 1:length(nt)
-                            ]),
-                        ),
-                    ])
-                end
+            """
+            function nt2layer2nt_equals_nt(
+                nt::NamedTuple;
+                force_no_schema::Bool = false,
+            )::Bool
+                force_no_schema ?
+                layer = AG._fromtable(
+                    nothing,
+                    Tables.rows(nt);
+                    layer_name = "layer",
+                ) : layer = AG.IFeatureLayer(nt)
+                ngeom = AG.ngeom(layer)
+                (ct_in, ct_out) = Tables.columntable.((nt, layer))
+                # we convert IGeometry values to WKT
+                (ctv_in, ctv_out) = ctv_toWKT.(values.((ct_in, ct_out)))
+                # we use two index functions to map ctv_in and ctv_out indices to the 
+                # sorted key list indices
+                (spidx_in, spidx_out) =
+                    sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
+                return all([
+                    sort([keys(ct_in)...]) == sort([keys(ct_out)...]),
+                    all(
+                        all.([
+                            (
+                                # if we are comparing two geometry columns values, we
+                                # convert `nothing` values to `missing`, see note #2
+                                spidx_out[i] <= ngeom ?
+                                map(
+                                    val ->
+                                        (val === nothing || val === missing) ?
+                                        missing : val,
+                                    ctv_in[spidx_in[i]],
+                                ) : ctv_in[spidx_in[i]]
+                            ) .=== ctv_out[spidx_out[i]] for i in 1:length(nt)
+                        ]),
+                    ),
+                ])
+            end
 
+            @testset "Tables with IGeometry" begin
                 # Test with mixed IGeometry and Float
                 nt = NamedTuple([
                     :point => [AG.createpoint(30, 10), 1.0],
@@ -1089,9 +1084,7 @@ using LibGEOS
                     string(
                         Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
                     ) == string(
-                        Tables.columntable(
-                            AG.IFeatureLayer(nt_WKT),#; parseWKT = true),
-                        )[colname],
+                        Tables.columntable(AG.IFeatureLayer(nt_WKT))[colname],
                     ) for colname in keys(nt_native)
                 ])
 
@@ -1116,9 +1109,7 @@ using LibGEOS
                     string(
                         Tables.columntable(AG.IFeatureLayer(nt_native))[colname],
                     ) == string(
-                        Tables.columntable(
-                            AG.IFeatureLayer(nt_WKB),#; parseWKB = true),
-                        )[colname],
+                        Tables.columntable(AG.IFeatureLayer(nt_WKB))[colname],
                     ) for colname in keys(nt_native)
                 ])
 
@@ -1188,13 +1179,116 @@ using LibGEOS
                     string(
                         Tables.columntable(AG.IFeatureLayer(nt_pure))[colname],
                     ) == string(
-                        Tables.columntable(AG.IFeatureLayer(
-                            nt_mixed,
-                            # parseWKT = true,
-                            # parseWKB = true,
-                        ))[colname],
+                        Tables.columntable(AG.IFeatureLayer(nt_mixed))[colname],
                     ) for colname in keys(nt_pure)
                 ])
+            end
+
+            @testset "geomcols and fieldtypes kwargs in table to layer conversion" begin
+                nt = NamedTuple([
+                    :point => [
+                        AG.createpoint(30, 10),
+                        nothing,
+                        AG.createpoint(35, 15),
+                    ],
+                    :linestring => [
+                        AG.createlinestring([
+                            (30.0, 10.0),
+                            (10.0, 30.0),
+                            (40.0, 40.0),
+                        ]),
+                        AG.createlinestring([
+                            (35.0, 15.0),
+                            (15.0, 35.0),
+                            (45.0, 45.0),
+                        ]),
+                        missing,
+                    ],
+                    :id => [nothing, "5.1", "5.2"],
+                    :zoom => [1.0, 2.0, 3],
+                    :location => ["Mumbai", missing, "New Delhi"],
+                    :mixedgeom1 => [
+                        AG.createpoint(5, 15),
+                        AG.createlinestring([
+                            (30.0, 10.0),
+                            (10.0, 30.0),
+                            (40.0, 40.0),
+                        ]),
+                        AG.createpoint(35, 15),
+                    ],
+                    :mixedgeom2 => [
+                        AG.createpoint(10, 20),
+                        AG.createlinestring([
+                            (30.0, 10.0),
+                            (10.0, 30.0),
+                            (40.0, 40.0),
+                        ]),
+                        AG.createmultilinestring([
+                            [(25.0, 5.0), (5.0, 25.0), (35.0, 35.0)],
+                            [(35.0, 15.0), (15.0, 35.0), (45.0, 45.0)],
+                        ]),
+                    ],
+                ])
+
+                nt_pure = merge(
+                    nt,
+                    (;
+                        zip(
+                            Symbol.((.*)(String.(keys(nt)), "_GI")),
+                            values(nt),
+                        )...,
+                    ),
+                    (;
+                        zip(
+                            Symbol.((.*)(String.(keys(nt)), "_WKT")),
+                            values(nt),
+                        )...,
+                    ),
+                    (;
+                        zip(
+                            Symbol.((.*)(String.(keys(nt)), "_WKB")),
+                            values(nt),
+                        )...,
+                    ),
+                )
+
+                nt_mixed = merge(
+                    nt,
+                    (;
+                        zip(
+                            Symbol.((.*)(String.(keys(nt)), "_GI")),
+                            map.(
+                                x ->
+                                    typeof(x) <: AG.IGeometry ?
+                                    LibGEOS.readgeom(AG.toWKT(x)) : x,
+                                values(nt),
+                            ),
+                        )...,
+                    ),
+                    (;
+                        zip(
+                            Symbol.((.*)(String.(keys(nt)), "_WKT")),
+                            map.(
+                                x ->
+                                    typeof(x) <: AG.IGeometry ? AG.toWKT(x) : x,
+                                values(nt),
+                            ),
+                        )...,
+                    ),
+                    (;
+                        zip(
+                            Symbol.((.*)(String.(keys(nt)), "_WKB")),
+                            map.(
+                                x ->
+                                    typeof(x) <: AG.IGeometry ? AG.toWKB(x) : x,
+                                values(nt),
+                            ),
+                        )...,
+                    ),
+                )
+
+                # TODO: implements tests
+
             end
         end
     end
