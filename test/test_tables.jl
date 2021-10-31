@@ -810,6 +810,44 @@ using LibGEOS
             end
 
             """
+                equals_for_columntables_with_IGeometries(ct1, ct2)
+
+            Compares two `NamedTuple` containing values `<: IGeometry` in the first `ngeom` columns of `ct1`, regarless of key order
+
+            """
+            function equals_for_columntables_with_IGeometries(ct1, ct2, ngeom)
+                # we convert IGeometry values to WKT
+                (ctv1, ctv2) = ctv_toWKT.(values.((ct1, ct2)))
+                # we use two index functions to map ctv1 and ctv2 indices to the 
+                # sorted key list indices
+                (spidx_in, spidx_out) =
+                    sortperm.(([keys(ct1)...], [keys(ct2)...]))
+                return all([
+                    sort([keys(ct1)...]) == sort([keys(ct2)...]),
+                    all(
+                        all.([
+                            isequal.(
+                                (
+                                    # if we are comparing two geometry columns values, we
+                                    # convert `nothing` values to `missing`, see note #2
+                                    spidx_out[i] <= ngeom ?
+                                    map(
+                                        val ->
+                                            (
+                                                val === nothing ||
+                                                val === missing
+                                            ) ? missing : val,
+                                        ctv1[spidx_in[i]],
+                                    ) : ctv1[spidx_in[i]]
+                                ),
+                                ctv2[spidx_out[i]],
+                            ) for i in 1:length(ctv2)
+                        ]),
+                    ),
+                ])
+            end
+
+            """
                 nt2layer2nt_equals_nt(nt; force_no_schema=true)
 
             Takes a NamedTuple, converts it to an IFeatureLayer and compares the NamedTuple
@@ -833,32 +871,13 @@ using LibGEOS
                     Tables.rows(nt);
                     layer_name = "layer",
                 ) : layer = AG.IFeatureLayer(nt)
-                ngeom = AG.ngeom(layer)
                 (ct_in, ct_out) = Tables.columntable.((nt, layer))
-                # we convert IGeometry values to WKT
-                (ctv_in, ctv_out) = ctv_toWKT.(values.((ct_in, ct_out)))
-                # we use two index functions to map ctv_in and ctv_out indices to the 
-                # sorted key list indices
-                (spidx_in, spidx_out) =
-                    sortperm.(([keys(ct_in)...], [keys(ct_out)...]))
-                return all([
-                    sort([keys(ct_in)...]) == sort([keys(ct_out)...]),
-                    all(
-                        all.([
-                            (
-                                # if we are comparing two geometry columns values, we
-                                # convert `nothing` values to `missing`, see note #2
-                                spidx_out[i] <= ngeom ?
-                                map(
-                                    val ->
-                                        (val === nothing || val === missing) ?
-                                        missing : val,
-                                    ctv_in[spidx_in[i]],
-                                ) : ctv_in[spidx_in[i]]
-                            ) .=== ctv_out[spidx_out[i]] for i in 1:length(nt)
-                        ]),
-                    ),
-                ])
+                ngeom = AG.ngeom(layer)
+                return equals_for_columntables_with_IGeometries(
+                    ct_in,
+                    ct_out,
+                    ngeom,
+                )
             end
 
             @testset "Tables with IGeometry" begin
@@ -1185,6 +1204,7 @@ using LibGEOS
             end
 
             @testset "geomcols and fieldtypes kwargs in table to layer conversion" begin
+                # Base NamedTuple with IGeometries only
                 nt = NamedTuple([
                     :point => [
                         AG.createpoint(30, 10),
@@ -1229,30 +1249,8 @@ using LibGEOS
                         ]),
                     ],
                 ])
-
-                nt_pure = merge(
-                    nt,
-                    (;
-                        zip(
-                            Symbol.((.*)(String.(keys(nt)), "_GI")),
-                            values(nt),
-                        )...,
-                    ),
-                    (;
-                        zip(
-                            Symbol.((.*)(String.(keys(nt)), "_WKT")),
-                            values(nt),
-                        )...,
-                    ),
-                    (;
-                        zip(
-                            Symbol.((.*)(String.(keys(nt)), "_WKB")),
-                            values(nt),
-                        )...,
-                    ),
-                )
-
-                nt_mixed = merge(
+                # Base NamedTuple with mixed geometry format, for test cases
+                nt_source = merge(
                     nt,
                     (;
                         zip(
@@ -1287,8 +1285,157 @@ using LibGEOS
                     ),
                 )
 
-                # TODO: implements tests
+                # Test `geomcols` kwarg
+                geomcols = [
+                    "point",
+                    "linestring",
+                    "mixedgeom1",
+                    "mixedgeom2",
+                    "point_GI",
+                    "linestring_GI",
+                    "mixedgeom1_GI",
+                    "mixedgeom2_GI",
+                    "mixedgeom2_WKT",
+                    "mixedgeom2_WKB",
+                ]
+                # Convert `nothing` to `missing` and non `missing` or `nothing`
+                # values to `IGeometry`in columns that are treated as 
+                # geometries in table to layer conversion 
+                nt_expectedresult = merge(
+                    (;
+                        [
+                            k => map(
+                                x -> x === nothing ? missing : (x === missing ? missing : convert(AG.IGeometry, x)),
+                                nt_source[k],
+                            ) for k in Symbol.(geomcols)
+                        ]...,
+                    ),
+                    (;
+                        [
+                            k => nt_source[k] for k in setdiff(
+                                keys(nt_source),
+                                Symbol.(geomcols),
+                            )
+                        ]...,
+                    ),
+                )
 
+                # Test table to layer conversion using `geomcols` kwargs
+                # with a list of column names but not all table's columns
+                # that may be parsed as geometry columns
+                @test begin
+                    nt_result = Tables.columntable(
+                        AG.IFeatureLayer(
+                            nt_source;
+                            layer_name = "layer",
+                            geomcols = geomcols,
+                        ),
+                    )
+                    all([
+                        Set(keys(nt_result)) == Set(keys(nt_expectedresult)),
+                        all([
+                            isequal(
+                                toWKT_withmissings.(nt_result[k]),
+                                toWKT_withmissings.(nt_expectedresult[k]),
+                            ) for k in keys(nt_expectedresult)
+                        ]),
+                    ])
+                end
+
+                # Test table to layer conversion using `geomcols` kwargs
+                # with a list of column indices but not all table's columns
+                # that may be parsed as geometry columns
+                geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21, 28]
+                @test begin
+                    nt_result = Tables.columntable(
+                        AG.IFeatureLayer(
+                            nt_source;
+                            layer_name = "layer",
+                            geomcols = geomcols,
+                        ),
+                    )
+                    all([
+                        Set(keys(nt_result)) == Set(keys(nt_expectedresult)),
+                        all([
+                            isequal(
+                                toWKT_withmissings.(nt_result[k]),
+                                toWKT_withmissings.(nt_expectedresult[k]),
+                            ) for k in keys(nt_expectedresult)
+                        ]),
+                    ])
+                end
+
+                # Test that a column specified in `geomecols` kwarg that cannot
+                # be parsed as a geometry column, throws an error 
+                geomcols = [
+                    "point",
+                    "linestring",
+                    "mixedgeom1",
+                    "mixedgeom2",
+                    "point_GI",
+                    "linestring_GI",
+                    "mixedgeom1_GI",
+                    "mixedgeom2_GI",
+                    "mixedgeom2_WKT",
+                    "mixedgeom2_WKB",
+                    "id",
+                ]
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                )
+
+                # Test that a column not specified in `geomecols` kwarg which
+                # is a geometry column with a format that cannot be converted
+                # directly to an OGRFieldType, throws an error 
+                geomcols = [
+                    "point",
+                    "linestring",
+                    "mixedgeom1",
+                    "mixedgeom2",
+                    "point_GI",
+                    "linestring_GI",
+                    "mixedgeom1_GI",
+                    # "mixedgeom2_GI", # Column with geometries format not convertible to OGRFieldType
+                    "mixedgeom2_WKT",
+                    "mixedgeom2_WKB",
+                ]
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                )
+
+                # Test that a column specified by name in `geomecols` kwarg 
+                # which is not member of table's columns throws an error 
+                geomcols = [
+                    "point",
+                    "linestring",
+                    "mixedgeom1",
+                    "mixedgeom2",
+                    "point_GI",
+                    "linestring_GI",
+                    "mixedgeom1_GI",
+                    "mixedgeom2_GI",
+                    "mixedgeom2_WKT",
+                    "mixedgeom2_WKB",
+                    "dummy_column",
+                ]
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                )
+
+                # Test that a column specified by index in `geomecols` kwarg 
+                # which is not member of table's columns throws an error 
+                geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21, 28, 29]
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                )
             end
         end
     end

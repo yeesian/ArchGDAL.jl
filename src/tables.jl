@@ -269,13 +269,13 @@ function _infergeometryorfieldtypes(
             diff = setdiff(spgeomcols, foundgeomcols)
             if !Base.isempty(diff)
                 error(
-                    "The column(s) $diff could not be parsed as geometry column(s)",
+                    "The column(s) $(join(string.(diff), ", ", " and ")) could not be parsed as geometry column(s)",
                 )
             end
             diff = setdiff(foundgeomcols, spgeomcols)
             if !Base.isempty(diff)
                 error(
-                    "The column(s) $diff are composed of geometry objects and have not been converted to a field type. Consider adding these column(s) to geometry columns or convert their values to WKT/WKB",
+                    "The column(s) $(join(string.(diff), ", ", " and ")) are composed of geometry objects and have not been converted to a field type. Consider adding these column(s) to geometry columns or convert their values to WKT/WKB",
                 )
             end
         end
@@ -312,14 +312,16 @@ function _coherencecheckandnormalizationofkwargs(
         spgeomcols = nothing
     elseif geomcols isa Vector{String}
         if geomcols ⊈ colnames
-            error("`geomcols` kwarg is not a subset of table column names")
+            errored_geomcols = setdiff(geomcols, geomcols ∩ colnames)
+            error("Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg ∉ table column names")
         else
             spgeomcols = findall(s -> s ∈ geomcols, colnames)
         end
     else
-        assert(geomcols isa Vector{Int})
+        @assert geomcols isa Vector{Int}
         if geomcols ⊈ Vector(1:length(colnames))
-            error("`geomcols` kwarg is not a subset of table column indices")
+            errored_geomcols = setdiff(geomcols, geomcols ∩ Vector(1:length(colnames)))
+            error("Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg ∉ table column indices")
         else
             spgeomcols = geomcols
         end
@@ -339,7 +341,7 @@ function _coherencecheckandnormalizationofkwargs(
             i in findall(s -> s ∈ keys(fieldtypes), colnames)
         ))
     else
-        assert(keys(fieldtypes) isa Vector{Int})
+        @assert keys(fieldtypes) isa Vector{Int}
         if keys(fieldtypes) ⊈ Vector(1:length(colnames))
             error(
                 "Keys of `fieldtypes` kwarg are not a subset of table column indices",
