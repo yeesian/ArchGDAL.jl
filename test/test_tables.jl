@@ -1486,6 +1486,135 @@ using LibGEOS
                         ]),
                     ])
                 end
+
+                # Test table to layer conversion using `geomcols` kwargs
+                # with a list of column indices but not all table's columns
+                # that may be parsed as geometry columns
+                fieldtypes = Dict(
+                    3 => (AG.OFTString, AG.OFSTNone),
+                    4 => (AG.OFTReal, AG.OFSTNone),
+                    21 => AG.wkbPoint,
+                    28 => AG.wkbUnknown,
+                )
+                @test begin
+                    nt_result = Tables.columntable(
+                        AG.IFeatureLayer(
+                            nt_source;
+                            layer_name = "layer",
+                            geomcols = geomcols,
+                            fieldtypes = fieldtypes,
+                        ),
+                    )
+                    all([
+                        Set(keys(nt_result)) == Set(keys(nt_expectedresult)),
+                        all([
+                            isequal(
+                                toWKT_withmissings.(nt_result[k]),
+                                toWKT_withmissings.(nt_expectedresult[k]),
+                            ) for k in keys(nt_expectedresult)
+                        ]),
+                    ])
+                end
+
+                # Test that using a string key in `fieldtypes` kwarg not in
+                # table's column names, throws an error
+                geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21, 28]
+                fieldtypes = Dict(
+                    "id" => (AG.OFTString, AG.OFSTNone),
+                    "zoom" => (AG.OFTReal, AG.OFSTNone),
+                    "point_GI" => AG.wkbPoint,
+                    "mixedgeom2_WKB" => AG.wkbUnknown,
+                    "dummy_column" => (AG.OFTString, AG.OFSTNone),
+                )
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                    fieldtypes = fieldtypes,
+                )
+
+                # Test that using int key in `fieldtypes` kwarg not in
+                # table's column number range, throws an error
+                fieldtypes = Dict(
+                    3 => (AG.OFTString, AG.OFSTNone),
+                    4 => (AG.OFTReal, AG.OFSTNone),
+                    21 => AG.wkbPoint,
+                    28 => AG.wkbUnknown,
+                    29 => (AG.OFTString, AG.OFSTNone),
+                )
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                    fieldtypes = fieldtypes,
+                )
+
+                # Test that a column with a specified `OGRwkbGeometryType` in 
+                # `fieldtypes` kwarg but not in `geomcols` kwarg throws an error
+                geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21]
+                fieldtypes = Dict(
+                    3 => (AG.OFTString, AG.OFSTNone),
+                    4 => (AG.OFTReal, AG.OFSTNone),
+                    21 => AG.wkbPoint,
+                    28 => AG.wkbUnknown,
+                )
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                    fieldtypes = fieldtypes,
+                )
+
+                # Test that a column with a specified tuple of `OGRFieldType`
+                # and `OGRFieldSubType` in `fieldtype` kwarg and also specified
+                # `geomcols` kwarg, raises an error
+                geomcols = [1, 2, 3, 6, 7, 8, 9, 13, 14, 21, 28]
+                fieldtypes = Dict(
+                    3 => (AG.OFTString, AG.OFSTNone),
+                    4 => (AG.OFTReal, AG.OFSTNone),
+                    21 => AG.wkbPoint,
+                    28 => AG.wkbUnknown,
+                )
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                    fieldtypes = fieldtypes,
+                )
+
+                # Test that incoherences in `fieldtypes` kwarg on OGRFieldType
+                # and OGRFieldSubType tuples, throw an error
+                geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21, 28]
+                fieldtypes = Dict(
+                    3 => (AG.OFTString, AG.OFSTNone),
+                    4 => (AG.OFTReal, AG.OFSTInt16),
+                    21 => AG.wkbPoint,
+                    28 => AG.wkbUnknown,
+                )
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                    fieldtypes = fieldtypes,
+                )
+
+                # Test that if keys in `fieldtypes` kwarg are not convertible
+                # to type Int or String or values convertible to 
+                # `Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}`, 
+                # an error is thrown
+                geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21, 28]
+                fieldtypes = Dict(
+                    3 => (AG.OFTString, AG.OFSTNone),
+                    4 => Float64,
+                    21 => AG.wkbPoint,
+                    28 => AG.wkbUnknown,
+                )
+                @test_throws ErrorException AG.IFeatureLayer(
+                    nt_source;
+                    layer_name = "layer",
+                    geomcols = geomcols,
+                    fieldtypes = fieldtypes,
+                )
             end
         end
     end
