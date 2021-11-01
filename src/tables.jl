@@ -313,15 +313,20 @@ function _coherencecheckandnormalizationofkwargs(
     elseif geomcols isa Vector{String}
         if geomcols ⊈ colnames
             errored_geomcols = setdiff(geomcols, geomcols ∩ colnames)
-            error("Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg ∉ table column names")
+            error(
+                "Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg ∉ table column names",
+            )
         else
             spgeomcols = findall(s -> s ∈ geomcols, colnames)
         end
     else
         @assert geomcols isa Vector{Int}
         if geomcols ⊈ Vector(1:length(colnames))
-            errored_geomcols = setdiff(geomcols, geomcols ∩ Vector(1:length(colnames)))
-            error("Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg ∉ table column indices")
+            errored_geomcols =
+                setdiff(geomcols, geomcols ∩ Vector(1:length(colnames)))
+            error(
+                "Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg ∉ table column indices",
+            )
         else
             spgeomcols = geomcols
         end
@@ -330,7 +335,7 @@ function _coherencecheckandnormalizationofkwargs(
     # Test coherence `fieldtypes` with schema names, and normalize it to a `Dict{Int, ...}` with indices of schema names
     if fieldtypes === nothing
         spfieldtypes = nothing
-    elseif keys(fieldtypes) isa Vector{String}
+    elseif collect(keys(fieldtypes)) isa Vector{String}
         if keys(fieldtypes) ⊈ colnames
             error(
                 "`fieldtypes` kwarg contains column name(s) not found in table schema",
@@ -341,7 +346,7 @@ function _coherencecheckandnormalizationofkwargs(
             i in findall(s -> s ∈ keys(fieldtypes), colnames)
         ))
     else
-        @assert keys(fieldtypes) isa Vector{Int}
+        @assert collect(keys(fieldtypes)) isa Vector{Int}
         if keys(fieldtypes) ⊈ Vector(1:length(colnames))
             error(
                 "Keys of `fieldtypes` kwarg are not a subset of table column indices",
@@ -353,36 +358,53 @@ function _coherencecheckandnormalizationofkwargs(
 
     # Test coherence of `spfieldtypes` and `spgeomcols`
     if spgeomcols !== nothing && spfieldtypes !== nothing
-        if findall(T -> T isa OGRwkbGeometryType, values(spfieldtypes)) ⊈
+        if keys(filter(kv -> last(kv) isa OGRwkbGeometryType, spfieldtypes)) ⊈
            spgeomcols
+            geomfieldtypedcols = keys(
+                filter(kv -> last(kv) isa OGRwkbGeometryType, spfieldtypes),
+            )
+            incoherent_geomfieldtypedcols =
+                setdiff(geomfieldtypedcols, geomfieldtypedcols ∩ spgeomcols)
             error(
-                "Some columns specified with an `OGRwkbGeometryType` type in `fieldtypes` kwarg, are not specified in `geomcols` kwarg",
+                "Column(s) $(join(string.(incoherent_geomfieldtypedcols), ", ", " and ")) specified with an `OGRwkbGeometryType` type in `fieldtypes` kwarg, are not specified in `geomcols` kwarg",
             )
         end
         if !Base.isempty(
-            findall(
-                T -> T isa Tuple{OGRFieldType,OGRFieldSubType},
-                values(spfieldtypes),
+            keys(
+                filter(
+                    kv -> last(kv) isa Tuple{OGRFieldType,OGRFieldSubType},
+                    spfieldtypes,
+                ),
             ) ∩ spgeomcols,
         )
+            fieldtypedcols = keys(
+                filter(
+                    kv -> last(kv) isa Tuple{OGRFieldType,OGRFieldSubType},
+                    spfieldtypes,
+                ),
+            )
+            incoherent_fieldtypedcols =
+                setdiff(fieldtypedcols, fieldtypedcols ∩ spgeomcols)
             error(
-                "Some columns specified with a `Tuple{OGRFieldType,OGRFieldSubType}` in `fieldtypes` kwarg, have also been specified as a geometry column in `geomcols` kwarg",
+                "Column(s) $(join(string.(incoherent_fieldtypedcols), ", ", " and ")) specified with a `Tuple{OGRFieldType,OGRFieldSubType}` in `fieldtypes` kwarg, have also been specified as a geometry column in `geomcols` kwarg",
             )
         end
     end
 
     # Test coherence of `OGRFieldType` and `OGRFieldSubType` in `fieldtypes` kwarg
     if spfieldtypes !== nothing
-        for k in findall(
-            T -> T isa Tuple{OGRFieldType,OGRFieldSubType},
-            values(spfieldtypes),
+        incoherent_OGRFT_OGRFST = filter(
+            kv ->
+                last(kv) isa Tuple{OGRFieldType,OGRFieldSubType} &&
+                    last(kv) ∉ values(OGRFieldcompatibleDataTypes),
+            spfieldtypes,
         )
-            if spfieltypes[k][1] !=
-               convert(OGRFieldType, convert(DataType, spfieltypes[k][1]))
-                error(
-                    "`OGRFieldtype` and `ORGFieldSubType` specified for column $k in `fieldtypes` kwarg, are not compatibles",
-                )
-            end
+        if !Base.isempty(incoherent_OGRFT_OGRFST)
+            incoherent_OGRFT_OGRFST_cols =
+                collect(keys(incoherent_OGRFT_OGRFST))
+            error(
+                "`OGRFieldtype` and `ORGFieldSubType` specified for column(s) $(join(string.(incoherent_OGRFT_OGRFST_cols), ", ", " and "))  in `fieldtypes` kwarg, are not compatibles",
+            )
         end
     end
 
@@ -557,26 +579,44 @@ function IFeatureLayer(
     table;
     layer_name::String = "layer",
     geomcols::Union{Nothing,Vector{String},Vector{Int}} = nothing,
-    fieldtypes::Union{
-        Nothing,
-        Dict{Int,Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}},
-        Dict{
-            String,
-            Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}},
-        },
-    } = nothing,
-)::IFeatureLayer
+    fieldtypes::T = nothing,
+) where {T<:Union{Nothing,Dict{U,V}}} where {U<:Union{String,Int},V}
     # Check tables interface's conformance
     !Tables.istable(table) &&
         throw(DomainError(table, "$table has not a Table interface"))
     # Extract table data
     rows = Tables.rows(table)
     schema = Tables.schema(table)
+    # Necessary since the default type will be Any when building the Dictionary
+    if T != Nothing
+        norm_fieldtypes = try
+            convert(
+                Dict{
+                    U,
+                    Union{
+                        OGRwkbGeometryType,
+                        Tuple{OGRFieldType,OGRFieldSubType},
+                    },
+                },
+                fieldtypes,
+            )
+        catch e
+            if e isa MethodError
+                error(
+                    "`fieldtypes` keys should be of type `String` or `Int` and values should either of type `OGRwkbGeometryType` or `Tuple{OGRFieldType,OGRFieldSubType}`",
+                )
+            else
+                rethrow()
+            end
+        end
+    else
+        norm_fieldtypes = nothing
+    end
     return _fromtable(
         schema,
         rows;
         layer_name = layer_name,
         geomcols = geomcols,
-        fieldtypes = fieldtypes,
+        fieldtypes = norm_fieldtypes,
     )
 end

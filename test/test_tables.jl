@@ -1285,7 +1285,9 @@ using LibGEOS
                     ),
                 )
 
-                # Test `geomcols` kwarg
+                #########################
+                # Test `geomcols` kwarg #
+                #########################
                 geomcols = [
                     "point",
                     "linestring",
@@ -1305,17 +1307,20 @@ using LibGEOS
                     (;
                         [
                             k => map(
-                                x -> x === nothing ? missing : (x === missing ? missing : convert(AG.IGeometry, x)),
+                                x ->
+                                    x === nothing ? missing :
+                                    (
+                                        x === missing ? missing :
+                                        convert(AG.IGeometry, x)
+                                    ),
                                 nt_source[k],
                             ) for k in Symbol.(geomcols)
                         ]...,
                     ),
                     (;
                         [
-                            k => nt_source[k] for k in setdiff(
-                                keys(nt_source),
-                                Symbol.(geomcols),
-                            )
+                            k => nt_source[k] for
+                            k in setdiff(keys(nt_source), Symbol.(geomcols))
                         ]...,
                     ),
                 )
@@ -1436,6 +1441,51 @@ using LibGEOS
                     layer_name = "layer",
                     geomcols = geomcols,
                 )
+
+                ###########################
+                # Test `fieldtypes` kwarg #
+                ###########################
+
+                # Test table to layer conversion using `geomcols` kwargs
+                # with a list of column names but not all table's columns
+                # that may be parsed as geometry columns
+                geomcols = [
+                    "point",
+                    "linestring",
+                    "mixedgeom1",
+                    "mixedgeom2",
+                    "point_GI",
+                    "linestring_GI",
+                    "mixedgeom1_GI",
+                    "mixedgeom2_GI",
+                    "mixedgeom2_WKT",
+                    "mixedgeom2_WKB",
+                ]
+                fieldtypes = Dict(
+                    "id" => (AG.OFTString, AG.OFSTNone),
+                    "zoom" => (AG.OFTReal, AG.OFSTNone),
+                    "point_GI" => AG.wkbPoint,
+                    "mixedgeom2_WKB" => AG.wkbUnknown,
+                )
+                @test begin
+                    nt_result = Tables.columntable(
+                        AG.IFeatureLayer(
+                            nt_source;
+                            layer_name = "layer",
+                            geomcols = geomcols,
+                            fieldtypes = fieldtypes,
+                        ),
+                    )
+                    all([
+                        Set(keys(nt_result)) == Set(keys(nt_expectedresult)),
+                        all([
+                            isequal(
+                                toWKT_withmissings.(nt_result[k]),
+                                toWKT_withmissings.(nt_expectedresult[k]),
+                            ) for k in keys(nt_expectedresult)
+                        ]),
+                    ])
+                end
             end
         end
     end

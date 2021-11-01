@@ -291,6 +291,30 @@ end
     OFTInteger64List::GDAL.OFTInteger64List,
 )
 
+const OGRFieldcompatibleDataTypes = Dict(
+    Bool => (OFTInteger, OFSTBoolean),
+    Int8 => (OFTInteger, OFSTNone),
+    Int16 => (OFTInteger, OFSTInt16),
+    Int32 => (OFTInteger, OFSTNone),
+    Vector{Bool} => (OFTIntegerList, OFSTBoolean),
+    Vector{Int16} => (OFTIntegerList, OFSTInt16),
+    Vector{Int32} => (OFTIntegerList, OFSTNone),
+    Float16 => (OFTReal, OFSTNone),
+    Float32 => (OFTReal, OFSTFloat32),
+    Float64 => (OFTReal, OFSTNone),
+    Vector{Float16} => (OFTRealList, OFSTNone),
+    Vector{Float32} => (OFTRealList, OFSTFloat32),
+    Vector{Float64} => (OFTRealList, OFSTNone),
+    String => (OFTString, OFSTNone),
+    Vector{String} => (OFTStringList, OFSTNone),
+    Vector{UInt8} => (OFTBinary, OFSTNone),
+    Dates.Date => (OFTDate, OFSTNone),
+    Dates.Time => (OFTTime, OFSTNone),
+    Dates.DateTime => (OFTDateTime, OFSTNone),
+    Int64 => (OFTInteger64, OFSTNone),
+    Vector{Int64} => (OFTInteger64List, OFSTNone),
+)
+
 @convert(
     OGRFieldType::DataType,
     OFTInteger::Bool,
