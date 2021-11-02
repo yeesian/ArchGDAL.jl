@@ -2,7 +2,7 @@
 
 ```@setup projections
 using ArchGDAL; const AG = ArchGDAL
-using Plots; gr()
+using Plots
 ```
 
 (This is based entirely on the [GDAL/OSR Tutorial](https://gdal.org/tutorials/osr_api_tut.html) and [Python GDAL/OGR Cookbook](https://pcjericks.github.io/py-gdalogr-cookbook/projection.html).)
