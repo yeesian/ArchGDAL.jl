@@ -53,20 +53,16 @@ const AG = ArchGDAL;
         end
 
         AG.read("data/point.geojson") do ds
-            layer = AG.getlayer(ds)
-            new_ds = AG.copy(layer; name = "duplicated layer 1").ownedby
-            AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
-            @test_throws ErrorException(
-                "Dataset has multiple layers. Specify the layer number or name",
-            ) AG.getlayer(new_ds) do layer
-                return nothing
+            AG.getlayer(ds) do layer
+                new_ds = AG.copy(layer; name = "duplicated layer 1").ownedby
+                AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
+                @test_throws ErrorException(
+                    "Dataset has multiple layers. Specify the layer number or name",
+                ) AG.getlayer(new_ds) do layer
+                    return nothing
+                end
             end
         end
-
-        # AG.read("data/point.geojson") do ds
-        #     layer = AG.getlayer(ds)
-        #     @test 
-        # end
 
         dataset1 = AG.read("data/point.geojson")
         @test AG.nlayer(dataset1) == 1
