@@ -63,11 +63,16 @@ const AG = ArchGDAL;
             end
         end
 
+        # AG.read("data/point.geojson") do ds
+        #     layer = AG.getlayer(ds)
+        #     @test 
+        # end
+
         dataset1 = AG.read("data/point.geojson")
         @test AG.nlayer(dataset1) == 1
         layer1 = AG.getlayer(dataset1, 0)
         @test AG.nfeature(layer1) == 4
-        AG.getlayer(dataset1) do layer1
+        AG.getlayer(dataset1, 0) do layer1
             @test AG.nfeature(layer1) == 4
         end
         @test AG.getgeotransform(dataset1) ≈ [0, 1, 0, 0, 0, 1]
