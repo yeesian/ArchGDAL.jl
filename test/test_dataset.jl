@@ -47,20 +47,14 @@ const AG = ArchGDAL;
             layer = AG.getlayer(ds)
             new_ds = AG.copy(layer; name = "duplicated layer 1").ownedby
             AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
-            @test_logs (
-                :warn,
-                "Dataset has multiple layers, getting the first layer\nSpecify the layer number or name to avoid the warning",
-            ) AG.getlayer(new_ds)
+            @test_throws ErrorException("Dataset has multiple layers.\nSpecify the layer number or name") AG.getlayer(new_ds)
         end
 
         AG.read("data/point.geojson") do ds
             layer = AG.getlayer(ds)
             new_ds = AG.copy(layer; name = "duplicated layer 1").ownedby
             AG.copy(layer; dataset = new_ds, name = "duplicated layer 2")
-            @test_logs (
-                :warn,
-                "Dataset has multiple layers, getting the first layer\nSpecify the layer number or name to avoid the warning",
-            ) AG.getlayer(new_ds) do layer
+            @test_throws ErrorException("Dataset has multiple layers.\nSpecify the layer number or name") AG.getlayer(new_ds) do layer
                 return nothing
             end
         end
@@ -69,7 +63,7 @@ const AG = ArchGDAL;
         @test AG.nlayer(dataset1) == 1
         layer1 = AG.getlayer(dataset1, 0)
         @test AG.nfeature(layer1) == 4
-        AG.getlayer(dataset1, 0) do layer1
+        AG.getlayer(dataset1) do layer1
             @test AG.nfeature(layer1) == 4
         end
         @test AG.getgeotransform(dataset1) ≈ [0, 1, 0, 0, 0, 1]
