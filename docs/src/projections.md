@@ -62,13 +62,12 @@ ArchGDAL.createcoordtrans(source, target) do transform
 end
 ```
 
-## Reprojecting a layer
-```@setup projections
+## Reprojecting from a layer
+```@example projections
 # Getting vector data
 ds = AG.read("/vsicurl/https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/metropole.geojson")
 layer = AG.getlayer(ds, 0)
-```
-```@example projections
+
 # Plotting with native GEOJSON geographic CRS
 p_WGS_84 = AG.getfeature(layer, 0) do feature
     AG.getgeom(feature, 0) do geom
