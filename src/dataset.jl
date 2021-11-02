@@ -519,7 +519,7 @@ getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
 """
     getlayer(dataset::AbstractDataset)
 
-Fetch the first layer and raise a waning if `dataset` contains more than one layer
+Fetch the first layer and raise an error if `dataset` contains more than one layer
 
 The returned layer remains owned by the `dataset` and should not be deleted by
 the application.
