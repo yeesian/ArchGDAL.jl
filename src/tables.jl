@@ -269,13 +269,13 @@ function _infergeometryorfieldtypes(
             diff = setdiff(spgeomcols, foundgeomcols)
             if !Base.isempty(diff)
                 error(
-                    "The column(s) $(join(string.(diff), ", ", " and ")) could not be parsed as geometry column(s)",
+                    "Column(s) $(join(string.(diff), ", ", " and ")) could not be parsed as geometry column(s)",
                 )
             end
             diff = setdiff(foundgeomcols, spgeomcols)
             if !Base.isempty(diff)
                 error(
-                    "The column(s) $(join(string.(diff), ", ", " and ")) are composed of geometry objects and have not been converted to a field type. Consider adding these column(s) to geometry columns or convert their values to WKT/WKB",
+                    "Column(s) $(join(string.(diff), ", ", " and ")) is(are) composed of geometry objects that cannot be converted to a GDAL field type.\nConsider adding this(these) column(s) to `geomcols` kwarg or convert their values to WKT/WKB",
                 )
             end
         end
@@ -320,7 +320,7 @@ function _coherencecheckandnormalizationofkwargs(
         if geomcols ⊈ colnames
             errored_geomcols = setdiff(geomcols, geomcols ∩ colnames)
             error(
-                "Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg is(are) not element of table column names",
+                "Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg is(are) not in table's columns names",
             )
         else
             spgeomcols = findall(s -> s ∈ geomcols, colnames)
@@ -331,7 +331,7 @@ function _coherencecheckandnormalizationofkwargs(
             errored_geomcols =
                 setdiff(geomcols, geomcols ∩ Vector(1:length(colnames)))
             error(
-                "Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg is(are) not element of table column indices",
+                "Column(s) $(join(string.(errored_geomcols), ", ", " and ")) in `geomcols` kwarg is(are) not in table's columns indices ranging from 1 to $(length(colnames))",
             )
         else
             spgeomcols = geomcols
@@ -346,7 +346,7 @@ function _coherencecheckandnormalizationofkwargs(
             errored_fieldtypes_keys =
                 setdiff(keys(fieldtypes), keys(fieldtypes) ∩ colnames)
             error(
-                "Column(s) $(join(string.(errored_fieldtypes_keys), ", ", " and ")) specified in `fieldtypes` kwarg keys is(are) not in table's colums(s)",
+                "Column(s) $(join(string.(errored_fieldtypes_keys), ", ", " and ")) specified in `fieldtypes` kwarg keys is(are) not in table's colums' names",
             )
         end
         spfieldtypes = Dict((
@@ -361,7 +361,7 @@ function _coherencecheckandnormalizationofkwargs(
                 keys(fieldtypes) ∩ Vector(1:length(colnames)),
             )
             error(
-                "Column(s) $(join(string.(errored_fieldtypes_keys), ", ", " and ")) specified in `fieldtypes` kwarg keys is(are) not in table's colums(s)",
+                "Column(s) $(join(string.(errored_fieldtypes_keys), ", ", " and ")) specified in `fieldtypes` kwarg keys is(are) not in table's colums' indices ranging from 1 to $(length(colnames))",
             )
         else
             spfieldtypes = fieldtypes
@@ -397,7 +397,7 @@ function _coherencecheckandnormalizationofkwargs(
             )
             incoherent_fieldtypedcols = fieldtypedcols ∩ spgeomcols
             error(
-                "Column(s) $(join(string.(incoherent_fieldtypedcols), ", ", " and ")) specified with a `Tuple{OGRFieldType,OGRFieldSubType}` in `fieldtypes` kwarg, have also been specified as a geometry column in `geomcols` kwarg",
+                "Column(s) $(join(string.(incoherent_fieldtypedcols), ", ", " and ")) specified with a `Tuple{OGRFieldType,OGRFieldSubType}` in `fieldtypes` kwarg, is(are) also specified as geometry column(s) in `geomcols` kwarg",
             )
         end
     end
@@ -414,7 +414,7 @@ function _coherencecheckandnormalizationofkwargs(
             incoherent_OGRFT_OGRFST_cols =
                 collect(keys(incoherent_OGRFT_OGRFST))
             error(
-                "`OGRFieldtype` and `ORGFieldSubType` specified for column(s) $(join(string.(incoherent_OGRFT_OGRFST_cols), ", ", " and "))  in `fieldtypes` kwarg, are not compatibles",
+                "`OGRFieldtype` and `ORGFieldSubType` specified for column(s) $(join(string.(incoherent_OGRFT_OGRFST_cols), ", ", " and "))  in `fieldtypes` kwarg, are not compatible",
             )
         end
     end
@@ -548,8 +548,10 @@ Construct an IFeatureLayer from a source implementing Tables.jl interface
 
 ## Keyword arguments
 - `layer_name::String = ""`: name of the layer
-- `geomcols::Union{Nothing, Vector{String}, Vector{Int}} = nothing`: if different from nothing, will only try to parse specified columns (by names or number) when looking for geometry columns
-- `fieldtypes::Union{Nothing, Dict{Int,Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}, Dict{String,Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}} = nothing`: if different from nothing, will use specified types for column parsing
+- `geomcols::Union{Nothing, Vector{String}, Vector{Int}} = nothing`: if `geomcols` is different from nothing, only the specified columns (by names or number) will be converted to geomfields
+- `fieldtypes`: has a default value of `nothing`. If it is different from `nothing`, the specified types will be used for column parsing. `Fieldtypes` can be of either types:
+  - `Dict{Int,Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}`
+  - `Dict{String,Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}}` 
 
 ## Restrictions
 - Source must contains at least one geometry column
@@ -613,7 +615,7 @@ function IFeatureLayer(
             )
         catch
             error(
-                "`fieldtypes` keys should be of type `String` or `Int` and values should either of type `OGRwkbGeometryType` or `Tuple{OGRFieldType,OGRFieldSubType}`",
+                "`fieldtypes` keys should be of type `String` or `Int` and values should be either of type `OGRwkbGeometryType` or `Tuple{OGRFieldType,OGRFieldSubType}`",
             )
         end
     else

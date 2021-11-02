@@ -1385,7 +1385,9 @@ using LibGEOS
                     "mixedgeom2_WKB",
                     "id",
                 ]
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) 3 could not be parsed as geometry column(s)",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1406,7 +1408,9 @@ using LibGEOS
                     "mixedgeom2_WKT",
                     "mixedgeom2_WKB",
                 ]
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) 14 is(are) composed of geometry objects that cannot be converted to a GDAL field type.\nConsider adding this(these) column(s) to `geomcols` kwarg or convert their values to WKT/WKB",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1427,7 +1431,9 @@ using LibGEOS
                     "mixedgeom2_WKB",
                     "dummy_column",
                 ]
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) dummy_column in `geomcols` kwarg is(are) not in table's columns names",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1436,7 +1442,9 @@ using LibGEOS
                 # Test that a column specified by index in `geomecols` kwarg 
                 # which is not member of table's columns throws an error 
                 geomcols = [1, 2, 6, 7, 8, 9, 13, 14, 21, 28, 29]
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) 29 in `geomcols` kwarg is(are) not in table's columns indices ranging from 1 to 28",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1526,7 +1534,9 @@ using LibGEOS
                     "mixedgeom2_WKB" => AG.wkbUnknown,
                     "dummy_column" => (AG.OFTString, AG.OFSTNone),
                 )
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) dummy_column specified in `fieldtypes` kwarg keys is(are) not in table's colums' names",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1542,7 +1552,9 @@ using LibGEOS
                     28 => AG.wkbUnknown,
                     29 => (AG.OFTString, AG.OFSTNone),
                 )
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) 29 specified in `fieldtypes` kwarg keys is(are) not in table's colums' indices ranging from 1 to 28",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1558,7 +1570,9 @@ using LibGEOS
                     21 => AG.wkbPoint,
                     28 => AG.wkbUnknown,
                 )
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) 28 specified with an `OGRwkbGeometryType` type in `fieldtypes` kwarg, is(are) not specified in `geomcols` kwarg",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1575,7 +1589,9 @@ using LibGEOS
                     21 => AG.wkbPoint,
                     28 => AG.wkbUnknown,
                 )
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "Column(s) 3 specified with a `Tuple{OGRFieldType,OGRFieldSubType}` in `fieldtypes` kwarg, is(are) also specified as geometry column(s) in `geomcols` kwarg",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1591,7 +1607,9 @@ using LibGEOS
                     21 => AG.wkbPoint,
                     28 => AG.wkbUnknown,
                 )
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "`OGRFieldtype` and `ORGFieldSubType` specified for column(s) 4  in `fieldtypes` kwarg, are not compatible",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
@@ -1609,7 +1627,9 @@ using LibGEOS
                     21 => AG.wkbPoint,
                     28 => AG.wkbUnknown,
                 )
-                @test_throws ErrorException AG.IFeatureLayer(
+                @test_throws ErrorException(
+                    "`fieldtypes` keys should be of type `String` or `Int` and values should be either of type `OGRwkbGeometryType` or `Tuple{OGRFieldType,OGRFieldSubType}`",
+                ) AG.IFeatureLayer(
                     nt_source;
                     layer_name = "layer",
                     geomcols = geomcols,
