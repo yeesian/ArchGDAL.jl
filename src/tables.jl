@@ -471,10 +471,8 @@ function _fromtable(
         string.(sch.names),
     )
 
-    # Infer geometry and field types
     AGtypes = _infergeometryorfieldtypes(sch, rows, spgeomcols, spfieldtypes)
 
-    # Create layer
     (layer, geomindices, fieldindices) = _create_empty_layer_from_AGtypes(
         string.(sch.names),
         AGtypes,
