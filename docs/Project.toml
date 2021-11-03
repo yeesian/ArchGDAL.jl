@@ -4,6 +4,7 @@ DataFrames = "a93c6f00-e57d-5684-b7b6-d8193f3e46c0"
 DiskArrays = "3c3547ce-8d99-4f5e-a174-61eb10b00ae3"
 Documenter = "e30172f5-a6a5-5a46-863b-614d45cd2de4"
 GDAL = "add2ef01-049f-52c4-9ee2-e494f65e021a"
+Plots = "91a5bcdd-55d7-5caf-9e0b-520d859cae80"
 
 [compat]
 Documenter = "0.26.2"
