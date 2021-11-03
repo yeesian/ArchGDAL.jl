@@ -525,22 +525,21 @@ The returned layer remains owned by the `dataset` and should not be deleted by
 the application.
 """
 function getlayer(dataset::AbstractDataset)::IFeatureLayer
-    layer = IFeatureLayer(
+    nlayer(dataset) == 1 ||
+        error("Dataset has multiple layers. Specify the layer number or name")
+    return IFeatureLayer(
         GDAL.gdaldatasetgetlayer(dataset.ptr, 0),
         ownedby = dataset,
     )
-    nlayer(dataset) == 1 ||
-        error("Dataset has multiple layers. Specify the layer number or name")
-    return layer
+    
 end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
     FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i))
 function unsafe_getlayer(dataset::AbstractDataset)::FeatureLayer
-    layer = FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0))
     nlayer(dataset) == 1 ||
         error("Dataset has multiple layers. Specify the layer number or name")
-    return layer
+    return FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0))
 end
 
 """
