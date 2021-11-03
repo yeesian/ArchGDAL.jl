@@ -1,10 +1,11 @@
 # Spatial Projections
 
 ```@setup projections
-using ArchGDAL
+using ArchGDAL; const AG = ArchGDAL
+using Plots
 ```
 
-(This is based entirely on the [GDAL/OSR Tutorial](http://www.gdal.org/osr_tutorial.html) and [Python GDAL/OGR Cookbook](https://pcjericks.github.io/py-gdalogr-cookbook/projection.html).)
+(This is based entirely on the [GDAL/OSR Tutorial](https://gdal.org/tutorials/osr_api_tut.html) and [Python GDAL/OGR Cookbook](https://pcjericks.github.io/py-gdalogr-cookbook/projection.html).)
 
 The `ArchGDAL.SpatialRef`, and `ArchGDAL.CoordTransform` types are lightweight wrappers around GDAL objects that represent coordinate systems (projections and datums) and provide services to transform between them. These services are loosely modeled on the OpenGIS Coordinate Transformations specification, and use the same Well Known Text format for describing coordinate systems.
 
@@ -59,6 +60,34 @@ ArchGDAL.createcoordtrans(source, target) do transform
     ArchGDAL.transform!(point, transform)
     println("After: $(ArchGDAL.toWKT(point))")
 end
+```
+
+## Reprojecting from a layer
+```@setup projections
+# Getting vector data
+ds = AG.read("/vsicurl/https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/master/data/metropole.geojson")
+layer = AG.getlayer(ds, 0)
+```
+```@example projections
+# Plotting with native GEOJSON geographic CRS
+p_WGS_84 = AG.getfeature(layer, 0) do feature
+    AG.getgeom(feature, 0) do geom
+        plot(geom; fa=0.1, title="WGS 84")
+    end
+end
+
+# Plotting with local projected CRS
+p_Lambert_93 = AG.getfeature(layer, 0) do feature
+    AG.getgeom(feature, 0) do geom
+        source = AG.getspatialref(geom)
+        target = AG.importEPSG(2154)
+        AG.createcoordtrans(source, target) do transform
+            plot(AG.transform!(geom, transform); fa=0.1, title="Lambert 93")
+        end
+    end
+end
+
+plot(p_WGS_84, p_Lambert_93; size=(600, 200), layout=(1,2))
 ```
 
 ## References
