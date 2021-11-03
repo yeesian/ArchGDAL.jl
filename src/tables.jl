@@ -195,9 +195,9 @@ function _infergeometryorfieldtypes(
         maybeWKTcolinds = maybeWKTcolinds ∩ spgeomcols
         maybeWKBcolinds = maybeWKBcolinds ∩ spgeomcols
     end
-    if fieldtypes !== nothing
-        maybeWKTcolinds = setdiff(maybeWKTcolinds, keys(fieldtypes))
-        maybeWKBcolinds = setdiff(maybeWKBcolinds, keys(fieldtypes))
+    if spfieldtypes !== nothing
+        maybeWKTcolinds = setdiff(maybeWKTcolinds, keys(spfieldtypes))
+        maybeWKBcolinds = setdiff(maybeWKBcolinds, keys(spfieldtypes))
     end
     maybegeomcolinds = maybeWKTcolinds ∪ maybeWKBcolinds
     if !Base.isempty(maybegeomcolinds)
@@ -454,7 +454,7 @@ function _fromtable(
     sch::Tables.Schema{names,types},
     rows;
     layer_name::String,
-    geomcols::Union{Nothing,Vector{String},Vector{Int}} = nothing, # Default value set as a convinience for tests
+    geomcols::Union{Nothing,Vector{String},Vector{Int}} = nothing, # Default value set as a convenience for tests
     fieldtypes::Union{
         Nothing,
         Dict{Int,Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}}},
@@ -462,7 +462,7 @@ function _fromtable(
             String,
             Union{OGRwkbGeometryType,Tuple{OGRFieldType,OGRFieldSubType}},
         },
-    } = nothing, # Default value set as a convinience for tests
+    } = nothing, # Default value set as a convenience for tests
 )::IFeatureLayer where {names,types}
     # Test coherence of `geomcols` and `fieldtypes` and normalize them with indices for schema names
     (spgeomcols, spfieldtypes) = _coherencecheckandnormalizationofkwargs(
