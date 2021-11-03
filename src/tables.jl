@@ -195,6 +195,10 @@ function _infergeometryorfieldtypes(
         maybeWKTcolinds = maybeWKTcolinds ∩ spgeomcols
         maybeWKBcolinds = maybeWKBcolinds ∩ spgeomcols
     end
+    if fieldtypes !== nothing
+        maybeWKTcolinds = setdiff(maybeWKTcolinds, keys(fieldtypes))
+        maybeWKBcolinds = setdiff(maybeWKBcolinds, keys(fieldtypes))
+    end
     maybegeomcolinds = maybeWKTcolinds ∪ maybeWKBcolinds
     if !Base.isempty(maybegeomcolinds)
         @assert Base.isempty(maybeWKTcolinds ∩ maybeWKBcolinds)
