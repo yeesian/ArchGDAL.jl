@@ -531,7 +531,6 @@ function getlayer(dataset::AbstractDataset)::IFeatureLayer
         GDAL.gdaldatasetgetlayer(dataset.ptr, 0),
         ownedby = dataset,
     )
-    
 end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =

@@ -252,15 +252,15 @@ function Base.show(io::IO, spref::AbstractSpatialRef)::Nothing
     return nothing
 end
 
-function Base.show(io::IO, geom::AbstractGeometry)::Nothing
+function Base.show(io::IO, geom::AbstractGeometry, prefix::String)::Nothing
     if geom.ptr == C_NULL
-        print(io, "NULL Geometry")
+        print(io, "NULL $(prefix)Geometry")
         return nothing
     end
     compact = get(io, :compact, false)
 
     if !compact
-        print(io, "Geometry: ")
+        print(io, "$(prefix)Geometry: ")
         geomwkt = toWKT(geom)
         if length(geomwkt) > 60
             print(io, "$(geomwkt[1:50]) ... $(geomwkt[(end - 4):end])")
@@ -268,10 +268,12 @@ function Base.show(io::IO, geom::AbstractGeometry)::Nothing
             print(io, "$geomwkt")
         end
     else
-        print(io, "Geometry: $(getgeomtype(geom))")
+        print(io, "$(prefix)Geometry: $(getgeomtype(geom))")
     end
     return nothing
 end
+Base.show(io::IO, geom::IGeometry) = show(io, geom, "I")
+Base.show(io::IO, geom::Geometry) = show(io, geom, "")
 
 function Base.show(io::IO, ct::ColorTable)::Nothing
     if ct.ptr == C_NULL

@@ -2,7 +2,8 @@ using Test
 import GeoInterface, GeoFormatTypes, ArchGDAL;
 const AG = ArchGDAL
 const GFT = GeoFormatTypes
-using LibGEOS
+using LibGEOS;
+const LG = LibGEOS;
 
 @testset "test_geometry.jl" begin
     @testset "Incomplete GeoInterface geometries" begin
@@ -654,12 +655,12 @@ using LibGEOS
         )
         AG.clone(geom3) do geom4
             @test sprint(print, AG.clone(geom3)) ==
-                  "Geometry: GEOMETRYCOLLECTION (" *
+                  "IGeometry: GEOMETRYCOLLECTION (" *
                   "POINT (2 5 8)," *
                   "POLYGON ((0 0 8," *
                   " ... MPTY)"
             @test sprint(print, AG.clone(geom4)) ==
-                  "Geometry: GEOMETRYCOLLECTION (" *
+                  "IGeometry: GEOMETRYCOLLECTION (" *
                   "POINT (2 5 8)," *
                   "POLYGON ((0 0 8," *
                   " ... MPTY)"
@@ -728,8 +729,8 @@ using LibGEOS
         @test AG.getgeomtype(AG.getgeom(geom3, 0)) == AG.wkbPoint25D
         @test AG.getgeomtype(AG.getgeom(geom3, 1)) == AG.wkbPolygon25D
         @test AG.getgeomtype(AG.getgeom(geom3, 2)) == AG.wkbPolygon25D
-        @test sprint(print, AG.getgeom(geom3, 3)) == "NULL Geometry"
-        @test sprint(print, AG.getgeom(AG.IGeometry(), 3)) == "NULL Geometry"
+        @test sprint(print, AG.getgeom(geom3, 3)) == "NULL IGeometry"
+        @test sprint(print, AG.getgeom(AG.IGeometry(), 3)) == "NULL IGeometry"
         AG.getgeom(geom3, 0) do geom4
             @test AG.getgeomtype(geom4) == AG.wkbPoint25D
         end
@@ -801,7 +802,7 @@ using LibGEOS
     @testset "Cloning NULL geometries" begin
         geom = AG.IGeometry()
         @test AG.geomname(geom) === missing
-        @test sprint(print, AG.clone(geom)) == "NULL Geometry"
+        @test sprint(print, AG.clone(geom)) == "NULL IGeometry"
         AG.clone(geom) do g
             @test sprint(print, g) == "NULL Geometry"
         end
@@ -815,12 +816,11 @@ using LibGEOS
             "MULTILINESTRING ((0 0, 10 10), (0 0, 10 0), (10 0, 10 10))",
             "POLYGON((1 1,1 5,5 5,5 1,1 1))",
             "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
+            "GEOMETRYCOLLECTION(MULTIPOINT(0 0, 0 0, 1 1),LINESTRING(1 1, 2 2, 2 2, 0 0),POLYGON((5 5, 0 0, 0 2, 2 2, 5 5)))",
         ]
         for wktgeom in wktgeoms
-            @test (AG.toWKT ∘ convert)(AG.IGeometry, readgeom(wktgeom)) ==
+            @test (AG.toWKT ∘ convert)(AG.IGeometry, LG.readgeom(wktgeom)) ==
                   (AG.toWKT ∘ AG.fromWKT)(wktgeom)
         end
-        wktgeomcoll = "GEOMETRYCOLLECTION(MULTIPOINT(0 0, 0 0, 1 1),LINESTRING(1 1, 2 2, 2 2, 0 0),POLYGON((5 5, 0 0, 0 2, 2 2, 5 5)))"
-        @test_throws ErrorException convert(AG.IGeometry, readgeom(wktgeomcoll))
     end
 end

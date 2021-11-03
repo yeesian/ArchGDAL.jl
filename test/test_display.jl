@@ -51,6 +51,22 @@ const AG = ArchGDAL;
                       "pointname (OFTString)"
                 @test sprint(print, AG.getgeomdefn(feature, 0)) == " (wkbPoint)"
             end
+
+            # Test display for Geometries and IGeometries 
+            @test sprint(print, AG.createpoint(1, 2)) ==
+                  "IGeometry: POINT (1 2)"
+            @test sprint(
+                print,
+                AG.createpoint(1, 2),
+                context = :compact => true,
+            ) == "IGeometry: wkbPoint"
+            AG.createpoint(1, 2) do point
+                @test sprint(print, point) == "Geometry: POINT (1 2)"
+            end
+            AG.createpoint(1, 2) do point
+                @test sprint(print, point, context = :compact => true) ==
+                      "Geometry: wkbPoint"
+            end
         end
 
         AG.read("gdalworkshop/world.tif") do dataset

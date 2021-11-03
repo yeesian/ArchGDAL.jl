@@ -577,7 +577,7 @@ julia> nt = NamedTuple([
            :zoom => [1.0, 2],
            :location => [missing, "New Delhi"],
        ])
-(point = Union{Missing, ArchGDAL.IGeometry{ArchGDAL.wkbPoint}}[Geometry: POINT (30 10), missing], mixedgeom = ArchGDAL.IGeometry[Geometry: POINT (5 10), Geometry: LINESTRING (30 10,10 30)], id = ["5.1", "5.2"], zoom = [1.0, 2.0], location = Union{Missing, String}[missing, "New Delhi"])
+(point = Union{Missing, ArchGDAL.IGeometry{ArchGDAL.wkbPoint}}[IGeometry: POINT (30 10), missing], mixedgeom = ArchGDAL.IGeometry[IGeometry: POINT (5 10), IGeometry: LINESTRING (30 10,10 30)], id = ["5.1", "5.2"], zoom = [1.0, 2.0], location = Union{Missing, String}[missing, "New Delhi"])
 
 julia> layer = AG.IFeatureLayer(nt; layer_name="towns")
 Layer: towns
