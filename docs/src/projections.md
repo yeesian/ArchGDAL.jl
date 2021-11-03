@@ -65,7 +65,7 @@ end
 ## Reprojecting from a layer
 ```@setup projections
 # Getting vector data
-ds = AG.read("/vsicurl/https://raw.githubusercontent.com/gregoiredavid/france-geojson/master/metropole.geojson")
+ds = AG.read("/vsicurl/https://raw.githubusercontent.com/yeesian/ArchGDALDatasets/master/data/metropole.geojson")
 layer = AG.getlayer(ds, 0)
 ```
 ```@example projections
