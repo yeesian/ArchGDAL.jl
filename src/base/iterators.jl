@@ -13,11 +13,29 @@ function Base.iterate(
     end
 end
 
+@generated function Base.iterate(
+    layer::FDP_AbstractFeatureLayer{FD},
+    state::Integer = 0,
+) where {FD<:FDType}
+    return quote
+        layer.ptr == C_NULL && return nothing
+        state == 0 && resetreading!(layer)
+        ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
+        return if ptr == C_NULL
+            resetreading!(layer)
+            nothing
+        else
+            (FDP_Feature{$FD}(ptr; ownedby = layer), state + 1)
+        end
+    end
+end
+
 Base.eltype(layer::AbstractFeatureLayer)::DataType = Feature
+Base.eltype(::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType} = FDP_Feature{FD}
 
-Base.IteratorSize(::Type{<:AbstractFeatureLayer}) = Base.SizeUnknown()
+Base.IteratorSize(::Type{<:DUAL_AbstractFeatureLayer}) = Base.SizeUnknown()
 
-Base.length(layer::AbstractFeatureLayer)::Integer = nfeature(layer, true)
+Base.length(layer::DUAL_AbstractFeatureLayer)::Integer = nfeature(layer, true)
 
 struct BlockIterator{T<:Integer}
     rows::T

@@ -24,6 +24,12 @@ function destroy(feature::Feature)::Nothing
     feature.ptr = C_NULL
     return nothing
 end
+function destroy(fdp_feature::FDP_AbstractFeature)
+    GDAL.ogr_f_destroy(fdp_feature.ptr)
+    fdp_feature.ptr = C_NULL
+    fdp_feature.ownedby = nothing
+    return nothing
+end
 
 """
     setgeom!(feature::Feature, geom::AbstractGeometry)
@@ -53,7 +59,7 @@ end
 
 Returns a clone of the geometry corresponding to the feature.
 """
-function getgeom(feature::Feature)::IGeometry
+function getgeom(feature::DUAL_AbstractFeature)::IGeometry
     result = GDAL.ogr_f_getgeometryref(feature.ptr)
     return if result == C_NULL
         IGeometry()
@@ -79,6 +85,9 @@ Fetch number of fields on this feature.
 This will always be the same as the field count for the OGRFeatureDefn.
 """
 nfield(feature::Feature)::Integer = GDAL.ogr_f_getfieldcount(feature.ptr)
+@generated function nfield(::FDP_AbstractFeature{FD}) where {FD<:FDType}
+    return :($(_nft(FD)))
+end
 
 """
     getfielddefn(feature::Feature, i::Integer)
@@ -95,6 +104,15 @@ internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::Feature, i::Integer)::IFieldDefnView =
     IFieldDefnView(GDAL.ogr_f_getfielddefnref(feature.ptr, i))
+function getfielddefn(
+    fdp_feature::FDP_Feature{FD},
+    i::Integer,
+) where {FD<:FDType}
+    return FTP_IFieldDefnView{_ftvec(FD)[i+1]}(
+        GDAL.ogr_f_getfielddefnref(fdp_feature.ptr, i);
+        ownedby = getfeaturedefn(fdp_feature),
+    )
+end
 
 """
     findfieldindex(feature::Feature, name::Union{AbstractString, Symbol})
@@ -112,7 +130,7 @@ the field index, or `nothing` if no matching field is found.
 This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 """
 function findfieldindex(
-    feature::Feature,
+    feature::DUAL_AbstractFeature,
     name::Union{AbstractString,Symbol},
 )::Union{Integer,Nothing}
     i = GDAL.ogr_f_getfieldindex(feature.ptr, name)
@@ -132,7 +150,7 @@ Test if a field has ever been assigned a value or not.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-isfieldset(feature::Feature, i::Integer)::Bool =
+isfieldset(feature::DUAL_AbstractFeature, i::Integer)::Bool =
     Bool(GDAL.ogr_f_isfieldset(feature.ptr, i))
 
 """
@@ -164,7 +182,7 @@ Test if a field is null.
 ### References
 * https://gdal.org/development/rfc/rfc67_nullfieldvalues.html
 """
-isfieldnull(feature::Feature, i::Integer)::Bool =
+isfieldnull(feature::DUAL_AbstractFeature, i::Integer)::Bool =
     Bool(GDAL.ogr_f_isfieldnull(feature.ptr, i))
 
 """
@@ -227,7 +245,7 @@ Fetch field value as integer.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asint(feature::Feature, i::Integer)::Int32 =
+asint(feature::DUAL_AbstractFeature, i::Integer)::Int32 =
     GDAL.ogr_f_getfieldasinteger(feature.ptr, i)
 
 """
@@ -239,7 +257,7 @@ Fetch field value as integer 64 bit.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asint64(feature::Feature, i::Integer)::Int64 =
+asint64(feature::DUAL_AbstractFeature, i::Integer)::Int64 =
     GDAL.ogr_f_getfieldasinteger64(feature.ptr, i)
 
 """
@@ -251,7 +269,7 @@ Fetch field value as a double.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asdouble(feature::Feature, i::Integer)::Float64 =
+asdouble(feature::DUAL_AbstractFeature, i::Integer)::Float64 =
     GDAL.ogr_f_getfieldasdouble(feature.ptr, i)
 
 """
@@ -263,7 +281,7 @@ Fetch field value as a string.
 * `feature`: the feature that owned the field.
 * `i`: the field to fetch, from 0 to GetFieldCount()-1.
 """
-asstring(feature::Feature, i::Integer)::String =
+asstring(feature::DUAL_AbstractFeature, i::Integer)::String =
     GDAL.ogr_f_getfieldasstring(feature.ptr, i)
 
 """
@@ -281,7 +299,7 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief. If *pnCount is zero on return the returned
 pointer may be NULL or non-NULL.
 """
-function asintlist(feature::Feature, i::Integer)::Vector{Int32}
+function asintlist(feature::DUAL_AbstractFeature, i::Integer)::Vector{Int32}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasintegerlist(feature.ptr, i, n)
     return (n.x == 0) ? Int32[] : unsafe_wrap(Vector{Int32}, ptr, n.x)
@@ -302,7 +320,7 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief. If *pnCount is zero on return the returned
 pointer may be NULL or non-NULL.
 """
-function asint64list(feature::Feature, i::Integer)::Vector{Int64}
+function asint64list(feature::DUAL_AbstractFeature, i::Integer)::Vector{Int64}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasinteger64list(feature.ptr, i, n)
     return (n.x == 0) ? Int64[] : unsafe_wrap(Vector{Int64}, ptr, n.x)
@@ -323,7 +341,10 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief. If *pnCount is zero on return the returned
 pointer may be NULL or non-NULL.
 """
-function asdoublelist(feature::Feature, i::Integer)::Vector{Float64}
+function asdoublelist(
+    feature::DUAL_AbstractFeature,
+    i::Integer,
+)::Vector{Float64}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasdoublelist(feature.ptr, i, n)
     return (n.x == 0) ? Float64[] : unsafe_wrap(Vector{Float64}, ptr, n.x)
@@ -342,7 +363,7 @@ Fetch field value as a list of strings.
 the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
-asstringlist(feature::Feature, i::Integer)::Vector{String} =
+asstringlist(feature::DUAL_AbstractFeature, i::Integer)::Vector{String} =
     GDAL.ogr_f_getfieldasstringlist(feature.ptr, i)
 
 """
@@ -358,7 +379,7 @@ Fetch field value as binary.
 the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
-function asbinary(feature::Feature, i::Integer)::Vector{UInt8}
+function asbinary(feature::DUAL_AbstractFeature, i::Integer)::Vector{UInt8}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasbinary(feature.ptr, i, n)
     return (n.x == 0) ? UInt8[] : unsafe_wrap(Vector{UInt8}, ptr, n.x)
@@ -377,7 +398,7 @@ OFTDate, OFTTime and OFTDateTime fields.
 ### Returns
 `true` on success or `false` on failure.
 """
-function asdatetime(feature::Feature, i::Integer)::DateTime
+function asdatetime(feature::DUAL_AbstractFeature, i::Integer)::DateTime
     pyr = Ref{Cint}()
     pmth = Ref{Cint}()
     pday = Ref{Cint}()
@@ -438,7 +459,8 @@ function getdefault(feature::Feature, i::Integer)::Union{String,Nothing}
     return getdefault(getfielddefn(feature, i))
 end
 
-getfield(feature::Feature, i::Nothing)::Missing = missing
+#! @yeesian What is the use of this function ?
+getfield(feature::DUAL_AbstractFeature, i::Nothing)::Missing = missing
 
 const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTInteger => asint,
@@ -454,6 +476,10 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTInteger64 => asint64,
     OFTInteger64List => asint64list,
 )
+
+@generated function getfields_asfuncs(::Type{FD}) where {FD<:FDType}
+    return ((_FETCHFIELD[T.parameters[1]] for T in _ftvec(FD))...,)
+end
 
 """
     getfield(feature, i)
@@ -487,7 +513,25 @@ function getfield(feature::Feature, i::Integer)
     end
 end
 
-function getfield(feature::Feature, name::Union{AbstractString,Symbol})
+@generated function getfield(
+    fdp_feature::FDP_AbstractFeature{FD},
+    i::Integer,
+) where {FD<:FDType}
+    return quote
+        return if !isfieldset(fdp_feature, i)
+            nothing
+        elseif isfieldnull(fdp_feature, i)
+            missing
+        else
+            $(getfields_asfuncs(FD))[i+1](fdp_feature, i)
+        end
+    end
+end
+
+function getfield(
+    feature::DUAL_AbstractFeature,
+    name::Union{AbstractString,Symbol},
+)
     return getfield(feature, findfieldindex(feature, name))
 end
 
@@ -639,6 +683,9 @@ Fetch number of geometry fields on this feature.
 This will always be the same as the geometry field count for OGRFeatureDefn.
 """
 ngeom(feature::Feature)::Integer = GDAL.ogr_f_getgeomfieldcount(feature.ptr)
+@generated function ngeom(::FDP_AbstractFeature{FD}) where {FD<:FDType}
+    return :($(_ngt(FD)))
+end
 
 """
     getgeomdefn(feature::Feature, i::Integer)
@@ -673,7 +720,7 @@ the geometry field index, or -1 if no matching geometry field is found.
 This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
 function findgeomindex(
-    feature::Feature,
+    feature::DUAL_AbstractFeature,
     name::Union{AbstractString,Symbol} = "",
 )::Integer
     return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
@@ -688,13 +735,26 @@ Returns a clone of the feature geometry at index `i`.
 * `feature`: the feature to get geometry from.
 * `i`: geometry field to get.
 """
-function getgeom(feature::Feature, i::Integer)::IGeometry
+function getgeom(feature::DUAL_AbstractFeature, i::Integer)::IGeometry
     result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
     return if result == C_NULL
         IGeometry()
     else
         IGeometry(GDAL.ogr_g_clone(result))
     end
+end
+
+function stealgeom(feature::DUAL_AbstractFeature, i::Integer)
+    return i == 0 ? IGeometry(GDAL.ogr_f_stealgeometry(feature.ptr)) :
+           getgeom(feature, i)
+end
+function stealgeom(
+    feature::DUAL_AbstractFeature,
+    name::Union{AbstractString,Symbol},
+)
+    i = findgeomindex(feature, name)
+    return i == 0 ? IGeometry(GDAL.ogr_f_stealgeometry(feature.ptr)) :
+           getgeom(feature, i)
 end
 
 function unsafe_getgeom(feature::Feature, i::Integer)::Geometry
@@ -707,7 +767,7 @@ function unsafe_getgeom(feature::Feature, i::Integer)::Geometry
 end
 
 function getgeom(
-    feature::Feature,
+    feature::DUAL_AbstractFeature,
     name::Union{AbstractString,Symbol},
 )::IGeometry
     i = findgeomindex(feature, name)

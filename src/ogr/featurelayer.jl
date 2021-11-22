@@ -1,10 +1,19 @@
 
+#! @yeesian Why is there a difference between interactive and non-interactive forms of
+#! layer type regarding ownedby and spatialref properties
 function destroy(layer::AbstractFeatureLayer)::Nothing
     layer.ptr = C_NULL
     return nothing
 end
+function destroy(fdp_layer::FDP_AbstractFeatureLayer)
+    # No specific GDAL object destructor for layer, it will be handled by the dataset closing
+    fdp_layer.ptr = C_NULL
+    fdp_layer.ownedby = nothing
+    fdp_layer.spatialref = nothing
+    return nothing
+end
 
-function destroy(layer::IFeatureLayer)::Nothing
+function destroy(layer::Union{IFeatureLayer,FDP_IFeatureLayer})::Nothing
     layer.ptr = C_NULL
     layer.ownedby = Dataset()
     layer.spatialref = SpatialRef()
@@ -110,14 +119,15 @@ end
 
 Return the layer name.
 """
-getname(layer::AbstractFeatureLayer)::String = GDAL.ogr_l_getname(layer.ptr)
+getname(layer::DUAL_AbstractFeatureLayer)::String =
+    GDAL.ogr_l_getname(layer.ptr)
 
 """
     getgeomtype(layer::AbstractFeatureLayer)
 
 Return the layer geometry type.
 """
-getgeomtype(layer::AbstractFeatureLayer)::OGRwkbGeometryType =
+getgeomtype(layer::DUAL_AbstractFeatureLayer)::OGRwkbGeometryType =
     GDAL.ogr_l_getgeomtype(layer.ptr)
 
 """
@@ -355,7 +365,7 @@ Reset feature reading to start on the first feature.
 
 This affects `nextfeature()`.
 """
-function resetreading!(layer::L)::L where {L<:AbstractFeatureLayer}
+function resetreading!(layer::L)::L where {L<:DUAL_AbstractFeatureLayer}
     GDAL.ogr_l_resetreading(layer.ptr)
     return layer
 end
@@ -556,6 +566,12 @@ The `featuredefn` is owned by the `layer` and should not be modified.
 """
 layerdefn(layer::AbstractFeatureLayer)::IFeatureDefnView =
     IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
+function layerdefn(fdp_layer::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
+    return FDP_IFeatureDefnView{FD}(
+        GDAL.ogr_l_getlayerdefn(fdp_layer.ptr);
+        ownedby = fdp_layer,
+    )
+end
 
 """
     findfieldindex(layer::AbstractFeatureLayer,
@@ -585,7 +601,7 @@ Fetch the feature count in this layer, or `-1` if the count is not known.
 * `force`: flag indicating whether the count should be computed even if it is
     expensive. (`false` by default.)
 """
-nfeature(layer::AbstractFeatureLayer, force::Bool = false)::Integer =
+nfeature(layer::DUAL_AbstractFeatureLayer, force::Bool = false)::Integer =
     GDAL.ogr_l_getfeaturecount(layer.ptr, force)
 
 """
@@ -594,6 +610,9 @@ nfeature(layer::AbstractFeatureLayer, force::Bool = false)::Integer =
 Fetch number of geometry fields on the feature layer.
 """
 ngeom(layer::AbstractFeatureLayer)::Integer = ngeom(layerdefn(layer))
+@generated function ngeom(::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
+    return :($(_ngt(FD)))
+end
 
 """
     nfield(layer::AbstractFeatureLayer)
@@ -601,6 +620,9 @@ ngeom(layer::AbstractFeatureLayer)::Integer = ngeom(layerdefn(layer))
 Fetch number of fields on the feature layer.
 """
 nfield(layer::AbstractFeatureLayer)::Integer = nfield(layerdefn(layer))
+@generated function nfield(::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
+    return :($(_nft(FD)))
+end
 
 """
     envelope(layer::AbstractFeatureLayer, force::Bool = false)

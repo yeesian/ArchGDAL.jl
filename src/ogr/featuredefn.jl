@@ -44,11 +44,21 @@ function destroy(featuredefn::FeatureDefn)::Nothing
     featuredefn.ptr = C_NULL
     return nothing
 end
+function destroy(fdp_featuredefn::FDP_FeatureDefn)
+    GDAL.ogr_fd_destroy(fdp_featuredefn.ptr)
+    fdp_featuredefn.ptr = C_NULL
+    fdp_featuredefn.ownedby = nothing
+    return nothing
+end
 
 "Destroy a feature definition view"
 function destroy(featuredefn::IFeatureDefnView)::Nothing
     featuredefn.ptr = C_NULL
     return nothing
+end
+function destroy(fdp_ifeaturedefnview::FDP_IFeatureDefnView)
+    fdp_ifeaturedefnview.ptr = C_NULL
+    return fdp_ifeaturedefnview.ownedby = nothing
 end
 
 """
@@ -76,6 +86,9 @@ Fetch number of fields on the passed feature definition.
 """
 nfield(featuredefn::AbstractFeatureDefn)::Integer =
     GDAL.ogr_fd_getfieldcount(featuredefn.ptr)
+@generated function nfield(::FDP_AbstractFeatureDefn{FD}) where {FD<:FDType}
+    return :($(_nft(FD)))
+end
 
 """
     getfielddefn(featuredefn::FeatureDefn, i::Integer)
@@ -93,8 +106,28 @@ object should not be modified or freed by the application.
 getfielddefn(featuredefn::FeatureDefn, i::Integer)::FieldDefn =
     FieldDefn(GDAL.ogr_fd_getfielddefn(featuredefn.ptr, i))
 
+function getfielddefn(
+    fdp_featuredefn::FDP_FeatureDefn{FD},
+    i::Integer = 0,
+) where {FD<:FDType}
+    return FTP_FieldDefn{_ftvec(FD)[i+1]}(
+        GDAL.ogr_fd_getfielddefn(fdp_featuredefn.ptr, i);
+        ownedby = fdp_featuredefn,
+    )
+end
+
 getfielddefn(featuredefn::IFeatureDefnView, i::Integer)::IFieldDefnView =
     IFieldDefnView(GDAL.ogr_fd_getfielddefn(featuredefn.ptr, i))
+
+function getfielddefn(
+    fdp_ifeaturedefnview::FDP_IFeatureDefnView{FD},
+    i::Integer = 0,
+) where {FD<:FDType}
+    return FTP_IFieldDefnView{_ftvec(FD)[i+1]}(
+        GDAL.ogr_fd_getfielddefn(fdp_ifeaturedefnview.ptr, i);
+        ownedby = fdp_ifeaturedefnview,
+    )
+end
 
 """
     findfieldindex(featuredefn::AbstractFeatureDefn,
@@ -258,6 +291,9 @@ Fetch number of geometry fields on the passed feature definition.
 """
 ngeom(featuredefn::AbstractFeatureDefn)::Integer =
     GDAL.ogr_fd_getgeomfieldcount(featuredefn.ptr)
+@generated function ngeom(::FDP_AbstractFeatureDefn{FD}) where {FD<:FDType}
+    return :($(_ngt(FD)))
+end
 
 """
     getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0)
@@ -271,11 +307,31 @@ Fetch geometry field definition of the passed feature definition.
 an internal field definition object or `NULL` if invalid index. This object
 should not be modified or freed by the application.
 """
-getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0)::GeomFieldDefn =
+getgeomdefn(featuredefn::AbstractFeatureDefn, i::Integer = 0)::GeomFieldDefn =
     GeomFieldDefn(GDAL.ogr_fd_getgeomfielddefn(featuredefn.ptr, i))
+
+function getgeomdefn(
+    fdp_featuredefn::FDP_FeatureDefn{FD},
+    i::Integer = 0,
+) where {FD<:FDType}
+    return GFTP_GeomFieldDefn{_gtvec(FD)[i+1]}(
+        GDAL.ogr_fd_getgeomfielddefn(fdp_featuredefn.ptr, i);
+        ownedby = fdp_featuredefn,
+    )
+end
 
 getgeomdefn(featuredefn::IFeatureDefnView, i::Integer = 0)::IGeomFieldDefnView =
     IGeomFieldDefnView(GDAL.ogr_fd_getgeomfielddefn(featuredefn.ptr, i))
+
+function getgeomdefn(
+    fdp_ifeaturedefnview::FDP_IFeatureDefnView{FD},
+    i::Integer = 0,
+) where {FD<:FDType}
+    return GFTP_IGeomFieldDefnView{_gtvec(FD)[i+1]}(
+        GDAL.ogr_fd_getgeomfielddefn(fdp_ifeaturedefnview.ptr, i);
+        ownedby = fdp_ifeaturedefnview,
+    )
+end
 
 """
     findgeomindex(featuredefn::AbstractFeatureDefn, name::AbstractString = "")
@@ -370,3 +426,9 @@ Fetch feature definition.
 """
 getfeaturedefn(feature::Feature)::IFeatureDefnView =
     IFeatureDefnView(GDAL.ogr_f_getdefnref(feature.ptr))
+function getfeaturedefn(fdp_feature::FDP_Feature{FD}) where {FD<:FDType}
+    return FDP_IFeatureDefnView{FD}(
+        GDAL.ogr_f_getdefnref(fdp_feature.ptr);
+        ownedby = fdp_feature.ownedby,
+    )
+end

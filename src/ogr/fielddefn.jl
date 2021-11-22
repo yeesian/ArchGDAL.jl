@@ -14,9 +14,20 @@ function destroy(fielddefn::FieldDefn)::Nothing
     fielddefn.ptr = C_NULL
     return nothing
 end
+function destroy(ftp_fielddefn::FTP_FieldDefn)
+    GDAL.ogr_fld_destroy(ftp_fielddefn)
+    ftp_fielddefn.ptr = C_NULL
+    ftp_fielddefn.ownedby = nothing
+    return nothing
+end
 
 function destroy(fielddefn::IFieldDefnView)::Nothing
     fielddefn.ptr = C_NULL
+    return nothing
+end
+function destroy(ftp_fielddefn::FTP_IFieldDefnView)
+    ftp_fielddefn.ptr = C_NULL
+    ftp_fielddefn.ownedby = nothing
     return nothing
 end
 
@@ -27,12 +38,15 @@ function setname!(fielddefn::FieldDefn, name::AbstractString)::FieldDefn
 end
 
 "Fetch the name of this field."
-getname(fielddefn::AbstractFieldDefn)::String =
+getname(fielddefn::DUAL_AbstractFieldDefn)::String =
     GDAL.ogr_fld_getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
 gettype(fielddefn::AbstractFieldDefn)::OGRFieldType =
     GDAL.ogr_fld_gettype(fielddefn.ptr)
+@generated function gettype(::FTP_AbstractFieldDefn{FType{T,ST}}) where {T,ST}
+    return :($T)
+end
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)::FieldDefn
@@ -53,6 +67,11 @@ field subtype.
 """
 getsubtype(fielddefn::AbstractFieldDefn)::OGRFieldSubType =
     GDAL.ogr_fld_getsubtype(fielddefn.ptr)
+@generated function getsubtype(
+    ::FTP_AbstractFieldDefn{FType{T,ST}},
+) where {T,ST}
+    return :($ST)
+end
 
 """
     setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)
@@ -97,6 +116,11 @@ function getfieldtype(
     else
         gettype(fielddefn)
     end
+end
+@generated function getfieldtype(
+    ::FTP_AbstractFieldDefn{FType{T,ST}},
+) where {T,ST}
+    return ST != OFSTNone ? :($ST) : :($T)
 end
 
 """
@@ -335,10 +359,23 @@ function destroy(geomdefn::GeomFieldDefn)::Nothing
     geomdefn.spatialref = SpatialRef()
     return nothing
 end
+function destroy(gftp_geomfielddefn::GFTP_GeomFieldDefn)
+    GDAL.ogr_gfld_destroy(gftp_geomfielddefn)
+    gftp_geomfielddefn.ptr = C_NULL
+    gftp_geomfielddefn.ownedby = nothing
+    gftp_geomfielddefn.spatialref = nothing
+    return nothing
+end
 
 "Destroy a geometry field definition."
 function destroy(geomdefn::IGeomFieldDefnView)::Nothing
     geomdefn.ptr = C_NULL
+    return nothing
+end
+function destroy(gftp_igeomfielddefnview::GFTP_IGeomFieldDefnView)
+    gftp_igeomfielddefnview.ptr = C_NULL
+    gftp_igeomfielddefnview.ownedby = nothing
+    gftp_igeomfielddefnview.spatialref = nothing
     return nothing
 end
 
@@ -349,11 +386,12 @@ function setname!(geomdefn::GeomFieldDefn, name::AbstractString)::GeomFieldDefn
 end
 
 "Fetch name of this field."
-getname(geomdefn::AbstractGeomFieldDefn)::String =
+getname(geomdefn::DUAL_AbstractGeomFieldDefn)::String =
     GDAL.ogr_gfld_getnameref(geomdefn.ptr)
 
 "Fetch geometry type of this field."
-gettype(geomdefn::AbstractGeomFieldDefn)::OGRwkbGeometryType =
+#TODO: Maybe faster to specialize on GFTP_AbstractGeomFieldDefn and retrieve type from type parameter
+gettype(geomdefn::DUAL_AbstractGeomFieldDefn)::OGRwkbGeometryType =
     GDAL.ogr_gfld_gettype(geomdefn.ptr)
 
 "Set the geometry type of this field."

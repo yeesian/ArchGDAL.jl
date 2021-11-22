@@ -515,6 +515,12 @@ the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
     IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i), ownedby = dataset)
+function getFDPlayer(dataset::AbstractDataset, i::Integer)::FDP_IFeatureLayer
+    ptr::GDAL.OGRLayerH = GDAL.gdaldatasetgetlayer(dataset.ptr, i)
+    fd_ptr = GDAL.ogr_l_getlayerdefn(ptr)
+    FD = getFDType(fd_ptr)
+    return FDP_IFeatureLayer{FD}(ptr, ownedby = dataset)
+end
 
 """
     getlayer(dataset::AbstractDataset)
@@ -531,7 +537,6 @@ function getlayer(dataset::AbstractDataset)::IFeatureLayer
         GDAL.gdaldatasetgetlayer(dataset.ptr, 0),
         ownedby = dataset,
     )
-    
 end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
