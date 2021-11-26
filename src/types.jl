@@ -29,29 +29,39 @@ end
 
 #! NEW simple FeatureDefn type, could later maybe(?) replaced by full FeatureDefn type in the definitions below
 FDType = Tuple{NTuple{NG,GType} where NG,NTuple{NF,FType} where NF} #! Type alias for FD parameter
+FDType = Tuple{
+    NamedTuple{NG,<:Tuple{Vararg{GType}}} where NG,
+    NamedTuple{NF,<:Tuple{Vararg{FType}}} where NF,
+}
 @generated function _ngt(::Type{T}) where {T<:FDType}
-    return :(length($T.parameters[1].parameters))
+    return :(length($T.types[1].types))
 end
-@generated function _gtvec(::Type{T}) where {T<:FDType}
-    return :(tuple($T.parameters[1].parameters...))
+@generated function _gtnames(::Type{T}) where {T<:FDType}
+    return :(tuple($T.types[1].names...))
+end
+@generated function _gttypes(::Type{T}) where {T<:FDType}
+    return :(tuple($T.types[1].types...))
 end
 @generated function _nft(::Type{T}) where {T<:FDType}
-    return :(length($T.parameters[2].parameters))
+    return :(length($T.types[2].types))
 end
-@generated function _ftvec(::Type{T}) where {T<:FDType}
-    return :(tuple($T.parameters[2].parameters...))
+@generated function _ftnames(::Type{T}) where {T<:FDType}
+    return :(tuple($T.types[2].names...))
 end
-function getFDType(ptr::GDAL.OGRFeatureDefnH)
+@generated function _fttypes(::Type{T}) where {T<:FDType}
+    return :(tuple($T.types[2].types...))
+end
+function _getFDType(ptr::GDAL.OGRFeatureDefnH) #! There no type difference between GDAL.OGRFeatureDefnH and GDAL.OGRLayerH (both Ptr{Cvoid})) and we cannot dispatch on it
     ng = GDAL.ogr_fd_getgeomfieldcount(ptr)
     gflddefn_ptrs = (GDAL.ogr_fd_getgeomfielddefn(ptr, i - 1) for i in 1:ng)
+    NG = tuple(Symbol.(GDAL.ogr_gfld_getnameref.(gflddefn_ptrs))...)
     TG = Tuple{(G for G in getGType.(gflddefn_ptrs))...}
     nf = GDAL.ogr_fd_getfieldcount(ptr)
     flddefn_ptrs = (GDAL.ogr_fd_getfielddefn(ptr, i - 1) for i in 1:nf)
+    NF = tuple(Symbol.(GDAL.ogr_fld_getnameref.(flddefn_ptrs))...)
     TF = Tuple{(F for F in getFType.(flddefn_ptrs))...}
-    return Tuple{TG,TF}
+    return Tuple{NamedTuple{NG,TG},NamedTuple{NF,TF}}
 end
-#! There no type difference between GDAL.OGRFeatureDefnH and GDAL.OGRLayerH (both Ptr{Cvoid})) and we cannot dispatch on it
-# getFDType(ptr::GDAL.OGRLayerH) = getFDType(GDAL.ogr_l_getlayerdefn(ptr))
 
 abstract type DUAL_AbstractFeatureDefn end #! NEW abstract type supertype of AbstractFeatureDefn and FDP_AbstractFeatureDefn
 abstract type AbstractFeatureDefn <: DUAL_AbstractFeatureDefn end

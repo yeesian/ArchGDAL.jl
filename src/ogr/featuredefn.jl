@@ -110,7 +110,7 @@ function getfielddefn(
     fdp_featuredefn::FDP_FeatureDefn{FD},
     i::Integer = 0,
 ) where {FD<:FDType}
-    return FTP_FieldDefn{_ftvec(FD)[i+1]}(
+    return FTP_FieldDefn{_fttypes(FD)[i+1]}(
         GDAL.ogr_fd_getfielddefn(fdp_featuredefn.ptr, i);
         ownedby = fdp_featuredefn,
     )
@@ -123,7 +123,7 @@ function getfielddefn(
     fdp_ifeaturedefnview::FDP_IFeatureDefnView{FD},
     i::Integer = 0,
 ) where {FD<:FDType}
-    return FTP_IFieldDefnView{_ftvec(FD)[i+1]}(
+    return FTP_IFieldDefnView{_fttypes(FD)[i+1]}(
         GDAL.ogr_fd_getfielddefn(fdp_ifeaturedefnview.ptr, i);
         ownedby = fdp_ifeaturedefnview,
     )
@@ -146,6 +146,15 @@ function findfieldindex(
     name::Union{AbstractString,Symbol},
 )::Integer
     return GDAL.ogr_fd_getfieldindex(featuredefn.ptr, name)
+end
+@generated function findfieldindex(
+    ::FDP_AbstractFeatureDefn{FD},
+    name::Union{AbstractString,Symbol},
+) where {FD<:FDType}
+    return return quote
+        i = findfirst(isequal(Symbol(name)), $(_ftnames(FD)))
+        return i !== nothing ? i - 1 : nothing
+    end
 end
 
 """
@@ -314,7 +323,7 @@ function getgeomdefn(
     fdp_featuredefn::FDP_FeatureDefn{FD},
     i::Integer = 0,
 ) where {FD<:FDType}
-    return GFTP_GeomFieldDefn{_gtvec(FD)[i+1]}(
+    return GFTP_GeomFieldDefn{_gttypes(FD)[i+1]}(
         GDAL.ogr_fd_getgeomfielddefn(fdp_featuredefn.ptr, i);
         ownedby = fdp_featuredefn,
     )
@@ -327,7 +336,7 @@ function getgeomdefn(
     fdp_ifeaturedefnview::FDP_IFeatureDefnView{FD},
     i::Integer = 0,
 ) where {FD<:FDType}
-    return GFTP_IGeomFieldDefnView{_gtvec(FD)[i+1]}(
+    return GFTP_IGeomFieldDefnView{_gttypes(FD)[i+1]}(
         GDAL.ogr_fd_getgeomfielddefn(fdp_ifeaturedefnview.ptr, i);
         ownedby = fdp_ifeaturedefnview,
     )
@@ -349,6 +358,15 @@ function findgeomindex(
     name::AbstractString = "",
 )::Integer
     return GDAL.ogr_fd_getgeomfieldindex(featuredefn.ptr, name)
+end
+@generated function findgeomindex(
+    ::FDP_AbstractFeatureDefn{FD},
+    name::AbstractString = "",
+) where {FD<:FDType}
+    return return quote
+        i = findfirst(isequal(Symbol(name)), $(_gtnames(FD)))
+        return i !== nothing ? i - 1 : nothing
+    end
 end
 
 """

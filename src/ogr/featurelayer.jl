@@ -590,6 +590,16 @@ function findfieldindex(
 )::Integer
     return GDAL.ogr_l_findfieldindex(layer.ptr, field, exactmatch)
 end
+@generated function findfieldindex(
+    ::FDP_AbstractFeatureLayer{FD},
+    field::Union{AbstractString,Symbol},
+    #! Note that exactmatch::Bool is not used in GDAL except when OGRAPISPY_ENABLED is true => dropped
+) where {FD<:FDType}
+    return return quote
+        i = findfirst(isequal(Symbol(field)), $(_ftnames(FD)))
+        return i !== nothing ? i - 1 : nothing
+    end
+end
 
 """
     nfeature(layer::AbstractFeatureLayer, force::Bool = false)

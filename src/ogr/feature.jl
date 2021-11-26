@@ -108,7 +108,7 @@ function getfielddefn(
     fdp_feature::FDP_Feature{FD},
     i::Integer,
 ) where {FD<:FDType}
-    return FTP_IFieldDefnView{_ftvec(FD)[i+1]}(
+    return FTP_IFieldDefnView{_fttypes(FD)[i+1]}(
         GDAL.ogr_f_getfielddefnref(fdp_feature.ptr, i);
         ownedby = getfeaturedefn(fdp_feature),
     )
@@ -130,7 +130,7 @@ the field index, or `nothing` if no matching field is found.
 This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 """
 function findfieldindex(
-    feature::DUAL_AbstractFeature,
+    feature::AbstractFeature,
     name::Union{AbstractString,Symbol},
 )::Union{Integer,Nothing}
     i = GDAL.ogr_f_getfieldindex(feature.ptr, name)
@@ -138,6 +138,15 @@ function findfieldindex(
         nothing
     else
         i
+    end
+end
+@generated function findfieldindex(
+    ::FDP_AbstractFeature{FD},
+    name::Union{AbstractString,Symbol},
+) where {FD<:FDType}
+    return quote
+        i = findfirst(isequal(Symbol(name)), $(_ftnames(FD)))
+        return i !== nothing ? i - 1 : nothing
     end
 end
 
@@ -478,7 +487,7 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
 )
 
 @generated function getfields_asfuncs(::Type{FD}) where {FD<:FDType}
-    return ((_FETCHFIELD[T.parameters[1]] for T in _ftvec(FD))...,)
+    return ((_FETCHFIELD[T.parameters[1]] for T in _fttypes(FD))...,)
 end
 
 """
@@ -720,10 +729,19 @@ the geometry field index, or -1 if no matching geometry field is found.
 This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 """
 function findgeomindex(
-    feature::DUAL_AbstractFeature,
+    feature::AbstractFeature,
     name::Union{AbstractString,Symbol} = "",
 )::Integer
     return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
+end
+@generated function findgeomindex(
+    ::FDP_AbstractFeature{FD},
+    name::Union{AbstractString,Symbol} = "",
+) where {FD<:FDType}
+    return return quote
+        i = findfirst(isequal(Symbol(name)), $(_gtnames(FD)))
+        return i !== nothing ? i - 1 : nothing
+    end
 end
 
 """

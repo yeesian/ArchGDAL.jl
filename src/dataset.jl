@@ -518,7 +518,7 @@ getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
 function getFDPlayer(dataset::AbstractDataset, i::Integer)::FDP_IFeatureLayer
     ptr::GDAL.OGRLayerH = GDAL.gdaldatasetgetlayer(dataset.ptr, i)
     fd_ptr = GDAL.ogr_l_getlayerdefn(ptr)
-    FD = getFDType(fd_ptr)
+    FD = _getFDType(fd_ptr)
     return FDP_IFeatureLayer{FD}(ptr, ownedby = dataset)
 end
 
