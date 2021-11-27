@@ -184,7 +184,30 @@ end
 macro ogrerr(code, message)
     return quote
         if $(esc(code)) != GDAL.OGRERR_NONE
-            error($(esc(message)))
+            # find the detailed error message
+            detailmsg = if $(esc(code)) == GDAL.OGRERR_NOT_ENOUGH_DATA
+                "Not enough data."
+            elseif $(esc(code)) == GDAL.OGRERR_NOT_ENOUGH_MEMORY
+                "Not enough memory."
+            elseif $(esc(code)) == GDAL.OGRERR_UNSUPPORTED_GEOMETRY_TYPE
+                "Unsupported geometry type."
+            elseif $(esc(code)) == GDAL.OGRERR_UNSUPPORTED_OPERATION
+                "Unsupported operation."
+            elseif $(esc(code)) == GDAL.OGRERR_CORRUPT_DATA
+                "Corrupt data."
+            elseif $(esc(code)) == GDAL.OGRERR_FAILURE
+                "Failure."
+            elseif $(esc(code)) == GDAL.OGRERR_UNSUPPORTED_SRS
+                "Unsupported spatial reference system."
+            elseif $(esc(code)) == GDAL.OGRERR_INVALID_HANDLE
+                "Invalid handle."
+            elseif $(esc(code)) == GDAL.OGRERR_NON_EXISTING_FEATURE
+                "Non-existing feature."
+            else
+                "Unknown error."
+            end
+
+            error($message * " ($detailmsg)")
         end
     end
 end
