@@ -1,9 +1,6 @@
 import DiskArrays: AbstractDiskArray
 import Base.convert
 
-abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
-# needs to have a `ptr::GDAL.OGRGeometryH` attribute
-
 abstract type AbstractSpatialRef end
 # needs to have a `ptr::GDAL.OGRSpatialReferenceH` attribute
 
@@ -62,6 +59,11 @@ function _getFDType(ptr::GDAL.OGRFeatureDefnH) #! There no type difference betwe
     TF = Tuple{(F for F in getFType.(flddefn_ptrs))...}
     return Tuple{NamedTuple{NG,TG},NamedTuple{NF,TF}}
 end
+
+abstract type DUAL_AbstractGeometry <: GeoInterface.AbstractGeometry end #! NEW abstract type supertype of AbstractGeometry and GP_AbstractGeometry
+abstract type AbstractGeometry <: DUAL_AbstractGeometry end
+abstract type GP_AbstractGeometry{G<:GType} <: DUAL_AbstractGeometry end #! NEW abstract type to group GP_Geometry instances
+# needs to have a `ptr::GDAL.OGRGeometryH` attribute
 
 abstract type DUAL_AbstractFeatureDefn end #! NEW abstract type supertype of AbstractFeatureDefn and FDP_AbstractFeatureDefn
 abstract type AbstractFeatureDefn <: DUAL_AbstractFeatureDefn end
@@ -421,18 +423,26 @@ mutable struct Geometry{OGRwkbGeometryType} <: AbstractGeometry
 end
 _geomtype(::Geometry{T}) where {T} = T
 
-#! NEW Geometry
-# mutable struct Geom{T<:GType} <: AbstractGeometry
-#     ptr::GDAL.OGRGeometryH
-#     ownedby::Union{Nothing,DUAL_AbstractFeature}
+function _inferGType(ptr::GDAL.OGRGeometryH = C_NULL)::Type{<:GType}
+    return if ptr != C_NULL
+        GType{OGRwkbGeometryType(Int32(GDAL.ogr_g_getgeometrytype(ptr)))}
+    else
+        GType{wkbUnknown}
+    end
+end
 
-#     function Geom{T}(
-#         ptr::GDAL.OGRGeometryH = C_NULL,
-#         ownedby::Union{Nothing,DUAL_AbstractFeature} = nothing,
-#     ) where {T<:GType}
-#         return new(ptr, ownedby)
-#     end
-# end
+#! NEW Geometry
+mutable struct GP_Geometry{G} <: GP_AbstractGeometry{G}
+    ptr::GDAL.OGRGeometryH
+    ownedby::Union{Nothing,DUAL_AbstractFeature}
+
+    function GP_Geometry{G}(
+        ptr::GDAL.OGRGeometryH = C_NULL,
+        ownedby::Union{Nothing,DUAL_AbstractFeature} = nothing,
+    ) where {G<:GType}
+        return new{_inferGType(ptr)}(ptr, ownedby)
+    end
+end
 
 mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry
     ptr::GDAL.OGRGeometryH
@@ -446,19 +456,19 @@ end
 _geomtype(::IGeometry{T}) where {T} = T
 
 #! NEW IGeometry
-# mutable struct IGeom{T<:GType} <: AbstractGeometry
-#     ptr::GDAL.OGRGeometryH
-#     ownedby::Union{Nothing,DUAL_AbstractFeature}
+mutable struct GP_IGeometry{G} <: GP_AbstractGeometry{G}
+    ptr::GDAL.OGRGeometryH
+    ownedby::Union{Nothing,DUAL_AbstractFeature}
 
-#     function IGeom{T}(
-#         ptr::GDAL.OGRGeometryH = C_NULL,
-#         ownedby::Union{Nothing,DUAL_AbstractFeature} = nothing,
-#     ) where {T<:GType}
-#         igeom = new(ptr, ownedby)
-#         finalizer(destroy, igeom)
-#         return igeom
-#     end
-# end
+    function GP_IGeometry{G}(
+        ptr::GDAL.OGRGeometryH = C_NULL,
+        ownedby::Union{Nothing,DUAL_AbstractFeature} = nothing,
+    ) where {G<:GType}
+        gp_igeometry = new{_inferGType(ptr)}(ptr, ownedby)
+        finalizer(destroy, gp_igeometry)
+        return gp_igeometry
+    end
+end
 
 mutable struct ColorTable
     ptr::GDAL.GDALColorTableH
@@ -713,80 +723,91 @@ end
     OGRSTUInches::GDAL.OGRSTUInches,
 )
 
-@convert(
-    OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
-    wkbUnknown::GDAL.wkbUnknown,
-    wkbPoint::GDAL.wkbPoint,
-    wkbLineString::GDAL.wkbLineString,
-    wkbPolygon::GDAL.wkbPolygon,
-    wkbMultiPoint::GDAL.wkbMultiPoint,
-    wkbMultiLineString::GDAL.wkbMultiLineString,
-    wkbMultiPolygon::GDAL.wkbMultiPolygon,
-    wkbGeometryCollection::GDAL.wkbGeometryCollection,
-    wkbCircularString::GDAL.wkbCircularString,
-    wkbCompoundCurve::GDAL.wkbCompoundCurve,
-    wkbCurvePolygon::GDAL.wkbCurvePolygon,
-    wkbMultiCurve::GDAL.wkbMultiCurve,
-    wkbMultiSurface::GDAL.wkbMultiSurface,
-    wkbCurve::GDAL.wkbCurve,
-    wkbSurface::GDAL.wkbSurface,
-    wkbPolyhedralSurface::GDAL.wkbPolyhedralSurface,
-    wkbTIN::GDAL.wkbTIN,
-    wkbTriangle::GDAL.wkbTriangle,
-    wkbNone::GDAL.wkbNone,
-    wkbLinearRing::GDAL.wkbLinearRing,
-    wkbCircularStringZ::GDAL.wkbCircularStringZ,
-    wkbCompoundCurveZ::GDAL.wkbCompoundCurveZ,
-    wkbCurvePolygonZ::GDAL.wkbCurvePolygonZ,
-    wkbMultiCurveZ::GDAL.wkbMultiCurveZ,
-    wkbMultiSurfaceZ::GDAL.wkbMultiSurfaceZ,
-    wkbCurveZ::GDAL.wkbCurveZ,
-    wkbSurfaceZ::GDAL.wkbSurfaceZ,
-    wkbPolyhedralSurfaceZ::GDAL.wkbPolyhedralSurfaceZ,
-    wkbTINZ::GDAL.wkbTINZ,
-    wkbTriangleZ::GDAL.wkbTriangleZ,
-    wkbPointM::GDAL.wkbPointM,
-    wkbLineStringM::GDAL.wkbLineStringM,
-    wkbPolygonM::GDAL.wkbPolygonM,
-    wkbMultiPointM::GDAL.wkbMultiPointM,
-    wkbMultiLineStringM::GDAL.wkbMultiLineStringM,
-    wkbMultiPolygonM::GDAL.wkbMultiPolygonM,
-    wkbGeometryCollectionM::GDAL.wkbGeometryCollectionM,
-    wkbCircularStringM::GDAL.wkbCircularStringM,
-    wkbCompoundCurveM::GDAL.wkbCompoundCurveM,
-    wkbCurvePolygonM::GDAL.wkbCurvePolygonM,
-    wkbMultiCurveM::GDAL.wkbMultiCurveM,
-    wkbMultiSurfaceM::GDAL.wkbMultiSurfaceM,
-    wkbCurveM::GDAL.wkbCurveM,
-    wkbSurfaceM::GDAL.wkbSurfaceM,
-    wkbPolyhedralSurfaceM::GDAL.wkbPolyhedralSurfaceM,
-    wkbTINM::GDAL.wkbTINM,
-    wkbTriangleM::GDAL.wkbTriangleM,
-    wkbPointZM::GDAL.wkbPointZM,
-    wkbLineStringZM::GDAL.wkbLineStringZM,
-    wkbPolygonZM::GDAL.wkbPolygonZM,
-    wkbMultiPointZM::GDAL.wkbMultiPointZM,
-    wkbMultiLineStringZM::GDAL.wkbMultiLineStringZM,
-    wkbMultiPolygonZM::GDAL.wkbMultiPolygonZM,
-    wkbGeometryCollectionZM::GDAL.wkbGeometryCollectionZM,
-    wkbCircularStringZM::GDAL.wkbCircularStringZM,
-    wkbCompoundCurveZM::GDAL.wkbCompoundCurveZM,
-    wkbCurvePolygonZM::GDAL.wkbCurvePolygonZM,
-    wkbMultiCurveZM::GDAL.wkbMultiCurveZM,
-    wkbMultiSurfaceZM::GDAL.wkbMultiSurfaceZM,
-    wkbCurveZM::GDAL.wkbCurveZM,
-    wkbSurfaceZM::GDAL.wkbSurfaceZM,
-    wkbPolyhedralSurfaceZM::GDAL.wkbPolyhedralSurfaceZM,
-    wkbTINZM::GDAL.wkbTINZM,
-    wkbTriangleZM::GDAL.wkbTriangleZM,
-    wkbPoint25D::GDAL.wkbPoint25D,
-    wkbLineString25D::GDAL.wkbLineString25D,
-    wkbPolygon25D::GDAL.wkbPolygon25D,
-    wkbMultiPoint25D::GDAL.wkbMultiPoint25D,
-    wkbMultiLineString25D::GDAL.wkbMultiLineString25D,
-    wkbMultiPolygon25D::GDAL.wkbMultiPolygon25D,
-    wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
-)
+# @convert(
+#     OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
+#     wkbUnknown::GDAL.wkbUnknown,
+#     wkbPoint::GDAL.wkbPoint,
+#     wkbLineString::GDAL.wkbLineString,
+#     wkbPolygon::GDAL.wkbPolygon,
+#     wkbMultiPoint::GDAL.wkbMultiPoint,
+#     wkbMultiLineString::GDAL.wkbMultiLineString,
+#     wkbMultiPolygon::GDAL.wkbMultiPolygon,
+#     wkbGeometryCollection::GDAL.wkbGeometryCollection,
+#     wkbCircularString::GDAL.wkbCircularString,
+#     wkbCompoundCurve::GDAL.wkbCompoundCurve,
+#     wkbCurvePolygon::GDAL.wkbCurvePolygon,
+#     wkbMultiCurve::GDAL.wkbMultiCurve,
+#     wkbMultiSurface::GDAL.wkbMultiSurface,
+#     wkbCurve::GDAL.wkbCurve,
+#     wkbSurface::GDAL.wkbSurface,
+#     wkbPolyhedralSurface::GDAL.wkbPolyhedralSurface,
+#     wkbTIN::GDAL.wkbTIN,
+#     wkbTriangle::GDAL.wkbTriangle,
+#     wkbNone::GDAL.wkbNone,
+#     wkbLinearRing::GDAL.wkbLinearRing,
+#     wkbCircularStringZ::GDAL.wkbCircularStringZ,
+#     wkbCompoundCurveZ::GDAL.wkbCompoundCurveZ,
+#     wkbCurvePolygonZ::GDAL.wkbCurvePolygonZ,
+#     wkbMultiCurveZ::GDAL.wkbMultiCurveZ,
+#     wkbMultiSurfaceZ::GDAL.wkbMultiSurfaceZ,
+#     wkbCurveZ::GDAL.wkbCurveZ,
+#     wkbSurfaceZ::GDAL.wkbSurfaceZ,
+#     wkbPolyhedralSurfaceZ::GDAL.wkbPolyhedralSurfaceZ,
+#     wkbTINZ::GDAL.wkbTINZ,
+#     wkbTriangleZ::GDAL.wkbTriangleZ,
+#     wkbPointM::GDAL.wkbPointM,
+#     wkbLineStringM::GDAL.wkbLineStringM,
+#     wkbPolygonM::GDAL.wkbPolygonM,
+#     wkbMultiPointM::GDAL.wkbMultiPointM,
+#     wkbMultiLineStringM::GDAL.wkbMultiLineStringM,
+#     wkbMultiPolygonM::GDAL.wkbMultiPolygonM,
+#     wkbGeometryCollectionM::GDAL.wkbGeometryCollectionM,
+#     wkbCircularStringM::GDAL.wkbCircularStringM,
+#     wkbCompoundCurveM::GDAL.wkbCompoundCurveM,
+#     wkbCurvePolygonM::GDAL.wkbCurvePolygonM,
+#     wkbMultiCurveM::GDAL.wkbMultiCurveM,
+#     wkbMultiSurfaceM::GDAL.wkbMultiSurfaceM,
+#     wkbCurveM::GDAL.wkbCurveM,
+#     wkbSurfaceM::GDAL.wkbSurfaceM,
+#     wkbPolyhedralSurfaceM::GDAL.wkbPolyhedralSurfaceM,
+#     wkbTINM::GDAL.wkbTINM,
+#     wkbTriangleM::GDAL.wkbTriangleM,
+#     wkbPointZM::GDAL.wkbPointZM,
+#     wkbLineStringZM::GDAL.wkbLineStringZM,
+#     wkbPolygonZM::GDAL.wkbPolygonZM,
+#     wkbMultiPointZM::GDAL.wkbMultiPointZM,
+#     wkbMultiLineStringZM::GDAL.wkbMultiLineStringZM,
+#     wkbMultiPolygonZM::GDAL.wkbMultiPolygonZM,
+#     wkbGeometryCollectionZM::GDAL.wkbGeometryCollectionZM,
+#     wkbCircularStringZM::GDAL.wkbCircularStringZM,
+#     wkbCompoundCurveZM::GDAL.wkbCompoundCurveZM,
+#     wkbCurvePolygonZM::GDAL.wkbCurvePolygonZM,
+#     wkbMultiCurveZM::GDAL.wkbMultiCurveZM,
+#     wkbMultiSurfaceZM::GDAL.wkbMultiSurfaceZM,
+#     wkbCurveZM::GDAL.wkbCurveZM,
+#     wkbSurfaceZM::GDAL.wkbSurfaceZM,
+#     wkbPolyhedralSurfaceZM::GDAL.wkbPolyhedralSurfaceZM,
+#     wkbTINZM::GDAL.wkbTINZM,
+#     wkbTriangleZM::GDAL.wkbTriangleZM,
+#     wkbPoint25D::GDAL.wkbPoint25D,
+#     wkbLineString25D::GDAL.wkbLineString25D,
+#     wkbPolygon25D::GDAL.wkbPolygon25D,
+#     wkbMultiPoint25D::GDAL.wkbMultiPoint25D,
+#     wkbMultiLineString25D::GDAL.wkbMultiLineString25D,
+#     wkbMultiPolygon25D::GDAL.wkbMultiPolygon25D,
+#     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
+# )
+
+# Conversions below assume that both 
+# - OGRwkbGeometryType Enum instances and 
+# - GDAL.OGRwkbGeometryType CEnum.Cenum instances 
+# have same Integer assigned values
+function convert(::Type{OGRwkbGeometryType}, gogtinst::GDAL.OGRwkbGeometryType)
+    return OGRwkbGeometryType(Integer(gogtinst))
+end
+function convert(::Type{GDAL.OGRwkbGeometryType}, ogtinst::OGRwkbGeometryType)
+    return GDAL.OGRwkbGeometryType(Integer(ogtinst))
+end
 
 function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType
     wkbGeomType = convert(GDAL.OGRwkbGeometryType, gt)

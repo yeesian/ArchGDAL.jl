@@ -486,7 +486,7 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTInteger64List => asint64list,
 )
 
-@generated function getfields_asfuncs(::Type{FD}) where {FD<:FDType}
+@generated function _get_fields_asfuncs(::Type{FD}) where {FD<:FDType}
     return ((_FETCHFIELD[T.parameters[1]] for T in _fttypes(FD))...,)
 end
 
@@ -532,16 +532,47 @@ end
         elseif isfieldnull(fdp_feature, i)
             missing
         else
-            $(getfields_asfuncs(FD))[i+1](fdp_feature, i)
+            $(_get_fields_asfuncs(FD))[i+1](fdp_feature, i)
         end
     end
 end
 
-function getfield(
-    feature::DUAL_AbstractFeature,
-    name::Union{AbstractString,Symbol},
-)
+@generated function getfield(
+    fdp_feature::FDP_AbstractFeature{FD},
+    i::Integer,
+    ::Val{K},
+) where {FD<:FDType,K}
+    return quote
+        return if !isfieldset(fdp_feature, i)
+            nothing
+        elseif isfieldnull(fdp_feature, i)
+            missing
+        else
+            $(_get_fields_asfuncs(FD)[K])(fdp_feature, i)
+        end
+    end
+end
+
+function getfield(feature::Feature, name::Union{AbstractString,Symbol})
     return getfield(feature, findfieldindex(feature, name))
+end
+
+@generated function getfield(
+    fdp_feature::FDP_AbstractFeature{FD},
+    name::Union{AbstractString,Symbol},
+) where {FD<:FDType}
+    return quote
+        i = findfieldindex(fdp_feature, name)
+        return if i === nothing
+            missing
+        elseif !isfieldset(fdp_feature, i)
+            nothing
+        elseif isfieldnull(fdp_feature, i)
+            missing
+        else
+            @inbounds $(_get_fields_asfuncs(FD))[i+1](fdp_feature, i)
+        end
+    end
 end
 
 """

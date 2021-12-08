@@ -8,6 +8,7 @@ using Tables: Tables
 using ImageCore: Normed, N0f8, N0f16, N0f32, ImageCore
 using ColorTypes: ColorTypes
 using CEnum
+using GeneralizedGenerated
 
 const GFT = GeoFormatTypes
 
@@ -35,6 +36,7 @@ include("context.jl")
 include("base/iterators.jl")
 include("base/display.jl")
 include("tables.jl")
+include("tables_columns.jl")
 include("geointerface.jl")
 include("convert.jl")
 
