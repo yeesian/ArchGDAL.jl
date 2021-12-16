@@ -9,6 +9,8 @@ using ImageCore: Normed, N0f8, N0f16, N0f32, ImageCore
 using ColorTypes: ColorTypes
 using CEnum
 using GeneralizedGenerated
+using RuntimeGeneratedFunctions
+RuntimeGeneratedFunctions.init(@__MODULE__)
 
 const GFT = GeoFormatTypes
 

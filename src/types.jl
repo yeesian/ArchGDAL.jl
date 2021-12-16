@@ -25,7 +25,7 @@ function getGType(ptr::GDAL.OGRGeomFieldDefnH)
 end
 
 #! NEW simple FeatureDefn type, could later maybe(?) replaced by full FeatureDefn type in the definitions below
-FDType = Tuple{NTuple{NG,GType} where NG,NTuple{NF,FType} where NF} #! Type alias for FD parameter
+#TODO delete: FDType = Tuple{NTuple{NG,GType} where NG,NTuple{NF,FType} where NF} #! Type alias for FD parameter
 FDType = Tuple{
     NamedTuple{NG,<:Tuple{Vararg{GType}}} where NG,
     NamedTuple{NF,<:Tuple{Vararg{FType}}} where NF,
@@ -49,14 +49,25 @@ end
     return :(tuple($T.types[2].types...))
 end
 function _getFDType(ptr::GDAL.OGRFeatureDefnH) #! There no type difference between GDAL.OGRFeatureDefnH and GDAL.OGRLayerH (both Ptr{Cvoid})) and we cannot dispatch on it
-    ng = GDAL.ogr_fd_getgeomfieldcount(ptr)
+    ng = GDAL.ogr_fd_getgeomfieldcount(ptr)::Int32
     gflddefn_ptrs = (GDAL.ogr_fd_getgeomfielddefn(ptr, i - 1) for i in 1:ng)
-    NG = tuple(Symbol.(GDAL.ogr_gfld_getnameref.(gflddefn_ptrs))...)
-    TG = Tuple{(G for G in getGType.(gflddefn_ptrs))...}
-    nf = GDAL.ogr_fd_getfieldcount(ptr)
+    NG = tuple(
+        (
+            Symbol(GDAL.ogr_gfld_getnameref(gflddefn_ptr)::String) for
+            gflddefn_ptr in gflddefn_ptrs
+        )...,
+    )
+    TG = Tuple{(getGType(gflddefn_ptr) for gflddefn_ptr in gflddefn_ptrs)...}
+    nf = GDAL.ogr_fd_getfieldcount(ptr)::Int32
     flddefn_ptrs = (GDAL.ogr_fd_getfielddefn(ptr, i - 1) for i in 1:nf)
-    NF = tuple(Symbol.(GDAL.ogr_fld_getnameref.(flddefn_ptrs))...)
-    TF = Tuple{(F for F in getFType.(flddefn_ptrs))...}
+    NF = tuple(
+        (
+            Symbol(GDAL.ogr_fld_getnameref(flddefn_ptr)::String) for
+            flddefn_ptr in flddefn_ptrs
+        )...,
+    )
+    TF = Tuple{(getFType(flddefn_ptr) for flddefn_ptr in flddefn_ptrs)...}
+    # TF = Tuple{ntuple(i -> getFType(flddefn_ptrs[i]), nf)...} => to use in case later conversion from FType to DataType has to be implemented
     return Tuple{NamedTuple{NG,TG},NamedTuple{NF,TF}}
 end
 
@@ -74,6 +85,9 @@ abstract type DUAL_AbstractFeatureLayer end #! NEW abstract type supertype of Ab
 abstract type AbstractFeatureLayer <: DUAL_AbstractFeatureLayer end
 abstract type FDP_AbstractFeatureLayer{FD<:FDType} <: DUAL_AbstractFeatureLayer end #! NEW abstract type to group FDP_FeatureLayer type instances
 # needs to have a `ptr::GDAL.OGRLayerH` attribute
+@generated function _getFD(::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
+    return FD
+end
 
 abstract type DUAL_AbstractFeature end #! NEW abstract type supertype of AbstractFeature and FDP_AbstractFeature
 abstract type AbstractFeature <: DUAL_AbstractFeature end #! NEW abstract type to group Feature and IFeature (if created)
@@ -555,7 +569,7 @@ const DataType_2_OGRFieldType_OGRFieldSubType_mapping = Base.ImmutableDict(
     Vector{Int64} => (OFTInteger64List, OFSTNone),
 )
 
-# Conversions from DataType to OFType
+# Conversions from DataType to FType
 const DataType2FType = Base.ImmutableDict(
     (
         k => FType{v...} for
@@ -568,12 +582,14 @@ GDALDataTypes = Union{keys(DataType2FType)...}
     !ismissing(result) || throw(MethodError(convert, (FType, T)))
     return :($(result))
 end
-#! PROBABLY NOT NECESSARY: Conversions from OFType to DataType
-# const FType2DataType = Base.ImmutableDict((v => k for (k, v) in DataType2FType)...)
+# Conversion from FType to DataType not implemented cause it creates a mess
+# use get(FType2DataType, FT, missing) instead
+const FType2DataType =
+    Base.ImmutableDict((v => k for (k, v) in DataType2FType)...)
 # # GDALFTypes = Union{keys(FType2DataType)...}
 # @generated function convert(::Type{DataType}, ::Type{T}) where T<:FType
 #     result = get(FType2DataType, T, missing)
-#     result !=== missing || error(
+#     result !== missing || error(
 #         "$T is not an FType corresponding to a valid GDAL (OGRFieldType, OGRFieldSubType) couple. \nPlease use one of the following: \n$(join((FType{v...} for (_, v) in DataType_2_OGRFieldType_OGRFieldSubType_mapping), "\n"))",
 #     )
 #     return :($(result))
@@ -807,6 +823,34 @@ function convert(::Type{OGRwkbGeometryType}, gogtinst::GDAL.OGRwkbGeometryType)
 end
 function convert(::Type{GDAL.OGRwkbGeometryType}, ogtinst::OGRwkbGeometryType)
     return GDAL.OGRwkbGeometryType(Integer(ogtinst))
+end
+
+# Conversion between Geometry or IGeometry subtypes and GType subtypes
+function convert(::Type{Geometry}, G::Type{GType{T}}) where {T}
+    return Geometry{T}
+end
+function convert(::Type{IGeometry}, ::Type{GType{T}}) where {T}
+    return IGeometry{T}
+end
+function convert(::Type{GType}, ::Type{Geometry{T}}) where {T}
+    return GType{T}
+end
+function convert(::Type{GType}, ::Type{IGeometry{T}}) where {T}
+    return GType{T}
+end
+
+# Conversion between GP_Geometry or GP_IGeometry subtypes and GType subtypes
+function convert(::Type{GP_Geometry}, ::Type{G}) where {G<:GType}
+    return GP_Geometry{G}
+end
+function convert(::Type{GType}, ::Type{GP_Geometry{G}}) where {G<:GType}
+    return G
+end
+function convert(::Type{GP_IGeometry}, ::Type{G}) where {G<:GType}
+    return GP_IGeometry{G}
+end
+function convert(::Type{GType}, ::Type{GP_IGeometry{G}}) where {G<:GType}
+    return G
 end
 
 function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType

@@ -1,5 +1,29 @@
-function Tables.schema(::DUAL_AbstractFeatureLayer)::Nothing
-    return nothing
+# function Tables.schema(::AbstractFeatureLayer)::Nothing
+#     return nothing
+# end
+
+function Tables.schema(layer::AbstractFeatureLayer)
+    geom_names, field_names, featuredefn, fielddefns =
+        schema_names(layerdefn(layer))
+    ngeom = ArchGDAL.ngeom(featuredefn)
+    geom_types =
+        (IGeometry{gettype(getgeomdefn(featuredefn, i))} for i in 0:ngeom-1)
+    field_types =
+        (convert(DataType, gettype(fielddefn)) for fielddefn in fielddefns)
+    return Tables.Schema(
+        (geom_names..., field_names...),
+        (geom_types..., field_types...),
+    )
+end
+
+@generated function Tables.schema(
+    ::FDP_AbstractFeatureLayer{FD},
+) where {FD<:FDType}
+    gnames = _gtnames(FD)
+    fnames = _ftnames(FD)
+    gtypes = (convert(IGeometry, gt) for gt in _gttypes(FD))
+    ftypes = (get(FType2DataType, ft, missing) for ft in _fttypes(FD))
+    return Tables.Schema((gnames..., fnames...), (gtypes..., ftypes...))
 end
 
 Tables.istable(::Type{<:DUAL_AbstractFeatureLayer})::Bool = true
@@ -10,23 +34,25 @@ function Tables.rows(layer::T)::T where {T<:DUAL_AbstractFeatureLayer}
 end
 
 function Tables.getcolumn(row::AbstractFeature, i::Int)
-    if i > nfield(row)
-        return stealgeom(row, i - nfield(row) - 1)
-    elseif i > 0
-        return getfield(row, i - 1)
+    ng = ngeom(row)
+    return if i <= ng
+        geom = stealgeom(row, i - 1)
+        geom.ptr != C_NULL ? geom : missing
     else
-        return missing
+        getfield(row, i - ng - 1)
     end
 end
 
 function Tables.getcolumn(
     row::FDP_AbstractFeature{FD},
-    i::T,
-) where {FD<:FDType,T<:Integer}
-    if i > nfield(row)
-        return stealgeom(row, i - nfield(row) - 1)
+    i::Int,
+) where {FD<:FDType}
+    ng = ngeom(row)
+    return if i <= ng
+        geom = stealgeom(row, i - 1)
+        geom.ptr != C_NULL ? geom : missing
     else
-        return getfield(row, i - 1)
+        getfield(row, i - ng - 1)
     end
 end
 
