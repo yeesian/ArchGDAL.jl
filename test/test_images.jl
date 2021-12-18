@@ -14,6 +14,8 @@ import GDAL
     AG.read("gdalworkshop/world.tif") do dataset
         @testset "Test RGB colors" begin
             @test eltype(AG.imread(dataset)) == ColorTypes.RGB{ImageCore.N0f8}
+            rasterdataset = AG.RasterDataset(dataset)
+            @test eltype(AG.imread(rasterdataset)) == ColorTypes.RGB{ImageCore.N0f8}
         end
     end
 
