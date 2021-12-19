@@ -1,8 +1,8 @@
-# function Tables.schema(::AbstractFeatureLayer)::Nothing
-#     return nothing
-# end
+function Tables.schema(::AbstractFeatureLayer)::Nothing
+    return nothing
+end
 
-function Tables.schema(layer::AbstractFeatureLayer)
+function gdal_schema(layer::AbstractFeatureLayer)
     geom_names, field_names, featuredefn, fielddefns =
         schema_names(layerdefn(layer))
     ngeom = ArchGDAL.ngeom(featuredefn)
@@ -16,7 +16,7 @@ function Tables.schema(layer::AbstractFeatureLayer)
     )
 end
 
-@generated function Tables.schema(
+@generated function gdal_schema(
     ::FDP_AbstractFeatureLayer{FD},
 ) where {FD<:FDType}
     gnames = _gtnames(FD)
@@ -36,7 +36,7 @@ end
 function Tables.getcolumn(row::AbstractFeature, i::Int)
     ng = ngeom(row)
     return if i <= ng
-        geom = stealgeom(row, i - 1)
+        geom = getgeom(row, i - 1)
         geom.ptr != C_NULL ? geom : missing
     else
         getfield(row, i - ng - 1)
@@ -49,7 +49,7 @@ function Tables.getcolumn(
 ) where {FD<:FDType}
     ng = ngeom(row)
     return if i <= ng
-        geom = stealgeom(row, i - 1)
+        geom = getgeom(row, i - 1)
         geom.ptr != C_NULL ? geom : missing
     else
         getfield(row, i - ng - 1)
@@ -61,7 +61,7 @@ function Tables.getcolumn(row::Feature, name::Symbol)
     if !ismissing(field)
         return field
     end
-    geom = stealgeom(row, name)
+    geom = getgeom(row, name)
     if geom.ptr != C_NULL
         return geom
     end
@@ -76,7 +76,7 @@ function Tables.getcolumn(
     if !ismissing(field)
         return field
     end
-    geom = stealgeom(row, name)
+    geom = getgeom(row, name)
     if geom.ptr != C_NULL
         return geom
     end

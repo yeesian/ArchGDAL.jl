@@ -94,7 +94,7 @@ function FDPcolumns_gg(
     fdp_layer::FDP_AbstractFeatureLayer{FD},
 ) where {FD<:FDType}
     len = length(fdp_layer)
-    gdal_sch = Tables.schema(fdp_layer)
+    gdal_sch = gdal_schema(fdp_layer)
     ng = _ngt(FD)
     cols = [
         [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
@@ -208,7 +208,7 @@ function FDPcolumns_rgf(
     fdp_layer::FDP_AbstractFeatureLayer{FD},
 ) where {FD<:FDType}
     len = length(fdp_layer)
-    gdal_sch = Tables.schema(fdp_layer)
+    gdal_sch = gdal_schema(fdp_layer)
     ng = _ngt(FD)
     cols = [
         [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
@@ -264,7 +264,7 @@ function FDPcolumns_pg(
     fdp_layer::FDP_AbstractFeatureLayer{FD},
 ) where {FD<:FDType}
     len = length(fdp_layer)
-    gdal_sch = Tables.schema(fdp_layer)
+    gdal_sch = gdal_schema(fdp_layer)
     ng = _ngt(FD)
     cols = [
         [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
@@ -291,10 +291,10 @@ function Tables.columns(
     fdp_layer::FDP_AbstractFeatureLayer{FD},
 ) where {FD<:FDType}
     len = length(fdp_layer)
-    gdal_sch = Tables.schema(fdp_layer)
+    gdal_sch = gdal_schema(fdp_layer)
     ng = _ngt(FD)
     # print("\tinit columns     : ")
-    # @time columns = [
+    # @time cols = [
     #     [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
     #     [Vector{Union{Missing,Nothing,T}}(missing, len) for T in gdal_sch.types[ng+1:end]]
     # ]
@@ -355,7 +355,7 @@ end
 
 function Tables.columns(layer::AbstractFeatureLayer)
     len = length(layer)
-    gdal_sch = Tables.schema(layer)
+    gdal_sch = gdal_schema(layer)
     ng = ngeom(layer)
     cols = [
         [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
@@ -365,10 +365,10 @@ function Tables.columns(layer::AbstractFeatureLayer)
         ]
     ]
     fillcolumns!(layer, cols)
-    return cols
-    # return NamedTuple{gdal_sch.names}(
-    #     NTuple{length(gdal_sch.names)}([
-    #         convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c) for c in cols
-    #     ]),
-    # )
+    return NamedTuple{gdal_sch.names}(
+        NTuple{length(gdal_sch.names)}([
+            convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c)
+            for c in cols
+        ]),
+    )
 end
