@@ -2,7 +2,12 @@ function imview(colortype::Type{<:ColorTypes.Colorant}, imgvalues...)
     return PermutedDimsArray(
         ImageCore.colorview(
             colortype,
-            (ImageCore.normedview(img) for img in imgvalues)...,
+            (
+                ImageCore.normedview(
+                    ImageCore.Normed{eltype(img),8 * sizeof(eltype(img))},
+                    img,
+                ) for img in imgvalues
+            )...,
         ),
         (2, 1),
     )

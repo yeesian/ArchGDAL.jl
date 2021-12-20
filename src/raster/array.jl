@@ -59,6 +59,7 @@ for f in (
     :buildoverviews!,
     :metadata,
     :metadatadomainlist,
+    :imread,
 )
     eval(:(function $(f)(x::RasterDataset, args...; kwargs...)
         return $(f)(x.ds, args...; kwargs...)
