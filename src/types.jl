@@ -34,7 +34,7 @@ FDType = Tuple{
     return :(length($T.types[1].types))
 end
 @generated function _gtnames(::Type{T}) where {T<:FDType}
-    return :(tuple($T.types[1].names...))
+    return :(tuple($T.types[1].parameters[1]...))
 end
 @generated function _gttypes(::Type{T}) where {T<:FDType}
     return :(tuple($T.types[1].types...))
@@ -43,7 +43,7 @@ end
     return :(length($T.types[2].types))
 end
 @generated function _ftnames(::Type{T}) where {T<:FDType}
-    return :(tuple($T.types[2].names...))
+    return :(tuple($T.types[2].parameters[1]...))
 end
 @generated function _fttypes(::Type{T}) where {T<:FDType}
     return :(tuple($T.types[2].types...))

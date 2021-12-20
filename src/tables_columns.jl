@@ -286,18 +286,12 @@ end
 # Best trials for FDP layer selected for Tables.columns #
 #########################################################
 
-# Intermediary steps performance measurement commented below
 function Tables.columns(
     fdp_layer::FDP_AbstractFeatureLayer{FD},
 ) where {FD<:FDType}
     len = length(fdp_layer)
     gdal_sch = gdal_schema(fdp_layer)
     ng = _ngt(FD)
-    # print("\tinit columns     : ")
-    # @time cols = [
-    #     [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
-    #     [Vector{Union{Missing,Nothing,T}}(missing, len) for T in gdal_sch.types[ng+1:end]]
-    # ]
     cols = [
         [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
         [
@@ -305,22 +299,14 @@ function Tables.columns(
             T in gdal_sch.types[ng+1:end]
         ]
     ]
-    # print("\tfill vectors     : ")
-    # @time FDPfillcolumns_pg!(fdp_layer, cols)
     FDPfillcolumns_pg!(fdp_layer, cols)
-    # print("\ttrim col types   :")
-    # @time trimmed_col_types = Tuple(promote_type(unique(typeof(e) for e in c)...) for c in cols)
-    # print("\tconv cols types  :")
-    # @time type_trimmed_columns = [
-    #     convert(Vector{trimmed_col_types[i]}, c) for (i, c) in enumerate(cols)
-    # ]
-    # print("\ttuples to NT     : ")
-    # @time nt = NamedTuple{gdal_sch.names}(
-    #     NTuple{length(gdal_sch.names)}(type_trimmed_columns),
-    # )
-    # return nt
+    # Below works only with Julia version >= 1.7
+    #return = NamedTuple{gdal_sch.names}([
+    #     convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c) for
+    #     c in cols
+    # ])
     return NamedTuple{gdal_sch.names}(
-        NTuple{length(gdal_sch.names)}([
+        NTuple{length(gdal_sch.names),Vector{T} where T}([
             convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c)
             for c in cols
         ]),
@@ -365,8 +351,13 @@ function Tables.columns(layer::AbstractFeatureLayer)
         ]
     ]
     fillcolumns!(layer, cols)
+    # Below works only with Julia version >= 1.7
+    #return = NamedTuple{gdal_sch.names}([
+    #     convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c) for
+    #     c in cols
+    # ])
     return NamedTuple{gdal_sch.names}(
-        NTuple{length(gdal_sch.names)}([
+        NTuple{length(gdal_sch.names),Vector{T} where T}([
             convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c)
             for c in cols
         ]),
