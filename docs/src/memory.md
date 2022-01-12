@@ -120,7 +120,7 @@ result = ArchGDAL.<method>(args...)
 ## References
 Here's a collection of references for developers who are interested.
 
-- [https://docs.julialang.org/en/v1.3/manual/calling-c-and-fortran-code/](https://docs.julialang.org/en/v1.3/manual/calling-c-and-fortran-code/)
+- [https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/](https://docs.julialang.org/en/v1/manual/calling-c-and-fortran-code/)
 - [https://github.com/JuliaLang/julia/issues/7721](https://github.com/JuliaLang/julia/issues/7721)
 - [https://github.com/JuliaLang/julia/issues/11207](https://github.com/JuliaLang/julia/issues/11207)
 - [https://gdal.org/api/python_gotchas.html](https://gdal.org/api/python_gotchas.html)
