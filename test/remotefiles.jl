@@ -43,6 +43,10 @@ remotefiles = [
        "f4ebb3953ff0852723569d6fb1f8519632f5ff9f413e751fe63742a7f2b365b0"
     ),
     (
+       "data/test_DUALxxx_methods.geojson",
+       "a42d0528e49ad8fa170e20d6c7d928d8403c4fd07076aea71f0dafb83c10582c"
+    ),
+    (
         "gdalworkshop/world.tif",
         "b376dc8af62f9894b5050a6a9273ac0763ae2990b556910d35d4a8f4753278bb",
     ),

@@ -1,7 +1,6 @@
 using Test
 import ArchGDAL
-# const 
-AG = ArchGDAL
+const AG = ArchGDAL
 using Dates
 using Tables
 
@@ -172,42 +171,9 @@ end
     # Tests on methods for DUAL_xxx abstract types
     @test Base.IteratorSize(fdp_layer) == Base.SizeUnknown()
     @test Base.length(fdp_layer) == 4
-    # Create test data file
-    geojson_string = """
-    {
-        "type": "FeatureCollection",
-        "crs": {
-            "type": "name",
-            "properties": {
-                "name": "urn:ogc:def:crs:OGC:1.3:CRS84"
-            }
-        },
-        "features": [
-            {
-                "type": "Feature",
-                "properties": {
-                    "int": $(typemax(Int32)),
-                    "int64": $(typemax(Int64)),
-                    "double": $(floatmax(Float64)),
-                    "string": "Hello",
-                    "intlist": [1, $(typemax(Int32))],
-                    "int64list": [1, $(typemax(Int64))],
-                    "asdoublelist": [1.0, $(floatmax(Float64))],
-                    "asstringlist": ["Hello", "World"],
-                    "asbinary": "Hello",
-                    "asdatetime": "2022-01-14T07:10:01",
-                    },
-                "geometry": {"type": "Point","coordinates": [100.0,0.0]}
-            }
-        ]
-    }
-    """
-    open("data/test_DUALxxx_methods.geojson", "w") do io
-        return print(io, geojson_string)
-    end
+    # Tests on methods for DUAL_xxx abstract types
     fdp_feature =
         iterate(AG.getFDPlayer(AG.read("data/test_DUALxxx_methods.geojson")))[1]
-    # Tests on methods for DUAL_xxx abstract types
     @test AG.asint(fdp_feature, 0) == typemax(Int32)
     @test AG.asint64(fdp_feature, 1) == typemax(Int64)
     @test AG.asdouble(fdp_feature, 2) == floatmax(Float64)
@@ -221,9 +187,6 @@ end
     @test AG.getfield(fdp_feature, nothing) === missing
     @test AG.toWKT(AG.getgeom(fdp_feature, 0)) == "POINT (100 0)"
     @test AG.toWKT(AG.getgeom(fdp_feature, "")) == "POINT (100 0)"
-    # Detete test data file
-    isfile("data/test_DUALxxx_methods.geojson") &&
-        rm("data/test_DUALxxx_methods.geojson")
 end
 
 @testset "Unit testing of Table object and its Tables.jl interface" begin
