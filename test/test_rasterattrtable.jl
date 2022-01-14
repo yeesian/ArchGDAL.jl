@@ -1,7 +1,6 @@
 using Test
 import GDAL
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_rasterattrtable.jl" begin
     @testset "Testing Raster Attribute Tables" begin

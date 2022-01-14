@@ -1,8 +1,6 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
-import GeoFormatTypes;
-const GFT = GeoFormatTypes;
+import ArchGDAL as AG
+import GeoFormatTypes as GFT
 
 @testset "test_convert.jl" begin
 
@@ -41,7 +39,7 @@ const GFT = GeoFormatTypes;
             ),
         ) == proj4326
         @test convert(GFT.CoordSys, GFT.CRS(), proj4326) isa GFT.CoordSys
-        @test convert(GFT.GML, GFT.CRS(), proj4326) isa GeoFormatTypes.GML
+        @test convert(GFT.GML, GFT.CRS(), proj4326) isa GFT.GML
     end
 
     @testset "geometry conversions" begin

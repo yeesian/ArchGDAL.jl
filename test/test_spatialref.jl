@@ -1,8 +1,6 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
-import GeoFormatTypes;
-const GFT = GeoFormatTypes;
+import ArchGDAL as AG
+import GeoFormatTypes as GFT
 
 @testset "test_spatialref.jl" begin
     @testset "Test Formats for Spatial Reference Systems" begin
