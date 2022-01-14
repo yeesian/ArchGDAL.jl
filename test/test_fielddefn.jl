@@ -16,7 +16,7 @@ const AG = ArchGDAL;
             @test AG.getfieldtype(fd) == AG.OFTDate
             AG.settype!(fd, AG.OFTInteger)
             @test AG.getsubtype(fd) == AG.OFSTNone
-            @test AG.getfieldtype(fd) == ArchGDAL.OFTInteger
+            @test AG.getfieldtype(fd) == AG.OFTInteger
             AG.setsubtype!(fd, AG.OFSTInt16)
             @test AG.getsubtype(fd) == AG.OFSTInt16
             @test AG.getfieldtype(fd) == AG.OFSTInt16

@@ -20,9 +20,9 @@ using Tables
                 "KEEP_GEOM_COLUMNS=NO",
             ],
         )
-        @test dataset isa ArchGDAL.IDataset
-        @test dataset1 isa ArchGDAL.IDataset
-        @test dataset2 isa ArchGDAL.IDataset
+        @test dataset isa AG.IDataset
+        @test dataset1 isa AG.IDataset
+        @test dataset2 isa AG.IDataset
         layer = AG.getlayer(dataset, 0)
         layer1 = AG.getlayer(dataset1, 0)
         layer2 = AG.getlayer(dataset2, 0)
@@ -530,7 +530,7 @@ using Tables
                 ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
-                        Union{Missing,ArchGDAL.IGeometry},
+                        Union{Missing,AG.IGeometry},
                         Union{Missing,Int64},
                         String,
                     ),
@@ -559,7 +559,7 @@ using Tables
                     types = (
                         Union{
                             Missing,
-                            ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
+                            AG.IGeometry{AG.wkbLineString},
                         },
                         Union{Missing,Int64},
                         String,
@@ -589,7 +589,7 @@ using Tables
                 GeoJSON_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
-                        Union{Missing,ArchGDAL.IGeometry},
+                        Union{Missing,AG.IGeometry},
                         Union{Missing,Int32},
                         String,
                     ),
@@ -618,7 +618,7 @@ using Tables
                     types = (
                         Union{
                             Missing,
-                            ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
+                            AG.IGeometry{AG.wkbLineString},
                         },
                         Union{Missing,Int32},
                         String,
@@ -648,7 +648,7 @@ using Tables
                 GML_test_reference_geotable = (
                     names = (:geometryProperty, :gml_id, :id, :name),
                     types = (
-                        Union{Missing,ArchGDAL.IGeometry},
+                        Union{Missing,AG.IGeometry},
                         String,
                         Union{Missing,Int64},
                         String,
@@ -684,7 +684,7 @@ using Tables
                 GPKG_test_reference_geotable = (
                     names = (:geom, :id, :name),
                     types = (
-                        Union{Missing,ArchGDAL.IGeometry},
+                        Union{Missing,AG.IGeometry},
                         Union{Missing,Int64},
                         String,
                     ),
@@ -712,7 +712,7 @@ using Tables
             @testset "Conversion to table for KML driver" begin
                 KML_test_reference_geotable = (
                     names = (Symbol(""), :Name, :Description),
-                    types = (ArchGDAL.IGeometry, String, String),
+                    types = (AG.IGeometry, String, String),
                     values = (
                         [
                             "LINESTRING (1 2,2 3,3 4)",
@@ -736,7 +736,7 @@ using Tables
             @testset "Conversion to table for FlatGeobuf driver" begin
                 FlatGeobuf_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
-                    types = (ArchGDAL.IGeometry, Union{Nothing,Int64}, String),
+                    types = (AG.IGeometry, Union{Nothing,Int64}, String),
                     values = (
                         [
                             "LINESTRING (5 6,6 7,7 8)",
@@ -769,8 +769,8 @@ using Tables
                     CSV_multigeom_test_reference_geotable = (
                         names = (:point, :linestring, :id, :zoom, :location),
                         types = (
-                            ArchGDAL.IGeometry{ArchGDAL.wkbPoint},
-                            ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
+                            AG.IGeometry{AG.wkbPoint},
+                            AG.IGeometry{AG.wkbLineString},
                             String,
                             String,
                             String,
