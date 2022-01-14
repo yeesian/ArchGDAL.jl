@@ -515,12 +515,6 @@ the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
     IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i), ownedby = dataset)
-function getFDPlayer(dataset::AbstractDataset, i::Integer)::FDP_IFeatureLayer
-    ptr::GDAL.OGRLayerH = GDAL.gdaldatasetgetlayer(dataset.ptr, i)
-    fd_ptr = GDAL.ogr_l_getlayerdefn(ptr)
-    FD = _getFDType(fd_ptr)
-    return FDP_IFeatureLayer{FD}(ptr, ownedby = dataset)
-end
 
 """
     getlayer(dataset::AbstractDataset)
@@ -530,13 +524,10 @@ Fetch the first layer and raise an error if `dataset` contains more than one lay
 The returned layer remains owned by the `dataset` and should not be deleted by
 the application.
 """
-function getlayer(dataset::AbstractDataset)::IFeatureLayer
+function getlayer(dataset::AbstractDataset)
     nlayer(dataset) == 1 ||
         error("Dataset has multiple layers. Specify the layer number or name")
-    return IFeatureLayer(
-        GDAL.gdaldatasetgetlayer(dataset.ptr, 0),
-        ownedby = dataset,
-    )
+    return getlayer(dataset, 0)
 end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
@@ -544,7 +535,7 @@ unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
 function unsafe_getlayer(dataset::AbstractDataset)::FeatureLayer
     nlayer(dataset) == 1 ||
         error("Dataset has multiple layers. Specify the layer number or name")
-    return FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0))
+    return unsafe_getlayer(dataset, 0)
 end
 
 """

@@ -38,7 +38,7 @@ include("context.jl")
 include("base/iterators.jl")
 include("base/display.jl")
 include("tables.jl")
-include("tables_columns.jl")
+include("tables2.jl")
 include("geointerface.jl")
 include("convert.jl")
 

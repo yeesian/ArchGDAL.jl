@@ -1,19 +1,9 @@
-
-#! @yeesian Why is there a difference between interactive and non-interactive forms of
-#! layer type regarding ownedby and spatialref properties
 function destroy(layer::AbstractFeatureLayer)::Nothing
     layer.ptr = C_NULL
     return nothing
 end
-function destroy(fdp_layer::FDP_AbstractFeatureLayer)
-    # No specific GDAL object destructor for layer, it will be handled by the dataset closing
-    fdp_layer.ptr = C_NULL
-    fdp_layer.ownedby = nothing
-    fdp_layer.spatialref = nothing
-    return nothing
-end
 
-function destroy(layer::Union{IFeatureLayer,FDP_IFeatureLayer})::Nothing
+function destroy(layer::IFeatureLayer)::Nothing
     layer.ptr = C_NULL
     layer.ownedby = Dataset()
     layer.spatialref = SpatialRef()
@@ -566,12 +556,6 @@ The `featuredefn` is owned by the `layer` and should not be modified.
 """
 layerdefn(layer::AbstractFeatureLayer)::IFeatureDefnView =
     IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
-function layerdefn(fdp_layer::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
-    return FDP_IFeatureDefnView{FD}(
-        GDAL.ogr_l_getlayerdefn(fdp_layer.ptr);
-        ownedby = fdp_layer,
-    )
-end
 
 """
     findfieldindex(layer::AbstractFeatureLayer,
@@ -589,16 +573,6 @@ function findfieldindex(
     exactmatch::Bool,
 )::Integer
     return GDAL.ogr_l_findfieldindex(layer.ptr, field, exactmatch)
-end
-@generated function findfieldindex(
-    ::FDP_AbstractFeatureLayer{FD},
-    field::Union{AbstractString,Symbol},
-    #! Note that exactmatch::Bool is not used in GDAL except when OGRAPISPY_ENABLED is true => dropped
-) where {FD<:FDType}
-    return return quote
-        i = findfirst(isequal(Symbol(field)), $(_ftnames(FD)))
-        return i !== nothing ? i - 1 : nothing
-    end
 end
 
 """
@@ -620,9 +594,6 @@ nfeature(layer::DUAL_AbstractFeatureLayer, force::Bool = false)::Integer =
 Fetch number of geometry fields on the feature layer.
 """
 ngeom(layer::AbstractFeatureLayer)::Integer = ngeom(layerdefn(layer))
-@generated function ngeom(::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
-    return :($(_ngt(FD)))
-end
 
 """
     nfield(layer::AbstractFeatureLayer)
@@ -630,9 +601,6 @@ end
 Fetch number of fields on the feature layer.
 """
 nfield(layer::AbstractFeatureLayer)::Integer = nfield(layerdefn(layer))
-@generated function nfield(::FDP_AbstractFeatureLayer{FD}) where {FD<:FDType}
-    return :($(_nft(FD)))
-end
 
 """
     envelope(layer::AbstractFeatureLayer, force::Bool = false)

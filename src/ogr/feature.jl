@@ -24,12 +24,6 @@ function destroy(feature::Feature)::Nothing
     feature.ptr = C_NULL
     return nothing
 end
-function destroy(fdp_feature::FDP_AbstractFeature)
-    GDAL.ogr_f_destroy(fdp_feature.ptr)
-    fdp_feature.ptr = C_NULL
-    fdp_feature.ownedby = nothing
-    return nothing
-end
 
 """
     setgeom!(feature::Feature, geom::AbstractGeometry)
@@ -85,9 +79,6 @@ Fetch number of fields on this feature.
 This will always be the same as the field count for the OGRFeatureDefn.
 """
 nfield(feature::Feature)::Integer = GDAL.ogr_f_getfieldcount(feature.ptr)
-@generated function nfield(::FDP_AbstractFeature{FD}) where {FD<:FDType}
-    return :($(_nft(FD)))
-end
 
 """
     getfielddefn(feature::Feature, i::Integer)
@@ -104,15 +95,6 @@ internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::Feature, i::Integer)::IFieldDefnView =
     IFieldDefnView(GDAL.ogr_f_getfielddefnref(feature.ptr, i))
-function getfielddefn(
-    fdp_feature::FDP_Feature{FD},
-    i::Integer,
-) where {FD<:FDType}
-    return FTP_IFieldDefnView{_fttypes(FD)[i+1]}(
-        GDAL.ogr_f_getfielddefnref(fdp_feature.ptr, i);
-        ownedby = getfeaturedefn(fdp_feature),
-    )
-end
 
 """
     findfieldindex(feature::Feature, name::Union{AbstractString, Symbol})
@@ -138,15 +120,6 @@ function findfieldindex(
         nothing
     else
         i
-    end
-end
-@generated function findfieldindex(
-    ::FDP_AbstractFeature{FD},
-    name::Union{AbstractString,Symbol},
-) where {FD<:FDType}
-    return quote
-        i = findfirst(isequal(Symbol(name)), $(_ftnames(FD)))
-        return i !== nothing ? i - 1 : nothing
     end
 end
 
@@ -468,7 +441,6 @@ function getdefault(feature::Feature, i::Integer)::Union{String,Nothing}
     return getdefault(getfielddefn(feature, i))
 end
 
-#! @yeesian What is the use of this function ?
 getfield(feature::DUAL_AbstractFeature, i::Nothing)::Missing = missing
 
 const _FETCHFIELD = Dict{OGRFieldType,Function}(
@@ -485,10 +457,6 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTInteger64 => asint64,
     OFTInteger64List => asint64list,
 )
-
-@generated function _get_fields_asfuncs(::Type{FD}) where {FD<:FDType}
-    return ((_FETCHFIELD[T.parameters[1]] for T in _fttypes(FD))...,)
-end
 
 """
     getfield(feature, i)
@@ -522,57 +490,8 @@ function getfield(feature::Feature, i::Integer)
     end
 end
 
-@generated function getfield(
-    fdp_feature::FDP_AbstractFeature{FD},
-    i::Integer,
-) where {FD<:FDType}
-    return quote
-        return if !isfieldset(fdp_feature, i)
-            nothing
-        elseif isfieldnull(fdp_feature, i)
-            missing
-        else
-            $(_get_fields_asfuncs(FD))[i+1](fdp_feature, i)
-        end
-    end
-end
-
-@generated function getfield(
-    fdp_feature::FDP_AbstractFeature{FD},
-    i::Integer,
-    ::Val{K},
-) where {FD<:FDType,K}
-    return quote
-        return if !isfieldset(fdp_feature, i)
-            nothing
-        elseif isfieldnull(fdp_feature, i)
-            missing
-        else
-            $(_get_fields_asfuncs(FD)[K])(fdp_feature, i)
-        end
-    end
-end
-
 function getfield(feature::Feature, name::Union{AbstractString,Symbol})
     return getfield(feature, findfieldindex(feature, name))
-end
-
-@generated function getfield(
-    fdp_feature::FDP_AbstractFeature{FD},
-    name::Union{AbstractString,Symbol},
-) where {FD<:FDType}
-    return quote
-        i = findfieldindex(fdp_feature, name)
-        return if i === nothing
-            missing
-        elseif !isfieldset(fdp_feature, i)
-            nothing
-        elseif isfieldnull(fdp_feature, i)
-            missing
-        else
-            @inbounds $(_get_fields_asfuncs(FD))[i+1](fdp_feature, i)
-        end
-    end
 end
 
 """
@@ -723,9 +642,6 @@ Fetch number of geometry fields on this feature.
 This will always be the same as the geometry field count for OGRFeatureDefn.
 """
 ngeom(feature::Feature)::Integer = GDAL.ogr_f_getgeomfieldcount(feature.ptr)
-@generated function ngeom(::FDP_AbstractFeature{FD}) where {FD<:FDType}
-    return :($(_ngt(FD)))
-end
 
 """
     getgeomdefn(feature::Feature, i::Integer)
@@ -765,15 +681,6 @@ function findgeomindex(
 )::Integer
     return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
 end
-@generated function findgeomindex(
-    ::FDP_AbstractFeature{FD},
-    name::Union{AbstractString,Symbol} = "",
-) where {FD<:FDType}
-    return return quote
-        i = findfirst(isequal(Symbol(name)), $(_gtnames(FD)))
-        return i !== nothing ? i - 1 : nothing
-    end
-end
 
 """
     getgeom(feature::Feature, i::Integer)
@@ -791,19 +698,6 @@ function getgeom(feature::DUAL_AbstractFeature, i::Integer)::IGeometry
     else
         IGeometry(GDAL.ogr_g_clone(result))
     end
-end
-
-function stealgeom(feature::DUAL_AbstractFeature, i::Integer)
-    return i == 0 ? IGeometry(GDAL.ogr_f_stealgeometry(feature.ptr)) :
-           getgeom(feature, i)
-end
-function stealgeom(
-    feature::DUAL_AbstractFeature,
-    name::Union{AbstractString,Symbol},
-)
-    i = findgeomindex(feature, name)
-    return i == 0 ? IGeometry(GDAL.ogr_f_stealgeometry(feature.ptr)) :
-           getgeom(feature, i)
 end
 
 function unsafe_getgeom(feature::Feature, i::Integer)::Geometry

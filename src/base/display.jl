@@ -107,7 +107,7 @@ function Base.show(
 end
 
 # assumes that the layer is reset, and will reset it after display
-function Base.show(io::IO, layer::DUAL_AbstractFeatureLayer)::Nothing
+function Base.show(io::IO, layer::DUAL_AbstractFeatureLayer)
     if layer.ptr == C_NULL
         print(io, "NULL FeatureLayer")
         return nothing
@@ -172,7 +172,7 @@ function Base.show(io::IO, layer::DUAL_AbstractFeatureLayer)::Nothing
     return nothing
 end
 
-function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::Nothing
+function Base.show(io::IO, featuredefn::DUAL_AbstractFeatureDefn)::Nothing
     if featuredefn.ptr == C_NULL
         print(io, "NULL FeatureDefn")
         return nothing
@@ -195,7 +195,7 @@ function Base.show(io::IO, featuredefn::AbstractFeatureDefn)::Nothing
     return nothing
 end
 
-function Base.show(io::IO, fd::AbstractFieldDefn)::Nothing
+function Base.show(io::IO, fd::DUAL_AbstractFieldDefn)::Nothing
     if fd.ptr == C_NULL
         print(io, "NULL FieldDefn")
         return nothing
@@ -204,7 +204,7 @@ function Base.show(io::IO, fd::AbstractFieldDefn)::Nothing
     return nothing
 end
 
-function Base.show(io::IO, gfd::AbstractGeomFieldDefn)::Nothing
+function Base.show(io::IO, gfd::DUAL_AbstractGeomFieldDefn)::Nothing
     if gfd.ptr == C_NULL
         print(io, "NULL GeomFieldDefn")
         return nothing

@@ -16,37 +16,14 @@ function gdal_schema(layer::AbstractFeatureLayer)
     )
 end
 
-@generated function gdal_schema(
-    ::FDP_AbstractFeatureLayer{FD},
-) where {FD<:FDType}
-    gnames = _gtnames(FD)
-    fnames = _ftnames(FD)
-    gtypes = (convert(IGeometry, gt) for gt in _gttypes(FD))
-    ftypes = (get(FType2DataType, ft, missing) for ft in _fttypes(FD))
-    return Tables.Schema((gnames..., fnames...), (gtypes..., ftypes...))
-end
+Tables.istable(::Type{<:AbstractFeatureLayer})::Bool = true
+Tables.rowaccess(::Type{<:AbstractFeatureLayer})::Bool = true
 
-Tables.istable(::Type{<:DUAL_AbstractFeatureLayer})::Bool = true
-Tables.rowaccess(::Type{<:DUAL_AbstractFeatureLayer})::Bool = true
-
-function Tables.rows(layer::T)::T where {T<:DUAL_AbstractFeatureLayer}
+function Tables.rows(layer::T)::T where {T<:AbstractFeatureLayer}
     return layer
 end
 
 function Tables.getcolumn(row::AbstractFeature, i::Int)
-    ng = ngeom(row)
-    return if i <= ng
-        geom = getgeom(row, i - 1)
-        geom.ptr != C_NULL ? geom : missing
-    else
-        getfield(row, i - ng - 1)
-    end
-end
-
-function Tables.getcolumn(
-    row::FDP_AbstractFeature{FD},
-    i::Int,
-) where {FD<:FDType}
     ng = ngeom(row)
     return if i <= ng
         geom = getgeom(row, i - 1)
@@ -68,23 +45,8 @@ function Tables.getcolumn(row::Feature, name::Symbol)
     return missing
 end
 
-function Tables.getcolumn(
-    row::FDP_AbstractFeature{FD},
-    name::Symbol,
-) where {FD<:FDType}
-    field = getfield(row, name)
-    if !ismissing(field)
-        return field
-    end
-    geom = getgeom(row, name)
-    if geom.ptr != C_NULL
-        return geom
-    end
-    return missing
-end
-
 function Tables.columnnames(
-    row::DUAL_AbstractFeature,
+    row::AbstractFeature,
 )::NTuple{Int64(nfield(row) + ngeom(row)),Symbol}
     geom_names, field_names = schema_names(getfeaturedefn(row))
     return (geom_names..., field_names...)
@@ -100,16 +62,57 @@ function schema_names(featuredefn::IFeatureDefnView)
     return (geom_names, field_names, featuredefn, fielddefns)
 end
 
-#TODO: check wether some functions used in schema_names could be optimized
-function schema_names(
-    fdp_featuredefn::FDP_IFeatureDefnView{FD},
-) where {FD<:FDType}
-    fielddefns =
-        (getfielddefn(fdp_featuredefn, i) for i in 0:nfield(fdp_featuredefn)-1)
-    field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
-    geom_names = collect(
-        Symbol(getname(getgeomdefn(fdp_featuredefn, i - 1))) for
-        i in 1:ngeom(fdp_featuredefn)
-    )
-    return (geom_names, field_names, fdp_featuredefn, fielddefns)
+#############################################################
+# Tables.columns on AbstractFeatture layer for normal layer #
+#############################################################
+
+function f2c(feature::AbstractFeature, i::Int, cols::Vector{Vector{T} where T})
+    ng = ngeom(feature)
+    nf = nfield(feature)
+    @inbounds for j in 1:(nf+ng)
+        cols[j][i] = Tables.getcolumn(feature, j)
+    end
+    return nothing
+end
+
+function fillcolumns!(
+    layer::AbstractFeatureLayer,
+    cols::Vector{Vector{T} where T},
+)
+    state = 0
+    while true
+        next = iterate(layer, state)
+        next === nothing && break
+        feature, state = next
+        f2c(feature, state, cols)
+    end
+end
+
+function Tables.columns(layer::AbstractFeatureLayer)
+    len = length(layer)
+    gdal_sch = gdal_schema(layer)
+    ng = ngeom(layer)
+    cols = [
+        [Vector{Union{Missing,IGeometry}}(missing, len) for _ in 1:ng]
+        [
+            Vector{Union{Missing,Nothing,T}}(missing, len) for
+            T in gdal_sch.types[ng+1:end]
+        ]
+    ]
+    fillcolumns!(layer, cols)
+    return if VERSION < v"1.7"
+        NamedTuple{gdal_sch.names}(
+            NTuple{length(gdal_sch.names),Vector{T} where T}([
+                convert(
+                    Vector{promote_type(unique(typeof(e) for e in c)...)},
+                    c,
+                ) for c in cols
+            ]),
+        )
+    else
+        NamedTuple{gdal_sch.names}(
+            convert(Vector{promote_type(unique(typeof(e) for e in c)...)}, c)
+            for c in cols
+        )
+    end
 end
