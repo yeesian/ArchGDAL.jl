@@ -241,11 +241,11 @@ const AG = ArchGDAL;
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
                 end
-                @test sprint(print, AG.getgeom(feature)) == "NULL Geometry"
+                @test sprint(print, AG.getgeom(feature)) == "NULL IGeometry"
                 AG.getgeom(feature) do geom
                     @test sprint(print, geom) == "NULL Geometry"
                 end
-                @test sprint(print, AG.getgeom(feature, 0)) == "NULL Geometry"
+                @test sprint(print, AG.getgeom(feature, 0)) == "NULL IGeometry"
                 AG.getgeom(feature, 0) do geom
                     @test sprint(print, geom) == "NULL Geometry"
                 end

@@ -207,7 +207,7 @@ macro ogrerr(code, message)
                 "Unknown error."
             end
 
-            error($message * " ($detailmsg)")
+            error($(esc(message)) * " ($detailmsg)")
         end
     end
 end

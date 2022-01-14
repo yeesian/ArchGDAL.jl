@@ -17,6 +17,14 @@ end
         @test AG.metadataitem(driver, "DMD_EXTENSIONS") == "tif tiff"
     end
 
+    @testset "gdal error macros" begin
+        @test_throws ErrorException AG.createlayer() do layer
+            AG.addfeature(layer) do feature
+                return AG.setgeom!(feature, 1, AG.createpoint(1, 1))
+            end
+        end
+    end
+
     @testset "OGR Errors" begin
         @test isnothing(AG.@ogrerr GDAL.OGRERR_NONE "not an error")
         eval_ogrerr(GDAL.OGRERR_NOT_ENOUGH_DATA, "Not enough data.")

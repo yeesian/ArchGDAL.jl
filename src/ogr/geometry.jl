@@ -34,6 +34,8 @@ function unsafe_fromWKB(data)::Geometry
     return Geometry(geom[])
 end
 
+convert(::Type{IGeometry}, data::Vector{UInt8}) = fromWKB(data)
+
 """
     fromWKT(data::Vector{String})
 
@@ -73,6 +75,8 @@ fromWKT(data::String, args...)::IGeometry = fromWKT([data], args...)
 
 unsafe_fromWKT(data::String, args...)::Geometry =
     unsafe_fromWKT([data], args...)
+
+convert(::Type{IGeometry}, s::String) = fromWKT(s)
 
 """
 Destroy geometry object.
@@ -1635,4 +1639,33 @@ for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
             )
         end
     end
+end
+
+# Conversion from GeoInterface geometry
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractPoint)
+    return createpoint(GeoInterface.coordinates(g))
+end
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractMultiPoint)
+    return createmultipoint(GeoInterface.coordinates(g))
+end
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractLineString)
+    return createlinestring(GeoInterface.coordinates(g))
+end
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractMultiLineString)
+    return createmultilinestring(GeoInterface.coordinates(g))
+end
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractPolygon)
+    return createpolygon(GeoInterface.coordinates(g))
+end
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractMultiPolygon)
+    return createmultipolygon(GeoInterface.coordinates(g))
+end
+function convert(::Type{IGeometry}, g::GeoInterface.AbstractGeometryCollection)
+    ag_geom = creategeom(wkbGeometryCollection)
+    for gi_subgeom in GeoInterface.geometries(g)
+        ag_subgeom = convert(IGeometry, gi_subgeom)
+        result = GDAL.ogr_g_addgeometry(ag_geom.ptr, ag_subgeom.ptr)
+        @ogrerr result "Failed to add $ag_subgeom"
+    end
+    return ag_geom
 end

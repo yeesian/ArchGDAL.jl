@@ -95,13 +95,13 @@ const AG = ArchGDAL;
                     )
 
                     @test sprint(print, AG.getgeom(newfeature)) ==
-                          "Geometry: POINT EMPTY"
+                          "IGeometry: POINT EMPTY"
                     @test sprint(print, AG.getgeom(newfeature, 0)) ==
-                          "Geometry: POINT EMPTY"
+                          "IGeometry: POINT EMPTY"
                     @test sprint(print, AG.getgeom(newfeature, 1)) ==
-                          "Geometry: LINESTRING EMPTY"
+                          "IGeometry: LINESTRING EMPTY"
                     @test sprint(print, AG.getgeom(newfeature, 2)) ==
-                          "Geometry: POLYGON ((0 0,1 1,0 1))"
+                          "IGeometry: POLYGON ((0 0,1 1,0 1))"
                     AG.getgeom(newfeature) do g
                         @test sprint(print, g) == "Geometry: POINT EMPTY"
                     end
@@ -152,7 +152,7 @@ const AG = ArchGDAL;
                 @test n == 2
                 AG.clearspatialfilter!(layer)
                 @test sprint(print, AG.getspatialfilter(layer)) ==
-                      "NULL Geometry"
+                      "NULL IGeometry"
                 n = 0
                 for feature in layer
                     n += 1

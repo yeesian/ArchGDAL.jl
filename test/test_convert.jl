@@ -11,7 +11,7 @@ const GFT = GeoFormatTypes;
         point = AG.createpoint(100, 70)
         json = convert(GFT.GeoJSON, point)
         @test sprint(print, convert(AG.IGeometry, json)) ==
-              "Geometry: POINT (100 70)"
+              "IGeometry: POINT (100 70)"
         kml = convert(GFT.KML, point)
         gml = convert(GFT.GML, point)
         wkb = convert(GFT.WellKnownBinary, point)

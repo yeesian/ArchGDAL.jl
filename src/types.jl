@@ -291,15 +291,45 @@ end
     OFTInteger64List::GDAL.OFTInteger64List,
 )
 
+const OGRFieldcompatibleDataTypes = Dict(
+    Bool => (OFTInteger, OFSTBoolean),
+    Int8 => (OFTInteger, OFSTNone),
+    Int16 => (OFTInteger, OFSTInt16),
+    Int32 => (OFTInteger, OFSTNone),
+    Vector{Bool} => (OFTIntegerList, OFSTBoolean),
+    Vector{Int16} => (OFTIntegerList, OFSTInt16),
+    Vector{Int32} => (OFTIntegerList, OFSTNone),
+    Float16 => (OFTReal, OFSTNone),
+    Float32 => (OFTReal, OFSTFloat32),
+    Float64 => (OFTReal, OFSTNone),
+    Vector{Float16} => (OFTRealList, OFSTNone),
+    Vector{Float32} => (OFTRealList, OFSTFloat32),
+    Vector{Float64} => (OFTRealList, OFSTNone),
+    String => (OFTString, OFSTNone),
+    Vector{String} => (OFTStringList, OFSTNone),
+    Vector{UInt8} => (OFTBinary, OFSTNone),
+    Dates.Date => (OFTDate, OFSTNone),
+    Dates.Time => (OFTTime, OFSTNone),
+    Dates.DateTime => (OFTDateTime, OFSTNone),
+    Int64 => (OFTInteger64, OFSTNone),
+    Vector{Int64} => (OFTInteger64List, OFSTNone),
+)
+
 @convert(
     OGRFieldType::DataType,
     OFTInteger::Bool,
+    OFTInteger::Int8,
     OFTInteger::Int16,
     OFTInteger::Int32,  # default type comes last
-    OFTIntegerList::Vector{Int32},
+    OFTIntegerList::Vector{Bool},
+    OFTIntegerList::Vector{Int16},
+    OFTIntegerList::Vector{Int32}, # default type comes last
+    OFTReal::Float16,
     OFTReal::Float32,
     OFTReal::Float64,  # default type comes last
-    OFTRealList::Vector{Float64},
+    OFTRealList::Vector{Float16},
+    OFTRealList::Vector{Float32},
+    OFTRealList::Vector{Float64}, # default type comes last
     OFTString::String,
     OFTStringList::Vector{String},
     OFTBinary::Vector{UInt8},
@@ -321,11 +351,29 @@ end
 
 @convert(
     OGRFieldSubType::DataType,
-    OFSTNone::Nothing,
-    OFSTBoolean::Bool,
-    OFSTInt16::Int16,
-    OFSTFloat32::Float32,
-    OFSTJSON::String,
+    OFSTNone::Int8,
+    OFSTNone::Int32,
+    OFSTBoolean::Vector{Bool},
+    OFSTBoolean::Bool, # default type comes last
+    OFSTInt16::Vector{Int16},
+    OFSTInt16::Int16, # default type comes last
+    OFSTNone::Vector{Int32},
+    OFSTInt16::Float16,
+    OFSTNone::Float64,
+    OFSTInt16::Vector{Float16},
+    OFSTFloat32::Vector{Float32},
+    OFSTFloat32::Float32, # default type comes last
+    OFSTNone::Vector{Float64},
+    OFSTNone::String,
+    OFSTNone::Vector{String},
+    OFSTNone::Vector{UInt8},
+    OFSTNone::Dates.Date,
+    OFSTNone::Dates.Time,
+    OFSTNone::Dates.DateTime,
+    OFSTNone::Int64,
+    OFSTNone::Vector{Int64},
+    # Lacking OFSTUUID and OFSTJSON defined in GDAL ≥ v"3.3"
+    OFSTNone::Nothing, # default type comes last
 )
 
 @convert(
@@ -508,6 +556,96 @@ end
     wkbMultiLineString25D::GDAL.wkbMultiLineString25D,
     wkbMultiPolygon25D::GDAL.wkbMultiPolygon25D,
     wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
+)
+
+@generated function convert(
+    T1::Type{OGRwkbGeometryType},
+    T2::Type{U},
+) where {U<:GeoInterface.AbstractGeometry}
+    U <: GeoInterface.AbstractPoint && return :(wkbPoint)
+    U <: GeoInterface.AbstractMultiPoint && return :(wkbMultiPoint)
+    U <: GeoInterface.AbstractLineString && return :(wkbLineString)
+    U <: GeoInterface.AbstractMultiLineString && return :(wkbMultiLineString)
+    U <: GeoInterface.AbstractPolygon && return :(wkbPolygon)
+    U <: GeoInterface.AbstractMultiPolygon && return :(wkbMultiPolygon)
+    U == GeoInterface.AbstractGeometry && return :(wkbUnknown)
+    return :(error("No convert method to convert $T2 to $T1"))
+end
+
+@convert(
+    OGRwkbGeometryType::IGeometry,
+    wkbUnknown::IGeometry{wkbUnknown},
+    wkbPoint::IGeometry{wkbPoint},
+    wkbLineString::IGeometry{wkbLineString},
+    wkbPolygon::IGeometry{wkbPolygon},
+    wkbMultiPoint::IGeometry{wkbMultiPoint},
+    wkbMultiLineString::IGeometry{wkbMultiLineString},
+    wkbMultiPolygon::IGeometry{wkbMultiPolygon},
+    wkbGeometryCollection::IGeometry{wkbGeometryCollection},
+    wkbCircularString::IGeometry{wkbCircularString},
+    wkbCompoundCurve::IGeometry{wkbCompoundCurve},
+    wkbCurvePolygon::IGeometry{wkbCurvePolygon},
+    wkbMultiCurve::IGeometry{wkbMultiCurve},
+    wkbMultiSurface::IGeometry{wkbMultiSurface},
+    wkbCurve::IGeometry{wkbCurve},
+    wkbSurface::IGeometry{wkbSurface},
+    wkbPolyhedralSurface::IGeometry{wkbPolyhedralSurface},
+    wkbTIN::IGeometry{wkbTIN},
+    wkbTriangle::IGeometry{wkbTriangle},
+    wkbNone::IGeometry{wkbNone},
+    wkbLinearRing::IGeometry{wkbLinearRing},
+    wkbCircularStringZ::IGeometry{wkbCircularStringZ},
+    wkbCompoundCurveZ::IGeometry{wkbCompoundCurveZ},
+    wkbCurvePolygonZ::IGeometry{wkbCurvePolygonZ},
+    wkbMultiCurveZ::IGeometry{wkbMultiCurveZ},
+    wkbMultiSurfaceZ::IGeometry{wkbMultiSurfaceZ},
+    wkbCurveZ::IGeometry{wkbCurveZ},
+    wkbSurfaceZ::IGeometry{wkbSurfaceZ},
+    wkbPolyhedralSurfaceZ::IGeometry{wkbPolyhedralSurfaceZ},
+    wkbTINZ::IGeometry{wkbTINZ},
+    wkbTriangleZ::IGeometry{wkbTriangleZ},
+    wkbPointM::IGeometry{wkbPointM},
+    wkbLineStringM::IGeometry{wkbLineStringM},
+    wkbPolygonM::IGeometry{wkbPolygonM},
+    wkbMultiPointM::IGeometry{wkbMultiPointM},
+    wkbMultiLineStringM::IGeometry{wkbMultiLineStringM},
+    wkbMultiPolygonM::IGeometry{wkbMultiPolygonM},
+    wkbGeometryCollectionM::IGeometry{wkbGeometryCollectionM},
+    wkbCircularStringM::IGeometry{wkbCircularStringM},
+    wkbCompoundCurveM::IGeometry{wkbCompoundCurveM},
+    wkbCurvePolygonM::IGeometry{wkbCurvePolygonM},
+    wkbMultiCurveM::IGeometry{wkbMultiCurveM},
+    wkbMultiSurfaceM::IGeometry{wkbMultiSurfaceM},
+    wkbCurveM::IGeometry{wkbCurveM},
+    wkbSurfaceM::IGeometry{wkbSurfaceM},
+    wkbPolyhedralSurfaceM::IGeometry{wkbPolyhedralSurfaceM},
+    wkbTINM::IGeometry{wkbTINM},
+    wkbTriangleM::IGeometry{wkbTriangleM},
+    wkbPointZM::IGeometry{wkbPointZM},
+    wkbLineStringZM::IGeometry{wkbLineStringZM},
+    wkbPolygonZM::IGeometry{wkbPolygonZM},
+    wkbMultiPointZM::IGeometry{wkbMultiPointZM},
+    wkbMultiLineStringZM::IGeometry{wkbMultiLineStringZM},
+    wkbMultiPolygonZM::IGeometry{wkbMultiPolygonZM},
+    wkbGeometryCollectionZM::IGeometry{wkbGeometryCollectionZM},
+    wkbCircularStringZM::IGeometry{wkbCircularStringZM},
+    wkbCompoundCurveZM::IGeometry{wkbCompoundCurveZM},
+    wkbCurvePolygonZM::IGeometry{wkbCurvePolygonZM},
+    wkbMultiCurveZM::IGeometry{wkbMultiCurveZM},
+    wkbMultiSurfaceZM::IGeometry{wkbMultiSurfaceZM},
+    wkbCurveZM::IGeometry{wkbCurveZM},
+    wkbSurfaceZM::IGeometry{wkbSurfaceZM},
+    wkbPolyhedralSurfaceZM::IGeometry{wkbPolyhedralSurfaceZM},
+    wkbTINZM::IGeometry{wkbTINZM},
+    wkbTriangleZM::IGeometry{wkbTriangleZM},
+    wkbPoint25D::IGeometry{wkbPoint25D},
+    wkbLineString25D::IGeometry{wkbLineString25D},
+    wkbPolygon25D::IGeometry{wkbPolygon25D},
+    wkbMultiPoint25D::IGeometry{wkbMultiPoint25D},
+    wkbMultiLineString25D::IGeometry{wkbMultiLineString25D},
+    wkbMultiPolygon25D::IGeometry{wkbMultiPolygon25D},
+    wkbGeometryCollection25D::IGeometry{wkbGeometryCollection25D},
+    wkbUnknown::IGeometry
 )
 
 function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType
