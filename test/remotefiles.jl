@@ -39,6 +39,10 @@ remotefiles = [
         "f40dae6e8b5e18f3648e9f095e22a0d7027014bb463418d32f732c3756d8c54f",
     ),
     (
+       "data/unset_null_testcase.geojson",
+       "f4ebb3953ff0852723569d6fb1f8519632f5ff9f413e751fe63742a7f2b365b0"
+    ),
+    (
         "gdalworkshop/world.tif",
         "b376dc8af62f9894b5050a6a9273ac0763ae2990b556910d35d4a8f4753278bb",
     ),
