@@ -646,7 +646,7 @@ using Tables
 
             @testset "Conversion to table for GML driver" begin
                 GML_test_reference_geotable = (
-                    names = (:geometryProperty, :fid, :id, :name),
+                    names = (:geometryProperty, :gml_id, :id, :name),
                     types = (
                         Union{Missing,ArchGDAL.IGeometry},
                         String,

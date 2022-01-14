@@ -191,7 +191,7 @@ const AG = ArchGDAL;
             AG.intersection,
             "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
             "POLYGON((0 1,0 2,10 2,10 1,0 1))",
-            "GEOMETRYCOLLECTION (POLYGON ((0.5 1.0,1 2,1 1,0.5 1.0)),POLYGON ((2 2,9 2,9.5 1.0,2 1,2 2)),LINESTRING (2 1,1 1),LINESTRING (1 2,2 2))",
+            "GEOMETRYCOLLECTION (POLYGON ((1 2,1 1,0.5 1.0,1 2)),POLYGON ((9.5 1.0,2 1,2 2,9 2,9.5 1.0)),LINESTRING (1 2,2 2),LINESTRING (2 1,1 1))",
         )
     end
 
