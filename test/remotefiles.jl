@@ -39,12 +39,12 @@ remotefiles = [
         "f40dae6e8b5e18f3648e9f095e22a0d7027014bb463418d32f732c3756d8c54f",
     ),
     (
-       "data/unset_null_testcase.geojson",
-       "f4ebb3953ff0852723569d6fb1f8519632f5ff9f413e751fe63742a7f2b365b0"
+        "data/unset_null_testcase.geojson",
+        "f4ebb3953ff0852723569d6fb1f8519632f5ff9f413e751fe63742a7f2b365b0",
     ),
     (
-       "data/test_DUALxxx_methods.geojson",
-       "a42d0528e49ad8fa170e20d6c7d928d8403c4fd07076aea71f0dafb83c10582c"
+        "data/test_DUALxxx_methods.geojson",
+        "a42d0528e49ad8fa170e20d6c7d928d8403c4fd07076aea71f0dafb83c10582c",
     ),
     (
         "gdalworkshop/world.tif",

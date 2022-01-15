@@ -1,19 +1,4 @@
 const StringList = Ptr{Cstring}
-"""
-    @exported_enum EnumName[::BaseType] value1[=x] value2[=y]
-
-Call `@enum` on arguments, export `EnumName`` and all its instances
-"""
-#TODO: debug macro
-macro exported_enum(T, syms...)
-    return esc(quote
-        @enum($T, $(syms...))
-        export $T
-        for inst in Symbol.(instances($T))
-            eval($(Expr(:quote, :(export $(Expr(:$, :inst))))))
-        end
-    end)
-end
 
 """
 The value of `GDALDataType` could be different from `GDAL.GDALDataType`.

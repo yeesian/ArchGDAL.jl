@@ -455,7 +455,9 @@ end
     return :($ST)
 end
 
-@generated function getfieldtype(::FTP_AbstractFieldDefn{FType{T,ST}}) where {T,ST}
+@generated function getfieldtype(
+    ::FTP_AbstractFieldDefn{FType{T,ST}},
+) where {T,ST}
     return ST != OFSTNone ? :($ST) : :($T)
 end
 
@@ -581,7 +583,10 @@ end
     return :($(_nft(FD)))
 end
 
-function getfielddefn(fdp_feature::FDP_IFeature{FD}, i::Integer) where {FD<:FDType}
+function getfielddefn(
+    fdp_feature::FDP_IFeature{FD},
+    i::Integer,
+) where {FD<:FDType}
     return FTP_IFieldDefnView{_fttypes(FD)[i+1]}(
         GDAL.ogr_f_getfielddefnref(fdp_feature.ptr, i);
         ownedby = getfeaturedefn(fdp_feature),
