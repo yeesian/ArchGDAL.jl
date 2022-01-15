@@ -108,7 +108,8 @@ abstract type FDP_AbstractFeatureLayer{FD<:FDType} <: DUAL_AbstractFeatureLayer 
 #           3. Definition of parametric ArchGDAL vector data types            #
 ###############################################################################
 
-#! NEW GFTP_GeomFieldDefn
+#! NEW GFTP_GeomFieldDefn and GFTP_IGeomFieldDefnView
+#! Unsafe version disabled as there is no usage for Table struct
 # mutable struct GFTP_GeomFieldDefn{GFT} <: GFTP_AbstractGeomFieldDefn{GFT}
 #     ptr::GDAL.OGRGeomFieldDefnH
 #     ownedby::Union{Nothing,FDP_AbstractFeatureDefn}
@@ -131,7 +132,6 @@ abstract type FDP_AbstractFeatureLayer{FD<:FDType} <: DUAL_AbstractFeatureLayer 
 #     return nothing
 # end
 
-#! NEW GFTP_IGeomFieldDefnView
 mutable struct GFTP_IGeomFieldDefnView{GFT} <: GFTP_AbstractGeomFieldDefn{GFT}
     ptr::GDAL.OGRGeomFieldDefnH
     ownedby::Union{Nothing,FDP_AbstractFeatureDefn}
@@ -155,7 +155,8 @@ function destroy(gftp_igeomfielddefnview::GFTP_IGeomFieldDefnView)
     return nothing
 end
 
-#! NEW FTP_FieldDefn
+#! NEW FTP_FieldDefn and FTP_IFieldDefnView
+#! Unsafe version disabled as there is no usage for Table struct
 # mutable struct FTP_FieldDefn{FT} <: FTP_AbstractFieldDefn{FT}
 #     ptr::GDAL.OGRFieldDefnH
 #     ownedby::Union{Nothing,FDP_AbstractFeatureDefn}
@@ -175,7 +176,6 @@ end
 #     return nothing
 # end
 
-#! NEW FTP_IFieldDefnView
 mutable struct FTP_IFieldDefnView{FT} <: FTP_AbstractFieldDefn{FT}
     ptr::GDAL.OGRFieldDefnH
     ownedby::Union{Nothing,FDP_AbstractFeatureDefn}
@@ -197,6 +197,7 @@ function destroy(ftp_fielddefn::FTP_IFieldDefnView)
 end
 
 #! NEW FeatureDefn parameterized FeatureDefn and IFeatureDefnView
+#! Unsafe version disabled as there is no usage for Table struct
 # mutable struct FDP_FeatureDefn{FD} <: FDP_AbstractFeatureDefn{FD}
 #     ptr::GDAL.OGRFeatureDefnH
 #     ownedby::Union{Nothing,FDP_AbstractFeatureLayer{FD}}
@@ -236,7 +237,8 @@ function destroy(fdp_ifeaturedefnview::FDP_IFeatureDefnView)
     return nothing
 end
 
-#! NEW FeatureDefn parameterized Feature
+#! NEW FeatureDefn parameterized Feature and IFeature
+#! Unsafe version disabled as there is no usage for Table struct
 # mutable struct FDP_Feature{FD} <: FDP_AbstractFeature{FD}
 #     ptr::GDAL.OGRFeatureH
 #     ownedby::Union{Nothing,FDP_AbstractFeatureLayer}
@@ -256,7 +258,6 @@ function destroy(fdp_feature::FDP_AbstractFeature)
     return nothing
 end
 
-#! NEW FeatureDefn parameterized IFeature
 mutable struct FDP_IFeature{FD} <: FDP_AbstractFeature{FD}
     ptr::GDAL.OGRFeatureH
     ownedby::Union{Nothing,FDP_AbstractFeatureLayer}
@@ -271,7 +272,7 @@ mutable struct FDP_IFeature{FD} <: FDP_AbstractFeature{FD}
     end
 end
 
-#! NEW Geometry and IGeometry
+#! NEW Geometry and IGeometry => disabled since no performance gain identified yet
 # abstract type GP_AbstractGeometry{G<:GType} <: GeoInterface.AbstractGeometry end
 
 # function _inferGType(ptr::GDAL.OGRGeometryH = C_NULL)::Type{<:GType}
@@ -306,7 +307,8 @@ end
 #     end
 # end
 
-# #! NEW FeatureDefn parameterized FeatureLayer
+#! NEW FeatureDefn parameterized FeatureLayer and IFeatureLayer
+#! Unsafe version disabled as there is no usage for Table struct
 # mutable struct FDP_FeatureLayer{FD} <: FDP_AbstractFeatureLayer{FD}
 #     ptr::GDAL.OGRLayerH
 #     ownedby::AbstractDataset
@@ -321,7 +323,6 @@ end
 #     end
 # end
 
-#! NEW FeatureDefn parameterized IFeatureLayer
 mutable struct FDP_IFeatureLayer{FD} <: FDP_AbstractFeatureLayer{FD}
     ptr::GDAL.OGRLayerH
     ownedby::Union{Nothing,AbstractDataset}
@@ -662,6 +663,7 @@ end
 #     return missing
 # end
 
+#! getindex which steals the geometry from the feature
 function getindex!(row::FDP_AbstractFeature{FD}, i::Int) where {FD<:FDType}
     ng = ngeom(row)
     return if i <= ng
@@ -765,8 +767,9 @@ end
 #######################################################################
 # Tables.columns on FDP_AbstractFeatureLayer with generated functions #
 #######################################################################
-# - Feature to columns line function: FDPf2c
-# - (Tables.)columns function: FDPfillcolumns
+# - Feature to columns line function: FDPf2c and FDP2c! (geometry stealing)
+# - Feature layer to array of columns : FDPfillcolumns! with geometry stealing option
+# - Feature layer to NamedTuple: _getcols with geometry stealing option
 
 @generated function FDPf2c(
     fdp_feature::FDP_AbstractFeature{FD},
@@ -891,6 +894,10 @@ end
 #*#############################################################################
 #*                        Table's Tables.jl interface                         #
 #*#############################################################################
+# Usage of NamedTuples in Table struct brings native support of Tables.jl interface
+# Usage of NamedTuples prevents extremely wide tables with # of columns > 67K
+# which is due to Julia compiler limitation
+# Should a need arise for larger tables, Table struct would have to be modified
 
 Tables.istable(::Table) = true
 Tables.schema(table::Table) = Tables.schema(table.cols)
