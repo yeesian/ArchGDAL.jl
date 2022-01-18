@@ -139,7 +139,7 @@ readraster(s::String; kwargs...)::RasterDataset =
 
 function DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks
     subchunks = DiskArrays.eachchunk(getband(ds, 1))
-    return DiskArrays.GridChunks(ds, (subchunks.chunksize..., 1))
+    return DiskArrays.GridChunks(subchunks.chunks...,DiskArrays.RegularChunks(1,0,size(ds,3)))
 end
 
 DiskArrays.haschunks(::RasterDataset)::DiskArrays.Chunked = DiskArrays.Chunked()
