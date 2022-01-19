@@ -1,5 +1,5 @@
-import ArchGDAL, GDAL;
-const AG = ArchGDAL
+import GDAL
+import ArchGDAL as AG
 using Test
 
 @testset "test_gdalutilities_errors.jl" begin

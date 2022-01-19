@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_dataset.jl" begin
     @testset "Test methods for raster dataset" begin

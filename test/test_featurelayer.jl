@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_featurelayer.jl" begin
     @testset "Testing FeatureLayer Methods" begin

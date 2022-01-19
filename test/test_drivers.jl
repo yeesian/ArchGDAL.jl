@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_drivers.jl" begin
     @testset "Testing ConfigOptions" begin

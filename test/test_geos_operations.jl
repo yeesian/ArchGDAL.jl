@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_geos_operations.jl" begin
     function equivalent_to_wkt(geom::AG.Geometry, wkt::String)

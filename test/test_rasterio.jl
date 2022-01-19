@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_rasterio.jl" begin
     AG.read("ospy/data4/aster.img") do ds

@@ -1,8 +1,7 @@
 # adapted from http://pcjericks.github.io/py-gdalogr-cookbook/geometry.html
 using Test
 import GeoInterface
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_cookbook_geometry.jl" begin
     @testset "Create a Point" begin

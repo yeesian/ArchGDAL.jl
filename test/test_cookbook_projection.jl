@@ -1,7 +1,7 @@
 using Test
-import GeoInterface, GeoFormatTypes, ArchGDAL
-const AG = ArchGDAL
-const GFT = GeoFormatTypes
+import GeoInterface
+import ArchGDAL as AG
+import GeoFormatTypes as GFT
 
 @testset "test_cookbook_projection.jl" begin
     @testset "Reproject a Geometry" begin
