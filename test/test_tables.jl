@@ -556,10 +556,7 @@ using Tables
                 ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
-                        Union{
-                            Missing,
-                            AG.IGeometry{AG.wkbLineString},
-                        },
+                        Union{Missing,AG.IGeometry{AG.wkbLineString}},
                         Union{Missing,Int64},
                         String,
                     ),
@@ -615,10 +612,7 @@ using Tables
                 GeoJSON_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
-                        Union{
-                            Missing,
-                            AG.IGeometry{AG.wkbLineString},
-                        },
+                        Union{Missing,AG.IGeometry{AG.wkbLineString}},
                         Union{Missing,Int32},
                         String,
                     ),
