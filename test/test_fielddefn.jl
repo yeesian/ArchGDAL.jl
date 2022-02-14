@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_fielddefn.jl" begin
     @testset "Tests for field defn" begin
@@ -16,7 +15,7 @@ const AG = ArchGDAL;
             @test AG.getfieldtype(fd) == AG.OFTDate
             AG.settype!(fd, AG.OFTInteger)
             @test AG.getsubtype(fd) == AG.OFSTNone
-            @test AG.getfieldtype(fd) == ArchGDAL.OFTInteger
+            @test AG.getfieldtype(fd) == AG.OFTInteger
             AG.setsubtype!(fd, AG.OFSTInt16)
             @test AG.getsubtype(fd) == AG.OFSTInt16
             @test AG.getfieldtype(fd) == AG.OFSTInt16

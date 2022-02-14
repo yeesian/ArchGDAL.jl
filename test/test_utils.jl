@@ -1,7 +1,6 @@
 using Test
 import GDAL
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 "Test both that an ErrorException is thrown and that the message is as expected"
 function eval_ogrerr(err, expected_message)

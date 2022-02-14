@@ -1,7 +1,6 @@
 using Test
 using DiskArrays: eachchunk, haschunks, Chunked, GridChunks, readblock!
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_array.jl" begin
     @testset "RasterDataset Type" begin

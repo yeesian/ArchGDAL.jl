@@ -1,6 +1,5 @@
 using Test
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_styletable.jl" begin
     @testset "Testing StyleTable Methods" begin

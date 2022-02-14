@@ -1,7 +1,6 @@
 using Test
 using Statistics
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_ospy_examples.jl" begin
     """

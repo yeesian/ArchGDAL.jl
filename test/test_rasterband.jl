@@ -1,7 +1,6 @@
 using Test
 import GDAL
-import ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 
 @testset "test_rasterband.jl" begin
     @testset "Test methods for rasterband" begin

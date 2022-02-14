@@ -1,7 +1,6 @@
 using BenchmarkTools
 using ZipFile
-using ArchGDAL;
-const AG = ArchGDAL;
+import ArchGDAL as AG
 using Tables
 using Shapefile
 

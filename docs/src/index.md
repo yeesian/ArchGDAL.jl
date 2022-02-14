@@ -34,8 +34,7 @@ julia> using ArchGDAL
 
 In the documentation `AG` is often used as a shorthand for `ArchGDAL`. To use this shorthand you can use:
 ```julia
-using ArchGDAL
-const AG = ArchGDAL
+import ArchGDAL as AG
 ```
 
 ## Contents
