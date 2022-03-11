@@ -1,25 +1,34 @@
 import DiskArrays: AbstractDiskArray
 import Base.convert
 
-abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
-# needs to have a `ptr::GDAL.OGRGeometryH` attribute
-
 abstract type AbstractSpatialRef end
 # needs to have a `ptr::GDAL.OGRSpatialReferenceH` attribute
 
 abstract type AbstractDataset end
 # needs to have a `ptr::GDAL.GDALDatasetH` attribute
 
-abstract type AbstractFeatureDefn end
+abstract type DUAL_AbstractGeometry <: GeoInterface.AbstractGeometry end #! NEW abstract type supertype of AbstractGeometry and GP_AbstractGeometry
+abstract type AbstractGeometry <: DUAL_AbstractGeometry end
+# needs to have a `ptr::GDAL.OGRGeometryH` attribute
+
+abstract type DUAL_AbstractFeatureDefn end #! NEW abstract type supertype of AbstractFeatureDefn and FDP_AbstractFeatureDefn
+abstract type AbstractFeatureDefn <: DUAL_AbstractFeatureDefn end
 # needs to have a `ptr::GDAL.OGRFeatureDefnH` attribute
 
-abstract type AbstractFeatureLayer end
+abstract type DUAL_AbstractFeatureLayer end #! NEW abstract type supertype of AbstractFeatureLayer and FDP_AbstractFeatureLayer
+abstract type AbstractFeatureLayer <: DUAL_AbstractFeatureLayer end
 # needs to have a `ptr::GDAL.OGRLayerH` attribute
 
-abstract type AbstractFieldDefn end
+abstract type DUAL_AbstractFeature end #! NEW abstract type supertype of AbstractFeature and FDP_AbstractFeature
+abstract type AbstractFeature <: DUAL_AbstractFeature end #! NEW abstract type to group Feature and IFeature (if created)
+# needs to have a `ptr::GDAL.OGRFeatureH attribute
+
+abstract type DUAL_AbstractFieldDefn end #! NEW abstract type, supertype of AbstractFieldDefn and FTP_AbstractFieldDefn
+abstract type AbstractFieldDefn <: DUAL_AbstractFieldDefn end
 # needs to have a `ptr::GDAL.OGRFieldDefnH` attribute
 
-abstract type AbstractGeomFieldDefn end
+abstract type DUAL_AbstractGeomFieldDefn end #! NEW abstract type, supertype of AbstractGeomFieldDefn and GFTP_AbstractGeomFieldDefn
+abstract type AbstractGeomFieldDefn <: DUAL_AbstractGeomFieldDefn end
 # needs to have a `ptr::GDAL.OGRGeomFieldDefnH` attribute
 
 abstract type AbstractRasterBand{T} <: AbstractDiskArray{T,2} end
@@ -139,7 +148,7 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     end
 end
 
-mutable struct Feature
+mutable struct Feature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
 end
 
@@ -435,80 +444,16 @@ end
     OGRSTUInches::GDAL.OGRSTUInches,
 )
 
-@convert(
-    OGRwkbGeometryType::GDAL.OGRwkbGeometryType,
-    wkbUnknown::GDAL.wkbUnknown,
-    wkbPoint::GDAL.wkbPoint,
-    wkbLineString::GDAL.wkbLineString,
-    wkbPolygon::GDAL.wkbPolygon,
-    wkbMultiPoint::GDAL.wkbMultiPoint,
-    wkbMultiLineString::GDAL.wkbMultiLineString,
-    wkbMultiPolygon::GDAL.wkbMultiPolygon,
-    wkbGeometryCollection::GDAL.wkbGeometryCollection,
-    wkbCircularString::GDAL.wkbCircularString,
-    wkbCompoundCurve::GDAL.wkbCompoundCurve,
-    wkbCurvePolygon::GDAL.wkbCurvePolygon,
-    wkbMultiCurve::GDAL.wkbMultiCurve,
-    wkbMultiSurface::GDAL.wkbMultiSurface,
-    wkbCurve::GDAL.wkbCurve,
-    wkbSurface::GDAL.wkbSurface,
-    wkbPolyhedralSurface::GDAL.wkbPolyhedralSurface,
-    wkbTIN::GDAL.wkbTIN,
-    wkbTriangle::GDAL.wkbTriangle,
-    wkbNone::GDAL.wkbNone,
-    wkbLinearRing::GDAL.wkbLinearRing,
-    wkbCircularStringZ::GDAL.wkbCircularStringZ,
-    wkbCompoundCurveZ::GDAL.wkbCompoundCurveZ,
-    wkbCurvePolygonZ::GDAL.wkbCurvePolygonZ,
-    wkbMultiCurveZ::GDAL.wkbMultiCurveZ,
-    wkbMultiSurfaceZ::GDAL.wkbMultiSurfaceZ,
-    wkbCurveZ::GDAL.wkbCurveZ,
-    wkbSurfaceZ::GDAL.wkbSurfaceZ,
-    wkbPolyhedralSurfaceZ::GDAL.wkbPolyhedralSurfaceZ,
-    wkbTINZ::GDAL.wkbTINZ,
-    wkbTriangleZ::GDAL.wkbTriangleZ,
-    wkbPointM::GDAL.wkbPointM,
-    wkbLineStringM::GDAL.wkbLineStringM,
-    wkbPolygonM::GDAL.wkbPolygonM,
-    wkbMultiPointM::GDAL.wkbMultiPointM,
-    wkbMultiLineStringM::GDAL.wkbMultiLineStringM,
-    wkbMultiPolygonM::GDAL.wkbMultiPolygonM,
-    wkbGeometryCollectionM::GDAL.wkbGeometryCollectionM,
-    wkbCircularStringM::GDAL.wkbCircularStringM,
-    wkbCompoundCurveM::GDAL.wkbCompoundCurveM,
-    wkbCurvePolygonM::GDAL.wkbCurvePolygonM,
-    wkbMultiCurveM::GDAL.wkbMultiCurveM,
-    wkbMultiSurfaceM::GDAL.wkbMultiSurfaceM,
-    wkbCurveM::GDAL.wkbCurveM,
-    wkbSurfaceM::GDAL.wkbSurfaceM,
-    wkbPolyhedralSurfaceM::GDAL.wkbPolyhedralSurfaceM,
-    wkbTINM::GDAL.wkbTINM,
-    wkbTriangleM::GDAL.wkbTriangleM,
-    wkbPointZM::GDAL.wkbPointZM,
-    wkbLineStringZM::GDAL.wkbLineStringZM,
-    wkbPolygonZM::GDAL.wkbPolygonZM,
-    wkbMultiPointZM::GDAL.wkbMultiPointZM,
-    wkbMultiLineStringZM::GDAL.wkbMultiLineStringZM,
-    wkbMultiPolygonZM::GDAL.wkbMultiPolygonZM,
-    wkbGeometryCollectionZM::GDAL.wkbGeometryCollectionZM,
-    wkbCircularStringZM::GDAL.wkbCircularStringZM,
-    wkbCompoundCurveZM::GDAL.wkbCompoundCurveZM,
-    wkbCurvePolygonZM::GDAL.wkbCurvePolygonZM,
-    wkbMultiCurveZM::GDAL.wkbMultiCurveZM,
-    wkbMultiSurfaceZM::GDAL.wkbMultiSurfaceZM,
-    wkbCurveZM::GDAL.wkbCurveZM,
-    wkbSurfaceZM::GDAL.wkbSurfaceZM,
-    wkbPolyhedralSurfaceZM::GDAL.wkbPolyhedralSurfaceZM,
-    wkbTINZM::GDAL.wkbTINZM,
-    wkbTriangleZM::GDAL.wkbTriangleZM,
-    wkbPoint25D::GDAL.wkbPoint25D,
-    wkbLineString25D::GDAL.wkbLineString25D,
-    wkbPolygon25D::GDAL.wkbPolygon25D,
-    wkbMultiPoint25D::GDAL.wkbMultiPoint25D,
-    wkbMultiLineString25D::GDAL.wkbMultiLineString25D,
-    wkbMultiPolygon25D::GDAL.wkbMultiPolygon25D,
-    wkbGeometryCollection25D::GDAL.wkbGeometryCollection25D,
-)
+# Conversions below assume that both 
+# - OGRwkbGeometryType Enum instances and 
+# - GDAL.OGRwkbGeometryType CEnum.Cenum instances 
+# have same Integer assigned values
+function convert(::Type{OGRwkbGeometryType}, gogtinst::GDAL.OGRwkbGeometryType)
+    return OGRwkbGeometryType(Integer(gogtinst))
+end
+function convert(::Type{GDAL.OGRwkbGeometryType}, ogtinst::OGRwkbGeometryType)
+    return GDAL.OGRwkbGeometryType(Integer(ogtinst))
+end
 
 function basetype(gt::OGRwkbGeometryType)::OGRwkbGeometryType
     wkbGeomType = convert(GDAL.OGRwkbGeometryType, gt)

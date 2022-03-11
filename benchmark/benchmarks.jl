@@ -24,16 +24,20 @@ road_shapefile_file =
     joinpath(road_shapefile_dir, splitpath(road_shapefile_dir)[end] * ".shp")
 
 # Benchmarks
-SUITE["shapefile_to_table"]["frenchroads_with_GDAL.jl_via_vsizip"] =
-    @benchmarkable Tables.columns(
-        AG.getlayer(
-            AG.read("/vsizip/" * relpath($road_shapefile_ziparchive)), # relpath is a workaround in case there are spaces in local fullpath (incompatible with /vsizip usage) when benchmarkpkg is run locally
-            0,
-        ),
+SUITE["shapefile_to_table"]["frenchroads_ArchGDAL_vsizip"] =
+    @benchmarkable Tables.columntable(
+        AG.getlayer(AG.read("/vsizip/" * relpath($road_shapefile_ziparchive))), # relpath is a workaround in case there are spaces in local fullpath (incompatible with /vsizip usage) when benchmarkpkg is run locally
     )
-SUITE["shapefile_to_table"]["frenchroads_with_GDAL.jl"] =
-    @benchmarkable Tables.columns(AG.getlayer(AG.read($road_shapefile_file), 0))
-SUITE["shapefile_to_table"]["frenchroads_with_Shapefile.jl"] =
-    @benchmarkable begin
-        Tables.columns(Shapefile.Table($road_shapefile_file))
-    end
+SUITE["shapefile_to_table"]["frenchroads_ArchGDAL"] =
+    @benchmarkable Tables.columntable(
+        AG.getlayer(AG.read($road_shapefile_file), 0),
+    )
+SUITE["shapefile_to_table"]["frenchroads_ArchGDAL_new_Tables_interface_vsizip"] =
+    @benchmarkable Tables.columntable(
+        AG.Table(AG.read("/vsizip/" * relpath($road_shapefile_ziparchive))), # relpath is a workaround in case there are spaces in local fullpath (incompatible with /vsizip usage) when benchmarkpkg is run locally
+    )
+SUITE["shapefile_to_table"]["frenchroads_ArchGDAL_new_Tables_interface"] =
+    @benchmarkable Tables.columntable(AG.Table($road_shapefile_file))
+SUITE["shapefile_to_table"]["frenchroads_Shapefile"] = @benchmarkable begin
+    Tables.columntable(Shapefile.Table($road_shapefile_file))
+end

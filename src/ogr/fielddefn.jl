@@ -27,7 +27,7 @@ function setname!(fielddefn::FieldDefn, name::AbstractString)::FieldDefn
 end
 
 "Fetch the name of this field."
-getname(fielddefn::AbstractFieldDefn)::String =
+getname(fielddefn::DUAL_AbstractFieldDefn)::String =
     GDAL.ogr_fld_getnameref(fielddefn.ptr)
 
 "Fetch the type of this field."
@@ -349,11 +349,11 @@ function setname!(geomdefn::GeomFieldDefn, name::AbstractString)::GeomFieldDefn
 end
 
 "Fetch name of this field."
-getname(geomdefn::AbstractGeomFieldDefn)::String =
+getname(geomdefn::DUAL_AbstractGeomFieldDefn)::String =
     GDAL.ogr_gfld_getnameref(geomdefn.ptr)
 
 "Fetch geometry type of this field."
-gettype(geomdefn::AbstractGeomFieldDefn)::OGRwkbGeometryType =
+gettype(geomdefn::DUAL_AbstractGeomFieldDefn)::OGRwkbGeometryType =
     GDAL.ogr_gfld_gettype(geomdefn.ptr)
 
 "Set the geometry type of this field."

@@ -271,7 +271,7 @@ Fetch geometry field definition of the passed feature definition.
 an internal field definition object or `NULL` if invalid index. This object
 should not be modified or freed by the application.
 """
-getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0)::GeomFieldDefn =
+getgeomdefn(featuredefn::AbstractFeatureDefn, i::Integer = 0)::GeomFieldDefn =
     GeomFieldDefn(GDAL.ogr_fd_getgeomfielddefn(featuredefn.ptr, i))
 
 getgeomdefn(featuredefn::IFeatureDefnView, i::Integer = 0)::IGeomFieldDefnView =

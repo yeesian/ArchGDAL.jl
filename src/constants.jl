@@ -298,80 +298,88 @@ convert(GDAL.OGRwkbGeometryType, ArchGDAL.wkbUnknown)
 wkbUnknown::OGRwkbGeometryType = 0x00000000
 ```
 """
-@enum(
-    OGRwkbGeometryType,
-    wkbUnknown = 0,
-    wkbPoint = 1,
-    wkbLineString = 2,
-    wkbPolygon = 3,
-    wkbMultiPoint = 4,
-    wkbMultiLineString = 5,
-    wkbMultiPolygon = 6,
-    wkbGeometryCollection = 7,
-    wkbCircularString = 8,
-    wkbCompoundCurve = 9,
-    wkbCurvePolygon = 10,
-    wkbMultiCurve = 11,
-    wkbMultiSurface = 12,
-    wkbCurve = 13,
-    wkbSurface = 14,
-    wkbPolyhedralSurface = 15,
-    wkbTIN = 16,
-    wkbTriangle = 17,
-    wkbNone = 18,
-    wkbLinearRing = 19,
-    wkbCircularStringZ = 20,
-    wkbCompoundCurveZ = 21,
-    wkbCurvePolygonZ = 22,
-    wkbMultiCurveZ = 23,
-    wkbMultiSurfaceZ = 24,
-    wkbCurveZ = 25,
-    wkbSurfaceZ = 26,
-    wkbPolyhedralSurfaceZ = 27,
-    wkbTINZ = 28,
-    wkbTriangleZ = 29,
-    wkbPointM = 30,
-    wkbLineStringM = 31,
-    wkbPolygonM = 32,
-    wkbMultiPointM = 33,
-    wkbMultiLineStringM = 34,
-    wkbMultiPolygonM = 35,
-    wkbGeometryCollectionM = 36,
-    wkbCircularStringM = 37,
-    wkbCompoundCurveM = 38,
-    wkbCurvePolygonM = 39,
-    wkbMultiCurveM = 40,
-    wkbMultiSurfaceM = 41,
-    wkbCurveM = 42,
-    wkbSurfaceM = 43,
-    wkbPolyhedralSurfaceM = 44,
-    wkbTINM = 45,
-    wkbTriangleM = 46,
-    wkbPointZM = 47,
-    wkbLineStringZM = 48,
-    wkbPolygonZM = 49,
-    wkbMultiPointZM = 50,
-    wkbMultiLineStringZM = 51,
-    wkbMultiPolygonZM = 52,
-    wkbGeometryCollectionZM = 53,
-    wkbCircularStringZM = 54,
-    wkbCompoundCurveZM = 55,
-    wkbCurvePolygonZM = 56,
-    wkbMultiCurveZM = 57,
-    wkbMultiSurfaceZM = 58,
-    wkbCurveZM = 59,
-    wkbSurfaceZM = 60,
-    wkbPolyhedralSurfaceZM = 61,
-    wkbTINZM = 62,
-    wkbTriangleZM = 63,
-    wkbPoint25D = 64,
-    wkbLineString25D = 65,
-    wkbPolygon25D = 66,
-    wkbMultiPoint25D = 67,
-    wkbMultiLineString25D = 68,
-    wkbMultiPolygon25D = 69,
-    wkbGeometryCollection25D = 70,
-)
+@enum OGRwkbGeometryType::UInt32 begin
+    wkbUnknown = 0x00000000
+    wkbPoint = 0x00000001
+    wkbLineString = 0x00000002
+    wkbPolygon = 0x00000003
+    wkbMultiPoint = 0x00000004
+    wkbMultiLineString = 0x00000005
+    wkbMultiPolygon = 0x00000006
+    wkbGeometryCollection = 0x00000007
+    wkbCircularString = 0x00000008
+    wkbCompoundCurve = 0x00000009
+    wkbCurvePolygon = 0x0000000a
+    wkbMultiCurve = 0x0000000b
+    wkbMultiSurface = 0x0000000c
+    wkbCurve = 0x0000000d
+    wkbSurface = 0x0000000e
+    wkbPolyhedralSurface = 0x0000000f
+    wkbTIN = 0x00000010
+    wkbTriangle = 0x00000011
+    wkbNone = 0x00000064
+    wkbLinearRing = 0x00000065
+    wkbCircularStringZ = 0x000003f0
+    wkbCompoundCurveZ = 0x000003f1
+    wkbCurvePolygonZ = 0x000003f2
+    wkbMultiCurveZ = 0x000003f3
+    wkbMultiSurfaceZ = 0x000003f4
+    wkbCurveZ = 0x000003f5
+    wkbSurfaceZ = 0x000003f6
+    wkbPolyhedralSurfaceZ = 0x000003f7
+    wkbTINZ = 0x000003f8
+    wkbTriangleZ = 0x000003f9
+    wkbPointM = 0x000007d1
+    wkbLineStringM = 0x000007d2
+    wkbPolygonM = 0x000007d3
+    wkbMultiPointM = 0x000007d4
+    wkbMultiLineStringM = 0x000007d5
+    wkbMultiPolygonM = 0x000007d6
+    wkbGeometryCollectionM = 0x000007d7
+    wkbCircularStringM = 0x000007d8
+    wkbCompoundCurveM = 0x000007d9
+    wkbCurvePolygonM = 0x000007da
+    wkbMultiCurveM = 0x000007db
+    wkbMultiSurfaceM = 0x000007dc
+    wkbCurveM = 0x000007dd
+    wkbSurfaceM = 0x000007de
+    wkbPolyhedralSurfaceM = 0x000007df
+    wkbTINM = 0x000007e0
+    wkbTriangleM = 0x000007e1
+    wkbPointZM = 0x00000bb9
+    wkbLineStringZM = 0x00000bba
+    wkbPolygonZM = 0x00000bbb
+    wkbMultiPointZM = 0x00000bbc
+    wkbMultiLineStringZM = 0x00000bbd
+    wkbMultiPolygonZM = 0x00000bbe
+    wkbGeometryCollectionZM = 0x00000bbf
+    wkbCircularStringZM = 0x00000bc0
+    wkbCompoundCurveZM = 0x00000bc1
+    wkbCurvePolygonZM = 0x00000bc2
+    wkbMultiCurveZM = 0x00000bc3
+    wkbMultiSurfaceZM = 0x00000bc4
+    wkbCurveZM = 0x00000bc5
+    wkbSurfaceZM = 0x00000bc6
+    wkbPolyhedralSurfaceZM = 0x00000bc7
+    wkbTINZM = 0x00000bc8
+    wkbTriangleZM = 0x00000bc9
+    wkbPoint25D = 0x80000001
+    wkbLineString25D = 0x80000002
+    wkbPolygon25D = 0x80000003
+    wkbMultiPoint25D = 0x80000004
+    wkbMultiLineString25D = 0x80000005
+    wkbMultiPolygon25D = 0x80000006
+    wkbGeometryCollection25D = 0x80000007
+end
+@assert begin
+    all(
+        string.(instances(OGRwkbGeometryType)) .==
+        string.(instances(GDAL.OGRwkbGeometryType)),
+    ) && all(
+        Integer.(instances(OGRwkbGeometryType)) .==
+        Integer.(instances(GDAL.OGRwkbGeometryType)),
+    )
+end
 
 """
 The value of `OGRwkbByteOrder` could be different from `GDAL.OGRwkbByteOrder`.

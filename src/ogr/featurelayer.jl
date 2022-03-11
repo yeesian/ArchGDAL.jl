@@ -1,4 +1,3 @@
-
 function destroy(layer::AbstractFeatureLayer)::Nothing
     layer.ptr = C_NULL
     return nothing
@@ -110,14 +109,15 @@ end
 
 Return the layer name.
 """
-getname(layer::AbstractFeatureLayer)::String = GDAL.ogr_l_getname(layer.ptr)
+getname(layer::DUAL_AbstractFeatureLayer)::String =
+    GDAL.ogr_l_getname(layer.ptr)
 
 """
     getgeomtype(layer::AbstractFeatureLayer)
 
 Return the layer geometry type.
 """
-getgeomtype(layer::AbstractFeatureLayer)::OGRwkbGeometryType =
+getgeomtype(layer::DUAL_AbstractFeatureLayer)::OGRwkbGeometryType =
     GDAL.ogr_l_getgeomtype(layer.ptr)
 
 """
@@ -355,7 +355,7 @@ Reset feature reading to start on the first feature.
 
 This affects `nextfeature()`.
 """
-function resetreading!(layer::L)::L where {L<:AbstractFeatureLayer}
+function resetreading!(layer::L)::L where {L<:DUAL_AbstractFeatureLayer}
     GDAL.ogr_l_resetreading(layer.ptr)
     return layer
 end
@@ -585,7 +585,7 @@ Fetch the feature count in this layer, or `-1` if the count is not known.
 * `force`: flag indicating whether the count should be computed even if it is
     expensive. (`false` by default.)
 """
-nfeature(layer::AbstractFeatureLayer, force::Bool = false)::Integer =
+nfeature(layer::DUAL_AbstractFeatureLayer, force::Bool = false)::Integer =
     GDAL.ogr_l_getfeaturecount(layer.ptr, force)
 
 """

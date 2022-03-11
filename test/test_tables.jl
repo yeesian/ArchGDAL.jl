@@ -38,11 +38,11 @@ using Tables
                   (:point, :linestring, :id, :zoom, :location)
             @test ismissing(Tables.getcolumn(features[2], -5))
             @test ismissing(Tables.getcolumn(features[2], 0))
-            @test Tables.getcolumn(features[1], 1) == "5.1"
-            @test Tables.getcolumn(features[1], 2) == "1.0"
-            @test Tables.getcolumn(features[1], 3) == "Mumbai"
-            @test AG.toWKT(Tables.getcolumn(features[1], 4)) == "POINT (30 10)"
-            @test AG.toWKT(Tables.getcolumn(features[1], 5)) ==
+            @test Tables.getcolumn(features[1], 3) == "5.1"
+            @test Tables.getcolumn(features[1], 4) == "1.0"
+            @test Tables.getcolumn(features[1], 5) == "Mumbai"
+            @test AG.toWKT(Tables.getcolumn(features[1], 1)) == "POINT (30 10)"
+            @test AG.toWKT(Tables.getcolumn(features[1], 2)) ==
                   "LINESTRING (30 10,10 30,40 40)"
             @test Tables.getcolumn(features[1], :id) == "5.1"
             @test Tables.getcolumn(features[1], :zoom) == "1.0"
@@ -57,11 +57,11 @@ using Tables
                   (:point, :linestring, :id, :zoom, :location)
             @test ismissing(Tables.getcolumn(features[2], -5))
             @test ismissing(Tables.getcolumn(features[2], 0))
-            @test Tables.getcolumn(features[2], 1) == "5.2"
-            @test Tables.getcolumn(features[2], 2) == "2.0"
-            @test Tables.getcolumn(features[2], 3) == "New Delhi"
-            @test AG.toWKT(Tables.getcolumn(features[2], 4)) == "POINT (35 15)"
-            @test AG.toWKT(Tables.getcolumn(features[2], 5)) ==
+            @test Tables.getcolumn(features[2], 3) == "5.2"
+            @test Tables.getcolumn(features[2], 4) == "2.0"
+            @test Tables.getcolumn(features[2], 5) == "New Delhi"
+            @test AG.toWKT(Tables.getcolumn(features[2], 1)) == "POINT (35 15)"
+            @test AG.toWKT(Tables.getcolumn(features[2], 2)) ==
                   "LINESTRING (35 15,15 35,45 45)"
             @test Tables.getcolumn(features[2], :id) == "5.2"
             @test Tables.getcolumn(features[2], :zoom) == "2.0"
