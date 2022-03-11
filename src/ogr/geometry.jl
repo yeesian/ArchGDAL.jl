@@ -1000,7 +1000,7 @@ getz(geom::AbstractGeometry, i::Integer)::Float64 = GDAL.ogr_g_getz(geom.ptr, i)
 Fetch a point in line string or a point geometry, at index i.
 
 ### Parameters
-* `i`: the vertex to fetch, from 0 to getNumPoints()-1, zero for a point.
+* `i`: the vertex to fetch, from 0 to ngeom()-1, zero for a point.
 """
 getpoint(geom::AbstractGeometry, i::Integer)::Tuple{Float64,Float64,Float64} =
     getpoint!(geom, i, Ref{Float64}(), Ref{Float64}(), Ref{Float64}())
@@ -1145,7 +1145,7 @@ For a polygon, `getgeom(polygon,i)` returns the exterior ring if
 
 ### Parameters
 * `geom`: the geometry container from which to get a geometry from.
-* `i`: index of the geometry to fetch, between 0 and getNumGeometries() - 1.
+* `i`: index of the geometry to fetch, between 0 and ngeom() - 1.
 """
 function getgeom(geom::AbstractGeometry, i::Integer)::IGeometry
     # NOTE(yeesian): GDAL.ogr_g_getgeometryref(geom, i) returns an handle to a
