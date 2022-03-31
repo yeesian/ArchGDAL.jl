@@ -232,6 +232,16 @@ import ArchGDAL as AG
                 AG.setsubtype!(fielddefn, AG.OFSTFloat32)
                 return AG.addfielddefn!(layer, fielddefn)
             end
+            AG.createfielddefn("float16subfield", AG.OFTReal) do fielddefn
+                AG.setsubtype!(fielddefn, AG.OFSTFloat32)
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("uint1616subfield", AG.OFTInteger) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("uint32subfield", AG.OFTInteger64) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
             AG.createfeature(layer) do feature
                 AG.setfield!(feature, 0, Int64(1))
                 AG.setfield!(feature, 1, Float64(1.0))
@@ -247,6 +257,9 @@ import ArchGDAL as AG
                 AG.setfield!(feature, 11, false)
                 AG.setfield!(feature, 12, Int8(1))
                 AG.setfield!(feature, 13, Float32(1.0))
+                AG.setfield!(feature, 14, Float16(1.0))
+                AG.setfield!(feature, 15, UInt16(1.0))
+                AG.setfield!(feature, 16, UInt32(1.0))
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
@@ -259,10 +272,12 @@ import ArchGDAL as AG
                 AG.getgeom(feature, 0) do geom
                     @test sprint(print, geom) == "NULL Geometry"
                 end
-
                 @test AG.getfield(feature, 11) === false
                 @test AG.getfield(feature, 12) === Int16(1) # Widened from Int8
                 @test AG.getfield(feature, 13) === Float32(1.0)
+                @test AG.getfield(feature, 14) === Float32(1.0) # Widened from Float16
+                @test AG.getfield(feature, 15) === Int32(1) # Widened from UInt16
+                @test AG.getfield(feature, 16) === Int64(1) # Widened from UInt32
 
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)
