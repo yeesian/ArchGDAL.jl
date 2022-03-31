@@ -220,7 +220,19 @@ import ArchGDAL as AG
             AG.createfielddefn("int32field", AG.OFTInteger) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
-            AG.createfielddefn("float32field", AG.OFTReal) do fielddefn
+            AG.createfielddefn("float64field", AG.OFTReal) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("booleansubfield", AG.OFTInteger) do fielddefn
+                AG.setsubtype!(fielddefn, AG.OFSTBoolean)
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("int16subfield", AG.OFTInteger) do fielddefn
+                AG.setsubtype!(fielddefn, AG.OFSTInt16)
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("float32subfield", AG.OFTReal) do fielddefn
+                AG.setsubtype!(fielddefn, AG.OFSTFloat32)
                 return AG.addfielddefn!(layer, fielddefn)
             end
             AG.createfeature(layer) do feature
@@ -235,7 +247,10 @@ import ArchGDAL as AG
                 AG.setfield!(feature, 8, true)
                 AG.setfield!(feature, 9, Int16(1))
                 AG.setfield!(feature, 10, Int32(1))
-                AG.setfield!(feature, 11, Float32(1.0))
+                AG.setfield!(feature, 11, 1.0)
+                AG.setfield!(feature, 12, false)
+                AG.setfield!(feature, 13, Int8(1))
+                AG.setfield!(feature, 14, Float32(1.0))
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
@@ -248,6 +263,10 @@ import ArchGDAL as AG
                 AG.getgeom(feature, 0) do geom
                     @test sprint(print, geom) == "NULL Geometry"
                 end
+
+                @test AG.getfield(feature, 12) === false
+                @test AG.getfield(feature, 13) === Int16(1) # Widened from Int8
+                @test AG.getfield(feature, 14) === Float32(1.0)
 
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)

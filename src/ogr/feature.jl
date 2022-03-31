@@ -219,6 +219,30 @@ end
 # end
 
 """
+    asbool(feature::Feature, i::Integer)
+
+Fetch field value as a boolean
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
+"""
+asbool(feature::Feature, i::Integer)::Bool =
+    convert(Bool, GDAL.ogr_f_getfieldasinteger(feature.ptr, i))
+
+"""
+    asint16(feature::Feature, i::Integer)
+
+Fetch field value as integer 16 bit.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
+"""
+asint16(feature::Feature, i::Integer)::Int16 =
+    convert(Int16, GDAL.ogr_f_getfieldasinteger(feature.ptr, i))
+
+"""
     asint(feature::Feature, i::Integer)
 
 Fetch field value as integer.
@@ -241,6 +265,18 @@ Fetch field value as integer 64 bit.
 """
 asint64(feature::Feature, i::Integer)::Int64 =
     GDAL.ogr_f_getfieldasinteger64(feature.ptr, i)
+
+"""
+assingle(feature::Feature, i::Integer)
+
+Fetch field value as a single.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
+"""
+assingle(feature::Feature, i::Integer)::Float32 =
+    convert(Float32, GDAL.ogr_f_getfieldasdouble(feature.ptr, i))
 
 """
     asdouble(feature::Feature, i::Integer)
@@ -453,9 +489,9 @@ const _FETCHFIELD = Dict{Union{OGRFieldType,OGRFieldSubType},Function}(
     OFTDateTime => asdatetime,
     OFTInteger64 => asint64,
     OFTInteger64List => asint64list,
-    OFSTBoolean => asint,
-    OFSTInt16 => asint,
-    OFSTFloat32 => asdouble,
+    OFSTBoolean => asbool,
+    OFSTInt16 => asint16,
+    OFSTFloat32 => assingle,
 )
 
 """

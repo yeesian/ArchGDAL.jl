@@ -332,8 +332,8 @@ end
 
 @convert(
     OGRFieldSubType::DataType,
-    OFSTBoolean::Bool,
     OFSTBoolean::Vector{Bool},
+    OFSTBoolean::Bool,  # default type comes last
     OFSTInt16::UInt8,
     OFSTInt16::Int8,
     OFSTInt16::Vector{Int8},

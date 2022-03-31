@@ -51,15 +51,26 @@ import GeoFormatTypes as GFT
     end
 
     @testset "type conversions" begin
-        @test convert(AG.OGRFieldType, Int32) == AG.OFTInteger
-        @test convert(AG.OGRFieldType, Int16) == AG.OFTInteger
         @test convert(AG.OGRFieldType, Bool) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, UInt8) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, Int8) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, UInt16) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, Int16) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, UInt32) == AG.OFTInteger64
+        @test convert(AG.OGRFieldType, Int32) == AG.OFTInteger
+        @test convert(AG.OGRFieldType, Int64) == AG.OFTInteger64
 
+        @test convert(AG.OGRFieldType, Float16) == AG.OFTReal
         @test convert(AG.OGRFieldType, Float32) == AG.OFTReal
         @test convert(AG.OGRFieldType, Float64) == AG.OFTReal
 
         # Reverse conversion should result in default type, not subtype
+        @test convert(DataType, AG.OFSTBoolean) == Bool
+        @test convert(DataType, AG.OFSTInt16) == Int16
         @test convert(DataType, AG.OFTInteger) == Int32
+        @test convert(DataType, AG.OFTInteger64) == Int64
+        @test convert(DataType, AG.OFSTFloat32) == Float32
         @test convert(DataType, AG.OFTReal) == Float64
+        @test convert(DataType, AG.OFSTNone) == Nothing
     end
 end
