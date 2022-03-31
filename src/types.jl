@@ -4,6 +4,9 @@ import Base.convert
 abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
 # needs to have a `ptr::GDAL.OGRGeometryH` attribute
 
+abstract type AbstractPreparedGeometry <: AbstractGeometry end
+# needs to have a `ptr::GDAL.OGRPreparedGeometryH` attribute
+
 abstract type AbstractSpatialRef end
 # needs to have a `ptr::GDAL.OGRSpatialReferenceH` attribute
 
@@ -230,6 +233,20 @@ mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry
     end
 end
 _geomtype(::IGeometry{T}) where {T} = T
+
+mutable struct PreparedGeometry <: AbstractPreparedGeometry
+    ptr::GDAL.OGRPreparedGeometryH
+end
+
+mutable struct IPreparedGeometry <: AbstractPreparedGeometry
+    ptr::GDAL.OGRPreparedGeometryH
+
+    function IPreparedGeometry(ptr::GDAL.OGRPreparedGeometryH)
+        geom = new(ptr)
+        finalizer(destroy, geom)
+        return geom
+    end
+end
 
 mutable struct ColorTable
     ptr::GDAL.GDALColorTableH

@@ -87,6 +87,18 @@ function destroy(geom::AbstractGeometry)::Nothing
 end
 
 """
+Destroy prepared geometry object.
+
+Equivalent to invoking delete on a prepared geometry, but it guaranteed to take place
+within the context of the GDAL/OGR heap.
+"""
+function destroy(geom::AbstractPreparedGeometry)::Nothing
+    GDAL.ogrdestroypreparedgeometry(geom.ptr)
+    geom.ptr = C_NULL
+    return nothing
+end
+
+"""
     clone(geom::AbstractGeometry)
 
 Returns a copy of the geometry with the original spatial reference system.
@@ -120,6 +132,18 @@ creategeom(geomtype::OGRwkbGeometryType)::IGeometry =
 
 unsafe_creategeom(geomtype::OGRwkbGeometryType)::Geometry =
     Geometry(GDAL.ogr_g_creategeometry(geomtype))
+
+"""
+    preparegeom(geom::AbstractGeometry)
+
+Create an prepared geometry of a geometry. This can speed up operations which interact
+with the geometry multiple times, by storing caches of calculated geometry information.
+"""
+preparegeom(geom::AbstractGeometry)::IPreparedGeometry =
+    IPreparedGeometry(GDAL.ogrcreatepreparedgeometry(geom.ptr))
+
+unsafe_preparegeom(geom::AbstractGeometry)::PreparedGeometry =
+    PreparedGeometry(GDAL.ogrcreatepreparedgeometry(geom.ptr))
 
 """
     forceto(geom::AbstractGeometry, targettype::OGRwkbGeometryType, [options])
@@ -608,6 +632,9 @@ boxes) of the two geometries overlap.
 intersects(g1::AbstractGeometry, g2::AbstractGeometry)::Bool =
     Bool(GDAL.ogr_g_intersects(g1.ptr, g2.ptr))
 
+intersects(g1::AbstractPreparedGeometry, g2::AbstractGeometry)::Bool =
+    Bool(GDAL.ogrpreparedgeometryintersects(g1.ptr, g2.ptr))
+
 """
     equals(g1::AbstractGeometry, g2::AbstractGeometry)
 
@@ -655,6 +682,9 @@ Returns `true` if g1 contains g2.
 """
 contains(g1::AbstractGeometry, g2::AbstractGeometry)::Bool =
     Bool(GDAL.ogr_g_contains(g1.ptr, g2.ptr))
+
+contains(g1::AbstractPreparedGeometry, g2::AbstractGeometry)::Bool =
+    Bool(GDAL.ogrpreparedgeometrycontains(g1.ptr, g2.ptr))
 
 """
     overlaps(g1::AbstractGeometry, g2::AbstractGeometry)
