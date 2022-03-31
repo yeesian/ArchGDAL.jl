@@ -294,11 +294,20 @@ end
 @convert(
     OGRFieldType::DataType,
     OFTInteger::Bool,
+    OFTInteger::UInt8,
+    OFTInteger::Int8,
+    OFTInteger::UInt16,
     OFTInteger::Int16,
     OFTInteger::Int32,  # default type comes last
-    OFTIntegerList::Vector{Int32},
+    OFTIntegerList::Vector{Int8},
+    OFTIntegerList::Vector{Int16},
+    OFTIntegerList::Vector{UInt16},
+    OFTIntegerList::Vector{Int32},  # default type comes last
+    OFTReal::Float16,
     OFTReal::Float32,
     OFTReal::Float64,  # default type comes last
+    OFTRealList::Vector{Float16},
+    OFTRealList::Vector{Float32},
     OFTRealList::Vector{Float64},
     OFTString::String,
     OFTStringList::Vector{String},
@@ -306,7 +315,9 @@ end
     OFTDate::Dates.Date,
     OFTTime::Dates.Time,
     OFTDateTime::Dates.DateTime,
-    OFTInteger64::Int64,
+    OFTInteger64::UInt32,
+    OFTInteger64::Int64,  # default type comes last
+    OFTInteger64List::Vector{UInt32},
     OFTInteger64List::Vector{Int64},
 )
 
@@ -321,11 +332,35 @@ end
 
 @convert(
     OGRFieldSubType::DataType,
-    OFSTNone::Nothing,
     OFSTBoolean::Bool,
-    OFSTInt16::Int16,
-    OFSTFloat32::Float32,
-    OFSTJSON::String,
+    OFSTBoolean::Vector{Bool},
+    OFSTInt16::UInt8,
+    OFSTInt16::Int8,
+    OFSTInt16::Vector{Int8},
+    OFSTInt16::Vector{Int16},
+    OFSTInt16::Int16, # default type comes last
+    OFSTFloat32::Float16,
+    OFSTFloat32::Vector{Float16},
+    OFSTFloat32::Vector{Float32},
+    OFSTFloat32::Float32, # default type comes last
+    OFSTNone::UInt16,
+    OFSTNone::Vector{UInt16},
+    OFSTNone::Int32,
+    OFSTNone::Vector{Int32},
+    OFSTNone::Float64,
+    OFSTNone::Vector{Float64},
+    OFSTNone::String,
+    OFSTNone::Vector{String},
+    OFSTNone::Vector{UInt8},
+    OFSTNone::Dates.Date,
+    OFSTNone::Dates.Time,
+    OFSTNone::Dates.DateTime,
+    OFSTNone::UInt32,
+    OFSTNone::Vector{UInt32},
+    OFSTNone::Int64,
+    OFSTNone::Vector{Int64},
+    # Lacking OFSTUUID and OFSTJSON defined in GDAL ≥ v"3.3"
+    OFSTNone::Nothing, # default type comes last
 )
 
 @convert(

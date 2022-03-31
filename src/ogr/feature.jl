@@ -440,7 +440,7 @@ end
 
 getfield(feature::Feature, i::Nothing)::Missing = missing
 
-const _FETCHFIELD = Dict{OGRFieldType,Function}(
+const _FETCHFIELD = Dict{Union{OGRFieldType,OGRFieldSubType},Function}(
     OFTInteger => asint,
     OFTIntegerList => asintlist,
     OFTReal => asdouble,
@@ -453,6 +453,9 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTDateTime => asdatetime,
     OFTInteger64 => asint64,
     OFTInteger64List => asint64list,
+    OFSTBoolean => asint,
+    OFSTInt16 => asint,
+    OFSTFloat32 => asdouble,
 )
 
 """
@@ -533,8 +536,18 @@ function setfield!(feature::Feature, i::Integer, value::Int32)::Feature
     return feature
 end
 
+function setfield!(feature::Feature, i::Integer, value::UInt16)
+    GDAL.ogr_f_setfieldinteger(feature.ptr, i, Int32(value))
+    return feature
+end
+
 function setfield!(feature::Feature, i::Integer, value::Int16)::Feature
     GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
+    return feature
+end
+
+function setfield!(feature::Feature, i::Integer, value::Union{UInt8,Int8})
+    GDAL.ogr_f_setfieldinteger(feature.ptr, i, Int16(value))
     return feature
 end
 
@@ -548,8 +561,18 @@ function setfield!(feature::Feature, i::Integer, value::Int64)::Feature
     return feature
 end
 
+function setfield!(feature::Feature, i::Integer, value::UInt32)
+    GDAL.ogr_f_setfieldinteger64(feature.ptr, i, Int64(value))
+    return feature
+end
+
 function setfield!(feature::Feature, i::Integer, value::Float32)::Feature
     GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
+    return feature
+end
+
+function setfield!(feature::Feature, i::Integer, value::Float16)::Feature
+    GDAL.ogr_f_setfielddouble(feature.ptr, i, Float32(value))
     return feature
 end
 
