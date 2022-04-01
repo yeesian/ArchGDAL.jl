@@ -567,52 +567,29 @@ function setfield!(feature::Feature, i::Integer, value::Missing)::Feature
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Int32)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Union{Bool,UInt8,Int8,UInt16,Int16,Int32},
+)::Feature
     GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::UInt16)
-    GDAL.ogr_f_setfieldinteger(feature.ptr, i, Int32(value))
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Int16)::Feature
-    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Union{UInt8,Int8})
-    GDAL.ogr_f_setfieldinteger(feature.ptr, i, Int16(value))
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Bool)::Feature
-    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Int64)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Union{UInt32,Int64},
+)::Feature
     GDAL.ogr_f_setfieldinteger64(feature.ptr, i, value)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::UInt32)
-    GDAL.ogr_f_setfieldinteger64(feature.ptr, i, Int64(value))
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Float32)::Feature
-    GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Float16)::Feature
-    GDAL.ogr_f_setfielddouble(feature.ptr, i, Float32(value))
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Float64)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Union{Float16,Float32,Float64},
+)::Feature
     GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
     return feature
 end
