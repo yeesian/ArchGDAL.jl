@@ -164,6 +164,15 @@ The following predicates return a `Bool`.
 * [`ArchGDAL.contains(g1, g2)`](@ref)
 * [`ArchGDAL.overlaps(g1, g2)`](@ref)
 
+### Prepared geometry
+When repeatedly calling [`ArchGDAL.intersects(g1, g2)`](@ref) and [`ArchGDAL.contains(g1, g2)`](@ref) on the same
+geometry, for example, when intersecting 50 points with a 100 polygons, it is possible to increase performance
+by caching required--otherwise repeatedly calculated--information on geometries.
+You can do this by *preparing* a geometry by calling [`ArchGDAL.preparegeom(geom)`](@ref) and using the
+resulting prepared geometry as the first argument for [`ArchGDAL.intersects(g1, g2)`](@ref) or [`ArchGDAL.contains(g1, g2)`](@ref).
+
+If you use a custom GDAL installation, you can check whether it supports prepared geometries by calling [`ArchGDAL.has_preparedgeom_support()`](@ref).
+
 ### Immutable Operations
 The following methods do not mutate the input geomteries `g1` and `g2`.
 

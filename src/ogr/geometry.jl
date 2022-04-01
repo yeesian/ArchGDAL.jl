@@ -134,6 +134,13 @@ unsafe_creategeom(geomtype::OGRwkbGeometryType)::Geometry =
     Geometry(GDAL.ogr_g_creategeometry(geomtype))
 
 """
+    haspreparedgeomsupport()
+
+Check whether the current GDAL instance has support for prepared geometries.
+"""
+has_preparedgeom_support() = Bool(GDAL.ogrhaspreparedgeometrysupport())
+
+"""
     preparegeom(geom::AbstractGeometry)
 
 Create an prepared geometry of a geometry. This can speed up operations which interact
