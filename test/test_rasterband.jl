@@ -117,7 +117,7 @@ import ArchGDAL as AG
                 AG.getoverview(destband, 0) do overview
                     return AG.regenerateoverviews!(
                         destband,
-                        [overview, AG.getoverview(destband, 2)],
+                        ArchGDAL.AbstractRasterBand{UInt8}[overview, AG.getoverview(destband, 2)],
                     )
                 end
 
