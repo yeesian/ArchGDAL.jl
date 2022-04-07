@@ -219,6 +219,30 @@ end
 # end
 
 """
+    asbool(feature::Feature, i::Integer)
+
+Fetch field value as a boolean
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
+"""
+asbool(feature::Feature, i::Integer)::Bool =
+    convert(Bool, GDAL.ogr_f_getfieldasinteger(feature.ptr, i))
+
+"""
+    asint16(feature::Feature, i::Integer)
+
+Fetch field value as integer 16 bit.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
+"""
+asint16(feature::Feature, i::Integer)::Int16 =
+    convert(Int16, GDAL.ogr_f_getfieldasinteger(feature.ptr, i))
+
+"""
     asint(feature::Feature, i::Integer)
 
 Fetch field value as integer.
@@ -241,6 +265,18 @@ Fetch field value as integer 64 bit.
 """
 asint64(feature::Feature, i::Integer)::Int64 =
     GDAL.ogr_f_getfieldasinteger64(feature.ptr, i)
+
+"""
+assingle(feature::Feature, i::Integer)
+
+Fetch field value as a single.
+
+### Parameters
+* `feature`: the feature that owned the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
+"""
+assingle(feature::Feature, i::Integer)::Float32 =
+    convert(Float32, GDAL.ogr_f_getfieldasdouble(feature.ptr, i))
 
 """
     asdouble(feature::Feature, i::Integer)
@@ -440,7 +476,7 @@ end
 
 getfield(feature::Feature, i::Nothing)::Missing = missing
 
-const _FETCHFIELD = Dict{OGRFieldType,Function}(
+const _FETCHFIELD = Dict{Union{OGRFieldType,OGRFieldSubType},Function}(
     OFTInteger => asint,
     OFTIntegerList => asintlist,
     OFTReal => asdouble,
@@ -453,6 +489,9 @@ const _FETCHFIELD = Dict{OGRFieldType,Function}(
     OFTDateTime => asdatetime,
     OFTInteger64 => asint64,
     OFTInteger64List => asint64list,
+    OFSTBoolean => asbool,
+    OFSTInt16 => asint16,
+    OFSTFloat32 => assingle,
 )
 
 """
@@ -528,32 +567,29 @@ function setfield!(feature::Feature, i::Integer, value::Missing)::Feature
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Int32)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Union{Bool,UInt8,Int8,UInt16,Int16,Int32},
+)::Feature
     GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Int16)::Feature
-    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Bool)::Feature
-    GDAL.ogr_f_setfieldinteger(feature.ptr, i, value)
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Int64)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Union{UInt32,Int64},
+)::Feature
     GDAL.ogr_f_setfieldinteger64(feature.ptr, i, value)
     return feature
 end
 
-function setfield!(feature::Feature, i::Integer, value::Float32)::Feature
-    GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
-    return feature
-end
-
-function setfield!(feature::Feature, i::Integer, value::Float64)::Feature
+function setfield!(
+    feature::Feature,
+    i::Integer,
+    value::Union{Float16,Float32,Float64},
+)::Feature
     GDAL.ogr_f_setfielddouble(feature.ptr, i, value)
     return feature
 end
