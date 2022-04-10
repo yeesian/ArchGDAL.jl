@@ -3,7 +3,7 @@ module ArchGDAL
 using Dates
 using GDAL: GDAL
 using GeoFormatTypes: GeoFormatTypes
-using GeoInterface: GeoInterface
+import GeoInterface
 using Tables: Tables
 using ImageCore: Normed, N0f8, N0f16, N0f32, ImageCore
 using ColorTypes: ColorTypes

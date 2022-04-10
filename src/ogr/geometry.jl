@@ -1032,6 +1032,13 @@ Fetch the z coordinate of a point from a geometry, at index i.
 getz(geom::AbstractGeometry, i::Integer)::Float64 = GDAL.ogr_g_getz(geom.ptr, i)
 
 """
+    getm(geom::AbstractGeometry, i::Integer)
+
+Fetch the m coordinate of a point from a geometry, at index i.
+"""
+getm(geom::AbstractGeometry, i::Integer)::Float64 = GDAL.ogr_g_getm(geom.ptr, i)
+
+"""
     getpoint(geom::AbstractGeometry, i::Integer)
 
 Fetch a point in line string or a point geometry, at index i.
@@ -1042,6 +1049,7 @@ Fetch a point in line string or a point geometry, at index i.
 getpoint(geom::AbstractGeometry, i::Integer)::Tuple{Float64,Float64,Float64} =
     getpoint!(geom, i, Ref{Float64}(), Ref{Float64}(), Ref{Float64}())
 
+# TODO These don't take the `ncoord` into account, but always assume XYZ
 function getpoint!(geom::AbstractGeometry, i::Integer, x, y, z)
     GDAL.ogr_g_getpoint(geom.ptr, i, x, y, z)
     return (x[], y[], z[])
@@ -1198,6 +1206,18 @@ function getgeom(geom::AbstractGeometry, i::Integer)::IGeometry
     else
         return IGeometry(GDAL.ogr_g_clone(result))
     end
+end
+function getgeom(
+    geom::Union{
+        ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
+        ArchGDAL.Geometry{ArchGDAL.wkbLineString},
+    }, # TODO All curves
+    i::Integer,
+)::IGeometry
+    if geom.ptr == C_NULL
+        return IGeometry()
+    end
+    return createpoint(getpoint(geom, i)[1:getcoorddim(geom)])
 end
 
 function unsafe_getgeom(geom::AbstractGeometry, i::Integer)::Geometry
@@ -1481,6 +1501,7 @@ Get flag to enable/disable returning non-linear geometries in the C API.
 """
 getnonlineargeomflag()::Bool = Bool(GDAL.ogrgetnonlineargeometriesenabledflag())
 
+# TODO This code doesn't create the wkbgeom variants (25D, M, ZM)
 for (geom, wkbgeom) in (
     (:geomcollection, wkbGeometryCollection),
     (:linestring, wkbLineString),

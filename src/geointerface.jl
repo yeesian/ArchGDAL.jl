@@ -23,57 +23,144 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         wkbGeometryCollectionZM,
     )
 
-    function GeoInterface.geotype(g::AbstractGeometry)::Symbol
-        gtype = getgeomtype(g)
+    twodtypes = (
+        wkbMultiPoint,
+        wkbLineString,
+        wkbMultiLineString,
+        wkbPolygon,
+        wkbMultiPolygon,
+        wkbGeometryCollection,
+    )
+    threedtypes = (
+        wkbPoint25D,
+        wkbMultiPoint25D,
+        wkbLineString25D,
+        wkbMultiLineString25D,
+        wkbPolygon25D,
+        wkbMultiPolygon25D,
+        wkbGeometryCollection25D,
+        wkbPointM,
+        wkbMultiPointM,
+        wkbLineStringM,
+        wkbMultiLineStringM,
+        wkbPolygonM,
+        wkbMultiPolygonM,
+        wkbGeometryCollectionM,
+    )
+    mtypes = (
+        wkbPointM,
+        wkbMultiPointM,
+        wkbLineStringM,
+        wkbMultiLineStringM,
+        wkbPolygonM,
+        wkbMultiPolygonM,
+        wkbGeometryCollectionM,
+    )
+    fourdtypes = (
+        wkbPointZM,
+        wkbMultiPointZM,
+        wkbLineStringZM,
+        wkbMultiLineStringZM,
+        wkbPolygonZM,
+        wkbMultiPolygonZM,
+        wkbGeometryCollectionZM,
+    )
+    hasztypes = (
+        wkbPoint25D,
+        wkbMultiPoint25D,
+        wkbLineString25D,
+        wkbMultiLineString25D,
+        wkbPolygon25D,
+        wkbMultiPolygon25D,
+        wkbGeometryCollection25D,
+        wkbPointZM,
+        wkbMultiPointZM,
+        wkbLineStringZM,
+        wkbMultiLineStringZM,
+        wkbPolygonZM,
+        wkbMultiPolygonZM,
+        wkbGeometryCollectionZM,
+    )
+    hasmtypes = (
+        wkbPointM,
+        wkbMultiPointM,
+        wkbLineStringM,
+        wkbMultiLineStringM,
+        wkbPolygonM,
+        wkbMultiPolygonM,
+        wkbGeometryCollectionM,
+        wkbPointZM,
+        wkbMultiPointZM,
+        wkbLineStringZM,
+        wkbMultiLineStringZM,
+        wkbPolygonZM,
+        wkbMultiPolygonZM,
+        wkbGeometryCollectionZM,
+    )
+
+    GeoInterface.isgeometry(geom::AbstractGeometry) = true
+    function GeoInterface.geomtype(geom::AbstractGeometry)
+        # TODO Dispatch directly once #266 is merged
+        gtype = getgeomtype(geom)
         return if gtype in pointtypes
-            :Point
+            GeoInterface.Point
         elseif gtype in multipointtypes
-            :MultiPoint
+            GeoInterface.MultiPoint
         elseif gtype in linetypes
-            :LineString
+            GeoInterface.LineString
         elseif gtype == wkbLinearRing
-            :LinearRing
+            GeoInterface.LinearRing
         elseif gtype in multilinetypes
-            :MultiLineString
+            GeoInterface.MultiLineString
         elseif gtype in polygontypes
-            :Polygon
+            GeoInterface.Polygon
         elseif gtype in multipolygontypes
-            :MultiPolygon
+            GeoInterface.MultiPolygon
         elseif gtype in collectiontypes
-            :GeometryCollection
+            GeoInterface.GeometryCollection
         else
             @warn "unknown geometry type" gtype
-            :Unknown
+            nothing
         end
     end
 
-    function GeoInterface.coordinates(g::AbstractGeometry)
-        gtype = getgeomtype(g)
-        ndim = getcoorddim(g)
-        return if gtype in pointtypes
-            if ndim == 2
-                Float64[getx(g, 0), gety(g, 0)]
-            elseif ndim == 3
-                Float64[getx(g, 0), gety(g, 0), getz(g, 0)]
-            else
-                error("getcoorddim($g) returned $ndim: expected 2 or 3")
-            end
-        elseif gtype in multipointtypes
-            Vector{Float64}[
-                GeoInterface.coordinates(getgeom(g, i - 1)) for i in 1:ngeom(g)
-            ]
-        elseif gtype in linetypes || gtype == wkbLinearRing
-            Vector{Float64}[
-                collect(getpoint(g, i - 1)[1:ndim]) for i in 1:ngeom(g)
-            ]
-        elseif gtype in multilinetypes || gtype in polygontypes
-            Vector{Vector{Float64}}[
-                GeoInterface.coordinates(getgeom(g, i - 1)) for i in 1:ngeom(g)
-            ]
-        elseif gtype in multipolygontypes
-            Vector{Vector{Vector{Float64}}}[
-                GeoInterface.coordinates(getgeom(g, i - 1)) for i in 1:ngeom(g)
-            ]
+    function GeoInterface.ncoord(
+        ::Type{<:GeoInterface.AbstractGeometry},
+        geom::AbstractGeometry,
+    )
+        return getcoorddim(geom)
+    end
+
+    function GeoInterface.getcoord(
+        ::Type{<:GeoInterface.AbstractGeometry},
+        geom::AbstractGeometry,
+        i,
+    )
+        if i == 1
+            getx(geom, 0)
+        elseif i == 2
+            gety(geom, 0)
+        elseif i == 3  # M is an option here, but not properly supported by ArchGDAL yet
+            getm(geom, 0)
+        elseif i == 4
+            getm(geom, 0)
+        else
+            return nothing
         end
+    end
+
+    function GeoInterface.ngeom(
+        ::Type{<:GeoInterface.AbstractGeometry},
+        geom::AbstractGeometry,
+    )
+        return ngeom(geom)
+    end
+
+    function GeoInterface.getgeom(
+        ::Type{<:GeoInterface.AbstractGeometry},
+        geom::AbstractGeometry,
+        i::Integer,
+    )
+        return getgeom(geom, i - 1)
     end
 end
