@@ -1,3 +1,5 @@
+using Extents
+
 let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     multipointtypes =
         (wkbMultiPoint, wkbMultiPoint25D, wkbMultiPointM, wkbMultiPointZM),
@@ -103,21 +105,21 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         # TODO Dispatch directly once #266 is merged
         gtype = getgeomtype(geom)
         return if gtype in pointtypes
-            GeoInterface.Point
+            GeoInterface.PointTrait()
         elseif gtype in multipointtypes
-            GeoInterface.MultiPoint
+            GeoInterface.MultiPointTrait()
         elseif gtype in linetypes
-            GeoInterface.LineString
+            GeoInterface.LineStringTrait()
         elseif gtype == wkbLinearRing
-            GeoInterface.LinearRing
+            GeoInterface.LinearRingTrait()
         elseif gtype in multilinetypes
-            GeoInterface.MultiLineString
+            GeoInterface.MultiLineStringTrait()
         elseif gtype in polygontypes
-            GeoInterface.Polygon
+            GeoInterface.PolygonTrait()
         elseif gtype in multipolygontypes
-            GeoInterface.MultiPolygon
+            GeoInterface.MultiPolygonTrait()
         elseif gtype in collectiontypes
-            GeoInterface.GeometryCollection
+            GeoInterface.GeometryCollectionTrait()
         else
             @warn "unknown geometry type" gtype
             nothing
@@ -125,14 +127,14 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.ncoord(
-        ::Type{<:GeoInterface.AbstractGeometry},
+        ::GeoInterface.AbstractGeometryTrait,
         geom::AbstractGeometry,
     )
         return getcoorddim(geom)
     end
 
     function GeoInterface.getcoord(
-        ::Type{<:GeoInterface.AbstractGeometry},
+        ::GeoInterface.AbstractGeometryTrait,
         geom::AbstractGeometry,
         i,
     )
@@ -150,17 +152,174 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.ngeom(
-        ::Type{<:GeoInterface.AbstractGeometry},
+        ::GeoInterface.AbstractGeometryTrait,
         geom::AbstractGeometry,
     )
         return ngeom(geom)
     end
 
     function GeoInterface.getgeom(
-        ::Type{<:GeoInterface.AbstractGeometry},
+        ::GeoInterface.AbstractGeometryTrait,
         geom::AbstractGeometry,
         i::Integer,
     )
         return getgeom(geom, i - 1)
+    end
+
+    # Operations
+    function GeoInterface.intersects(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return intersects(a, b)
+    end
+    function GeoInterface.equals(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return equals(a, b)
+    end
+    function GeoInterface.disjoint(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return disjoint(a, b)
+    end
+    function GeoInterface.touches(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return touches(a, b)
+    end
+    function GeoInterface.crosses(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return crosses(a, b)
+    end
+    function GeoInterface.within(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return within(a, b)
+    end
+    function GeoInterface.contains(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return contains(a, b)
+    end
+    function GeoInterface.overlaps(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return overlaps(a, b)
+    end
+
+    function GeoInterface.union(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return union(a, b)
+    end
+    function GeoInterface.intersection(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return intersection(a, b)
+    end
+    function GeoInterface.difference(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return difference(a, b)
+    end
+    function GeoInterface.symdifference(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return symdifference(a, b)
+    end
+    function GeoInterface.symdifference(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return symdifference(a, b)
+    end
+
+    function GeoInterface.distance(
+        ::GeoInterface.AbstractGeometryTrait,
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        b::AbstractGeometry,
+    )
+        return distance(a, b)
+    end
+
+    function GeoInterface.length(
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+    )
+        return geomlength(a)
+    end
+
+    function GeoInterface.area(
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+    )
+        return geomarea(a)
+    end
+
+    function GeoInterface.buffer(
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+        d,
+    )
+        return buffer(a, d)
+    end
+
+    function GeoInterface.convexhull(
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+    )
+        return convexhull(a)
+    end
+
+    function GeoInterface.extent(
+        ::GeoInterface.AbstractGeometryTrait,
+        a::AbstractGeometry,
+    )
+        env = envelope3d(a)
+        return Extent(
+            X = (env.MinX, env.MaxX),
+            Y = (env.MinY, env.MaxY),
+            Z = (env.MinZ, env.MaxZ),
+        )
     end
 end

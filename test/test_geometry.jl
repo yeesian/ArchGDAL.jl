@@ -37,7 +37,8 @@ import GeoFormatTypes as GFT
     @testset "Create a Point" begin
         # Method 1
         AG.createpoint(100, 70) do point
-            @test GeoInterface.geomtype(point) == GeoInterface.Point
+            @test GeoInterface.geomtype(point) == GeoInterface.PointTrait()
+            @test GeoInterface.bbox(point).X[1] == 100
             @test isapprox(
                 GeoInterface.coordinates(point),
                 [100, 70],
@@ -270,7 +271,7 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINESTRING (1 4,2 5,3 6)"
         AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtype(geom) == GeoInterface.LineString
+            @test GeoInterface.geomtype(geom) == GeoInterface.LineStringTrait()
             @test isapprox(
                 GeoInterface.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
@@ -299,7 +300,7 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINEARRING (1 4,2 5,3 6)"
         AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtype(geom) == GeoInterface.LineString
+            @test GeoInterface.geomtype(geom) == GeoInterface.LineStringTrait()
             @test isapprox(
                 GeoInterface.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
@@ -325,7 +326,7 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "POLYGON ((1 4,2 5,3 6))"
         AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtype(geom) == GeoInterface.Polygon
+            @test GeoInterface.geomtype(geom) == GeoInterface.PolygonTrait()
             @test isapprox(
                 GeoInterface.coordinates(geom),
                 [[[1, 4], [2, 5], [3, 6]]],
@@ -347,7 +348,7 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "MULTIPOINT (1 4,2 5,3 6)"
         AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtype(geom) == GeoInterface.MultiPoint
+            @test GeoInterface.geomtype(geom) == GeoInterface.MultiPointTrait()
             @test isapprox(
                 GeoInterface.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
@@ -393,7 +394,8 @@ import GeoFormatTypes as GFT
                 ],
             ],
         ) do geom
-            @test GeoInterface.geomtype(geom) == GeoInterface.MultiPolygon
+            @test GeoInterface.geomtype(geom) ==
+                  GeoInterface.MultiPolygonTrait()
             @test isapprox(
                 GeoInterface.coordinates(geom),
                 [
@@ -623,7 +625,7 @@ import GeoFormatTypes as GFT
               "POINT (2 5 8),POINT (3 6 9))"
         AG.symdifference(geom1, geom2) do result
             @test GeoInterface.geomtype(result) ==
-                  GeoInterface.GeometryCollection
+                  GeoInterface.GeometryCollectionTrait()
             @test AG.toWKT(result) ==
                   "GEOMETRYCOLLECTION (" *
                   "POLYGON (" *

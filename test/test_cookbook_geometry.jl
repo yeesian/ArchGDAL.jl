@@ -363,7 +363,7 @@ import ArchGDAL as AG
             ],
         ) do multiline
             @test GeoInterface.geomtype(multiline) ==
-                  GeoInterface.MultiLineString
+                  GeoInterface.MultiLineStringTrait()
             @test AG.toWKT(multiline) == wktline
         end
 
