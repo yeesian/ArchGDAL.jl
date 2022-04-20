@@ -1,5 +1,15 @@
 using Extents
 
+lookup_method = Dict(
+    GeoInterface.PointTrait => createpoint,
+    GeoInterface.MultiPointTrait => createmultipoint,
+    GeoInterface.LineStringTrait => createlinestring,
+    GeoInterface.LinearRingTrait => createlinearring,
+    GeoInterface.MultiLineStringTrait => createmultilinestring,
+    GeoInterface.PolygonTrait => createpolygon,
+    GeoInterface.MultiPolygonTrait => createmultipolygon,
+)
+
 let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     multipointtypes =
         (wkbMultiPoint, wkbMultiPoint25D, wkbMultiPointM, wkbMultiPointZM),
@@ -22,81 +32,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         wkbGeometryCollection,
         wkbGeometryCollection25D,
         wkbGeometryCollectionM,
-        wkbGeometryCollectionZM,
-    )
-
-    twodtypes = (
-        wkbMultiPoint,
-        wkbLineString,
-        wkbMultiLineString,
-        wkbPolygon,
-        wkbMultiPolygon,
-        wkbGeometryCollection,
-    )
-    threedtypes = (
-        wkbPoint25D,
-        wkbMultiPoint25D,
-        wkbLineString25D,
-        wkbMultiLineString25D,
-        wkbPolygon25D,
-        wkbMultiPolygon25D,
-        wkbGeometryCollection25D,
-        wkbPointM,
-        wkbMultiPointM,
-        wkbLineStringM,
-        wkbMultiLineStringM,
-        wkbPolygonM,
-        wkbMultiPolygonM,
-        wkbGeometryCollectionM,
-    )
-    mtypes = (
-        wkbPointM,
-        wkbMultiPointM,
-        wkbLineStringM,
-        wkbMultiLineStringM,
-        wkbPolygonM,
-        wkbMultiPolygonM,
-        wkbGeometryCollectionM,
-    )
-    fourdtypes = (
-        wkbPointZM,
-        wkbMultiPointZM,
-        wkbLineStringZM,
-        wkbMultiLineStringZM,
-        wkbPolygonZM,
-        wkbMultiPolygonZM,
-        wkbGeometryCollectionZM,
-    )
-    hasztypes = (
-        wkbPoint25D,
-        wkbMultiPoint25D,
-        wkbLineString25D,
-        wkbMultiLineString25D,
-        wkbPolygon25D,
-        wkbMultiPolygon25D,
-        wkbGeometryCollection25D,
-        wkbPointZM,
-        wkbMultiPointZM,
-        wkbLineStringZM,
-        wkbMultiLineStringZM,
-        wkbPolygonZM,
-        wkbMultiPolygonZM,
-        wkbGeometryCollectionZM,
-    )
-    hasmtypes = (
-        wkbPointM,
-        wkbMultiPointM,
-        wkbLineStringM,
-        wkbMultiLineStringM,
-        wkbPolygonM,
-        wkbMultiPolygonM,
-        wkbGeometryCollectionM,
-        wkbPointZM,
-        wkbMultiPointZM,
-        wkbLineStringZM,
-        wkbMultiLineStringZM,
-        wkbPolygonZM,
-        wkbMultiPolygonZM,
         wkbGeometryCollectionZM,
     )
 
@@ -264,14 +199,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     )
         return symdifference(a, b)
     end
-    function GeoInterface.symdifference(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
-        a::AbstractGeometry,
-        b::AbstractGeometry,
-    )
-        return symdifference(a, b)
-    end
 
     function GeoInterface.distance(
         ::GeoInterface.AbstractGeometryTrait,
@@ -323,3 +250,15 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         )
     end
 end
+
+# function Base.convert(::Type{IGeometry}, x)
+#     GeoInterface.isgeometry(x) || error(
+#         "Cannot convert an object of $(typeof(x)) that doesn't implement GeoInterface.",
+#     )
+#     type = GeoInterface.geomtype(x)
+#     f = get(lookup_method, typeof(type), nothing)
+#     isnothing(f) || error(
+#         "Cannot convert an object of $(typeof(x)) with the $(typeof(type)) trait (yet). Please report an issue.",
+#     )
+#     return f(GeoInterface.coordinates(x))
+# end
