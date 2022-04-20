@@ -456,7 +456,7 @@ unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer)::Feature =
     Feature(GDAL.ogr_l_getfeature(layer.ptr, i))
 
 """
-    setfeature!(layer::AbstractFeatureLayer, feature::Feature)
+    setfeature!(layer::AbstractFeatureLayer, feature::AbstractFeature)
 
 Rewrite an existing feature.
 
@@ -467,7 +467,7 @@ the OGRFeature.
 Use OGR_L_TestCapability(OLCRandomWrite) to establish if this layer supports
 random access writing via OGR_L_SetFeature().
 """
-function setfeature!(layer::AbstractFeatureLayer, feature::Feature)
+function setfeature!(layer::AbstractFeatureLayer, feature::AbstractFeature)
     result = GDAL.ogr_l_setfeature(layer.ptr, feature.ptr)
     # OGRERR_NONE if the operation works, otherwise an appropriate error code
     # (e.g OGRERR_NON_EXISTING_FEATURE if the feature does not exist).
@@ -476,7 +476,7 @@ function setfeature!(layer::AbstractFeatureLayer, feature::Feature)
 end
 
 """
-    addfeature!(layer::AbstractFeatureLayer, feature::Feature)
+    addfeature!(layer::AbstractFeatureLayer, feature::AbstractFeature)
 
 Write a new feature within a layer.
 
@@ -489,7 +489,7 @@ will have been updated with the new feature id.
 """
 function addfeature!(
     layer::L,
-    feature::Feature,
+    feature::AbstractFeature,
 )::L where {L<:AbstractFeatureLayer}
     result = GDAL.ogr_l_createfeature(layer.ptr, feature.ptr)
     @ogrerr result "Failed to create and write feature in layer."

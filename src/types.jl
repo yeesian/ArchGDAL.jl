@@ -13,6 +13,9 @@ abstract type AbstractSpatialRef end
 abstract type AbstractDataset end
 # needs to have a `ptr::GDAL.GDALDatasetH` attribute
 
+abstract type AbstractFeature end
+# needs to have a `ptr::GDAL.OGRFeatureH` attribute
+
 abstract type AbstractFeatureDefn end
 # needs to have a `ptr::GDAL.OGRFeatureDefnH` attribute
 
@@ -142,8 +145,18 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     end
 end
 
-mutable struct Feature
+mutable struct Feature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
+end
+
+mutable struct IFeature <: AbstractFeature
+    ptr::GDAL.OGRFeatureH
+
+    function IFeature(ptr::GDAL.OGRFeatureH = C_NULL)
+        feature = new(ptr)
+        finalizer(destroy, feature)
+        return feature
+    end
 end
 
 mutable struct FeatureDefn <: AbstractFeatureDefn
