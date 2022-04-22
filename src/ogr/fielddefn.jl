@@ -336,7 +336,7 @@ function destroy(geomdefn::GeomFieldDefn)::Nothing
     return nothing
 end
 
-"Destroy a geometry field definition."
+"Destroy a geometry field definition view."
 function destroy(geomdefn::IGeomFieldDefnView)::Nothing
     geomdefn.ptr = C_NULL
     return nothing

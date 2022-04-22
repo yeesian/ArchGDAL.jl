@@ -364,9 +364,9 @@ function unsafe_createfeature(featuredefn::AbstractFeatureDefn)::Feature
 end
 
 """
-    getfeaturedefn(feature::Feature)
+    getfeaturedefn(feature::AbstractFeature)
 
 Fetch feature definition.
 """
-getfeaturedefn(feature::Feature)::IFeatureDefnView =
+getfeaturedefn(feature::AbstractFeature)::IFeatureDefnView =
     IFeatureDefnView(GDAL.ogr_f_getdefnref(feature.ptr))

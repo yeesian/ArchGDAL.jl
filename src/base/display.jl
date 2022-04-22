@@ -213,7 +213,7 @@ function Base.show(io::IO, gfd::AbstractGeomFieldDefn)::Nothing
     return nothing
 end
 
-function Base.show(io::IO, feature::Feature)::Nothing
+function Base.show(io::IO, feature::AbstractFeature)::Nothing
     if feature.ptr == C_NULL
         print(io, "NULL Feature")
         return nothing
