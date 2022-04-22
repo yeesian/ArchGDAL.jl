@@ -1,7 +1,7 @@
 function Base.iterate(
     layer::AbstractFeatureLayer,
     state::Integer = 0,
-)::Union{Nothing,Tuple{Feature,Int64}}
+)::Union{Nothing,Tuple{IFeature,Int64}}
     layer.ptr == C_NULL && return nothing
     state == 0 && resetreading!(layer)
     ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
@@ -9,11 +9,11 @@ function Base.iterate(
         resetreading!(layer)
         nothing
     else
-        (Feature(ptr), state + 1)
+        (IFeature(ptr), state + 1)
     end
 end
 
-Base.eltype(layer::AbstractFeatureLayer)::DataType = Feature
+Base.eltype(layer::AbstractFeatureLayer)::DataType = IFeature
 
 Base.IteratorSize(::Type{<:AbstractFeatureLayer}) = Base.SizeUnknown()
 

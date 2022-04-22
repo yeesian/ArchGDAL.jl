@@ -9,7 +9,7 @@ function Tables.rows(layer::T)::T where {T<:AbstractFeatureLayer}
     return layer
 end
 
-function Tables.getcolumn(row::Feature, i::Int)
+function Tables.getcolumn(row::AbstractFeature, i::Int)
     if i > nfield(row)
         return getgeom(row, i - nfield(row) - 1)
     elseif i > 0
@@ -19,7 +19,7 @@ function Tables.getcolumn(row::Feature, i::Int)
     end
 end
 
-function Tables.getcolumn(row::Feature, name::Symbol)
+function Tables.getcolumn(row::AbstractFeature, name::Symbol)
     field = getfield(row, name)
     if !ismissing(field)
         return field
@@ -32,7 +32,7 @@ function Tables.getcolumn(row::Feature, name::Symbol)
 end
 
 function Tables.columnnames(
-    row::Feature,
+    row::AbstractFeature,
 )::NTuple{Int64(nfield(row) + ngeom(row)),Symbol}
     geom_names, field_names = schema_names(getfeaturedefn(row))
     return (geom_names..., field_names...)
