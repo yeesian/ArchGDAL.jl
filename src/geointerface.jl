@@ -35,6 +35,17 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         wkbGeometryCollectionZM,
     )
 
+    GeometryTraits = Union{
+        GeoInterface.PointTrait,
+        GeoInterface.MultiPointTrait,
+        GeoInterface.LineStringTrait,
+        GeoInterface.LinearRingTrait,
+        GeoInterface.MultiLineStringTrait,
+        GeoInterface.PolygonTrait,
+        GeoInterface.MultiPolygonTrait,
+        GeoInterface.GeometryCollectionTrait,
+    }
+
     GeoInterface.isgeometry(geom::AbstractGeometry) = true
     function GeoInterface.geomtype(geom::AbstractGeometry)
         # TODO Dispatch directly once #266 is merged
@@ -61,18 +72,11 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         end
     end
 
-    function GeoInterface.ncoord(
-        ::GeoInterface.AbstractGeometryTrait,
-        geom::AbstractGeometry,
-    )
+    function GeoInterface.ncoord(::GeometryTraits, geom::AbstractGeometry)
         return getcoorddim(geom)
     end
 
-    function GeoInterface.getcoord(
-        ::GeoInterface.AbstractGeometryTrait,
-        geom::AbstractGeometry,
-        i,
-    )
+    function GeoInterface.getcoord(::GeometryTraits, geom::AbstractGeometry, i)
         if i == 1
             getx(geom, 0)
         elseif i == 2
@@ -86,15 +90,16 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         end
     end
 
-    function GeoInterface.ngeom(
-        ::GeoInterface.AbstractGeometryTrait,
-        geom::AbstractGeometry,
-    )
+    function GeoInterface.isempty(::GeometryTraits, geom::AbstractGeometry)
+        return isempty(geom)
+    end
+
+    function GeoInterface.ngeom(::GeometryTraits, geom::AbstractGeometry)
         return ngeom(geom)
     end
 
     function GeoInterface.getgeom(
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
         geom::AbstractGeometry,
         i::Integer,
     )
@@ -103,64 +108,64 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
 
     # Operations
     function GeoInterface.intersects(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return intersects(a, b)
     end
     function GeoInterface.equals(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return equals(a, b)
     end
     function GeoInterface.disjoint(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return disjoint(a, b)
     end
     function GeoInterface.touches(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return touches(a, b)
     end
     function GeoInterface.crosses(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return crosses(a, b)
     end
     function GeoInterface.within(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return within(a, b)
     end
     function GeoInterface.contains(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return contains(a, b)
     end
     function GeoInterface.overlaps(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
@@ -168,32 +173,32 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.union(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return union(a, b)
     end
     function GeoInterface.intersection(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return intersection(a, b)
     end
     function GeoInterface.difference(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return difference(a, b)
     end
     function GeoInterface.symdifference(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
@@ -201,47 +206,31 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.distance(
-        ::GeoInterface.AbstractGeometryTrait,
-        ::GeoInterface.AbstractGeometryTrait,
+        ::GeometryTraits,
+        ::GeometryTraits,
         a::AbstractGeometry,
         b::AbstractGeometry,
     )
         return distance(a, b)
     end
 
-    function GeoInterface.length(
-        ::GeoInterface.AbstractGeometryTrait,
-        a::AbstractGeometry,
-    )
+    function GeoInterface.length(::GeometryTraits, a::AbstractGeometry)
         return geomlength(a)
     end
 
-    function GeoInterface.area(
-        ::GeoInterface.AbstractGeometryTrait,
-        a::AbstractGeometry,
-    )
+    function GeoInterface.area(::GeometryTraits, a::AbstractGeometry)
         return geomarea(a)
     end
 
-    function GeoInterface.buffer(
-        ::GeoInterface.AbstractGeometryTrait,
-        a::AbstractGeometry,
-        d,
-    )
+    function GeoInterface.buffer(::GeometryTraits, a::AbstractGeometry, d)
         return buffer(a, d)
     end
 
-    function GeoInterface.convexhull(
-        ::GeoInterface.AbstractGeometryTrait,
-        a::AbstractGeometry,
-    )
+    function GeoInterface.convexhull(::GeometryTraits, a::AbstractGeometry)
         return convexhull(a)
     end
 
-    function GeoInterface.extent(
-        ::GeoInterface.AbstractGeometryTrait,
-        a::AbstractGeometry,
-    )
+    function GeoInterface.extent(::GeometryTraits, a::AbstractGeometry)
         env = envelope3d(a)
         return Extent(
             X = (env.MinX, env.MaxX),
@@ -249,16 +238,12 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
             Z = (env.MinZ, env.MaxZ),
         )
     end
-end
 
-# function Base.convert(::Type{IGeometry}, x)
-#     GeoInterface.isgeometry(x) || error(
-#         "Cannot convert an object of $(typeof(x)) that doesn't implement GeoInterface.",
-#     )
-#     type = GeoInterface.geomtype(x)
-#     f = get(lookup_method, typeof(type), nothing)
-#     isnothing(f) || error(
-#         "Cannot convert an object of $(typeof(x)) with the $(typeof(type)) trait (yet). Please report an issue.",
-#     )
-#     return f(GeoInterface.coordinates(x))
-# end
+    function GeoInterface.convert(::Type{IGeometry}, type::GeometryTraits, geom)
+        f = get(lookup_method, typeof(type), nothing)
+        isnothing(f) || error(
+            "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
+        )
+        return f(GeoInterface.coordinates(geom))
+    end
+end
