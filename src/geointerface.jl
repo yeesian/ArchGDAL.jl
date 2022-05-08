@@ -239,6 +239,14 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         )
     end
 
+    function GeoInterface.asbinary(::GeometryTraits, a::AbstractGeometry)
+        return toWKB(geom)
+    end
+
+    function GeoInterface.astext(::GeometryTraits, a::AbstractGeometry)
+        return toWKT(geom)
+    end
+
     function GeoInterface.convert(::Type{IGeometry}, type::GeometryTraits, geom)
         f = get(lookup_method, typeof(type), nothing)
         isnothing(f) || error(
