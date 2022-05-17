@@ -73,7 +73,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.ncoord(::GeometryTraits, geom::AbstractGeometry)
-        return getcoorddim(geom)
+        return isempty(geom) ? 0 : getcoorddim(geom)
     end
 
     function GeoInterface.getcoord(::GeometryTraits, geom::AbstractGeometry, i)
@@ -95,7 +95,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.ngeom(::GeometryTraits, geom::AbstractGeometry)
-        return ngeom(geom)
+        return isempty(geom) ? 0 : ngeom(geom)
     end
 
     function GeoInterface.getgeom(
