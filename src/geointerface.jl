@@ -47,7 +47,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     }
 
     GeoInterface.isgeometry(geom::AbstractGeometry) = true
-    function GeoInterface.geomtype(geom::AbstractGeometry)
+    function GeoInterface.geomtrait(geom::AbstractGeometry)
         # TODO Dispatch directly once #266 is merged
         gtype = getgeomtype(geom)
         return if gtype in pointtypes
