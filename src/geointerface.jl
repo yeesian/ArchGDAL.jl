@@ -46,7 +46,20 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         GeoInterface.GeometryCollectionTrait,
     }
 
+    # Feature
+    GeoInterface.isfeature(feat::AbstractFeature) = true
+    function GeoInterface.properties(feat::AbstractFeature)
+        return (;
+            (
+                (Symbol(getname(getfielddefn(feat, i))), getfield(feat, i)) for
+                i in 0:nfield(feat)-1
+            )...,
+        )
+    end
+    GeoInterface.geometry(feat::AbstractFeature) = getgeom(feat, 0)
+
     GeoInterface.isgeometry(geom::AbstractGeometry) = true
+
     function GeoInterface.geomtrait(geom::AbstractGeometry)
         # TODO Dispatch directly once #266 is merged
         gtype = getgeomtype(geom)
@@ -67,7 +80,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         elseif gtype in collectiontypes
             GeoInterface.GeometryCollectionTrait()
         else
-            @warn "unknown geometry type" gtype
             nothing
         end
     end
@@ -247,7 +259,24 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return toWKT(geom)
     end
 
-    function GeoInterface.convert(::Type{IGeometry}, type::GeometryTraits, geom)
+    function Base.convert(::Type{T}, geom::X) where {T<:IGeometry,X}
+        return Base.convert(T, GeoInterface.geomtrait(geom), geom)
+    end
+    function Base.convert(
+        ::Type{T},
+        ::GeometryTraits,
+        geom::T,
+    ) where {T<:IGeometry}
+        return geom
+    end  # fast fallthrough without conversion
+    function Base.convert(::Type{T}, ::Nothing, geom::T) where {T<:IGeometry}
+        return geom
+    end  # fast fallthrough without conversion
+    function Base.convert(
+        ::Type{T},
+        type::GeometryTraits,
+        geom,
+    ) where {T<:IGeometry}
         f = get(lookup_method, typeof(type), nothing)
         isnothing(f) || error(
             "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
