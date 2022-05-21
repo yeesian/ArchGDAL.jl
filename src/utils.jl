@@ -10,32 +10,32 @@ if VERSION < v"1.5"
 end
 
 """
-    @convert(<T1>::<T2>, 
+    @convert(<T1>::<T2>,
         <conversions>
     )
 
-Generate `convert` functions both ways between ArchGDAL Enum of typeids (e.g. `ArchGDAL.OGRFieldType`) 
+Generate `convert` functions both ways between ArchGDAL Enum of typeids (e.g. `ArchGDAL.OGRFieldType`)
 and other types or typeids.
 
-ArchGDAL uses Enum types, listing typeids of various data container used in GDAL/OGR object model. 
-Some of these types are used to implement concrete types in julia through parametric composite types 
+ArchGDAL uses Enum types, listing typeids of various data container used in GDAL/OGR object model.
+Some of these types are used to implement concrete types in julia through parametric composite types
 based on those Enum of typeids (e.g. `Geometry` and `IGeometry` types with `OGRwkbGeometryType`)
 
 Other types or typeids can be:
-- GDAL CEnum.Cenum typeids (e.g. `GDAL.OGRFieldType`), 
-- Base primitive DataType types (e.g. `Bool`), 
+- GDAL CEnum.Cenum typeids (e.g. `GDAL.OGRFieldType`),
+- Base primitive DataType types (e.g. `Bool`),
 - other parametric composite types (e.g. `ImageCore.Normed`)
 
 # Arguments
 - `(<T1>::<T2>)::Expr`: source and target supertypes, where `T1<:Enum`  and `T2<:CEnum.Cenum || T2::Type{DataType} || T2::UnionAll}``
-- `(<stype1>::<stype2>)::Expr`: source and target subtypes or type ids with `stype1::T1` and 
-    - `stype2::T2 where T2<:CEnum.Cenum` or 
-    - `stype2::T2 where T2::Type{DataType}` or 
+- `(<stype1>::<stype2>)::Expr`: source and target subtypes or type ids with `stype1::T1` and
+    - `stype2::T2 where T2<:CEnum.Cenum` or
+    - `stype2::T2 where T2::Type{DataType}` or
     - `stype2<:T2`where T2<:UnionAll
 - ...
 
-**Note:** In the case where the mapping is not bijective, the last declared typeid of subtype is used. 
-Example: 
+**Note:** In the case where the mapping is not bijective, the last declared typeid of subtype is used.
+Example:
 ```
 @convert(
     OGRFieldType::DataType,
@@ -56,7 +56,7 @@ will generate a `convert` functions giving:
     GF_Write::GDAL.GF_Write,
 )
 ```
-does the equivalent of 
+does the equivalent of
 ```
 const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
     GF_Read => GDAL.GF_Read,
@@ -66,7 +66,7 @@ Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
     GDALRWFlag_to_GDALRWFlag_map[ft]
 
 const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
-    GDAL.GF_Read => GF_Read, 
+    GDAL.GF_Read => GF_Read,
     GDAL.GF_Write => GF_Write
 )
 Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
@@ -82,7 +82,7 @@ Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
 does the equivalent of
 ```
 const OGRFieldType_to_DataType_map = ImmutableDict(
-    OFTInteger => Bool, 
+    OFTInteger => Bool,
     OFTInteger => Int16,
 )
 Base.convert(::Type{DataType}, ft::OGRFieldType) =
@@ -229,7 +229,20 @@ macro cplwarn(code, message)
 end
 
 macro cplprogress(progressfunc)
-    @cfunction($(esc(progressfunc)), Cint, (Cdouble, Cstring, Ptr{Cvoid}))
+    @static if Sys.ARCH == :aarch64
+        @warn "User provided progress functions are unsupported on this architecture."
+        return @cfunction(
+            GDAL.gdaldummyprogress,
+            Cint,
+            (Cdouble, Cstring, Ptr{Cvoid})
+        )
+    else
+        return @cfunction(
+            $(esc(progressfunc)),
+            Cint,
+            (Cdouble, Cstring, Ptr{Cvoid})
+        )
+    end
 end
 
 # """
