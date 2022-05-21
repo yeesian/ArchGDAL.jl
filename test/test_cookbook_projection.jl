@@ -50,7 +50,7 @@ import GeoFormatTypes as GFT
                 @test AG.reproject(wktpoint, GFT.EPSG(2927), GFT.EPSG(4326)) ==
                       result
                 @test convert(
-                    AG.Geometry,
+                    AG.IGeometry,
                     AG.reproject(result, GFT.EPSG(4326), GFT.EPSG(2927)),
                 ) |> GeoInterface.coordinates ≈
                       [1.12035156999967e6, 741921.420000271]

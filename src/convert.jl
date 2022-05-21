@@ -20,41 +20,35 @@ function Base.convert(
     mode::Union{GFT.FormatMode,Type{GFT.FormatMode}},
     source::GFT.GeoFormat,
 )
-    return convert(target, convert(AbstractGeometry, source))
+    return convert(target, convert(IGeometry, source))
 end
 
 """
-    convert(::Type{<:AbstractGeometry},
+    convert(::Type{<:IGeometry},
         source::GeoFormatTypes.AbstractWellKnownText)
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.WellKnownBinary)
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.GeoJSON)
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.GML)
+    convert(::Type{<:IGeometry}, source::GeoFormatTypes.WellKnownBinary)
+    convert(::Type{<:IGeometry}, source::GeoFormatTypes.GeoJSON)
+    convert(::Type{<:IGeometry}, source::GeoFormatTypes.GML)
 
 Convert `GeoFormat` geometry data to an ArchGDAL `Geometry` type
 """
 
 function Base.convert(
-    ::Type{T},
+    ::Type{<:IGeometry},
     source::X,
-) where {T<:AbstractGeometry,X<:GFT.AbstractWellKnownText}
+)::IGeometry where {X<:GFT.WellKnownText}
     return fromWKT(GFT.val(source))
 end
 function Base.convert(
-    ::Type{T},
+    ::Type{<:IGeometry},
     source::X,
-) where {T<:AbstractGeometry,X<:GFT.WellKnownBinary}
+)::IGeometry where {X<:GFT.WellKnownBinary}
     return fromWKB(GFT.val(source))
 end
-function Base.convert(
-    ::Type{T},
-    source::X,
-) where {T<:AbstractGeometry,X<:GFT.GeoJSON}
+function Base.convert(::Type{<:IGeometry}, source::X) where {X<:GFT.GeoJSON}
     return fromJSON(GFT.val(source))
 end
-function Base.convert(
-    ::Type{T},
-    source::X,
-) where {T<:AbstractGeometry,X<:GFT.GML}
+function Base.convert(::Type{<:IGeometry}, source::X) where {X<:GFT.GML}
     return fromGML(GFT.val(source))
 end
 

@@ -44,6 +44,13 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         GeoInterface.PolygonTrait,
         GeoInterface.MultiPolygonTrait,
         GeoInterface.GeometryCollectionTrait,
+        GeoInterface.CircularStringTrait,
+        GeoInterface.CompoundCurveTrait,
+        GeoInterface.CurvePolygonTrait,
+        GeoInterface.MultiSurfaceTrait,
+        GeoInterface.PolyhedralSurfaceTrait,
+        GeoInterface.TINTrait,
+        GeoInterface.TriangleTrait,
     }
 
     # Feature
@@ -59,6 +66,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     GeoInterface.geometry(feat::AbstractFeature) = getgeom(feat, 0)
 
     GeoInterface.isgeometry(geom::AbstractGeometry) = true
+    @enable_geo_plots AbstractGeometry
 
     function GeoInterface.geomtrait(geom::AbstractGeometry)
         # TODO Dispatch directly once #266 is merged
@@ -79,9 +87,31 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
             GeoInterface.MultiPolygonTrait()
         elseif gtype in collectiontypes
             GeoInterface.GeometryCollectionTrait()
+        elseif gtype == wkbCircularString
+            GeoInterface.CircularStringTrait()
+        elseif gtype == wkbCompoundCurve
+            GeoInterface.CompoundCurveTrait()
+        elseif gtype == wkbCurvePolygon
+            GeoInterface.CurvePolygonTrait()
+        elseif gtype == wkbMultiSurface
+            GeoInterface.MultiSurfaceTrait()
+        elseif gtype == wkbPolyhedralSurface
+            GeoInterface.PolyhedralSurfaceTrait()
+        elseif gtype == wkbTIN
+            GeoInterface.TINTrait()
+        elseif gtype == wkbTriangle
+            GeoInterface.TriangleTrait()
         else
+            @warn "unknown geometry type"
             nothing
         end
+    end
+
+    function GeoInterface.is3d(::GeometryTraits, geom::AbstractGeometry)
+        return getcoorddim(geom) >= 3
+    end
+    function GeoInterface.ismeasured(::GeometryTraits, geom::AbstractGeometry)
+        return getcoorddim(geom) >= 4
     end
 
     function GeoInterface.ncoord(::GeometryTraits, geom::AbstractGeometry)
@@ -259,29 +289,24 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return toWKT(geom)
     end
 
-    function Base.convert(::Type{T}, geom::X) where {T<:AbstractGeometry,X}
-        @info geom, T
+    function Base.convert(::Type{T}, geom::X) where {T<:IGeometry,X}
         return Base.convert(T, GeoInterface.geomtrait(geom), geom)
     end
     function Base.convert(
         ::Type{T},
         ::GeometryTraits,
         geom::T,
-    ) where {T<:AbstractGeometry}
+    ) where {T<:IGeometry}
         return geom
     end  # fast fallthrough without conversion
-    function Base.convert(
-        ::Type{T},
-        ::Nothing,
-        geom::T,
-    ) where {T<:AbstractGeometry}
+    function Base.convert(::Type{T}, ::Nothing, geom::T) where {T<:IGeometry}
         return geom
     end  # fast fallthrough without conversion
     function Base.convert(
         ::Type{T},
         type::GeometryTraits,
         geom,
-    ) where {T<:AbstractGeometry}
+    ) where {T<:IGeometry}
         f = get(lookup_method, typeof(type), nothing)
         isnothing(f) || error(
             "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
