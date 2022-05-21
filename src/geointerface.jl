@@ -124,7 +124,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         elseif i == 2
             gety(geom, 0)
         elseif i == 3  # M is an option here, but not properly supported by ArchGDAL yet
-            getm(geom, 0)
+            getz(geom, 0)
         elseif i == 4
             getm(geom, 0)
         else

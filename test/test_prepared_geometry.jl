@@ -12,7 +12,7 @@ import ArchGDAL as AG
 
     @test AG.has_preparedgeom_support()
 
-    prep_polygon = AG.preparegeom(polygon)  # this segfaults
+    prep_polygon = AG.preparegeom(polygon)
     unsafe_prep_polygon = AG.unsafe_preparegeom(polygon)
     @test isa(unsafe_prep_polygon, AG.PreparedGeometry)
     AG.destroy(unsafe_prep_polygon)
