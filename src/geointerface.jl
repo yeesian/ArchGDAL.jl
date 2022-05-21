@@ -259,24 +259,29 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return toWKT(geom)
     end
 
-    function Base.convert(::Type{T}, geom::X) where {T<:IGeometry,X}
+    function Base.convert(::Type{T}, geom::X) where {T<:AbstractGeometry,X}
+        @info geom, T
         return Base.convert(T, GeoInterface.geomtrait(geom), geom)
     end
     function Base.convert(
         ::Type{T},
         ::GeometryTraits,
         geom::T,
-    ) where {T<:IGeometry}
+    ) where {T<:AbstractGeometry}
         return geom
     end  # fast fallthrough without conversion
-    function Base.convert(::Type{T}, ::Nothing, geom::T) where {T<:IGeometry}
+    function Base.convert(
+        ::Type{T},
+        ::Nothing,
+        geom::T,
+    ) where {T<:AbstractGeometry}
         return geom
     end  # fast fallthrough without conversion
     function Base.convert(
         ::Type{T},
         type::GeometryTraits,
         geom,
-    ) where {T<:IGeometry}
+    ) where {T<:AbstractGeometry}
         f = get(lookup_method, typeof(type), nothing)
         isnothing(f) || error(
             "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",

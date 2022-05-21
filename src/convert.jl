@@ -11,7 +11,7 @@ Convert a `GeoFormatTypes.GeoFormat` object to Geometry, then to the target
 format. The Geom trait is needed to separate out convert for CRS for
 WellKnownText and GML, which may contain both.
 
-Both `Geom` and `Mixed` formats are converted to Geometries by default. 
+Both `Geom` and `Mixed` formats are converted to Geometries by default.
 To convert a `Mixed` format to crs, `CRS` must be explicitly passed for `mode`.
 """
 
@@ -34,22 +34,34 @@ Convert `GeoFormat` geometry data to an ArchGDAL `Geometry` type
 """
 
 function Base.convert(
-    ::Type{<:AbstractGeometry},
-    source::GFT.AbstractWellKnownText,
-)
+    ::Type{T},
+    source::X,
+) where {T<:AbstractGeometry,X<:GFT.AbstractWellKnownText}
     return fromWKT(GFT.val(source))
 end
-function Base.convert(::Type{<:AbstractGeometry}, source::GFT.WellKnownBinary)
+function Base.convert(
+    ::Type{T},
+    source::X,
+) where {T<:AbstractGeometry,X<:GFT.WellKnownBinary}
     return fromWKB(GFT.val(source))
 end
-function Base.convert(::Type{<:AbstractGeometry}, source::GFT.GeoJSON)
+function Base.convert(
+    ::Type{T},
+    source::X,
+) where {T<:AbstractGeometry,X<:GFT.GeoJSON}
     return fromJSON(GFT.val(source))
 end
-function Base.convert(::Type{<:AbstractGeometry}, source::GFT.GML)
+function Base.convert(
+    ::Type{T},
+    source::X,
+) where {T<:AbstractGeometry,X<:GFT.GML}
     return fromGML(GFT.val(source))
 end
 
-function Base.convert(::Type{IGeometry{wkbUnknown}}, source::AbstractGeometry)
+function Base.convert(
+    ::Type{IGeometry{wkbUnknown}},
+    source::X,
+) where {X<:AbstractGeometry}
     result = IGeometry(C_NULL)
     result.ptr = unsafe_clone(source).ptr
     return result

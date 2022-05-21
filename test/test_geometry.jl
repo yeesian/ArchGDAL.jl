@@ -10,29 +10,29 @@ import GeoFormatTypes as GFT
         end
     end
 
-    @testset "Incomplete GeoInterface geometries" begin
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbCircularString),
-        )
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbCompoundCurve),
-        )
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbCurvePolygon),
-        )
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbMultiSurface),
-        )
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbPolyhedralSurface),
-        )
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbTIN),
-        )
-        @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
-            AG.creategeom(AG.wkbTriangle),
-        )
-    end
+    # @testset "Incomplete GeoInterface geometries" begin
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbCircularString),
+    #     )
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbCompoundCurve),
+    #     )
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbCurvePolygon),
+    #     )
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbMultiSurface),
+    #     )
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbPolyhedralSurface),
+    #     )
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbTIN),
+    #     )
+    #     @test_logs (:warn, "unknown geometry type") GeoInterface.geomtrait(
+    #         AG.creategeom(AG.wkbTriangle),
+    #     )
+    # end
 
     @testset "Create a Point" begin
         # Method 1
