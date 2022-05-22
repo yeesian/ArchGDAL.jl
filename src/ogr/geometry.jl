@@ -937,11 +937,27 @@ function empty!(geom::G)::G where {G<:AbstractGeometry}
 end
 
 """
+    is3d(geom::AbstractGeometry)
+
+Returns `true` if the geometry has a z coordinate, otherwise `false`.
+"""
+is3d(geom::AbstractGeometry)::Bool = GDAL.ogr_g_is3d(geom.ptr) == 0x2
+
+"""
+    ismeasured(geom::AbstractGeometry)
+
+Returns `true` if the geometry has a m coordinate, otherwise `false`.
+"""
+ismeasured(geom::AbstractGeometry)::Bool =
+    GDAL.ogr_g_ismeasured(geom.ptr) == 0x4
+
+"""
     isempty(geom::AbstractGeometry)
 
 Returns `true` if the geometry has no points, otherwise `false`.
 """
-isempty(geom::AbstractGeometry)::Bool = Bool(GDAL.ogr_g_isempty(geom.ptr))
+isempty(geom::AbstractGeometry)::Bool =
+    Bool(GDAL.ogr_g_isempty(geom.ptr)) == 0x1
 
 """
     isvalid(geom::AbstractGeometry)

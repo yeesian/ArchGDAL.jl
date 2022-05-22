@@ -107,11 +107,9 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         end
     end
 
-    function GeoInterface.is3d(::GeometryTraits, geom::AbstractGeometry)
-        return getcoorddim(geom) >= 3
-    end
+    GeoInterface.is3d(::GeometryTraits, geom::AbstractGeometry) = is3d(geom)
     function GeoInterface.ismeasured(::GeometryTraits, geom::AbstractGeometry)
-        return getcoorddim(geom) >= 4
+        return ismeasured(geom)
     end
 
     function GeoInterface.ncoord(::GeometryTraits, geom::AbstractGeometry)
@@ -123,9 +121,11 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
             getx(geom, 0)
         elseif i == 2
             gety(geom, 0)
-        elseif i == 3  # M is an option here, but not properly supported by ArchGDAL yet
+        elseif i == 3 && is3d(geom)
             getz(geom, 0)
-        elseif i == 4
+        elseif i == 3 && ismeasured(geom)
+            getm(geom, 0)
+        elseif i == 4 && ismeasured(geom) && is3d(geom)
             getm(geom, 0)
         else
             return nothing

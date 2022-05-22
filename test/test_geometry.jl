@@ -1,26 +1,22 @@
 using Test
-import GeoInterface
+import GeoInterface as GI
 import ArchGDAL as AG
 import GeoFormatTypes as GFT
 
 @testset "test_geometry.jl" begin
     @testset "GeoInterface" begin
         AG.createpoint(100, 70) do point
-            @test GeoInterface.testgeometry(point)
+            @test GI.testgeometry(point)
         end
     end
 
     @testset "Create a Point" begin
         # Method 1
         AG.createpoint(100, 70) do point
-            @test GeoInterface.geomtrait(point) == GeoInterface.PointTrait()
-            @test GeoInterface.testgeometry(point)
-            @test GeoInterface.bbox(point).X[1] == 100
-            @test isapprox(
-                GeoInterface.coordinates(point),
-                [100, 70],
-                atol = 1e-6,
-            )
+            @test GI.geomtrait(point) == GI.PointTrait()
+            @test GI.testgeometry(point)
+            @test GI.bbox(point).X[1] == 100
+            @test isapprox(GI.coordinates(point), [100, 70], atol = 1e-6)
             @test AG.geomdim(point) == 0
             @test AG.getcoorddim(point) == 2
             AG.setcoorddim!(point, 3)
@@ -117,7 +113,7 @@ import GeoFormatTypes as GFT
             )
             AG.createpoint(100, 70, 0) do point2
                 @test isapprox(
-                    GeoInterface.coordinates(point2),
+                    GI.coordinates(point2),
                     [100, 70, 0],
                     atol = 1e-6,
                 )
@@ -248,10 +244,10 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINESTRING (1 4,2 5,3 6)"
         AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtrait(geom) == GeoInterface.LineStringTrait()
-            @test GeoInterface.testgeometry(geom)
+            @test GI.geomtrait(geom) == GI.LineStringTrait()
+            @test GI.testgeometry(geom)
             @test isapprox(
-                GeoInterface.coordinates(geom),
+                GI.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
                 atol = 1e-6,
             )
@@ -278,9 +274,9 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINEARRING (1 4,2 5,3 6)"
         AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtrait(geom) == GeoInterface.LineStringTrait()
+            @test GI.geomtrait(geom) == GI.LineStringTrait()
             @test isapprox(
-                GeoInterface.coordinates(geom),
+                GI.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
                 atol = 1e-6,
             )
@@ -304,10 +300,10 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "POLYGON ((1 4,2 5,3 6))"
         AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtrait(geom) == GeoInterface.PolygonTrait()
-            @test GeoInterface.testgeometry(geom)
+            @test GI.geomtrait(geom) == GI.PolygonTrait()
+            @test GI.testgeometry(geom)
             @test isapprox(
-                GeoInterface.coordinates(geom),
+                GI.coordinates(geom),
                 [[[1, 4], [2, 5], [3, 6]]],
                 atol = 1e-6,
             )
@@ -327,10 +323,10 @@ import GeoFormatTypes as GFT
         @test AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "MULTIPOINT (1 4,2 5,3 6)"
         AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GeoInterface.geomtrait(geom) == GeoInterface.MultiPointTrait()
-            @test GeoInterface.testgeometry(geom)
+            @test GI.geomtrait(geom) == GI.MultiPointTrait()
+            @test GI.testgeometry(geom)
             @test isapprox(
-                GeoInterface.coordinates(geom),
+                GI.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
                 atol = 1e-6,
             )
@@ -374,11 +370,10 @@ import GeoFormatTypes as GFT
                 ],
             ],
         ) do geom
-            @test GeoInterface.geomtrait(geom) ==
-                  GeoInterface.MultiPolygonTrait()
-            @test GeoInterface.testgeometry(geom)
+            @test GI.geomtrait(geom) == GI.MultiPolygonTrait()
+            @test GI.testgeometry(geom)
             @test isapprox(
-                GeoInterface.coordinates(geom),
+                GI.coordinates(geom),
                 [
                     [
                         [[0, 0], [0, 4], [4, 4], [4, 0]],
@@ -605,8 +600,7 @@ import GeoFormatTypes as GFT
               "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
               "POINT (2 5 8),POINT (3 6 9))"
         AG.symdifference(geom1, geom2) do result
-            @test GeoInterface.geomtrait(result) ==
-                  GeoInterface.GeometryCollectionTrait()
+            @test GI.geomtrait(result) == GI.GeometryCollectionTrait()
             @test AG.toWKT(result) ==
                   "GEOMETRYCOLLECTION (" *
                   "POLYGON (" *
@@ -779,7 +773,7 @@ import GeoFormatTypes as GFT
                     AG.fromWKT("POINT (1120351.57 741921.42)") do point
                         @test AG.toWKT(point) == "POINT (1120351.57 741921.42)"
                         AG.transform!(point, transform)
-                        @test GeoInterface.coordinates(point) ≈
+                        @test GI.coordinates(point) ≈
                               [47.3488070138318, -122.5981499431438]
                     end
                 end
@@ -793,6 +787,44 @@ import GeoFormatTypes as GFT
         @test sprint(print, AG.clone(geom)) == "NULL Geometry"
         AG.clone(geom) do g
             @test sprint(print, g) == "NULL Geometry"
+        end
+    end
+
+    @testset "Test coordinate dimensions" begin
+        AG.createpoint(1, 2, 3) do point
+            AG.GDAL.ogr_g_setmeasured(point.ptr, true)
+            @test GI.getcoord(point, 3) == 3
+            @test GI.getcoord(point, 4) == 0
+            @test !GI.isempty(point)
+            @test GI.ismeasured(point)
+            @test GI.is3d(point)
+        end
+        AG.createpoint(1, 2, 3) do point
+            @test GI.getcoord(point, 3) == 3
+            @test isnothing(GI.getcoord(point, 4))
+            @test !GI.isempty(point)
+            @test !GI.ismeasured(point)
+            @test GI.is3d(point)
+        end
+        AG.createpoint(1, 2) do point
+            @test isnothing(GI.getcoord(point, 3))
+            @test isnothing(GI.getcoord(point, 4))
+            @test !GI.isempty(point)
+            @test !GI.ismeasured(point)
+            @test !GI.is3d(point)
+        end
+        AG.createpoint(1, 2) do point
+            AG.GDAL.ogr_g_setmeasured(point.ptr, true)
+            @test GI.getcoord(point, 3) == 0
+            @test isnothing(GI.getcoord(point, 4))
+            @test !GI.isempty(point)
+            @test GI.ismeasured(point)
+            @test !GI.is3d(point)
+        end
+        AG.createpoint() do point
+            @test GI.isempty(point)
+            @test !GI.ismeasured(point)
+            @test !GI.is3d(point)
         end
     end
 end
