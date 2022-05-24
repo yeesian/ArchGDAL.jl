@@ -1,6 +1,6 @@
 using Extents
 
-lookup_method = Dict(
+const lookup_method = Dict{DataType,Function}(
     GeoInterface.PointTrait => createpoint,
     GeoInterface.MultiPointTrait => createmultipoint,
     GeoInterface.LineStringTrait => createlinestring,
@@ -56,12 +56,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     # Feature
     GeoInterface.isfeature(feat::AbstractFeature) = true
     function GeoInterface.properties(feat::AbstractFeature)
-        return (;
-            (
-                (Symbol(getname(getfielddefn(feat, i))), getfield(feat, i)) for
-                i in 0:nfield(feat)-1
-            )...,
-        )
+        return (; (zip(Symbol.(keys(feat)), values(feat)))...)
     end
     GeoInterface.geometry(feat::AbstractFeature) = getgeom(feat, 0)
 
