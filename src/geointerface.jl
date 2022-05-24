@@ -281,15 +281,15 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         )
     end
 
-    function GeoInterface.asbinary(::GeometryTraits, a::AbstractGeometry)
+    function GeoInterface.asbinary(::GeometryTraits, geom::AbstractGeometry)
         return toWKB(geom)
     end
 
-    function GeoInterface.astext(::GeometryTraits, a::AbstractGeometry)
+    function GeoInterface.astext(::GeometryTraits, geom::AbstractGeometry)
         return toWKT(geom)
     end
 
-    function Base.convert(::Type{T}, geom::X) where {T<:IGeometry,X}
+    function Base.convert(::Type{T}, geom) where {T<:IGeometry}
         return Base.convert(T, GeoInterface.geomtrait(geom), geom)
     end
     function Base.convert(

@@ -827,4 +827,23 @@ import GeoFormatTypes as GFT
             @test !GI.is3d(point)
         end
     end
+
+    @testset "GeoInterface conversion" begin
+        struct MyPoint end
+        struct MyLine end
+
+        GI.isgeometry(::MyPoint) = true
+        GI.geomtrait(::MyPoint) = GI.PointTrait()
+        GI.ncoord(::GI.PointTrait, geom::MyPoint) = 2
+        GI.getcoord(::GI.PointTrait, geom::MyPoint, i) = [1, 2][i]
+
+        GI.isgeometry(::MyLine) = true
+        GI.geomtrait(::MyLine) = GI.LineStringTrait()
+        GI.ngeom(::GI.LineStringTrait, geom::MyLine) = 2
+        GI.getgeom(::GI.LineStringTrait, geom::MyLine, i) = MyPoint()
+
+        geom = MyLine()
+        ag_geom = convert(Type{AG.IGeometry}, geom)
+        GI.coordinates(ag_geom) == [[1, 2], [1, 2]]
+    end
 end

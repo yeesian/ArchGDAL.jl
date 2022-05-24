@@ -1,5 +1,6 @@
 using Test
 import ArchGDAL as AG
+using Extents
 
 @testset "test_geos_operations.jl" begin
     function equivalent_to_wkt(geom::AG.Geometry, wkt::String)
@@ -166,6 +167,129 @@ import ArchGDAL as AG
             end
         end
     end
+    function test_method_simple(
+        f::Function,
+        wkt1::AbstractString,
+        wkt2::AbstractString,
+        wkt3::AbstractString,
+    )
+        AG.fromWKT(wkt1) do geom1
+            AG.fromWKT(wkt2) do geom2
+                @test AG.toWKT(f(geom1, geom2)) == wkt3
+            end
+        end
+    end
+
+    function test_predicate(f::Function, wkt1, wkt2, result::Bool)
+        AG.fromWKT(wkt1) do geom1
+            AG.fromWKT(wkt2) do geom2
+                @test f(geom1, geom2) == result
+            end
+        end
+    end
+
+    @testset "GeoInterface" begin
+        test_predicate(
+            GI.intersects,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            true,
+        )
+        test_predicate(
+            GI.equals,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            false,
+        )
+        test_predicate(
+            GI.disjoint,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            false,
+        )
+        test_predicate(
+            GI.touches,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(1 1)",
+            true,
+        )
+        test_predicate(
+            GI.crosses,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            false,
+        )
+        test_predicate(
+            GI.within,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            false,
+        )
+        test_predicate(
+            GI.contains,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            true,
+        )
+        test_predicate(
+            GI.overlaps,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            false,
+        )
+        test_method_simple(
+            GI.union,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            "POLYGON ((1 5,5 5,5 1,1 1,1 5))",
+        )
+        test_method_simple(
+            GI.intersection,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            "POINT (2 2)",
+        )
+        test_method_simple(
+            GI.difference,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            "POLYGON ((1 5,5 5,5 1,1 1,1 5))",
+        )
+        test_method_simple(
+            GI.symdifference,
+            "POLYGON((1 1,1 5,5 5,5 1,1 1))",
+            "POINT(2 2)",
+            "POLYGON ((1 5,5 5,5 1,1 1,1 5))",
+        )
+        @test GI.distance(
+            AG.fromWKT("POLYGON((1 1,1 5,5 5,5 1,1 1))"),
+            AG.fromWKT("POINT(2 2)"),
+        ) == 0.0
+
+        @test GI.length(AG.fromWKT("LINESTRING(0 0, 10 0)")) == 10
+
+        @test GI.area(AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))")) ==
+              100
+
+        @test GI.coordinates(
+            GI.buffer(AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"), 1),
+        )[1][1] == [-1.0, 0.0]
+
+        @test AG.toWKT(
+            GI.convexhull(AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))")),
+        ) == "POLYGON ((0 0,0 10,10 10,10 0,0 0))"
+
+        @test GI.extent(AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))")) ==
+              Extent(X = (0.0, 10.0), Y = (0.0, 10.0), Z = (0.0, 0.0))
+
+        @test GI.asbinary(
+            AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
+        )[1:10] ==
+              UInt8[0x01, 0x03, 0x00, 0x00, 0x00, 0x01, 0x00, 0x00, 0x00, 0x05]
+
+        @test GI.astext(AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))")) ==
+              "POLYGON ((0 0,10 0,10 10,0 10,0 0))"
+    end
 
     @testset "Intersection" begin
         test_method(
@@ -192,14 +316,12 @@ import ArchGDAL as AG
             "POLYGON((0 1,0 2,10 2,10 1,0 1))",
             "GEOMETRYCOLLECTION (POLYGON ((1 2,1 1,0.5 1.0,1 2)),POLYGON ((9.5 1.0,2 1,2 2,9 2,9.5 1.0)),LINESTRING (1 2,2 2),LINESTRING (2 1,1 1))",
         )
-    end
-
-    function test_predicate(f::Function, wkt1, wkt2, result::Bool)
-        AG.fromWKT(wkt1) do geom1
-            AG.fromWKT(wkt2) do geom2
-                @test f(geom1, geom2) == result
-            end
-        end
+        test_method_simple(
+            GI.intersection,
+            "MULTIPOLYGON(((0 0,5 10,10 0,0 0),(1 1,1 2,2 2,2 1,1 1),(100 100,100 102,102 102,102 100,100 100)))",
+            "POLYGON((0 1,0 2,10 2,10 1,0 1))",
+            "GEOMETRYCOLLECTION (POLYGON ((1 2,1 1,0.5 1.0,1 2)),POLYGON ((9.5 1.0,2 1,2 2,9 2,9.5 1.0)),LINESTRING (1 2,2 2),LINESTRING (2 1,1 1))",
+        )
     end
 
     @testset "Intersects" begin
@@ -224,6 +346,12 @@ import ArchGDAL as AG
         )
         test_predicate(
             AG.intersects,
+            "POLYGON((1 1,1 2,2 2,2 1,1 1))",
+            "MULTIPOLYGON(((0 0,0 10,10 10,10 0,0 0)))",
+            true,
+        )
+        test_predicate(
+            GI.intersects,
             "POLYGON((1 1,1 2,2 2,2 1,1 1))",
             "MULTIPOLYGON(((0 0,0 10,10 10,10 0,0 0)))",
             true,
