@@ -102,7 +102,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         elseif gtype == wkbTriangle
             GeoInterface.TriangleTrait()
         else
-            @warn "unknown geometry type"
             nothing
         end
     end
@@ -308,7 +307,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         geom,
     ) where {T<:IGeometry}
         f = get(lookup_method, typeof(type), nothing)
-        isnothing(f) || error(
+        isnothing(f) && error(
             "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
         )
         return f(GeoInterface.coordinates(geom))
