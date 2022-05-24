@@ -289,7 +289,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return toWKT(geom)
     end
 
-    function Base.convert(::Type{T}, geom) where {T<:IGeometry}
+    function Base.convert(::Type{T}, geom::X) where {T<:IGeometry,X}
         return Base.convert(T, GeoInterface.geomtrait(geom), geom)
     end
     function Base.convert(
