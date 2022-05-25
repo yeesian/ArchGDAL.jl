@@ -11,7 +11,7 @@ Convert a `GeoFormatTypes.GeoFormat` object to Geometry, then to the target
 format. The Geom trait is needed to separate out convert for CRS for
 WellKnownText and GML, which may contain both.
 
-Both `Geom` and `Mixed` formats are converted to Geometries by default. 
+Both `Geom` and `Mixed` formats are converted to Geometries by default.
 To convert a `Mixed` format to crs, `CRS` must be explicitly passed for `mode`.
 """
 
@@ -20,36 +20,42 @@ function Base.convert(
     mode::Union{GFT.FormatMode,Type{GFT.FormatMode}},
     source::GFT.GeoFormat,
 )
-    return convert(target, convert(AbstractGeometry, source))
+    return convert(target, convert(IGeometry, source))
 end
 
 """
-    convert(::Type{<:AbstractGeometry},
+    convert(::Type{<:IGeometry},
         source::GeoFormatTypes.AbstractWellKnownText)
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.WellKnownBinary)
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.GeoJSON)
-    convert(::Type{<:AbstractGeometry}, source::GeoFormatTypes.GML)
+    convert(::Type{<:IGeometry}, source::GeoFormatTypes.WellKnownBinary)
+    convert(::Type{<:IGeometry}, source::GeoFormatTypes.GeoJSON)
+    convert(::Type{<:IGeometry}, source::GeoFormatTypes.GML)
 
 Convert `GeoFormat` geometry data to an ArchGDAL `Geometry` type
 """
 
 function Base.convert(
-    ::Type{<:AbstractGeometry},
-    source::GFT.AbstractWellKnownText,
-)
+    ::Type{<:IGeometry},
+    source::X,
+)::IGeometry where {X<:GFT.WellKnownText}
     return fromWKT(GFT.val(source))
 end
-function Base.convert(::Type{<:AbstractGeometry}, source::GFT.WellKnownBinary)
+function Base.convert(
+    ::Type{<:IGeometry},
+    source::X,
+)::IGeometry where {X<:GFT.WellKnownBinary}
     return fromWKB(GFT.val(source))
 end
-function Base.convert(::Type{<:AbstractGeometry}, source::GFT.GeoJSON)
+function Base.convert(::Type{<:IGeometry}, source::X) where {X<:GFT.GeoJSON}
     return fromJSON(GFT.val(source))
 end
-function Base.convert(::Type{<:AbstractGeometry}, source::GFT.GML)
+function Base.convert(::Type{<:IGeometry}, source::X) where {X<:GFT.GML}
     return fromGML(GFT.val(source))
 end
 
-function Base.convert(::Type{IGeometry{wkbUnknown}}, source::AbstractGeometry)
+function Base.convert(
+    ::Type{IGeometry{wkbUnknown}},
+    source::X,
+) where {X<:AbstractGeometry}
     result = IGeometry(C_NULL)
     result.ptr = unsafe_clone(source).ptr
     return result

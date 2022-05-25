@@ -142,7 +142,7 @@ function reproject(
 )
     return convert(
         typeof(geom),
-        reproject(convert(Geometry, geom), sourcecrs, targetcrs; kwargs...),
+        reproject(convert(IGeometry, geom), sourcecrs, targetcrs; kwargs...),
     )
 end
 

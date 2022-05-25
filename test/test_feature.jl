@@ -1,5 +1,6 @@
 using Test
 import ArchGDAL as AG
+import GeoInterface as GI
 
 @testset "test_feature.jl" begin
     AG.read("data/point.geojson") do dataset
@@ -12,6 +13,8 @@ import ArchGDAL as AG
                   (index 0) FID => 2.0
                   (index 1) pointname => point-a
                 """
+                @test GI.isfeature(f2)
+                @test GI.isgeometry(GI.geometry(f2))
                 AG.getgeom(f1) do g1
                     @test sprint(print, g1) == "Geometry: POINT (100 0)"
                 end
@@ -22,6 +25,7 @@ import ArchGDAL as AG
                     @test sprint(print, g) == "NULL Geometry"
                 end
 
+                @test first(GI.properties(f2)) == 0.0
                 @test sprint(print, f2) == """
                 Feature
                   (index 0) geom => POINT

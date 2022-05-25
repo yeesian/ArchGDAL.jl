@@ -86,6 +86,24 @@ nfield(feature::AbstractFeature)::Integer =
     GDAL.ogr_f_getfieldcount(feature.ptr)
 
 """
+    keys(feature::AbstractFeature)
+
+Fetch the keys or names on this feature.
+"""
+function Base.keys(feature::AbstractFeature)
+    return (getname(getfielddefn(feature, i)) for i in 0:nfield(feature)-1)
+end
+
+"""
+    values(feature::AbstractFeature)
+
+Fetch the values this feature.
+"""
+function Base.values(feature::AbstractFeature)
+    return (getfield(feature, i) for i in 0:nfield(feature)-1)
+end
+
+"""
     getfielddefn(feature::AbstractFeature, i::Integer)
 
 Fetch definition for this field.

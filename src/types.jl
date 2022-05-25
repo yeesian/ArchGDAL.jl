@@ -1,7 +1,7 @@
 import DiskArrays: AbstractDiskArray
 import Base.convert
 
-abstract type AbstractGeometry <: GeoInterface.AbstractGeometry end
+abstract type AbstractGeometry end
 # needs to have a `ptr::GDAL.OGRGeometryH` attribute
 
 abstract type AbstractPreparedGeometry <: AbstractGeometry end
