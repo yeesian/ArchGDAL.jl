@@ -1529,184 +1529,122 @@ for (geom, wkbgeom) in (
     (:point, wkbPoint),
     (:polygon, wkbPolygon),
 )
-    eval(
-        quote
-            $(Symbol("create$geom"))()::IGeometry = creategeom($wkbgeom)
-            $(Symbol("unsafe_create$geom"))()::Geometry =
-                unsafe_creategeom($wkbgeom)
-        end,
-    )
+    @eval begin
+        $(Symbol("create$geom"))()::IGeometry = creategeom($wkbgeom)
+        $(Symbol("unsafe_create$geom"))()::Geometry =
+            unsafe_creategeom($wkbgeom)
+    end
 end
 
+
 for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
-    for (args, typedargs) in (
-        ((:x, :y), (:(x::Real), :(y::Real))),
-        ((:x, :y, :z), (:(x::Real), :(y::Real), :(z::Real))),
-    )
-        eval(quote
-            function $(Symbol("$(f)point"))($(typedargs...))::$rt
-                geom = $(Symbol("$(f)point"))()
-                addpoint!(geom, $(args...))
+    pointargs2d = (:x, :y), (:(x::Real), :(y::Real))
+    pointargs3d = (:x, :y, :z), (:(x::Real), :(y::Real), :(z::Real))
+    for (args, typedargs) in (pointargs2d, pointargs3d)
+        f1 = Symbol("$(f)point")
+        @eval function $f1($(typedargs...))::$rt
+            geom = $f1()
+            addpoint!(geom, $(args...))
+            return geom
+        end
+    end
+
+    V = Vector{<:Real}
+    geomargs2d = (:xs, :ys), (:(xs::$V), :(ys::$V))
+    geomargs3d = (:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V))
+    for (args, typedargs) in (geomargs2d, geomargs3d)
+        for geom in (:linestring, :linearring)
+            f1 = Symbol("$f$geom")
+            @eval function $f1($(typedargs...))::$rt
+                geom = $f1()
+                for pt in zip($(args...))
+                    addpoint!(geom, pt...)
+                end
                 return geom
             end
-        end)
+        end
+        f1 = Symbol("$(f)polygon")
+        @eval function $f1($(typedargs...))::$rt
+            geom = $f1()
+            subgeom = unsafe_createlinearring($(args...))
+            result = GDAL.ogr_g_addgeometrydirectly(
+                geom.ptr,
+                subgeom.ptr,
+            )
+            @ogrerr result "Failed to add linearring."
+            return geom
+        end
+        f1 = Symbol("$(f)multipoint")
+        @eval function $f1($(typedargs...))::$rt
+            geom = $f1()
+            for pt in zip($(args...))
+                subgeom = unsafe_createpoint(pt)
+                result = GDAL.ogr_g_addgeometrydirectly(
+                    geom.ptr,
+                    subgeom.ptr,
+                )
+                @ogrerr result "Failed to add point."
+            end
+            return geom
+        end
     end
 
-    for (args, typedargs) in (
-        ((:xs, :ys), (:(xs::Vector{Cdouble}), :(ys::Vector{Cdouble}))),
-        (
-            (:xs, :ys, :zs),
-            (
-                :(xs::Vector{Cdouble}),
-                :(ys::Vector{Cdouble}),
-                :(zs::Vector{Cdouble}),
-            ),
-        ),
-    )
+    # Coordinates can be Vector of Real or 
+    coordtypes = (Vector{<:Real}, Tuple{<:Real,<:Real}, Tuple{<:Real,<:Real,<:Real})
+
+    for typeargs in coordtypes
+        f1 = Symbol("$(f)point")
+        @eval function $f1(coords::$typeargs)::$rt
+            geom = $f1()
+            addpoint!(geom, coords...)
+            return geom
+        end
+    end
+
+    for typeargs in map(ct -> Vector{<:ct}, coordtypes)
         for geom in (:linestring, :linearring)
-            eval(quote
-                function $(Symbol("$f$geom"))($(typedargs...))::$rt
-                    geom = $(Symbol("$f$geom"))()
-                    for pt in zip($(args...))
-                        addpoint!(geom, pt...)
-                    end
-                    return geom
+            f1 = Symbol("$f$geom")
+            @eval function $f1(coords::$typeargs)::$rt
+                geom = $f1()
+                for coord in coords
+                    addpoint!(geom, coord...)
                 end
-            end)
-        end
-
-        for (geom, component) in ((:polygon, :linearring),)
-            eval(
-                quote
-                    function $(Symbol("$f$geom"))($(typedargs...))::$rt
-                        geom = $(Symbol("$f$geom"))()
-                        subgeom =
-                            $(Symbol("unsafe_create$component"))($(args...))
-                        result = GDAL.ogr_g_addgeometrydirectly(
-                            geom.ptr,
-                            subgeom.ptr,
-                        )
-                        @ogrerr result "Failed to add $component."
-                        return geom
-                    end
-                end,
-            )
-        end
-
-        for (geom, component) in ((:multipoint, :point),)
-            eval(
-                quote
-                    function $(Symbol("$f$geom"))($(typedargs...))::$rt
-                        geom = $(Symbol("$f$geom"))()
-                        for pt in zip($(args...))
-                            subgeom = $(Symbol("unsafe_create$component"))(pt)
-                            result = GDAL.ogr_g_addgeometrydirectly(
-                                geom.ptr,
-                                subgeom.ptr,
-                            )
-                            @ogrerr result "Failed to add point."
-                        end
-                        return geom
-                    end
-                end,
-            )
-        end
-    end
-
-    for typeargs in
-        (Vector{<:Real}, Tuple{<:Real,<:Real}, Tuple{<:Real,<:Real,<:Real})
-        eval(quote
-            function $(Symbol("$(f)point"))(coords::$typeargs)::$rt
-                geom = $(Symbol("$(f)point"))()
-                addpoint!(geom, coords...)
                 return geom
             end
-        end)
-    end
-
-    for typeargs in (
-        Vector{Tuple{Cdouble,Cdouble}},
-        Vector{Tuple{Cdouble,Cdouble,Cdouble}},
-        Vector{Vector{Cdouble}},
-    )
-        for geom in (:linestring, :linearring)
-            eval(quote
-                function $(Symbol("$f$geom"))(coords::$typeargs)::$rt
-                    geom = $(Symbol("$f$geom"))()
-                    for coord in coords
-                        addpoint!(geom, coord...)
-                    end
-                    return geom
-                end
-            end)
         end
-
-        for (geom, component) in ((:polygon, :linearring),)
-            eval(
-                quote
-                    function $(Symbol("$f$geom"))(coords::$typeargs)::$rt
-                        geom = $(Symbol("$f$geom"))()
-                        subgeom = $(Symbol("unsafe_create$component"))(coords)
-                        result = GDAL.ogr_g_addgeometrydirectly(
-                            geom.ptr,
-                            subgeom.ptr,
-                        )
-                        @ogrerr result "Failed to add $component."
-                        return geom
-                    end
-                end,
+        f1 = Symbol("$(f)polygon")
+        @eval function $f1(coords::$typeargs)::$rt
+            geom = $f1()
+            subgeom = unsafe_createlinearring(coords)
+            result = GDAL.ogr_g_addgeometrydirectly(
+                geom.ptr,
+                subgeom.ptr,
             )
+            @ogrerr result "Failed to add linearring."
+            return geom
         end
     end
 
-    for (variants, typeargs) in (
-        (
-            ((:multipoint, :point),),
-            (
-                Vector{Tuple{Cdouble,Cdouble}},
-                Vector{Tuple{Cdouble,Cdouble,Cdouble}},
-                Vector{Vector{Cdouble}},
-            ),
-        ),
-        (
-            (
-                (:polygon, :linearring),
-                (:multilinestring, :linestring),
-                (:multipolygon_noholes, :polygon),
-            ),
-            (
-                Vector{Vector{Tuple{Cdouble,Cdouble}}},
-                Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}},
-                Vector{Vector{Vector{Cdouble}}},
-            ),
-        ),
-        (
-            ((:multipolygon, :polygon),),
-            (
-                Vector{Vector{Vector{Tuple{Cdouble,Cdouble}}}},
-                Vector{Vector{Vector{Tuple{Cdouble,Cdouble,Cdouble}}}},
-                Vector{Vector{Vector{Vector{Cdouble}}}},
-            ),
-        ),
-    )
-        for typearg in typeargs, (geom, component) in variants
-            eval(
-                quote
-                    function $(Symbol("$f$geom"))(coords::$typearg)::$rt
-                        geom = $(Symbol("$f$geom"))()
-                        for coord in coords
-                            subgeom =
-                                $(Symbol("unsafe_create$component"))(coord)
-                            result = GDAL.ogr_g_addgeometrydirectly(
-                                geom.ptr,
-                                subgeom.ptr,
-                            )
-                            @ogrerr result "Failed to add $component."
-                        end
-                        return geom
-                    end
-                end,
-            )
+    nested1 = (:multipoint => :point,), map(ct -> Vector{<:ct}, coordtypes)
+    nested2 = (:polygon => :linearring, 
+               :multilinestring => :linestring, 
+               :multipolygon_noholes => :polygon), map(ct -> Vector{<:Vector{<:ct}}, coordtypes)
+    nested3 = (:multipolygon => :polygon,), map(ct -> Vector{<:Vector{<:Vector{<:ct}}}, coordtypes)
+
+    for (variants, typeargs) in (nested1, nested2, nested3), 
+        typearg in typeargs, (geom, component) in variants
+        f1 = Symbol("$f$geom")
+        @eval function $f1(coords::$typearg)::$rt
+            geom = $f1()
+            for coord in coords
+                subgeom = $(Symbol("unsafe_create$component"))(coord)
+                result = GDAL.ogr_g_addgeometrydirectly(
+                    geom.ptr,
+                    subgeom.ptr,
+                )
+                @ogrerr result "Failed to add $component."
+            end
+            return geom
         end
     end
 end
