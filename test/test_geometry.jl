@@ -242,7 +242,8 @@ import GeoFormatTypes as GFT
     end
 
     @testset "Testing construction of complex geometries" begin
-        @test AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+        @test AG.toWKT(AG.createlinestring([1.0f0, 2.0f0, 3.0f0], [4.0f0, 5.0f0, 6.0f0])) ==
+              AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINESTRING (1 4,2 5,3 6)"
         AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
             @test GI.geomtrait(geom) == GI.LineStringTrait()
@@ -272,7 +273,8 @@ import GeoFormatTypes as GFT
             @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9,11 11 11)"
         end
 
-        @test AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+        @test AG.toWKT(AG.createlinearring([1, 2, 3], [4, 5, 6])) ==
+              AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINEARRING (1 4,2 5,3 6)"
         AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
             @test GI.geomtrait(geom) == GI.LineStringTrait()
@@ -298,7 +300,8 @@ import GeoFormatTypes as GFT
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9,1 4 7)"
         end
 
-        @test AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+        @test AG.toWKT(AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06])) ==
+              AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "POLYGON ((1 4,2 5,3 6))"
         AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
             @test GI.geomtrait(geom) == GI.PolygonTrait()
@@ -321,7 +324,8 @@ import GeoFormatTypes as GFT
             @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9,1 4 7))"
         end
 
-        @test AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+        @test AG.toWKT(AG.createmultipoint([1, 2, 3], [4, 5, 6])) ==
+              AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "MULTIPOINT (1 4,2 5,3 6)"
         AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
             @test GI.geomtrait(geom) == GI.MultiPointTrait()
@@ -344,14 +348,28 @@ import GeoFormatTypes as GFT
 
         @test AG.toWKT(
             AG.createmultipolygon(
-                Vector{Vector{Tuple{Cdouble,Cdouble}}}[
-                    Vector{Tuple{Cdouble,Cdouble}}[
+                [
+                    [
                         [(0, 0), (0, 4), (4, 4), (4, 0)],
                         [(1, 1), (1, 3), (3, 3), (3, 1)],
                     ],
-                    Vector{Tuple{Cdouble,Cdouble}}[
+                    [
                         [(10, 0), (10, 4), (14, 4), (14, 0)],
                         [(11, 1), (11, 3), (13, 3), (13, 1)],
+                    ],
+                ],
+            ),
+        ) ==
+        AG.toWKT(
+            AG.createmultipolygon(
+                [
+                    [
+                        [(0,.0, 1.0), (0,.0, 1.0), (4,.0, 1.0), (4,.0, 1.0)],
+                        [(1,.0, 1.0), (1,.0, 1.0), (3,.0, 1.0), (3,.0, 1.0)],
+                    ],
+                    [
+                        [(10.0, 1.0), (10.0, 1.0), (14.0, 1.0), (14.0, 1.0)],
+                        [(11.0, 1.0), (11.0, 1.0), (13.0, 1.0), (13.0, 1.0)],
                     ],
                 ],
             ),
