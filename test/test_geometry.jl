@@ -8,6 +8,7 @@ import GeoFormatTypes as GFT
         AG.createpoint(100, 70) do point
             @test GI.testgeometry(point)
         end
+        @test GI.isgeometry(AG.IGeometry)
     end
 
     @testset "Create a Point" begin
