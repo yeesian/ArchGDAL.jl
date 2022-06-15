@@ -941,23 +941,21 @@ end
 
 Returns `true` if the geometry has a z coordinate, otherwise `false`.
 """
-is3d(geom::AbstractGeometry)::Bool = GDAL.ogr_g_is3d(geom.ptr) == 0x2
+is3d(geom::AbstractGeometry)::Bool = GDAL.ogr_g_is3d(geom.ptr) != 0
 
 """
     ismeasured(geom::AbstractGeometry)
 
 Returns `true` if the geometry has a m coordinate, otherwise `false`.
 """
-ismeasured(geom::AbstractGeometry)::Bool =
-    GDAL.ogr_g_ismeasured(geom.ptr) == 0x4
+ismeasured(geom::AbstractGeometry)::Bool = GDAL.ogr_g_ismeasured(geom.ptr) != 0
 
 """
     isempty(geom::AbstractGeometry)
 
 Returns `true` if the geometry has no points, otherwise `false`.
 """
-isempty(geom::AbstractGeometry)::Bool =
-    Bool(GDAL.ogr_g_isempty(geom.ptr)) == 0x1
+isempty(geom::AbstractGeometry)::Bool = GDAL.ogr_g_isempty(geom.ptr) != 0
 
 """
     isvalid(geom::AbstractGeometry)
