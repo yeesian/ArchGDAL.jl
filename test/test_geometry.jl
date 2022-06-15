@@ -118,6 +118,7 @@ import GeoFormatTypes as GFT
                     [100, 70, 0],
                     atol = 1e-6,
                 )
+                @test point == point2
                 @test AG.equals(point, point2) == true
             end
             AG.createpoint((100, 70, 0)) do point3
