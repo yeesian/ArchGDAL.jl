@@ -60,7 +60,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
     GeoInterface.geometry(feat::AbstractFeature) = getgeom(feat, 0)
 
-    GeoInterface.isgeometry(geom::AbstractGeometry) = true
+    GeoInterface.isgeometry(::Type{<:AbstractGeometry}) = true
     @enable_geo_plots AbstractGeometry
 
     function GeoInterface.geomtrait(geom::AbstractGeometry)
