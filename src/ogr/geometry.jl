@@ -651,7 +651,7 @@ equals(g1::AbstractGeometry, g2::AbstractGeometry)::Bool =
     Bool(GDAL.ogr_g_equals(g1.ptr, g2.ptr))
 
 function Base.:(==)(g1::AbstractGeometry, g2::AbstractGeometry)
-    equals(g1, g2)
+    return equals(g1, g2)
 end
 
 """
