@@ -285,7 +285,7 @@ function create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype::DataType = Any,
+    dtype = GDT_Unknown,
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
@@ -306,7 +306,7 @@ function create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype::DataType = Any,
+    dtype = GDT_Unknown,
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
