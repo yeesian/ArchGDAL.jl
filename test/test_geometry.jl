@@ -243,15 +243,31 @@ import GeoFormatTypes as GFT
     end
 
     @testset "Testing construction of complex geometries" begin
-        @test AG.toWKT(
-                  AG.createlinestring(
-                      [1.0f0, 2.0f0, 3.0f0],
-                      [4.0f0, 5.0f0, 6.0f0],
-                  ),
-              ) ==
-              AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
-              "LINESTRING (1 4,2 5,3 6)"
-        AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
+        @testset "linestring" begin
+            @test AG.toWKT(AG.createlinestring([1.0f0, 2.0f0, 3.0f0], [4.0f0, 5.0f0, 6.0f0])) ==
+                  AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+                  "LINESTRING (1 4,2 5,3 6)"
+            AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
+                @test GI.geomtrait(geom) == GI.LineStringTrait()
+                @test GI.testgeometry(geom)
+                @test isapprox(
+                    GI.coordinates(geom),
+                    [[1, 4], [2, 5], [3, 6]],
+                    atol = 1e-6,
+                )
+                @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
+                AG.closerings!(geom)
+                @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
+                AG.setpoint!(geom, 1, 10, 10)
+                @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
+                @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString}
+                # child = AG.unsafe_getgeom(geom, 0)
+                # @test typeof(child) == AG.Geometry{AG.wkbPoint}
+                # AG.destroy(child)
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
+            end
+            geom = AG.unsafe_createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])
             @test GI.geomtrait(geom) == GI.LineStringTrait()
             @test GI.testgeometry(geom)
             @test isapprox(
@@ -266,248 +282,267 @@ import GeoFormatTypes as GFT
             @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
             @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
             @test typeof(geom) == AG.Geometry{AG.wkbLineString}
-        end
-        AG.createlinestring(
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0],
-        ) do geom
-            @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
-            AG.setpoint!(geom, 1, 10, 10, 10)
-            @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9)"
-            AG.addpoint!(geom, 11, 11, 11)
-            @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9,11 11 11)"
+            AG.destroy(geom)
+            AG.createlinestring(
+                [1.0, 2.0, 3.0],
+                [4.0, 5.0, 6.0],
+                [7.0, 8.0, 9.0],
+            ) do geom
+                @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
+                AG.setpoint!(geom, 1, 10, 10, 10)
+                @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9)"
+                AG.addpoint!(geom, 11, 11, 11)
+                @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9,11 11 11)"
+            end
         end
 
-        @test AG.toWKT(AG.createlinearring([1, 2, 3], [4, 5, 6])) ==
-              AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
-              "LINEARRING (1 4,2 5,3 6)"
-        AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GI.geomtrait(geom) == GI.LineStringTrait()
-            @test isapprox(
-                GI.coordinates(geom),
-                [[1, 4], [2, 5], [3, 6]],
-                atol = 1e-6,
-            )
-            @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
-            AG.setpointcount!(geom, 5)
-            @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
-            AG.empty!(geom)
-            @test AG.toWKT(geom) == "LINEARRING EMPTY"
-            @test typeof(geom) == AG.Geometry{AG.wkbLineString} # this seems odd
-        end
-        AG.createlinearring(
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0],
-        ) do geom
+        @testset "linearring" begin
+            @test AG.toWKT(AG.createlinearring([1, 2, 3], [4, 5, 6])) ==
+                  AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+                  "LINEARRING (1 4,2 5,3 6)"
+            AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
+                @test GI.geomtrait(geom) == GI.LineStringTrait()
+                @test isapprox(
+                    GI.coordinates(geom),
+                    [[1, 4], [2, 5], [3, 6]],
+                    atol = 1e-6,
+                )
+                @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
+                AG.setpointcount!(geom, 5)
+                @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString} # GDAL only uses the LinearRing enum during construction  
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
+                AG.empty!(geom)
+                @test AG.toWKT(geom) == "LINEARRING EMPTY"
+            end
+            points = [1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]
+            AG.createlinearring(points...) do geom
+                @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
+                AG.closerings!(geom)
+                @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9,1 4 7)"
+            end
+            geom = AG.unsafe_createlinearring(points...)
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
             AG.closerings!(geom)
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9,1 4 7)"
+            AG.destroy(geom)
         end
 
-        @test AG.toWKT(
-                  AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06]),
-              ) ==
-              AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
-              "POLYGON ((1 4,2 5,3 6))"
-        AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GI.geomtrait(geom) == GI.PolygonTrait()
-            @test GI.testgeometry(geom)
-            @test isapprox(
-                GI.coordinates(geom),
-                [[[1, 4], [2, 5], [3, 6]]],
-                atol = 1e-6,
-            )
-            @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
-            @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
-        end
-        AG.createpolygon(
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0],
-        ) do geom
-            @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
-            AG.closerings!(geom)
-            @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9,1 4 7))"
-        end
-
-        @test AG.toWKT(AG.createmultipoint([1, 2, 3], [4, 5, 6])) ==
-              AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
-              "MULTIPOINT (1 4,2 5,3 6)"
-        AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
-            @test GI.geomtrait(geom) == GI.MultiPointTrait()
-            @test GI.testgeometry(geom)
-            @test isapprox(
-                GI.coordinates(geom),
-                [[1, 4], [2, 5], [3, 6]],
-                atol = 1e-6,
-            )
-            @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
-            @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint}
-        end
-        AG.createmultipoint(
-            [1.0, 2.0, 3.0],
-            [4.0, 5.0, 6.0],
-            [7.0, 8.0, 9.0],
-        ) do geom
-            @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
+        @testset "polygon" begin
+            @test AG.toWKT(AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06])) ==
+                  AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+                  "POLYGON ((1 4,2 5,3 6))"
+            AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
+                @test GI.geomtrait(geom) == GI.PolygonTrait()
+                @test GI.testgeometry(geom)
+                @test isapprox(
+                    GI.coordinates(geom),
+                    [[[1, 4], [2, 5], [3, 6]]],
+                    atol = 1e-6,
+                )
+                @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
+                @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
+            end
+            AG.createpolygon(
+                [1.0, 2.0, 3.0],
+                [4.0, 5.0, 6.0],
+                [7.0, 8.0, 9.0],
+            ) do geom
+                @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
+                AG.closerings!(geom)
+                @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9,1 4 7))"
+            end
         end
 
-        @test AG.toWKT(
-                  AG.createmultipolygon(
-                      Vector{Vector{Tuple{Int,Int}}}[
-                          Vector{Tuple{Int,Int}}[
-                              [(0, 0), (0, 4), (4, 4), (4, 0)],
-                              [(1, 1), (1, 3), (3, 3), (3, 1)],
-                          ],
-                          Vector{Tuple{Int,Int}}[
-                              [(10, 0), (10, 4), (14, 4), (14, 0)],
-                              [(11, 1), (11, 3), (13, 3), (13, 1)],
-                          ],
-                      ],
-                  ),
-              ) ==
-              AG.toWKT(
-                  AG.createmultipolygon(
-                      Vector{Vector{Tuple{Cdouble,Cdouble}}}[
-                          Vector{Tuple{Cdouble,Cdouble}}[
-                              [(0.0, 0.0), (0.0, 4.0), (4.0, 4.0), (4.0, 0.0)],
-                              [(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)],
-                          ],
-                          Vector{Tuple{Cdouble,Cdouble}}[
-                              [
-                                  (10.0, 0.0),
-                                  (10.0, 4.0),
-                                  (14.0, 4.0),
-                                  (14.0, 0.0),
-                              ],
-                              [
-                                  (11.0, 1.0),
-                                  (11.0, 3.0),
-                                  (13.0, 3.0),
-                                  (13.0, 1.0),
-                              ],
-                          ],
-                      ],
-                  ),
-              ) ==
-              "MULTIPOLYGON (" *
-              "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
-              "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
-        AG.createmultipolygon(
-            Vector{Vector{Tuple{Cdouble,Cdouble}}}[
-                Vector{Tuple{Cdouble,Cdouble}}[
-                    [(0, 0), (0, 4), (4, 4), (4, 0)],
-                    [(1, 1), (1, 3), (3, 3), (3, 1)],
-                ],
-                Vector{Tuple{Cdouble,Cdouble}}[
-                    [(10, 0), (10, 4), (14, 4), (14, 0)],
-                    [(11, 1), (11, 3), (13, 3), (13, 1)],
-                ],
-            ],
-        ) do geom
-            @test GI.geomtrait(geom) == GI.MultiPolygonTrait()
-            @test GI.testgeometry(geom)
-            @test isapprox(
-                GI.coordinates(geom),
-                [
-                    [
-                        [[0, 0], [0, 4], [4, 4], [4, 0]],
-                        [[1, 1], [1, 3], [3, 3], [3, 1]],
+        @testset "multipoint" begin
+            @test AG.toWKT(AG.createmultipoint([1, 2, 3], [4, 5, 6])) ==
+                  AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+                  "MULTIPOINT (1 4,2 5,3 6)"
+            AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
+                @test GI.geomtrait(geom) == GI.MultiPointTrait()
+                @test GI.testgeometry(geom)
+                @test isapprox(
+                    GI.coordinates(geom),
+                    [[1, 4], [2, 5], [3, 6]],
+                    atol = 1e-6,
+                )
+                @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
+                @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint}
+            end
+            AG.createmultipoint(
+                [1.0, 2.0, 3.0],
+                [4.0, 5.0, 6.0],
+                [7.0, 8.0, 9.0],
+            ) do geom
+                @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
+            end
+        end
+
+        @testset "multipolygon" begin
+            @test AG.toWKT(
+                AG.createmultipolygon(
+                    Vector{Vector{Tuple{Int,Int}}}[
+                        Vector{Tuple{Int,Int}}[
+                            [(0, 0), (0, 4), (4, 4), (4, 0)],
+                            [(1, 1), (1, 3), (3, 3), (3, 1)],
+                        ],
+                        Vector{Tuple{Int,Int}}[
+                            [(10, 0), (10, 4), (14, 4), (14, 0)],
+                            [(11, 1), (11, 3), (13, 3), (13, 1)],
+                        ],
                     ],
-                    [
-                        [[10, 0], [10, 4], [14, 4], [14, 0]],
-                        [[11, 1], [11, 3], [13, 3], [13, 1]],
+                ),
+            ) ==
+            AG.toWKT(
+                AG.createmultipolygon(
+                    Vector{Vector{Tuple{Cdouble,Cdouble}}}[
+                        Vector{Tuple{Cdouble,Cdouble}}[
+                            [(0.0, 0.0), (0.0, 4.0), (4.0, 4.0), (4.0, 0.0)],
+                            [(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)],
+                        ],
+                        Vector{Tuple{Cdouble,Cdouble}}[
+                            [(10.0, 0.0), (10.0, 4.0), (14.0, 4.0), (14.0, 0.0)],
+                            [(11.0, 1.0), (11.0, 3.0), (13.0, 3.0), (13.0, 1.0)],
+                        ],
                     ],
-                ],
-                atol = 1e-6,
-            )
-            @test AG.toWKT(geom) ==
+                ),
+            ) ==
                   "MULTIPOLYGON (" *
                   "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
                   "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
-            @test typeof(geom) == AG.Geometry{AG.wkbMultiPolygon}
+            AG.createmultipolygon(
+                Vector{Vector{Tuple{Cdouble,Cdouble}}}[
+                    Vector{Tuple{Cdouble,Cdouble}}[
+                        [(0, 0), (0, 4), (4, 4), (4, 0)],
+                        [(1, 1), (1, 3), (3, 3), (3, 1)],
+                    ],
+                    Vector{Tuple{Cdouble,Cdouble}}[
+                        [(10, 0), (10, 4), (14, 4), (14, 0)],
+                        [(11, 1), (11, 3), (13, 3), (13, 1)],
+                    ],
+                ],
+            ) do geom
+                @test GI.geomtrait(geom) == GI.MultiPolygonTrait()
+                @test GI.testgeometry(geom)
+                @test isapprox(
+                    GI.coordinates(geom),
+                    [
+                        [
+                            [[0, 0], [0, 4], [4, 4], [4, 0]],
+                            [[1, 1], [1, 3], [3, 3], [3, 1]],
+                        ],
+                        [
+                            [[10, 0], [10, 4], [14, 4], [14, 0]],
+                            [[11, 1], [11, 3], [13, 3], [13, 1]],
+                        ],
+                    ],
+                    atol = 1e-6,
+                )
+                @test AG.toWKT(geom) ==
+                      "MULTIPOLYGON (" *
+                      "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
+                      "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
+                @test typeof(geom) == AG.Geometry{AG.wkbMultiPolygon}
+                child = AG.unsafe_getgeom(geom, 0)
+                @test typeof(child) == AG.Geometry{AG.wkbPolygon}
+                AG.destroy(child)
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPolygon}
+            end
         end
 
-        AG.fromWKT(
-            "CURVEPOLYGON (" *
-            "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
-            "(-1 0,0 0.5,1 0,0 1,-1 0))",
-        ) do geom
-            @test typeof(geom) == AG.Geometry{AG.wkbCurvePolygon}
-            @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) ==
-                  "CURVEPOLYGON (" *
-                  "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
-                  "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
-            AG.lineargeom(geom, 0.5) do lgeom
-                @test typeof(lgeom) == AG.Geometry{AG.wkbPolygon}
-                AG.curvegeom(lgeom) do clgeom
-                    @test AG.toWKT(clgeom) ==
-                          "CURVEPOLYGON (" *
-                          "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
-                          "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
-                    @test typeof(clgeom) == AG.Geometry{AG.wkbCurvePolygon}
-                end
-                @test AG.ngeom(
-                    AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
-                ) == 2
-                AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
-                    @test typeof(mlsgeom) == AG.Geometry{AG.wkbMultiLineString}
-                    AG.polygonize(mlsgeom) do plgeom
-                        @test AG.ngeom(plgeom) == 2
-                        @test typeof(plgeom) ==
-                              AG.Geometry{AG.wkbGeometryCollection}
+        @testset "circularstring" begin
+            AG.fromWKT("CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)") do geom
+                @test typeof(geom) == AG.Geometry{AG.wkbCircularString}
+                @test GI.geomtrait(geom) == GI.CircularStringTrait()
+                # Other tests ???
+            end
+        end
+
+        @testset "curvepolygon" begin
+            AG.fromWKT(
+                "CURVEPOLYGON (" *
+                "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
+                "(-1 0,0 0.5,1 0,0 1,-1 0))",
+            ) do geom
+                @test GI.geomtrait(geom) == GI.CurvePolygonTrait()
+                @test typeof(geom) == AG.Geometry{AG.wkbCurvePolygon}
+                child = AG.unsafe_getgeom(geom, 0)
+                @test typeof(child) == AG.Geometry{AG.wkbCircularString}
+                AG.destroy(child)
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbCircularString}
+                @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) ==
+                      "CURVEPOLYGON (" *
+                      "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
+                      "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+                AG.lineargeom(geom, 0.5) do lgeom
+                    @test typeof(lgeom) == AG.Geometry{AG.wkbPolygon}
+                    AG.curvegeom(lgeom) do clgeom
+                        @test AG.toWKT(clgeom) ==
+                              "CURVEPOLYGON (" *
+                              "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
+                              "(-1 0,0.0 0.5,1 0,0 1,-1 0))"
+                        @test typeof(clgeom) == AG.Geometry{AG.wkbCurvePolygon}
+                    end
+                    @test AG.ngeom(
+                        AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
+                    ) == 2
+                    AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+                        @test typeof(mlsgeom) == AG.Geometry{AG.wkbMultiLineString}
+                        AG.polygonize(mlsgeom) do plgeom
+                            @test AG.ngeom(plgeom) == 2
+                            @test typeof(plgeom) ==
+                                  AG.Geometry{AG.wkbGeometryCollection}
+                        end
                     end
                 end
-            end
 
-            @test startswith(
-                AG.toWKT(
-                    AG.curvegeom(
-                        AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO"),
+                @test startswith(
+                    AG.toWKT(
+                        AG.curvegeom(
+                            AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO"),
+                        ),
                     ),
-                ),
-                "CURVEPOLYGON (CIRCULARSTRING (",
-            )
-            AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO") do lgeom
-                AG.curvegeom(lgeom) do clgeom
-                    @test startswith(
-                        AG.toWKT(clgeom),
-                        "CURVEPOLYGON (CIRCULARSTRING (",
-                    )
-                end
-                @test AG.ngeom(
-                    AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
-                ) == 2
-                AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
-                    AG.polygonize(mlsgeom) do plgeom
-                        @test AG.ngeom(plgeom) == 2
+                    "CURVEPOLYGON (CIRCULARSTRING (",
+                )
+                AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO") do lgeom
+                    AG.curvegeom(lgeom) do clgeom
+                        @test startswith(
+                            AG.toWKT(clgeom),
+                            "CURVEPOLYGON (CIRCULARSTRING (",
+                        )
+                    end
+                    @test AG.ngeom(
+                        AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
+                    ) == 2
+                    AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+                        AG.polygonize(mlsgeom) do plgeom
+                            @test AG.ngeom(plgeom) == 2
+                        end
                     end
                 end
-            end
 
-            @test startswith(
-                AG.toWKT(
-                    AG.curvegeom(
-                        AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5),
+                @test startswith(
+                    AG.toWKT(
+                        AG.curvegeom(
+                            AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5),
+                        ),
                     ),
-                ),
-                "CURVEPOLYGON (CIRCULARSTRING (",
-            )
-            AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5) do lgeom
-                AG.curvegeom(lgeom) do clgeom
-                    @test startswith(
-                        AG.toWKT(clgeom),
-                        "CURVEPOLYGON (CIRCULARSTRING (",
-                    )
-                end
-                @test AG.ngeom(
-                    AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
-                ) == 2
-                AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
-                    AG.polygonize(mlsgeom) do plgeom
-                        @test AG.ngeom(plgeom) == 2
+                    "CURVEPOLYGON (CIRCULARSTRING (",
+                )
+                AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5) do lgeom
+                    AG.curvegeom(lgeom) do clgeom
+                        @test startswith(
+                            AG.toWKT(clgeom),
+                            "CURVEPOLYGON (CIRCULARSTRING (",
+                        )
+                    end
+                    @test AG.ngeom(
+                        AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
+                    ) == 2
+                    AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
+                        AG.polygonize(mlsgeom) do plgeom
+                            @test AG.ngeom(plgeom) == 2
+                        end
                     end
                 end
             end

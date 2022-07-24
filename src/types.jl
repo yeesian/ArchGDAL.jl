@@ -1,10 +1,10 @@
 import DiskArrays: AbstractDiskArray
 import Base.convert
 
-abstract type AbstractGeometry end
+abstract type AbstractGeometry{T} end
 # needs to have a `ptr::GDAL.OGRGeometryH` attribute
 
-abstract type AbstractPreparedGeometry <: AbstractGeometry end
+abstract type AbstractPreparedGeometry{T} <: AbstractGeometry{T} end
 # needs to have a `ptr::GDAL.OGRPreparedGeometryH` attribute
 
 abstract type AbstractSpatialRef end
@@ -221,41 +221,51 @@ mutable struct ISpatialRef <: AbstractSpatialRef
     end
 end
 
-function _infergeomtype(ptr::GDAL.OGRGeometryH = C_NULL)::OGRwkbGeometryType
-    return if ptr != C_NULL
-        convert(OGRwkbGeometryType, GDAL.ogr_g_getgeometrytype(ptr))
-    else
+_infergeomtype(ptr::GDAL.OGRGeometryH) = wkbUnknown
+function _infergeomtype(ptr::GDAL.OGRGeometryH)::OGRwkbGeometryType
+    return if ptr == C_NULL
         wkbUnknown
+    else
+        convert(OGRwkbGeometryType, GDAL.ogr_g_getgeometrytype(ptr))
     end
 end
 
-mutable struct Geometry{OGRwkbGeometryType} <: AbstractGeometry
+mutable struct Geometry{OGRwkbGeometryType} <: AbstractGeometry{OGRwkbGeometryType}
     ptr::GDAL.OGRGeometryH
-
-    Geometry(ptr::GDAL.OGRGeometryH = C_NULL) = new{_infergeomtype(ptr)}(ptr)
+    Geometry{wkbUnknown}() = new{wkbUnknown}(C_NULL)
+    Geometry{T}(ptr::GDAL.OGRGeometryH) where T = new{T}(ptr)
 end
+Geometry(ptr::GDAL.OGRGeometryH) = Geometry{_infergeomtype(ptr)}(ptr)
+Geometry() = Geometry{wkbUnknown}()
 _geomtype(::Geometry{T}) where {T} = T
 
-mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry
+mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry{OGRwkbGeometryType}
     ptr::GDAL.OGRGeometryH
 
-    function IGeometry(ptr::GDAL.OGRGeometryH = C_NULL)
-        geom = new{_infergeomtype(ptr)}(ptr)
+    function IGeometry{wkbUnknown}()
+        geom = new{wkbUnknown}(C_NULL)
+        finalizer(destroy, geom)
+        return geom
+    end
+    function IGeometry{T}(ptr::GDAL.OGRGeometryH) where T
+        geom = new{T}(ptr)
         finalizer(destroy, geom)
         return geom
     end
 end
+IGeometry(ptr::GDAL.OGRGeometryH) = IGeometry{_infergeomtype(ptr)}(ptr)
+IGeometry() = IGeometry{wkbUnknown}()
 _geomtype(::IGeometry{T}) where {T} = T
 
-mutable struct PreparedGeometry <: AbstractPreparedGeometry
+mutable struct PreparedGeometry{T} <: AbstractPreparedGeometry{T}
     ptr::GDAL.OGRPreparedGeometryH
 end
 
-mutable struct IPreparedGeometry <: AbstractPreparedGeometry
+mutable struct IPreparedGeometry{T} <: AbstractPreparedGeometry{T}
     ptr::GDAL.OGRPreparedGeometryH
 
-    function IPreparedGeometry(ptr::GDAL.OGRPreparedGeometryH)
-        geom = new(ptr)
+    function IPreparedGeometry{T}(ptr::GDAL.OGRPreparedGeometryH) where T
+        geom = new{T}(ptr)
         finalizer(destroy, geom)
         return geom
     end
