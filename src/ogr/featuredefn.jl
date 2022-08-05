@@ -330,7 +330,7 @@ function directly, but use OGRLayer::DeleteGeomField() instead.
 This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn.
 """
-function deletegeomdefn!(featuredefn::FeatureDefn, i::Integer)::FeatureDefn
+function deletegeomdefn!(featuredefn::Union{FeatureDefn, IFeatureDefnView}, i::Integer)
     result = GDAL.ogr_fd_deletegeomfielddefn(featuredefn.ptr, i)
     @ogrerr result "Failed to delete geom field $i in the feature definition"
     return featuredefn

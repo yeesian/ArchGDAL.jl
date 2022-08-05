@@ -178,7 +178,71 @@ function write(
     filename::AbstractString;
     kwargs...,
 )::Nothing
-    destroy(unsafe_copy(dataset, filename = filename; kwargs...))
+    drivername = GDAL.gdalgetdrivershortname(getdriver(dataset).ptr)
+    if drivername in gdal_raster_drivers
+        destroy(unsafe_copy(dataset, filename = filename; kwargs...))
+    elseif drivername in gdal_vector_drivers
+        writevectords(dataset, filename; kwargs...)
+    else
+        error("Dataset format not recognized.")
+    end
+    return nothing
+end
+
+"""
+    writevectords(ds, filename; driver=ArchGDAL.getdriver(ds), options::Vector{String}=[""], chunksize=20000)
+
+Writes the vector dataset to the designated filename. The options are passed to the newly created dataset and
+have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
+in each database transaction, e.g. for SQLite.
+"""
+function writevectords(ds, filename; driver=getdriver(ds), options::Vector{String}=[""], chunksize=20000)
+    create(filename; driver=driver, options=options) do target
+        for layeridx in 0:nlayer(ds)-1
+            sourcelayer = getlayer(ds, layeridx)
+            sourcelayerdef = layerdefn(sourcelayer)
+            createlayer(name=getname(sourcelayer),
+                                 dataset=target,
+                                 geom=wkbUnknown,  # GPKG only works when using unknown here, deleting the field and recreating it later
+                                 spatialref=getspatialref(sourcelayer)) do targetlayer
+                targetlayerdefn = layerdefn(targetlayer)
+                
+                # the following try catch block is a bit hacky
+                # geopackage files dont work with the default geom field definition,
+                # because the driver expects a field "GEOMETRY" but the default is "Geometry"!?
+                # on the other hand, the ESRI Shapefile driver does not support GDAL.ogr_l_creategeomfield
+                # hence the try catch block as a workaround; it seems to work even after having delted the geomdefn
+                try
+                    deletegeomdefn!(targetlayerdefn, 0)
+                    # add geometry field definitions
+                    for geomfieldidx in 0:ngeom(sourcelayer)-1
+                        addgeomdefn!(targetlayer, getgeomdefn(sourcelayerdef, geomfieldidx))
+                    end
+                catch err
+                    if (err isa GDAL.GDALError) && err.msg == "CreateGeomField() not supported by this layer.\n"
+                        nothing
+                    else
+                        rethrow(err)
+                    end
+                end
+
+                # add field definitions
+                for fieldidx in 0:nfield(sourcelayer)-1
+                    addfielddefn!(targetlayer, getfielddefn(sourcelayerdef, fieldidx))
+                end
+                
+                for chunk in Iterators.partition(sourcelayer, chunksize)
+                    GDAL.ogr_l_starttransaction(targetlayer.ptr)
+
+                    for feature in chunk
+                        ArchGDAL.addfeature!(targetlayer, feature)
+                    end
+
+                    GDAL.ogr_l_committransaction(targetlayer.ptr)
+                end
+            end
+        end
+    end
     return nothing
 end
 
