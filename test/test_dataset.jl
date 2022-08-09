@@ -1,6 +1,16 @@
 using Test
 import ArchGDAL as AG
 
+const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "GPKG", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
+
+function assertsimilar(ds1, ds2)
+    AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
+    AG.ngeom(AG.getlayer(ds1)) == AG.ngeom(AG.getlayer(ds2)) || error("unequal number of geometries")
+    AG.nraster(ds1) == AG.nraster(ds2) || error("unequal raster count")
+    AG.height(ds1) == AG.height(ds2) || error("unequal height")
+    AG.width(ds1) == AG.width(ds2) || error("unequal width")
+end
+
 @testset "test_dataset.jl" begin
     @testset "Test methods for raster dataset" begin
         AG.read("data/utmsmall.tif") do dataset
@@ -61,6 +71,15 @@ import ArchGDAL as AG
                     return nothing
                 end
             end
+        end
+
+        for driver in supported_vector_drivers
+            fname = "test." * lowercase(join(split(driver)))
+            AG.read("data/point.geojson") do input_ds
+                AG.write(input_ds, fname; driver=AG.getdriver(driver))
+                @test assertsimilar(input_ds, AG.read(fname))
+            end
+            rm(fname, force=true, recursive=true)
         end
 
         dataset1 = AG.read("data/point.geojson")

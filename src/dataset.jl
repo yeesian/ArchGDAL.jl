@@ -172,75 +172,127 @@ end
     write(dataset::AbstractDataset, filename::AbstractString; kwargs...)
 
 Writes the dataset to the designated filename.
+
+For the keyword arguments for vector datasets, consult the documentation of `writelayers` 
+and for raster datasets the docs for `writerasters`.
 """
 function write(
     dataset::AbstractDataset,
     filename::AbstractString;
     kwargs...,
 )::Nothing
-    drivername = GDAL.gdalgetdrivershortname(getdriver(dataset).ptr)
-    if drivername in gdal_raster_drivers
+    
+    if nraster(dataset) > 0
         destroy(unsafe_copy(dataset, filename = filename; kwargs...))
-    elseif drivername in gdal_vector_drivers
-        writevectords(dataset, filename; kwargs...)
+    elseif nlayer(dataset) > 0
+        writelayers(dataset, filename; kwargs...)
+    elseif nraster(dataset) > 0 && nlayer(dataset) > 0
+        error("Writing datasets with raster and vector data is not supported.")
     else
-        error("Dataset format not recognized.")
+        error("Could not determine dataset type (raster or vector).")
     end
     return nothing
 end
 
 """
-    writevectords(ds, filename; driver=ArchGDAL.getdriver(ds), options::Vector{String}=[""], chunksize=20000)
+    writerasters(dataset::AbstractDataset, filename::AbstractString; kwargs...)::Nothing
+
+Write a raster dataset to disk.
+
+### Parameters
+* `dataset`       the dataset to write
+
+### Keyword Arguments
+* `filename`      the filename, UTF-8 encoded.
+* `driver`        the driver to use
+* `strict`        ``true`` if the copy must be strictly equivalent, or more
+normally ``false`` if the copy may adapt as needed for the output format.
+* `options`       additional format dependent options controlling creation
+of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+avoid prior destruction of existing dataset.
+
+### Returns
+nothing
+"""
+function writerasters(dataset::AbstractDataset,
+                      filename::AbstractString;
+                      kwargs...)::Nothing
+    destroy(unsafe_copy(dataset, filename = filename; kwargs...))
+    return nothing
+end
+
+"""
+    writelayers(ds, filename; driver, driver_options=[""], layer_options=[""], chunksize=20000)
 
 Writes the vector dataset to the designated filename. The options are passed to the newly created dataset and
 have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
-in each database transaction, e.g. for SQLite.
+in each database transaction, e.g. for SQLite. This function can also be used to copy datasets on disk.
+
+Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML, MapML, ESRI Shapefile, SQLite
+
+### Parameters
+*`dataset`  The source dataset
+*`filename` The file name to write to
+
+### Keyword arguments
+`driver`           The driver to use, you have to manually select the right driver for the file extension you wish
+`driver_options`   A vector of strings containing KEY=VALUE pairs for driver-specific creation options
+`layer_options`    Driver specific options for layer creation
+`chunksize`        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
+`use_gdal_copy`    Set this to true if you encounter errors when writing. Set to false for higher speed.
+
+### Returns
+nothing
 """
-function writevectords(ds, filename; driver=getdriver(ds), options::Vector{String}=[""], chunksize=20000)
-    create(filename; driver=driver, options=options) do target
-        for layeridx in 0:nlayer(ds)-1
-            sourcelayer = getlayer(ds, layeridx)
+function writelayers(dataset::AbstractDataset,
+                     filename;
+                     driver=getdriver(dataset),
+                     driver_options::Vector{String}=[""], 
+                     layer_options::Vector{String}=[""],
+                     chunksize=20000,
+                     use_gdal_copy=false)
+    create(filename; driver=driver, options=driver_options, width=0, height=0, nbands=0) do target
+        for layeridx in 0:nlayer(dataset)-1
+            sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
-            createlayer(name=getname(sourcelayer),
-                                 dataset=target,
-                                 geom=wkbUnknown,  # GPKG only works when using unknown here, deleting the field and recreating it later
-                                 spatialref=getspatialref(sourcelayer)) do targetlayer
-                targetlayerdefn = layerdefn(targetlayer)
-                
-                # the following try catch block is a bit hacky
-                # geopackage files dont work with the default geom field definition,
-                # because the driver expects a field "GEOMETRY" but the default is "Geometry"!?
-                # on the other hand, the ESRI Shapefile driver does not support GDAL.ogr_l_creategeomfield
-                # hence the try catch block as a workaround; it seems to work even after having delted the geomdefn
-                try
-                    deletegeomdefn!(targetlayerdefn, 0)
-                    # add geometry field definitions
-                    for geomfieldidx in 0:ngeom(sourcelayer)-1
-                        addgeomdefn!(targetlayer, getgeomdefn(sourcelayerdef, geomfieldidx))
-                    end
-                catch err
-                    if (err isa GDAL.GDALError) && err.msg == "CreateGeomField() not supported by this layer.\n"
-                        nothing
-                    else
-                        rethrow(err)
-                    end
-                end
 
-                # add field definitions
-                for fieldidx in 0:nfield(sourcelayer)-1
-                    addfielddefn!(targetlayer, getfielddefn(sourcelayerdef, fieldidx))
-                end
-                
-                for chunk in Iterators.partition(sourcelayer, chunksize)
-                    GDAL.ogr_l_starttransaction(targetlayer.ptr)
+            if use_gdal_copy
+                unsafe_copy(sourcelayer; dataset=target, name=getname(sourcelayer))
+            else
+                createlayer(name=getname(sourcelayer),
+                            dataset=target,
+                            geom=getgeomtype(sourcelayer),
+                            spatialref=getspatialref(sourcelayer),
+                            options=layer_options) do targetlayer
 
-                    for feature in chunk
-                        ArchGDAL.addfeature!(targetlayer, feature)
+                    targetlayerdef = layerdefn(targetlayer)
+                    
+                    # work around GPKG driver quirks
+                    # GPKG still has issues with empty geometry field names,
+                    # especially when the field name is empty
+                    if shortname(driver) == "GPKG"
+                        deletegeomdefn!(targetlayerdef, 0)
+                        for geomfieldidx in 0:ngeom(sourcelayer)-1
+                            geomdef = getgeomdefn(sourcelayerdef, geomfieldidx)
+                            addgeomdefn!(targetlayer, geomdef)
+                        end
                     end
-
-                    GDAL.ogr_l_committransaction(targetlayer.ptr)
-                end
-            end
+                    
+                    # add field definitions
+                    for fieldidx in 0:nfield(sourcelayer)-1
+                        addfielddefn!(targetlayer, getfielddefn(sourcelayerdef, fieldidx))
+                    end
+                    
+                    # iterate over features in chunks to get better speed than gdaldatasetcopylayer
+                    for chunk in Iterators.partition(sourcelayer, chunksize)
+                        GDAL.ogr_l_starttransaction(targetlayer.ptr)
+                        for feature in chunk
+                            addfeature!(targetlayer, feature)
+                        end
+                        GDAL.ogr_l_committransaction(targetlayer.ptr)
+                    end
+                end # createlayer
+            end # if
         end
     end
     return nothing
