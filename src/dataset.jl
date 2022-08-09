@@ -228,7 +228,8 @@ Writes the vector dataset to the designated filename. The options are passed to 
 have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
 in each database transaction, e.g. for SQLite. This function can also be used to copy datasets on disk.
 
-Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML, MapML, ESRI Shapefile, SQLite
+Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, JML, KML, MapML, ESRI Shapefile, SQLite
+GPKG should mostly work, too
 
 ### Parameters
 *`dataset`  The source dataset

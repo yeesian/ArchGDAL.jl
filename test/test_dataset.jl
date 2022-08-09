@@ -1,7 +1,7 @@
 using Test
 import ArchGDAL as AG
 
-const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "GPKG", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
+const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
 
 function assertsimilar(ds1, ds2)
     AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
