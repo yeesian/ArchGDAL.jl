@@ -173,56 +173,40 @@ end
 
 Writes the dataset to the designated filename.
 
-For the keyword arguments for vector datasets, consult the documentation of `writelayers` 
-and for raster datasets the docs for `writerasters`.
+### Parameters
+* `dataset`: The dataset to write
+* `filename`: The filename, UTF-8 encoded.
+
+### Keyword Arguments
+* `driver`: The driver to use, you have to manually select the right driver via `getdriver(drivername)` matching the file extension you wish. 
+Otherwise the driver of the source dataset will be used.
+* `options` (Vector{String}): A vector of strings containing KEY=VALUE pairs for driver-specific creation options.
+* `layer_options` (Vector{String}): Driver specific options for layer creation when writing vector datasets.
+* `chunksize` (Integer): Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
+* `use_gdal_copy` (Bool): Set this to `true` if you encounter errors when writing. Set to `false` for higher speed.
+* `strict` (Bool): Set this to `true` if the written dataset should be a 1:1 copy of the source data, default is `false`,
+which allows the driver to adapt if necessary.
+    
+### Returns
+`nothing`
 """
 function write(
     dataset::AbstractDataset,
     filename::AbstractString;
     kwargs...,
 )::Nothing
-    
-    if nraster(dataset) > 0
+    if nraster(dataset) > 0 && nlayer(dataset) > 0
+        error("Writing datasets with raster and vector data is not supported.")
+    elseif nraster(dataset) > 0
         destroy(unsafe_copy(dataset, filename = filename; kwargs...))
     elseif nlayer(dataset) > 0
         writelayers(dataset, filename; kwargs...)
-    elseif nraster(dataset) > 0 && nlayer(dataset) > 0
-        error("Writing datasets with raster and vector data is not supported.")
-    else
-        error("Could not determine dataset type (raster or vector).")
     end
     return nothing
 end
 
 """
-    writerasters(dataset::AbstractDataset, filename::AbstractString; kwargs...)::Nothing
-
-Write a raster dataset to disk.
-
-### Parameters
-* `dataset`       the dataset to write
-
-### Keyword Arguments
-* `filename`      the filename, UTF-8 encoded.
-* `driver`        the driver to use
-* `strict`        ``true`` if the copy must be strictly equivalent, or more
-normally ``false`` if the copy may adapt as needed for the output format.
-* `options`       additional format dependent options controlling creation
-of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
-avoid prior destruction of existing dataset.
-
-### Returns
-nothing
-"""
-function writerasters(dataset::AbstractDataset,
-                      filename::AbstractString;
-                      kwargs...)::Nothing
-    destroy(unsafe_copy(dataset, filename = filename; kwargs...))
-    return nothing
-end
-
-"""
-    writelayers(ds, filename; driver, driver_options=[""], layer_options=[""], chunksize=20000)
+    writelayers(ds, filename; driver, options=[""], layer_options=[""], chunksize=20000)
 
 Writes the vector dataset to the designated filename. The options are passed to the newly created dataset and
 have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
@@ -237,7 +221,7 @@ GPKG should mostly work, too
 
 ### Keyword arguments
 `driver`           The driver to use, you have to manually select the right driver for the file extension you wish
-`driver_options`   A vector of strings containing KEY=VALUE pairs for driver-specific creation options
+`options`   A vector of strings containing KEY=VALUE pairs for driver-specific creation options
 `layer_options`    Driver specific options for layer creation
 `chunksize`        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
 `use_gdal_copy`    Set this to true if you encounter errors when writing. Set to false for higher speed.
@@ -248,17 +232,17 @@ nothing
 function writelayers(dataset::AbstractDataset,
                      filename;
                      driver=getdriver(dataset),
-                     driver_options::Vector{String}=[""], 
+                     options::Vector{String}=[""], 
                      layer_options::Vector{String}=[""],
                      chunksize=20000,
                      use_gdal_copy=false)
-    create(filename; driver=driver, options=driver_options, width=0, height=0, nbands=0) do target
+    create(filename; driver=driver, options=options) do target
         for layeridx in 0:nlayer(dataset)-1
             sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
 
             if use_gdal_copy
-                unsafe_copy(sourcelayer; dataset=target, name=getname(sourcelayer))
+                copy(sourcelayer; dataset=target, name=getname(sourcelayer))
             else
                 createlayer(name=getname(sourcelayer),
                             dataset=target,
@@ -294,8 +278,8 @@ function writelayers(dataset::AbstractDataset,
                     end
                 end # createlayer
             end # if
-        end
-    end
+        end # for layeridx
+    end # create
     return nothing
 end
 
@@ -329,7 +313,7 @@ function unsafe_create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype::DataType = Any,
+    dtype = GDT_Unknown,
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
@@ -350,7 +334,7 @@ function unsafe_create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype::DataType = Any,
+    dtype = GDT_Unknown,
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(

@@ -1,7 +1,7 @@
 using Test
 import ArchGDAL as AG
 
-const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
+const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GPKG", "GML", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
 
 function assertsimilar(ds1, ds2)
     AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
@@ -73,13 +73,19 @@ end
             end
         end
 
-        for driver in supported_vector_drivers
-            fname = "test." * lowercase(join(split(driver)))
-            AG.read("data/point.geojson") do input_ds
-                AG.write(input_ds, fname; driver=AG.getdriver(driver))
-                @test assertsimilar(input_ds, AG.read(fname))
+        @testset "write functionality" begin
+            @testset "$driver" for driver in supported_vector_drivers
+                fname = "test." * lowercase(join(split(driver)))
+                AG.read("data/point.geojson") do input_ds
+                    try
+                        AG.write(input_ds, fname; driver=AG.getdriver(driver))
+                        @test assertsimilar(input_ds, AG.read(fname))
+                    finally
+                        rm(fname, force=true, recursive=true)
+                    end
+                end
+                rm("test.xsd", force=true, recursive=true)  # some driver creates this file, delete it manually
             end
-            rm(fname, force=true, recursive=true)
         end
 
         dataset1 = AG.read("data/point.geojson")
