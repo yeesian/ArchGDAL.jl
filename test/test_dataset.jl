@@ -81,9 +81,11 @@ end
                         AG.write(input_ds, fname; driver=AG.getdriver(driver))
                         @test assertsimilar(input_ds, AG.read(fname))
                         sleep(0.05)
+                        GC.gc()
                         rm(fname, force=true, recursive=true)
                     finally
                         sleep(0.05)
+                        GC.gc()
                         rm(fname, force=true, recursive=true)
                     end
                 end
