@@ -1,7 +1,7 @@
 using Test
 import ArchGDAL as AG
 
-const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
+const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "GPKG", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
 
 function assertsimilar(ds1, ds2)
     AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
@@ -76,20 +76,29 @@ end
         @testset "write functionality" begin
             @testset "$driver" for driver in supported_vector_drivers
                 fname = "test." * lowercase(join(split(driver)))
-                AG.read("data/point.geojson") do input_ds
-                    try
-                        AG.write(input_ds, fname; driver=AG.getdriver(driver))
-                        @test assertsimilar(input_ds, AG.read(fname))
-                        sleep(0.05)
-                        GC.gc()
-                        rm(fname, force=true, recursive=true)
-                    finally
-                        sleep(0.05)
-                        GC.gc()
-                        rm(fname, force=true, recursive=true)
+                # test point and multipolygon dataset
+                for dsname in ("point", "metropole")
+                    AG.read("data/$dsname.geojson") do input_ds
+                        try
+                            # the GPKG driver can handle field ids of type real, which is the case for point.geojson
+                            if driver == "GPKG" && dsname == "point"
+                                @test_throws GDAL.GDALError AG.write(input_ds, fname; driver=AG.getdriver(driver))
+                            else
+                                AG.write(input_ds, fname; driver=AG.getdriver(driver))
+                                @test assertsimilar(input_ds, AG.read(fname))
+                            end
+                            # sleep and GC are for windows: let the gc run to close the file, otherwise it can't be deleted
+                            sleep(0.05)
+                            GC.gc()
+                            rm(fname, force=true, recursive=true)
+                        finally
+                            sleep(0.05)
+                            GC.gc()
+                            rm(fname, force=true, recursive=true)
+                        end
                     end
+                    rm("test.xsd", force=true, recursive=true)  # some driver creates this file, delete it manually
                 end
-                rm("test.xsd", force=true, recursive=true)  # some driver creates this file, delete it manually
             end
         end
 

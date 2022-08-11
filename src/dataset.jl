@@ -196,7 +196,10 @@ function write(
     kwargs...,
 )::Nothing
     if nraster(dataset) > 0 && nlayer(dataset) > 0
-        error("Writing datasets with raster and vector data is not supported.")
+        drivername = :driver ∈ keys(kwargs) ? shortname(kwargs[:driver]) : shortname(getdriver(dataset))
+        error("Writing datasets with raster and vector data is not supported when using driver $drivername. 
+        Please file an issue at https://github.com/yeesian/ArchGDAL.jl/issues 
+        including following dataset information: \n\n$dataset")
     elseif nraster(dataset) > 0
         destroy(unsafe_copy(dataset, filename = filename; kwargs...))
     elseif nlayer(dataset) > 0
@@ -212,8 +215,7 @@ Writes the vector dataset to the designated filename. The options are passed to 
 have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
 in each database transaction, e.g. for SQLite. This function can also be used to copy datasets on disk.
 
-Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, JML, KML, MapML, ESRI Shapefile, SQLite
-GPKG should mostly work, too
+Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML, MapML, ESRI Shapefile, SQLite
 
 ### Parameters
 *`dataset`  The source dataset
@@ -240,6 +242,15 @@ function writelayers(dataset::AbstractDataset,
         for layeridx in 0:nlayer(dataset)-1
             sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
+            
+            if shortname(driver) == "GPKG"
+                if !any(Base.contains.(layer_options, "GEOMETRY_NAME"))
+                    if ngeom(sourcelayer) > 0  # for GPKG there can be only one geometry column / layer
+                        geometry_column_name = getname(getgeomdefn(sourcelayerdef, 0))
+                        push!(layer_options, "GEOMETRY_NAME=$geometry_column_name")
+                    end
+                end
+            end
 
             if use_gdal_copy
                 copy(sourcelayer; dataset=target, name=getname(sourcelayer))
@@ -249,20 +260,6 @@ function writelayers(dataset::AbstractDataset,
                             geom=getgeomtype(sourcelayer),
                             spatialref=getspatialref(sourcelayer),
                             options=layer_options) do targetlayer
-
-                    targetlayerdef = layerdefn(targetlayer)
-                    
-                    # work around GPKG driver quirks
-                    # GPKG still has issues with empty geometry field names,
-                    # especially when the field name is empty
-                    if shortname(driver) == "GPKG"
-                        deletegeomdefn!(targetlayerdef, 0)
-                        for geomfieldidx in 0:ngeom(sourcelayer)-1
-                            geomdef = getgeomdefn(sourcelayerdef, geomfieldidx)
-                            addgeomdefn!(targetlayer, geomdef)
-                        end
-                    end
-                    
                     # add field definitions
                     for fieldidx in 0:nfield(sourcelayer)-1
                         addfielddefn!(targetlayer, getfielddefn(sourcelayerdef, fieldidx))
@@ -313,7 +310,7 @@ function unsafe_create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = GDT_Unknown,
+    dtype = Any,
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
@@ -334,7 +331,7 @@ function unsafe_create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = GDT_Unknown,
+    dtype = Any,
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
@@ -386,7 +383,7 @@ function create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = GDT_Unknown,
+    dtype = Any,
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
@@ -407,7 +404,7 @@ function create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = GDT_Unknown,
+    dtype = Any,
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(

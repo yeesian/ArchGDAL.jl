@@ -1,5 +1,6 @@
 using Test
 using Dates
+using GDAL
 
 # ensure all testing files are present
 include("remotefiles.jl")
