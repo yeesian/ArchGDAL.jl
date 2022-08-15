@@ -280,7 +280,11 @@ using Extents
         ) == "POLYGON ((0 0,0 10,10 10,10 0,0 0))"
 
         @test GI.extent(AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))")) ==
-              Extent(X = (0.0, 10.0), Y = (0.0, 10.0), Z = (0.0, 0.0))
+              Extent(X = (0.0, 10.0), Y = (0.0, 10.0))
+
+        @test GI.extent(
+            AG.fromWKT("POLYGON((0 0 0, 10 0 0, 10 10 0, 0 10 0, 0 0 1))"),
+        ) == Extent(X = (0.0, 10.0), Y = (0.0, 10.0), Z = (0.0, 1.0))
 
         @test GI.asbinary(
             AG.fromWKT("POLYGON((0 0, 10 0, 10 10, 0 10, 0 0))"),
