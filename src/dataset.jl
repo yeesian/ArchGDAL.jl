@@ -254,7 +254,11 @@ function writelayers(dataset::AbstractDataset,
     end
     create(filename; driver=driver, options=options) do target
         for layeridx in 0:nlayer(dataset)-1  # GDAL indexing starts with 0
-            current_layer_options = layeridx+1 <= length(layer_options) ? layer_options[layeridx+1] : [""]
+            if layer_options isa Vector{Vector{String}}
+                current_layer_options = layeridx+1 <= length(layer_options) ? layer_options[layeridx+1] : [""]
+            else
+                current_layer_options = layer_options
+            end
 
             sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
