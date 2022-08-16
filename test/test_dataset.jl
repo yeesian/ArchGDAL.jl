@@ -143,15 +143,18 @@ end
                 end
                 AG.write(point_dataset, "deleteme.sqlite"; driver=AG.getdriver("SQLite"), 
                          layer_options=[["FORMAT=WKT", "LAUNDER=YES"], ["STRICT=NO"]], use_gdal_copy=true)
-                read_ds = AG.read("deleteme.sqlite")
-                l0  = AG.getlayer(read_ds, 0)
-                l1  = AG.getlayer(read_ds, 1)
-                gd0 = AG.getgeomdefn(AG.layerdefn(l0))
-                gd1 = AG.getgeomdefn(AG.layerdefn(l1))
-        
-                @test assertsimilar(point_dataset, read_ds)
-                @test AG.getname(gd0) == "WKT_GEOMETRY"
-                @test AG.getname(gd1) == "GEOMETRY"
+                AG.read("deleteme.sqlite") do read_ds
+                    l0  = AG.getlayer(read_ds, 0)
+                    l1  = AG.getlayer(read_ds, 1)
+                    gd0 = AG.getgeomdefn(AG.layerdefn(l0))
+                    gd1 = AG.getgeomdefn(AG.layerdefn(l1))
+            
+                    @test assertsimilar(point_dataset, read_ds)
+                    @test AG.getname(gd0) == "WKT_GEOMETRY"
+                    @test AG.getname(gd1) == "GEOMETRY"
+                end
+                sleep(0.05)
+                GC.gc()
                 rm("deleteme.sqlite", force=true)
             end
         end
