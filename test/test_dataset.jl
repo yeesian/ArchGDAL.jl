@@ -5,7 +5,9 @@ const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", 
 
 function assertsimilar(ds1, ds2)
     AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
-    AG.ngeom(AG.getlayer(ds1)) == AG.ngeom(AG.getlayer(ds2)) || error("unequal number of geometries")
+    for i in 0:AG.nlayer(ds1)-1
+        AG.ngeom(AG.getlayer(ds1,i)) == AG.ngeom(AG.getlayer(ds2,i)) || error("unequal number of geometries in layer $i")
+    end
     AG.nraster(ds1) == AG.nraster(ds2) || error("unequal raster count")
     AG.height(ds1) == AG.height(ds2) || error("unequal height")
     AG.width(ds1) == AG.width(ds2) || error("unequal width")
@@ -99,6 +101,52 @@ end
                     end
                     rm("test.xsd", force=true, recursive=true)  # some driver creates this file, delete it manually
                 end
+            end
+
+            # test setting individual layer options
+            AG.create(AG.getdriver("Memory")) do point_dataset
+                AG.createlayer(
+                    name = "point_out",
+                    dataset = point_dataset,
+                    geom = AG.wkbPoint
+                ) do layer
+                    @show AG.layerdefn(layer)
+                    AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
+                    AG.findfieldindex(layer, "Name", false)
+                    ArchGDAL.createfeature(layer) do feature
+                        @show AG.layerdefn(layer)
+                        AG.setfid!(feature, 0)
+                        AG.setfield!(feature, AG.findfieldindex(feature, "Name"), "myname")
+                        AG.setgeom!(feature, 0, AG.createpoint(100.123, 0.123))
+                        @show AG.layerdefn(layer)
+                        nothing
+                    end
+                    @show AG.layerdefn(layer)
+                end
+                AG.createlayer(
+                    name = "point_out_2",
+                    dataset = point_dataset,
+                    geom = AG.wkbPoint
+                ) do layer
+                    AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
+                    AG.findfieldindex(layer, "Name", false)
+                    ArchGDAL.createfeature(layer) do feature
+                        AG.setfield!(feature, AG.findfieldindex(feature, "Name"), "myname")
+                        AG.setgeom!(feature, 0, AG.createpoint(100.123, 1.123))
+                        nothing
+                    end
+                end
+                AG.write(point_dataset, "deleteme.sqlite"; driver=AG.getdriver("SQLite"), layer_options=[["FORMAT=WKT", "LAUNDER=YES"], ["STRICT=NO"]])
+                read_ds = AG.read("deleteme.sqlite")
+                l0  = AG.getlayer(read_ds, 0)
+                l1  = AG.getlayer(read_ds, 1)
+                gd0 = AG.getgeomdefn(AG.layerdefn(l0))
+                gd1 = AG.getgeomdefn(AG.layerdefn(l1))
+
+                @test assertsimilar(point_dataset, read_ds)
+                @test AG.getname(gd0) == "WKT_GEOMETRY"
+                @test AG.getname(gd1) == "GEOMETRY"
+                rm("deleteme.sqlite", force=true)
             end
         end
 

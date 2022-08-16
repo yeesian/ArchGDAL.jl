@@ -178,17 +178,23 @@ Writes the dataset to the designated filename.
 * `filename`: The filename, UTF-8 encoded.
 
 ### Keyword Arguments
-* `driver`: The driver to use, you have to manually select the right driver via `getdriver(drivername)` matching the file extension you wish. 
+* `driver` (ArchGDAL.Driver): The driver to use, you have to manually select the right driver via `getdriver(drivername)` matching the file extension you wish. 
 Otherwise the driver of the source dataset will be used.
 * `options` (Vector{String}): A vector of strings containing KEY=VALUE pairs for driver-specific creation options.
-* `layer_options` (Vector{String}): Driver specific options for layer creation when writing vector datasets.
-* `chunksize` (Integer): Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
-* `use_gdal_copy` (Bool): Set this to `true` if you encounter errors when writing. Set to `false` for higher speed.
+* `layer_options`: Driver specific options for layer creation. The options can either be a Vector{String} to provide the
+same options for each layer, or a Vector{Vector{String}} to provide individual options per layer, in the order of their 
+appearance in the dataset. The strings have to be KEY=VALUE pairs. If you give less individual options than there are layers, 
+the remaining layers use the default creation options. An example for two layers: 
+`[["FORMAT=WKT", "LAUNDER=NO"], ["STRICT=NO"]]`
+* `use_gdal_copy` (Bool): Set this to false (default is true) to achieve higher write speeds at the cost of possible errors. 
+Note that when set to true, no coordinate transformations are possible while writing the features.
+* `chunksize` (Integer): Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true. 
+Default is 20000.
 * `strict` (Bool): Set this to `true` if the written dataset should be a 1:1 copy of the source data, default is `false`,
 which allows the driver to adapt if necessary.
     
 ### Returns
-`nothing`
+    `nothing`
 """
 function write(
     dataset::AbstractDataset,
@@ -209,7 +215,7 @@ function write(
 end
 
 """
-    writelayers(ds, filename; driver, options=[""], layer_options=[""], chunksize=20000)
+    writelayers(dataset, filename; kwargs...)
 
 Writes the vector dataset to the designated filename. The options are passed to the newly created dataset and
 have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
@@ -218,15 +224,19 @@ in each database transaction, e.g. for SQLite. This function can also be used to
 Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML, MapML, ESRI Shapefile, SQLite
 
 ### Parameters
-*`dataset`  The source dataset
-*`filename` The file name to write to
+* `dataset`  The source dataset
+* `filename` The file name to write to
 
 ### Keyword arguments
-`driver`           The driver to use, you have to manually select the right driver for the file extension you wish
-`options`   A vector of strings containing KEY=VALUE pairs for driver-specific creation options
-`layer_options`    Driver specific options for layer creation
-`chunksize`        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
-`use_gdal_copy`    Set this to true if you encounter errors when writing. Set to false for higher speed.
+* `driver`:           The driver to use, you have to manually select the right driver for the file extension you wish
+* `options`:          A vector of strings containing KEY=VALUE pairs for driver-specific creation options
+* `layer_options`:    Driver specific options for layer creation. The options can either be a Vector{String} to provide the
+same options for each layer, or a Vector{Vector{String}} to provide individual options per layer, in the order of their 
+appearance in the dataset. The strings have to be KEY=VALUE pairs. An example for two layers: 
+`[["FORMAT=WKT", "LAUNDER=NO"], ["STRICT=NO"]]`
+* `chunksize`:        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
+* `use_gdal_copy`:    Set this to false (default is true) to achieve higher write speeds at the cost of possible errors. 
+Note that when set to true, no coordinate transformations are possible while writing the features.
 
 ### Returns
 nothing
@@ -235,31 +245,37 @@ function writelayers(dataset::AbstractDataset,
                      filename;
                      driver=getdriver(dataset),
                      options::Vector{String}=[""], 
-                     layer_options::Vector{String}=[""],
+                     layer_options=[""],
                      chunksize=20000,
-                     use_gdal_copy=false)
+                     use_gdal_copy=true)
+    if !(layer_options isa Vector{String}) && !(layer_options isa Vector{Vector{String}})
+        error("Layer options not recognized. Please provide a Vector{String} to set the same options for all layers or a
+        Vector{Vector{String}} to set individual options per layer.")
+    end
     create(filename; driver=driver, options=options) do target
-        for layeridx in 0:nlayer(dataset)-1
+        for layeridx in 0:nlayer(dataset)-1  # GDAL indexing starts with 0
+            current_layer_options = layeridx+1 <= length(layer_options) ? layer_options[layeridx+1] : [""]
+
             sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
             
             if shortname(driver) == "GPKG"
-                if !any(Base.contains.(layer_options, "GEOMETRY_NAME"))
-                    if ngeom(sourcelayer) > 0  # for GPKG there can be only one geometry column / layer
+                if !any(Base.contains.(current_layer_options, "GEOMETRY_NAME"))
+                    if ngeom(sourcelayer) > 0  # for GPKG there can be only one geometry column per layer
                         geometry_column_name = getname(getgeomdefn(sourcelayerdef, 0))
-                        push!(layer_options, "GEOMETRY_NAME=$geometry_column_name")
+                        push!(current_layer_options, "GEOMETRY_NAME=$geometry_column_name")
                     end
                 end
             end
 
             if use_gdal_copy
-                copy(sourcelayer; dataset=target, name=getname(sourcelayer))
+                copy(sourcelayer; dataset=target, name=getname(sourcelayer), options=current_layer_options)
             else
                 createlayer(name=getname(sourcelayer),
                             dataset=target,
                             geom=getgeomtype(sourcelayer),
                             spatialref=getspatialref(sourcelayer),
-                            options=layer_options) do targetlayer
+                            options=current_layer_options) do targetlayer
                     # add field definitions
                     for fieldidx in 0:nfield(sourcelayer)-1
                         addfielddefn!(targetlayer, getfielddefn(sourcelayerdef, fieldidx))
