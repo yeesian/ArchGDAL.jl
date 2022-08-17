@@ -142,7 +142,7 @@ end
                     end
                 end
                 AG.write(point_dataset, "deleteme.sqlite"; driver=AG.getdriver("SQLite"), 
-                         layer_options=[["FORMAT=WKT", "LAUNDER=YES"], ["STRICT=NO"]], use_gdal_copy=true)
+                         layer_options=Dict(0=>["FORMAT=WKT", "LAUNDER=YES"], 1=>["STRICT=NO"]), use_gdal_copy=true)
                 AG.read("deleteme.sqlite") do read_ds
                     l0  = AG.getlayer(read_ds, 0)
                     l1  = AG.getlayer(read_ds, 1)

@@ -202,7 +202,7 @@ function write(
     kwargs...,
 )::Nothing
     if nraster(dataset) > 0 && nlayer(dataset) > 0
-        drivername = :driver ∈ keys(kwargs) ? shortname(kwargs[:driver]) : shortname(getdriver(dataset))
+        drivername = shortname(get(kwargs, :driver, getdriver(dataset)))
         error("Writing datasets with raster and vector data is not supported when using driver $drivername. 
         Please file an issue at https://github.com/yeesian/ArchGDAL.jl/issues 
         including following dataset information: \n\n$dataset")
@@ -213,6 +213,10 @@ function write(
     end
     return nothing
 end
+
+# utility functions for writelayers
+_getlayeroptions(options::Dict{<:Integer, Vector{String}}, i::Integer) = get(options, i, StringList(C_NULL))
+_getlayeroptions(options::Union{Ptr{Cstring}, Vector{String}}, i) = options
 
 """
     writelayers(dataset, filename; kwargs...)
@@ -231,8 +235,8 @@ Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML,
 * `driver`:           The driver to use, you have to manually select the right driver for the file extension you wish
 * `options`:          A vector of strings containing KEY=VALUE pairs for driver-specific creation options
 * `layer_options`:    Driver specific options for layer creation. The options can either be a Vector{String} to provide the
-same options for each layer, or a Vector{Vector{String}} to provide individual options per layer, in the order of their 
-appearance in the dataset. The strings have to be KEY=VALUE pairs. An example for two layers: 
+same options for each layer, or a Dict(layer_index => Vector{String}) to provide individual options per layer. 
+Note that layer indexing in GDAL starts with 0. The strings have to be KEY=VALUE pairs. An example for two layers: 
 `[["FORMAT=WKT", "LAUNDER=NO"], ["STRICT=NO"]]`
 * `chunksize`:        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
 * `use_gdal_copy`:    Set this to false (default is true) to achieve higher write speeds at the cost of possible errors. 
@@ -242,23 +246,19 @@ Note that when set to true, no coordinate transformations are possible while wri
 nothing
 """
 function writelayers(dataset::AbstractDataset,
-                     filename;
-                     driver=getdriver(dataset),
-                     options::Vector{String}=[""], 
-                     layer_options=[""],
-                     chunksize=20000,
-                     use_gdal_copy=true)
-    if !(layer_options isa Vector{String}) && !(layer_options isa Vector{Vector{String}})
-        error("Layer options not recognized. Please provide a Vector{String} to set the same options for all layers or a
-        Vector{Vector{String}} to set individual options per layer.")
+                     filename::AbstractString;
+                     driver::Driver = getdriver(dataset),
+                     options = [""],
+                     layer_options = [""],
+                     chunksize::Integer = 20000,
+                     use_gdal_copy::Bool = true)
+    if !(typeof(layer_options) <: Union{Vector{String}, Dict{<:Integer, Vector{String}}})
+        throw(ArgumentError("Layer options not recognized. Please provide a Vector{String} to set the same options for all layers or a
+        Dict{<:Integer, Vector{String}} to set individual options per layer."))
     end
     create(filename; driver=driver, options=options) do target
         for layeridx in 0:nlayer(dataset)-1  # GDAL indexing starts with 0
-            if layer_options isa Vector{Vector{String}}
-                current_layer_options = layeridx+1 <= length(layer_options) ? layer_options[layeridx+1] : [""]
-            else
-                current_layer_options = layer_options
-            end
+            current_layer_options = _getlayeroptions(layer_options, layeridx)
 
             sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
@@ -330,7 +330,7 @@ function unsafe_create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = Any,
+    dtype::DataType = Any,
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
@@ -351,7 +351,7 @@ function unsafe_create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = Any,
+    dtype::DataType = Any,
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
@@ -403,7 +403,7 @@ function create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = Any,
+    dtype::DataType = Any,
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
@@ -424,7 +424,7 @@ function create(
     width::Integer = 0,
     height::Integer = 0,
     nbands::Integer = 0,
-    dtype = Any,
+    dtype::DataType = Any,
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
