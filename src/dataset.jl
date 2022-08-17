@@ -215,7 +215,7 @@ function write(
 end
 
 # utility functions for writelayers
-_getlayeroptions(options::Dict{<:Integer, Vector{String}}, i::Integer) = get(options, i, StringList(C_NULL))
+_getlayeroptions(options::Dict{<:Integer, Vector{String}}, i::Integer) = get(options, i, [""])
 _getlayeroptions(options::Union{Ptr{Cstring}, Vector{String}}, i) = options
 
 """
