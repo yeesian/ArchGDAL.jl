@@ -31,6 +31,10 @@ remotefiles = [
         "8744593479054a67c784322e0c198bfa880c9388b39a2ddd4c56726944711bd9",
     ),
     (
+        "data/metropole.geojson",
+        "d1f4aec3fbc274d4af3f5930302a342d3efe0ea1daf410fbeef535346167bf0c",
+    ),
+    (
         "data/color_relief.txt",
         "f44feef9b8529b3ff9cb64de4d01a3107f99aad7822a0a2d91055e44a915c267",
     ),
