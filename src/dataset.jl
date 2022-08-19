@@ -203,9 +203,11 @@ function write(
 )::Nothing
     if nraster(dataset) > 0 && nlayer(dataset) > 0
         drivername = shortname(get(kwargs, :driver, getdriver(dataset)))
-        error("Writing datasets with raster and vector data is not supported when using driver $drivername. 
-        Please file an issue at https://github.com/yeesian/ArchGDAL.jl/issues 
-        including following dataset information: \n\n$dataset")
+        error(
+            "Writing datasets with raster and vector data is not supported when using driver $drivername. 
+      Please file an issue at https://github.com/yeesian/ArchGDAL.jl/issues 
+      including following dataset information: \n\n$dataset",
+        )
     elseif nraster(dataset) > 0
         destroy(unsafe_copy(dataset, filename = filename; kwargs...))
     elseif nlayer(dataset) > 0
@@ -215,8 +217,10 @@ function write(
 end
 
 # utility functions for writelayers
-_getlayeroptions(options::Dict{<:Integer, Vector{String}}, i::Integer) = get(options, i, [""])
-_getlayeroptions(options::Union{Ptr{Cstring}, Vector{String}}, i) = options
+function _getlayeroptions(options::Dict{<:Integer,Vector{String}}, i::Integer)
+    return get(options, i, [""])
+end
+_getlayeroptions(options::Union{Ptr{Cstring},Vector{String}}, i) = options
 
 """
     writelayers(dataset, filename; kwargs...)
@@ -245,46 +249,69 @@ Note that when set to true, no coordinate transformations are possible while wri
 ### Returns
 nothing
 """
-function writelayers(dataset::AbstractDataset,
-                     filename::AbstractString;
-                     driver::Driver = getdriver(dataset),
-                     options = [""],
-                     layer_options = [""],
-                     chunksize::Integer = 20000,
-                     use_gdal_copy::Bool = true)
-    if !(typeof(layer_options) <: Union{Vector{String}, Dict{<:Integer, Vector{String}}})
-        throw(ArgumentError("Layer options not recognized. Please provide a Vector{String} to set the same options for all layers or a
-        Dict{<:Integer, Vector{String}} to set individual options per layer."))
+function writelayers(
+    dataset::AbstractDataset,
+    filename::AbstractString;
+    driver::Driver = getdriver(dataset),
+    options = [""],
+    layer_options = [""],
+    chunksize::Integer = 20000,
+    use_gdal_copy::Bool = true,
+)
+    if !(
+        typeof(layer_options) <:
+        Union{Vector{String},Dict{<:Integer,Vector{String}}}
+    )
+        throw(
+            ArgumentError(
+                "Layer options not recognized. Please provide a Vector{String} to set the same options for all layers or a
+Dict{<:Integer, Vector{String}} to set individual options per layer.",
+            ),
+        )
     end
-    create(filename; driver=driver, options=options) do target
+    create(filename; driver = driver, options = options) do target
         for layeridx in 0:nlayer(dataset)-1  # GDAL indexing starts with 0
             current_layer_options = _getlayeroptions(layer_options, layeridx)
 
             sourcelayer = getlayer(dataset, layeridx)
             sourcelayerdef = layerdefn(sourcelayer)
-            
+
             if shortname(driver) == "GPKG"
                 if !any(Base.contains.(current_layer_options, "GEOMETRY_NAME"))
                     if ngeom(sourcelayer) > 0  # for GPKG there can be only one geometry column per layer
-                        geometry_column_name = getname(getgeomdefn(sourcelayerdef, 0))
-                        push!(current_layer_options, "GEOMETRY_NAME=$geometry_column_name")
+                        geometry_column_name =
+                            getname(getgeomdefn(sourcelayerdef, 0))
+                        push!(
+                            current_layer_options,
+                            "GEOMETRY_NAME=$geometry_column_name",
+                        )
                     end
                 end
             end
 
             if use_gdal_copy
-                copy(sourcelayer; dataset=target, name=getname(sourcelayer), options=current_layer_options)
+                copy(
+                    sourcelayer;
+                    dataset = target,
+                    name = getname(sourcelayer),
+                    options = current_layer_options,
+                )
             else
-                createlayer(name=getname(sourcelayer),
-                            dataset=target,
-                            geom=getgeomtype(sourcelayer),
-                            spatialref=getspatialref(sourcelayer),
-                            options=current_layer_options) do targetlayer
+                createlayer(
+                    name = getname(sourcelayer),
+                    dataset = target,
+                    geom = getgeomtype(sourcelayer),
+                    spatialref = getspatialref(sourcelayer),
+                    options = current_layer_options,
+                ) do targetlayer
                     # add field definitions
                     for fieldidx in 0:nfield(sourcelayer)-1
-                        addfielddefn!(targetlayer, getfielddefn(sourcelayerdef, fieldidx))
+                        addfielddefn!(
+                            targetlayer,
+                            getfielddefn(sourcelayerdef, fieldidx),
+                        )
                     end
-                    
+
                     # iterate over features in chunks to get better speed than gdaldatasetcopylayer
                     for chunk in Iterators.partition(sourcelayer, chunksize)
                         GDAL.ogr_l_starttransaction(targetlayer.ptr)

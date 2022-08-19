@@ -1,16 +1,28 @@
 using Test
 import ArchGDAL as AG
 
-const supported_vector_drivers = ["FlatGeobuf", "GeoJSON", "GeoJSONSeq", "GML", "GPKG", "JML", "KML", "MapML", "ESRI Shapefile","SQLite"]
+const supported_vector_drivers = [
+    "FlatGeobuf",
+    "GeoJSON",
+    "GeoJSONSeq",
+    "GML",
+    "GPKG",
+    "JML",
+    "KML",
+    "MapML",
+    "ESRI Shapefile",
+    "SQLite",
+]
 
 function assertsimilar(ds1, ds2)
     AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
     for i in 0:AG.nlayer(ds1)-1
-        AG.ngeom(AG.getlayer(ds1,i)) == AG.ngeom(AG.getlayer(ds2,i)) || error("unequal number of geometries in layer $i")
+        AG.ngeom(AG.getlayer(ds1, i)) == AG.ngeom(AG.getlayer(ds2, i)) ||
+            error("unequal number of geometries in layer $i")
     end
     AG.nraster(ds1) == AG.nraster(ds2) || error("unequal raster count")
     AG.height(ds1) == AG.height(ds2) || error("unequal height")
-    AG.width(ds1) == AG.width(ds2) || error("unequal width")
+    return AG.width(ds1) == AG.width(ds2) || error("unequal width")
 end
 
 @testset "test_dataset.jl" begin
@@ -77,7 +89,7 @@ end
 
         @testset "write functionality" begin
             @testset "$driver" for driver in supported_vector_drivers
-            # for driver in supported_vector_drivers
+                # for driver in supported_vector_drivers
                 fname = "test." * lowercase(join(split(driver)))
                 # test point and multipolygon dataset
                 for dsname in ("point", "metropole")
@@ -85,77 +97,107 @@ end
                         try
                             # the GPKG driver can handle field ids of type real, which is the case for point.geojson
                             if driver == "GPKG" && dsname == "point"
-                                @test_throws GDAL.GDALError AG.write(input_ds, fname; driver=AG.getdriver(driver))
+                                @test_throws GDAL.GDALError AG.write(
+                                    input_ds,
+                                    fname;
+                                    driver = AG.getdriver(driver),
+                                )
                             else
-                                AG.write(input_ds, fname; driver=AG.getdriver(driver), use_gdal_copy=true)
+                                AG.write(
+                                    input_ds,
+                                    fname;
+                                    driver = AG.getdriver(driver),
+                                    use_gdal_copy = true,
+                                )
                                 @test assertsimilar(input_ds, AG.read(fname))
                                 # sleep and GC are for windows: let the gc run to close the file, otherwise it can't be deleted
                                 sleep(0.05)
                                 GC.gc()
-                                rm(fname, force=true, recursive=true)
-                                
-                                AG.write(input_ds, fname; driver=AG.getdriver(driver), use_gdal_copy=false)
+                                rm(fname, force = true, recursive = true)
+
+                                AG.write(
+                                    input_ds,
+                                    fname;
+                                    driver = AG.getdriver(driver),
+                                    use_gdal_copy = false,
+                                )
                                 @test assertsimilar(input_ds, AG.read(fname))
                                 sleep(0.05)
                                 GC.gc()
-                                rm(fname, force=true, recursive=true)
+                                rm(fname, force = true, recursive = true)
                             end
                         finally
                             sleep(0.05)
                             GC.gc()
-                            rm(fname, force=true, recursive=true)
+                            rm(fname, force = true, recursive = true)
                         end
                     end
-                    rm("test.xsd", force=true, recursive=true)  # some driver creates this file, delete it manually
+                    rm("test.xsd", force = true, recursive = true)  # some driver creates this file, delete it manually
                 end
             end
-        
+
             # test setting individual layer options
             AG.create(AG.getdriver("Memory")) do point_dataset
                 # first layer
                 AG.createlayer(
                     name = "point_out",
                     dataset = point_dataset,
-                    geom = AG.wkbPoint
+                    geom = AG.wkbPoint,
                 ) do layer
                     AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
                     AG.findfieldindex(layer, "Name", false)
                     AG.createfeature(layer) do feature
                         AG.setfid!(feature, 0)
-                        AG.setfield!(feature, AG.findfieldindex(feature, "Name"), "myname")
+                        AG.setfield!(
+                            feature,
+                            AG.findfieldindex(feature, "Name"),
+                            "myname",
+                        )
                         AG.setgeom!(feature, 0, AG.createpoint(100.123, 0.123))
-                        nothing
+                        return nothing
                     end
                 end
                 # second layer
                 AG.createlayer(
                     name = "point_out_2",
                     dataset = point_dataset,
-                    geom = AG.wkbPoint
+                    geom = AG.wkbPoint,
                 ) do layer
                     AG.addfielddefn!(layer, "Name", AG.OFTString, nwidth = 32)
                     AG.findfieldindex(layer, "Name", false)
                     AG.createfeature(layer) do feature
-                        AG.setfield!(feature, AG.findfieldindex(feature, "Name"), "myname")
+                        AG.setfield!(
+                            feature,
+                            AG.findfieldindex(feature, "Name"),
+                            "myname",
+                        )
                         AG.setgeom!(feature, 0, AG.createpoint(100.123, 1.123))
-                        nothing
+                        return nothing
                     end
                 end
-                AG.write(point_dataset, "deleteme.sqlite"; driver=AG.getdriver("SQLite"), 
-                         layer_options=Dict(0=>["FORMAT=WKT", "LAUNDER=YES"], 1=>["STRICT=NO"]), use_gdal_copy=true)
+                AG.write(
+                    point_dataset,
+                    "deleteme.sqlite";
+                    driver = AG.getdriver("SQLite"),
+                    layer_options = Dict(
+                        0 => ["FORMAT=WKT", "LAUNDER=YES"],
+                        1 => ["STRICT=NO"],
+                    ),
+                    use_gdal_copy = true,
+                )
                 AG.read("deleteme.sqlite") do read_ds
-                    l0  = AG.getlayer(read_ds, 0)
-                    l1  = AG.getlayer(read_ds, 1)
+                    l0 = AG.getlayer(read_ds, 0)
+                    l1 = AG.getlayer(read_ds, 1)
                     gd0 = AG.getgeomdefn(AG.layerdefn(l0))
                     gd1 = AG.getgeomdefn(AG.layerdefn(l1))
-            
+
                     @test assertsimilar(point_dataset, read_ds)
                     @test AG.getname(gd0) == "WKT_GEOMETRY"
                     @test AG.getname(gd1) == "GEOMETRY"
                 end
                 sleep(0.05)
                 GC.gc()
-                rm("deleteme.sqlite", force=true)
+                return rm("deleteme.sqlite", force = true)
             end
         end
 
