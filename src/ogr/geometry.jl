@@ -1538,7 +1538,6 @@ for (geom, wkbgeom) in (
     end
 end
 
-
 for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
     pointargs2d = (:x, :y), (:(x::Real), :(y::Real))
     pointargs3d = (:x, :y, :z), (:(x::Real), :(y::Real), :(z::Real))
@@ -1569,10 +1568,7 @@ for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
         @eval function $f1($(typedargs...))::$rt
             geom = $f1()
             subgeom = unsafe_createlinearring($(args...))
-            result = GDAL.ogr_g_addgeometrydirectly(
-                geom.ptr,
-                subgeom.ptr,
-            )
+            result = GDAL.ogr_g_addgeometrydirectly(geom.ptr, subgeom.ptr)
             @ogrerr result "Failed to add linearring."
             return geom
         end
@@ -1581,10 +1577,7 @@ for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
             geom = $f1()
             for pt in zip($(args...))
                 subgeom = unsafe_createpoint(pt)
-                result = GDAL.ogr_g_addgeometrydirectly(
-                    geom.ptr,
-                    subgeom.ptr,
-                )
+                result = GDAL.ogr_g_addgeometrydirectly(geom.ptr, subgeom.ptr)
                 @ogrerr result "Failed to add point."
             end
             return geom
@@ -1592,7 +1585,8 @@ for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
     end
 
     # Coordinates can be Vector of Real or 
-    coordtypes = (Vector{<:Real}, Tuple{<:Real,<:Real}, Tuple{<:Real,<:Real,<:Real})
+    coordtypes =
+        (Vector{<:Real}, Tuple{<:Real,<:Real}, Tuple{<:Real,<:Real,<:Real})
 
     for typeargs in coordtypes
         f1 = Symbol("$(f)point")
@@ -1618,32 +1612,32 @@ for (f, rt) in ((:create, :IGeometry), (:unsafe_create, :Geometry))
         @eval function $f1(coords::$typeargs)::$rt
             geom = $f1()
             subgeom = unsafe_createlinearring(coords)
-            result = GDAL.ogr_g_addgeometrydirectly(
-                geom.ptr,
-                subgeom.ptr,
-            )
+            result = GDAL.ogr_g_addgeometrydirectly(geom.ptr, subgeom.ptr)
             @ogrerr result "Failed to add linearring."
             return geom
         end
     end
 
     nested1 = (:multipoint => :point,), map(ct -> Vector{<:ct}, coordtypes)
-    nested2 = (:polygon => :linearring, 
-               :multilinestring => :linestring, 
-               :multipolygon_noholes => :polygon), map(ct -> Vector{<:Vector{<:ct}}, coordtypes)
-    nested3 = (:multipolygon => :polygon,), map(ct -> Vector{<:Vector{<:Vector{<:ct}}}, coordtypes)
+    nested2 = (
+        :polygon => :linearring,
+        :multilinestring => :linestring,
+        :multipolygon_noholes => :polygon,
+    ),
+    map(ct -> Vector{<:Vector{<:ct}}, coordtypes)
+    nested3 = (:multipolygon => :polygon,),
+    map(ct -> Vector{<:Vector{<:Vector{<:ct}}}, coordtypes)
 
-    for (variants, typeargs) in (nested1, nested2, nested3), 
-        typearg in typeargs, (geom, component) in variants
+    for (variants, typeargs) in (nested1, nested2, nested3),
+        typearg in typeargs,
+        (geom, component) in variants
+
         f1 = Symbol("$f$geom")
         @eval function $f1(coords::$typearg)::$rt
             geom = $f1()
             for coord in coords
                 subgeom = $(Symbol("unsafe_create$component"))(coord)
-                result = GDAL.ogr_g_addgeometrydirectly(
-                    geom.ptr,
-                    subgeom.ptr,
-                )
+                result = GDAL.ogr_g_addgeometrydirectly(geom.ptr, subgeom.ptr)
                 @ogrerr result "Failed to add $component."
             end
             return geom

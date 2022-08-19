@@ -243,7 +243,12 @@ import GeoFormatTypes as GFT
     end
 
     @testset "Testing construction of complex geometries" begin
-        @test AG.toWKT(AG.createlinestring([1.0f0, 2.0f0, 3.0f0], [4.0f0, 5.0f0, 6.0f0])) ==
+        @test AG.toWKT(
+                  AG.createlinestring(
+                      [1.0f0, 2.0f0, 3.0f0],
+                      [4.0f0, 5.0f0, 6.0f0],
+                  ),
+              ) ==
               AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "LINESTRING (1 4,2 5,3 6)"
         AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
@@ -301,7 +306,9 @@ import GeoFormatTypes as GFT
             @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9,1 4 7)"
         end
 
-        @test AG.toWKT(AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06])) ==
+        @test AG.toWKT(
+                  AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06]),
+              ) ==
               AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
               "POLYGON ((1 4,2 5,3 6))"
         AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
@@ -348,33 +355,43 @@ import GeoFormatTypes as GFT
         end
 
         @test AG.toWKT(
-            AG.createmultipolygon(
-                Vector{Vector{Tuple{Int,Int}}}[
-                    Vector{Tuple{Int,Int}}[
-                        [(0, 0), (0, 4), (4, 4), (4, 0)],
-                        [(1, 1), (1, 3), (3, 3), (3, 1)],
-                    ],
-                    Vector{Tuple{Int,Int}}[
-                        [(10, 0), (10, 4), (14, 4), (14, 0)],
-                        [(11, 1), (11, 3), (13, 3), (13, 1)],
-                    ],
-                ],
-            ),
-        ) ==
-        AG.toWKT(
-            AG.createmultipolygon(
-                Vector{Vector{Tuple{Cdouble,Cdouble}}}[
-                    Vector{Tuple{Cdouble,Cdouble}}[
-                        [(0.0, 0.0), (0.0, 4.0), (4.0, 4.0), (4.0, 0.0)],
-                        [(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)],
-                    ],
-                    Vector{Tuple{Cdouble,Cdouble}}[
-                        [(10.0, 0.0), (10.0, 4.0), (14.0, 4.0), (14.0, 0.0)],
-                        [(11.0, 1.0), (11.0, 3.0), (13.0, 3.0), (13.0, 1.0)],
-                    ],
-                ],
-            ),
-        ) ==
+                  AG.createmultipolygon(
+                      Vector{Vector{Tuple{Int,Int}}}[
+                          Vector{Tuple{Int,Int}}[
+                              [(0, 0), (0, 4), (4, 4), (4, 0)],
+                              [(1, 1), (1, 3), (3, 3), (3, 1)],
+                          ],
+                          Vector{Tuple{Int,Int}}[
+                              [(10, 0), (10, 4), (14, 4), (14, 0)],
+                              [(11, 1), (11, 3), (13, 3), (13, 1)],
+                          ],
+                      ],
+                  ),
+              ) ==
+              AG.toWKT(
+                  AG.createmultipolygon(
+                      Vector{Vector{Tuple{Cdouble,Cdouble}}}[
+                          Vector{Tuple{Cdouble,Cdouble}}[
+                              [(0.0, 0.0), (0.0, 4.0), (4.0, 4.0), (4.0, 0.0)],
+                              [(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)],
+                          ],
+                          Vector{Tuple{Cdouble,Cdouble}}[
+                              [
+                                  (10.0, 0.0),
+                                  (10.0, 4.0),
+                                  (14.0, 4.0),
+                                  (14.0, 0.0),
+                              ],
+                              [
+                                  (11.0, 1.0),
+                                  (11.0, 3.0),
+                                  (13.0, 3.0),
+                                  (13.0, 1.0),
+                              ],
+                          ],
+                      ],
+                  ),
+              ) ==
               "MULTIPOLYGON (" *
               "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
               "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
