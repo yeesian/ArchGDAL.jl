@@ -267,12 +267,17 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.extent(::GeometryTraits, a::AbstractGeometry)
-        env = envelope3d(a)
-        return Extent(
-            X = (env.MinX, env.MaxX),
-            Y = (env.MinY, env.MaxY),
-            Z = (env.MinZ, env.MaxZ),
-        )
+        if GeoInterface.is3d(a)
+            env = envelope3d(a)
+            return Extent(
+                X = (env.MinX, env.MaxX),
+                Y = (env.MinY, env.MaxY),
+                Z = (env.MinZ, env.MaxZ),
+            )
+        else
+            env = envelope(a)
+            return Extent(X = (env.MinX, env.MaxX), Y = (env.MinY, env.MaxY))
+        end
     end
 
     function GeoInterface.asbinary(::GeometryTraits, geom::AbstractGeometry)
