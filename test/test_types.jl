@@ -22,10 +22,15 @@ import ImageCore
             @test Base.convert(AG.OGRFieldType, Int32) == AG.OFTInteger
             @test Base.convert(DataType, AG.OFTInteger) == Int32
 
-            # Default type for AG.OFTReal is Float64 
+            # Default type for AG.OFTReal is Float64
             @test Base.convert(AG.OGRFieldType, Float32) == AG.OFTReal
             @test Base.convert(AG.OGRFieldType, Float64) == AG.OFTReal
             @test Base.convert(DataType, AG.OFTReal) == Float64
+
+            # Manual defined convert for Enums
+            @enum TestEnum::Bool EnumValue = false
+            @test convert(ArchGDAL.OGRFieldType, TestEnum) == AG.OFTInteger
+            @test convert(ArchGDAL.OGRFieldSubType, TestEnum) == AG.OFSTBoolean
         end
     end
 
