@@ -2,6 +2,10 @@ using Test
 import ArchGDAL as AG
 import GeoInterface as GI
 
+@enum TestEnum::Bool begin
+    EnumValue = false
+end
+
 @testset "test_feature.jl" begin
     AG.read("data/point.geojson") do dataset
         layer = AG.getlayer(dataset, 0)
@@ -246,6 +250,10 @@ import GeoInterface as GI
             AG.createfielddefn("uint32subfield", AG.OFTInteger64) do fielddefn
                 return AG.addfielddefn!(layer, fielddefn)
             end
+            AG.createfielddefn("booleanenumfield", AG.OFTInteger) do fielddefn
+                AG.setsubtype!(fielddefn, AG.OFSTBoolean)
+                return AG.addfielddefn!(layer, fielddefn)
+            end
             AG.createfeature(layer) do feature
                 AG.setfield!(feature, 0, Int64(1))
                 AG.setfield!(feature, 1, Float64(1.0))
@@ -264,6 +272,7 @@ import GeoInterface as GI
                 AG.setfield!(feature, 14, Float16(1.0))
                 AG.setfield!(feature, 15, UInt16(1.0))
                 AG.setfield!(feature, 16, UInt32(1.0))
+                AG.setfield!(feature, 17, EnumValue)
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
@@ -282,6 +291,7 @@ import GeoInterface as GI
                 @test AG.getfield(feature, 14) === Float32(1.0) # Widened from Float16
                 @test AG.getfield(feature, 15) === Int32(1) # Widened from UInt16
                 @test AG.getfield(feature, 16) === Int64(1) # Widened from UInt32
+                @test AG.getfield(feature, 17) === false  # Enum is lost
 
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)

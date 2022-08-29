@@ -619,6 +619,14 @@ end
 function setfield!(
     feature::AbstractFeature,
     i::Integer,
+    value::Enum,
+)::AbstractFeature
+    return setfield!(feature, i, Integer(value))
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
     value::Union{Float16,Float32,Float64},
 )::AbstractFeature
     GDAL.ogr_f_setfielddouble(feature.ptr, i, value)

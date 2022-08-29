@@ -351,6 +351,10 @@ end
     OFTInteger64List::Vector{Int64},
 )
 
+function Base.convert(og::Type{OGRFieldType}, ::Type{<:Enum{T}}) where {T}
+    return Base.convert(og, T)
+end
+
 @convert(
     OGRFieldSubType::GDAL.OGRFieldSubType,
     OFSTNone::GDAL.OFSTNone,
@@ -392,6 +396,10 @@ end
     # Lacking OFSTUUID and OFSTJSON defined in GDAL ≥ v"3.3"
     OFSTNone::Nothing, # default type comes last
 )
+
+function Base.convert(og::Type{OGRFieldSubType}, ::Type{<:Enum{T}}) where {T}
+    return Base.convert(og, T)
+end
 
 @convert(
     OGRJustification::GDAL.OGRJustification,
