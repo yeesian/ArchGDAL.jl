@@ -1072,7 +1072,7 @@ const _AbstractGeometryHasM = Union{_AbstractGeometryM,_AbstractGeometryZM}
 const _IGeometryHasM = Union{_IGeometryM,_IGeometryZM}
 const _GeometryHasM = Union{_GeometryM,_GeometryZM}
 
-const _AbstractGeometryNoM = Union{_AbstractGeometry,_AbstractGeometryZ,_AbstractGeometry25d}
+const _AbstractGeometryNoM = Union{_AbstractGeometry,_AbstractGeometryZ,_AbstractGeometry25D}
 const _IGeometryNoM = Union{_IGeometry,_IGeometryZ,_IGeometry25D}
 const _GeometryNoM = Union{_Geometry,_GeometryZ,_Geometry25D}
 
@@ -1204,10 +1204,10 @@ Fetch a point in line string or a point geometry, at index i.
 ### Parameters
 * `i`: the vertex to fetch, from 0 to ngeom()-1, zero for a point.
 """
-getpoint(geom::AbstractGeometry, i::Integer)::Tuple{Float64,Float64,Float64} =
+getpoint(geom::AbstractGeometry, i::Integer)::Tuple{Float64,Float64,Float64} = 
     getpoint!(geom, i, Ref{Float64}(), Ref{Float64}(), Ref{Float64}())
 
-function getpoint!(geom::AbstractGeometry, i::Integer, x, y, z)
+function getpoint!(geom::AbstractGeometry, i::Integer, x, y, z)::Tuple{Float64,Float64,Float64}
     GDAL.ogr_g_getpoint(geom.ptr, i, x, y, z)
     return (x[], y[], z[])
 end
@@ -1332,8 +1332,8 @@ This corresponds to
     wkbGeometryCollection[25D], and
 * `0` for other geometry types.
 """
-function ngeom(geom::AbstractGeometry)::Integer
-    n = GDAL.ogr_g_getpointcount(geom.ptr)
+function ngeom(geom::AbstractGeometry)::Int32
+    n = GDAL.ogr_g_getpointcount(geom.ptr)::Int32
     return n == 0 ? GDAL.ogr_g_getgeometrycount(geom.ptr) : n
 end
 
@@ -1361,22 +1361,18 @@ function getgeom(geom::AbstractGeometry, i::Integer)::IGeometry
 end
 # TODO create points with measures
 function getgeom(geom::AbstractGeometry{wkbLineString}, i::Integer)
-    geom.ptr == C_NULL && return IGeometry{wkbUnknown}()
     p = getpoint(geom, i)
     return createpoint(p[1], p[2])
 end
 function getgeom(geom::AbstractGeometry{wkbLineStringM}, i::Integer)
-    geom.ptr == C_NULL && return IGeometry{wkbUnknown}()
     p = getpoint(geom, i)
     return createpoint(p[1], p[2]; m=getm(geom, i))
 end
 function getgeom(geom::AbstractGeometry{wkbLineString25D}, i::Integer)
-    geom.ptr == C_NULL && return IGeometry{wkbUnknown}()
     p = getpoint(geom, i)
     return createpoint(p[1], p[2], p[3])
 end
 function getgeom(geom::AbstractGeometry{wkbLineStringZM}, i::Integer)
-    geom.ptr == C_NULL && return IGeometry{wkbUnknown}()
     p = getpoint(geom, i)
     return createpoint(p[1], p[2], p[3]; m=getm(geom, i))
 end
