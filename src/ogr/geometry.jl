@@ -1068,6 +1068,14 @@ const _AbstractGeometry3d = Union{map(x -> AbstractGeometry{x}, wkbEnums3d)...}
 const _IGeometry3d = Union{map(x -> IGeometry{x}, wkbEnums3d)...}
 const _Geometry3d = Union{map(x -> Geometry{x}, wkbEnums3d)...}
 
+const _AbstractGeometryHasM = Union{_AbstractGeometryM,_AbstractGeometryZM}
+const _IGeometryHasM = Union{_IGeometryM,_IGeometryZM}
+const _GeometryHasM = Union{_GeometryM,_GeometryZM}
+
+const _AbstractGeometryNoM = Union{_AbstractGeometry,_AbstractGeometryZ,_AbstractGeometry25d}
+const _IGeometryNoM = Union{_IGeometry,_IGeometryZ,_IGeometry25D}
+const _GeometryNoM = Union{_Geometry,_GeometryZ,_Geometry25D}
+
 """
     is3d(geom::AbstractGeometry)
 
@@ -1083,6 +1091,8 @@ is3d(geom::_AbstractGeometry3d) = true
 Returns `true` if the geometry has a m coordinate, otherwise `false`.
 """
 ismeasured(geom::AbstractGeometry)::Bool = GDAL.ogr_g_ismeasured(geom.ptr) != 0
+ismeasured(geom::_AbstractGeometryHasM) = true
+ismeasured(geom::_AbstractGeometryNoM) = false
 
 """
     isempty(geom::AbstractGeometry)
