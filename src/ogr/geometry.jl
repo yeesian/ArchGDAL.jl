@@ -1682,7 +1682,7 @@ other libraries or applications.
 
 ### Parameters
 * `flag`: `true` if non-linear geometries might be returned (default value).
-          `false` to ask for non-linear geonetries to be approximated as linear
+          `false` to ask for non-linear geometries to be approximated as linear
           geometries.
 
 ### Returns
