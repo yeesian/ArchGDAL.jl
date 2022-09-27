@@ -20,13 +20,15 @@ GDT_Unknown::GDALDataType = 0x00000000
     GDT_Int16 = 3,
     GDT_UInt32 = 4,
     GDT_Int32 = 5,
-    GDT_Float32 = 6,
-    GDT_Float64 = 7,
-    GDT_CInt16 = 8,
-    GDT_CInt32 = 9,
-    GDT_CFloat32 = 10,
-    GDT_CFloat64 = 11,
-    GDT_TypeCount = 12,
+    GDT_UInt64 = 6,
+    GDT_Int64 = 7,
+    GDT_Float32 = 8,
+    GDT_Float64 = 9,
+    GDT_CInt16 = 10,
+    GDT_CInt32 = 11,
+    GDT_CFloat32 = 12,
+    GDT_CFloat64 = 13,
+    GDT_TypeCount = 14,
 )
 
 """
