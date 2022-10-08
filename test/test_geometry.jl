@@ -863,8 +863,7 @@ import GeoFormatTypes as GFT
     end
 
     @testset "Test coordinate dimensions" begin
-        AG.createpoint(1, 2, 3) do point
-            AG.GDAL.ogr_g_setmeasured(point.ptr, true)
+        AG.createpoint(1, 2, 3; m=0) do point
             @test GI.getcoord(point, 3) == 3
             @test GI.getcoord(point, 4) == 0
             @test !GI.isempty(point)
@@ -885,8 +884,7 @@ import GeoFormatTypes as GFT
             @test !GI.ismeasured(point)
             @test !GI.is3d(point)
         end
-        AG.createpoint(1, 2) do point
-            AG.GDAL.ogr_g_setmeasured(point.ptr, true)
+        AG.createpoint(1, 2; m=0) do point
             @test GI.getcoord(point, 3) == 0
             @test isnothing(GI.getcoord(point, 4))
             @test !GI.isempty(point)
