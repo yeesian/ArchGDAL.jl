@@ -1376,23 +1376,7 @@ function getgeom(geom::AbstractGeometry{wkbLineStringZM}, i::Integer)
     p = getpoint(geom, i)
     return createpoint(p[1], p[2], p[3]; m=getm(geom, i))
 end
-#
-# function getgeom(
-#     geom::Union{
-#         ArchGDAL.IGeometry{ArchGDAL.wkbLineString},
-#         ArchGDAL.Geometry{ArchGDAL.wkbLineString},
-#     }, # TODO All curves
-#     i::Integer,
-# )
-#     if geom.ptr == C_NULL
-#         return IGeometry{wkbUnknown}()
-#     end
-#     if is3d(geom)
-#         createpoint(getpoint(geom, i)[1:3])
-#     else
-#         createpoint(getpoint(geom, i)[1:2])
-#     end
-# end
+
 function unsafe_getgeom(geom::AbstractGeometry, i::Integer)::Geometry
     # NOTE(yeesian): GDAL.ogr_g_getgeometryref(geom, i) returns an handle to a
     # geometry within the container. The returned geometry remains owned by the
