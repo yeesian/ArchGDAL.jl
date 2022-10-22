@@ -15,7 +15,6 @@ import GeoFormatTypes as GFT
             @test GI.m(point) == nothing
             @test GI.getcoord(point, 1) == 100
             @test GI.getcoord(point, 2) == 70
-            @show @which GI.getcoord(GI.PointTrait(), point, 3)
             @test GI.getcoord(point, 3) == nothing
             @test GI.getcoord(point, 4) == nothing
         end
