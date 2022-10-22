@@ -6,7 +6,13 @@ import GeoFormatTypes as GFT
 @testset "test_geometry.jl" begin
     @testset "GeoInterface" begin
         AG.createpoint(100, 70) do point
+            @test GI.geomtrait(point) == GI.PointTrait()
             @test GI.testgeometry(point)
+            @test GI.bbox(point).X[1] == 100
+            @test GI.x(point) == 100
+            @test GI.y(point) == 70
+            @test GI.z(point) == nothing
+            @test GI.m(point) == nothing
         end
         @test GI.isgeometry(AG.IGeometry)
     end
@@ -14,9 +20,7 @@ import GeoFormatTypes as GFT
     @testset "Create a Point" begin
         # Method 1
         AG.createpoint(100, 70) do point
-            @test GI.geomtrait(point) == GI.PointTrait()
-            @test GI.testgeometry(point)
-            @test GI.bbox(point).X[1] == 100
+            @test point isa AG.Geometry{AG.wkbPoint}
             @test isapprox(GI.coordinates(point), [100, 70], atol = 1e-6)
             @test AG.geomdim(point) == 0
             @test AG.getcoorddim(point) == 2
@@ -112,14 +116,19 @@ import GeoFormatTypes as GFT
                 AG.toJSON(point, ["SIGNIFICANT_FIGURES=1"]),
                 "{ \"type\": \"Point\", \"coordinates\": [",
             )
-            AG.createpoint(100, 70, 0) do point2
+            AG.createpoint(100, 70, 0) do pointz
                 @test isapprox(
-                    GI.coordinates(point2),
+                    GI.coordinates(pointz),
                     [100, 70, 0],
                     atol = 1e-6,
                 )
-                @test point == point2
-                @test AG.equals(point, point2) == true
+                @test pointz isa AG.Geometry{AG.wkbPoint25D}
+                @test point == pointz
+                @test GI.x(pointz) == 100
+                @test GI.y(pointz) == 70
+                @test GI.z(pointz) == 0
+                @test GI.m(pointz) == nothing
+                @test AG.equals(point, pointz) == true
             end
             AG.createpoint((100, 70, 0)) do point3
                 @test AG.equals(point, point3) == true
@@ -247,9 +256,13 @@ import GeoFormatTypes as GFT
             @test AG.toWKT(AG.createlinestring([1.0f0, 2.0f0, 3.0f0], [4.0f0, 5.0f0, 6.0f0])) ==
                   AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
                   "LINESTRING (1 4,2 5,3 6)"
+            # create
             AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.LineStringTrait()
                 @test GI.testgeometry(geom)
+                @test !AG.is3d(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
                 @test isapprox(
                     GI.coordinates(geom),
                     [[1, 4], [2, 5], [3, 6]],
@@ -261,15 +274,13 @@ import GeoFormatTypes as GFT
                 AG.setpoint!(geom, 1, 10, 10)
                 @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
                 @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
-                @test typeof(geom) == AG.Geometry{AG.wkbLineString}
-                # child = AG.unsafe_getgeom(geom, 0)
-                # @test typeof(child) == AG.Geometry{AG.wkbPoint}
-                # AG.destroy(child)
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
             end
+            # unsafe_create
             geom = AG.unsafe_createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])
             @test GI.geomtrait(geom) == GI.LineStringTrait()
             @test GI.testgeometry(geom)
+            @test typeof(geom) == AG.Geometry{AG.wkbLineString}
+            @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
             @test isapprox(
                 GI.coordinates(geom),
                 [[1, 4], [2, 5], [3, 6]],
@@ -281,13 +292,18 @@ import GeoFormatTypes as GFT
             AG.setpoint!(geom, 1, 10, 10)
             @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
             @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
-            @test typeof(geom) == AG.Geometry{AG.wkbLineString}
             AG.destroy(geom)
+            # create 25D
             AG.createlinestring(
                 [1.0, 2.0, 3.0],
                 [4.0, 5.0, 6.0],
                 [7.0, 8.0, 9.0],
             ) do geom
+                @test GI.geomtrait(geom) == GI.LineStringTrait()
+                @test AG.is3d(geom)
+                @test GI.testgeometry(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString25D}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
                 @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
                 AG.setpoint!(geom, 1, 10, 10, 10)
                 @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9)"
@@ -302,6 +318,12 @@ import GeoFormatTypes as GFT
                   "LINEARRING (1 4,2 5,3 6)"
             AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.LineStringTrait()
+                @test GI.testgeometry(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString} # GDAL only uses the LinearRing enum during construction  
+                @test AG._infergeomtype(geom.ptr) == AG.wkbLineString
+                @test !AG.is3d(geom)
+                @test GDAL.ogr_g_is3d(geom.ptr) == 0
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
                 @test isapprox(
                     GI.coordinates(geom),
                     [[1, 4], [2, 5], [3, 6]],
@@ -310,13 +332,18 @@ import GeoFormatTypes as GFT
                 @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
                 AG.setpointcount!(geom, 5)
                 @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
-                @test typeof(geom) == AG.Geometry{AG.wkbLineString} # GDAL only uses the LinearRing enum during construction  
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
                 AG.empty!(geom)
                 @test AG.toWKT(geom) == "LINEARRING EMPTY"
             end
             points = [1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]
             AG.createlinearring(points...) do geom
+                @test GI.testgeometry(geom)
+                @test AG._infergeomtype(geom.ptr) == AG.wkbLineString25D
+                @test AG.is3d(geom)
+                @test GDAL.ogr_g_is3d(geom.ptr) == 1
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString25D}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
+                # @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
                 @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
                 AG.closerings!(geom)
                 @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9,1 4 7)"
@@ -335,19 +362,25 @@ import GeoFormatTypes as GFT
             AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.PolygonTrait()
                 @test GI.testgeometry(geom)
+                @test !GI.is3d(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbLineString}
                 @test isapprox(
                     GI.coordinates(geom),
                     [[[1, 4], [2, 5], [3, 6]]],
                     atol = 1e-6,
                 )
                 @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
-                @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
             end
             AG.createpolygon(
                 [1.0, 2.0, 3.0],
                 [4.0, 5.0, 6.0],
                 [7.0, 8.0, 9.0],
             ) do geom
+                @test GI.geomtrait(geom) == GI.PolygonTrait()
+                @test GI.is3d(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbPolygon25D}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbLineString25D}
                 @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
                 AG.closerings!(geom)
                 @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9,1 4 7))"
@@ -361,19 +394,25 @@ import GeoFormatTypes as GFT
             AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.MultiPointTrait()
                 @test GI.testgeometry(geom)
+                @test !GI.is3d(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
                 @test isapprox(
                     GI.coordinates(geom),
                     [[1, 4], [2, 5], [3, 6]],
                     atol = 1e-6,
                 )
                 @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
-                @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint}
             end
             AG.createmultipoint(
                 [1.0, 2.0, 3.0],
                 [4.0, 5.0, 6.0],
                 [7.0, 8.0, 9.0],
             ) do geom
+                @test GI.geomtrait(geom) == GI.MultiPointTrait()
+                @test GI.is3d(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint25D}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
                 @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
             end
         end
@@ -424,6 +463,13 @@ import GeoFormatTypes as GFT
             ) do geom
                 @test GI.geomtrait(geom) == GI.MultiPolygonTrait()
                 @test GI.testgeometry(geom)
+                @test GDAL.ogr_g_is3d(geom.ptr) == 0
+                @test !GI.is3d(geom)
+                @test typeof(geom) == AG.Geometry{AG.wkbMultiPolygon}
+                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPolygon}
+                child = AG.unsafe_getgeom(geom, 0)
+                @test typeof(child) == AG.Geometry{AG.wkbPolygon}
+                AG.destroy(child)
                 @test isapprox(
                     GI.coordinates(geom),
                     [
@@ -442,11 +488,6 @@ import GeoFormatTypes as GFT
                       "MULTIPOLYGON (" *
                       "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
                       "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
-                @test typeof(geom) == AG.Geometry{AG.wkbMultiPolygon}
-                child = AG.unsafe_getgeom(geom, 0)
-                @test typeof(child) == AG.Geometry{AG.wkbPolygon}
-                AG.destroy(child)
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPolygon}
             end
         end
 
@@ -863,13 +904,6 @@ import GeoFormatTypes as GFT
     end
 
     @testset "Test coordinate dimensions" begin
-        AG.createpoint(1, 2, 3; m=0) do point
-            @test GI.getcoord(point, 3) == 3
-            @test GI.getcoord(point, 4) == 0
-            @test !GI.isempty(point)
-            @test GI.ismeasured(point)
-            @test GI.is3d(point)
-        end
         AG.createpoint(1, 2, 3) do point
             @test GI.getcoord(point, 3) == 3
             @test isnothing(GI.getcoord(point, 4))
@@ -882,13 +916,6 @@ import GeoFormatTypes as GFT
             @test isnothing(GI.getcoord(point, 4))
             @test !GI.isempty(point)
             @test !GI.ismeasured(point)
-            @test !GI.is3d(point)
-        end
-        AG.createpoint(1, 2; m=0) do point
-            @test GI.getcoord(point, 3) == 0
-            @test isnothing(GI.getcoord(point, 4))
-            @test !GI.isempty(point)
-            @test GI.ismeasured(point)
             @test !GI.is3d(point)
         end
         AG.createpoint() do point

@@ -141,8 +141,9 @@ unsafe_creategeom(::Val{T}) where T = Geometry{T}(GDAL.ogr_g_creategeometry(T))
 
 # Special-case createlinearring, because we need to pass
 # wkbLinearRing create but gdal returns a wkbLineString
-creategeom(::Val{wkbLinearRing}) = IGeometry{wkbLineString}(GDAL.ogr_g_creategeometry(wkbLinearRing))
-unsafe_creategeom(::Val{wkbLinearRing}) = Geometry{wkbLineString}(GDAL.ogr_g_creategeometry(wkbLinearRing))
+# we also don't know the type because there is no wkbLinearRing25D
+creategeom(::Val{wkbLinearRing}) = IGeometry(GDAL.ogr_g_creategeometry(wkbLinearRing))::Union{IGeometry{wkbLineString},IGeometry{wkbLineString25D}}
+unsafe_creategeom(::Val{wkbLinearRing}) = Geometry(GDAL.ogr_g_creategeometry(wkbLinearRing))::Union{Geometry{wkbLineString},Geometry{wkbLineString25D}}
 
 """
     haspreparedgeomsupport()
@@ -1081,18 +1082,18 @@ const _GeometryNoM = Union{_Geometry,_GeometryZ,_Geometry25D}
 
 Returns `true` if the geometry has a z coordinate, otherwise `false`.
 """
-is3d(geom::AbstractGeometry)::Bool = GDAL.ogr_g_is3d(geom.ptr) != 0 # Is a fallback still needed?
 is3d(geom::_AbstractGeometry2d) = false
 is3d(geom::_AbstractGeometry3d) = true
+# is3d(geom::AbstractGeometry)::Bool = GDAL.ogr_g_is3d(geom.ptr) != 0 # old GDAL method
 
 """
     ismeasured(geom::AbstractGeometry)
 
 Returns `true` if the geometry has a m coordinate, otherwise `false`.
 """
-ismeasured(geom::AbstractGeometry)::Bool = GDAL.ogr_g_ismeasured(geom.ptr) != 0
 ismeasured(geom::_AbstractGeometryHasM) = true
 ismeasured(geom::_AbstractGeometryNoM) = false
+# ismeasured(geom::AbstractGeometry)::Bool = GDAL.ogr_g_ismeasured(geom.ptr) != 0 # old GDAL method
 
 """
     isempty(geom::AbstractGeometry)
@@ -1364,17 +1365,9 @@ function getgeom(geom::AbstractGeometry{wkbLineString}, i::Integer)
     p = getpoint(geom, i)
     return createpoint(p[1], p[2])
 end
-function getgeom(geom::AbstractGeometry{wkbLineStringM}, i::Integer)
-    p = getpoint(geom, i)
-    return createpoint(p[1], p[2]; m=getm(geom, i))
-end
 function getgeom(geom::AbstractGeometry{wkbLineString25D}, i::Integer)
     p = getpoint(geom, i)
     return createpoint(p[1], p[2], p[3])
-end
-function getgeom(geom::AbstractGeometry{wkbLineStringZM}, i::Integer)
-    p = getpoint(geom, i)
-    return createpoint(p[1], p[2], p[3]; m=getm(geom, i))
 end
 
 function unsafe_getgeom(geom::AbstractGeometry, i::Integer)::Geometry
@@ -1713,30 +1706,45 @@ end
 for f in (:create, :unsafe_create)
 
     V = Vector{<:Real}
-    geomargs2d = (:xs, :ys), (:(xs::$V), :(ys::$V))
-    geomargs3d = (:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V))
-    for (args, typedargs) in (geomargs2d, geomargs3d)
-        for geom in (:linestring, :linearring)
-            f1 = Symbol("$f$geom")
-            @eval function $f1($(typedargs...))
-                geom = $f1()
-                for pt in zip($(args...))
-                    addpoint!(geom, pt...)
-                end
-                return geom
+    geomargs2d = (:xs, :ys), (:(xs::$V), :(ys::$V)), ""
+    geomargs3d = (:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V)), "25D"
+    for (args, typedargs, typesuffix) in (geomargs2d, geomargs3d)
+        f1 = Symbol("$(f)linestring")
+        T = Symbol("wkbLineString" * typesuffix) 
+        @eval function $f1($(typedargs...))
+            geom = $f1(Val{$T}())
+            for pt in zip($(args...))
+                addpoint!(geom, pt...)
             end
+            return geom
+        end
+        @eval function createlinearring($(typedargs...))
+            geom = $f1(Val{wkbLinearRing}())
+            for pt in zip($(args...))
+                addpoint!(geom, pt...)
+            end
+            return IGeometry{$T}(geom.ptr) # rewrap LinearRing as the corrent LineString/LineString25D
+        end
+        @eval function unsafe_createlinearring($(typedargs...))
+            geom = $f1(Val{wkbLinearRing}())
+            for pt in zip($(args...))
+                addpoint!(geom, pt...)
+            end
+            return Geometry{$T}(geom.ptr) # rewrap LinearRing as the corrent LineString/LineString25D
         end
         f1 = Symbol("$(f)polygon")
+        T = Symbol("wkbPolygon" * typesuffix) 
         @eval function $f1($(typedargs...))
-            geom = $f1()
+            geom = $f1(Val{$T}())
             subgeom = unsafe_createlinearring($(args...))
             result = GDAL.ogr_g_addgeometrydirectly(geom.ptr, subgeom.ptr)
             @ogrerr result "Failed to add linearring."
             return geom
         end
         f1 = Symbol("$(f)multipoint")
+        T = Symbol("wkbMultiPoint" * typesuffix) 
         @eval function $f1($(typedargs...))
-            geom = $f1()
+            geom = $f1(Val{$T}())
             for pt in zip($(args...))
                 subgeom = unsafe_createpoint(pt)
                 result = GDAL.ogr_g_addgeometrydirectly(geom.ptr, subgeom.ptr)
@@ -1747,20 +1755,11 @@ for f in (:create, :unsafe_create)
     end
 
     f1 = Symbol("$(f)point")
-    @eval function $f1(cs::Real...; m=nothing)
-        isnothing(m) ? $f1(cs) : $f1(cs, m)
-    end
+    @eval $f1(cs::Real...) = $f1(cs)
     @eval $f1(coords::Vector) = $f1(Tuple(coords))
-    @eval $f1(coords::Vector, m) = $f1(Tuple(coords), m)
     @eval function $f1(coords::Tuple{<:Real,<:Real})
         geom = $f1(Val{wkbPoint}())
         addpoint!(geom, coords...)
-        return geom
-    end
-    @eval function $f1(coords::Tuple{<:Real,<:Real}, m)
-        geom = $f1(Val{wkbPointM}())
-        addpoint!(geom, coords...)
-        # TODO set m
         return geom
     end
     @eval function $f1(coords::Tuple{<:Real,<:Real,<:Real})
@@ -1768,12 +1767,17 @@ for f in (:create, :unsafe_create)
         addpoint!(geom, coords...)
         return geom
     end
-    @eval function $f1(coords::Tuple{<:Real,<:Real,<:Real}, m)
-        geom = $f1(Val{wkbPointZM}())
-        addpoint!(geom, coords...)
-        # TODO set m
-        return geom
-    end
+    # TODO make measures work
+    # @eval function $f1(coords::Tuple{<:Real,<:Real}, m)
+        # geom = $f1(Val{wkbPointM}())
+        # addpoint!(geom, coords...)
+        # return geom
+    # end
+    # @eval function $f1(coords::Tuple{<:Real,<:Real,<:Real}, m)
+        # geom = $f1(Val{wkbPointZM}())
+        # addpoint!(geom, coords...)
+        # return geom
+    # end
 
 
     # Coordinates can be Vector of Real or 

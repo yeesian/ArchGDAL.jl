@@ -221,7 +221,6 @@ mutable struct ISpatialRef <: AbstractSpatialRef
     end
 end
 
-_infergeomtype(ptr::GDAL.OGRGeometryH) = wkbUnknown
 function _infergeomtype(ptr::GDAL.OGRGeometryH)::OGRwkbGeometryType
     return if ptr == C_NULL
         wkbUnknown
