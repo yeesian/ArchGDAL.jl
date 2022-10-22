@@ -76,7 +76,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     GeoInterface.z(::GeoInterface.AbstractPointTrait, geom::_AbstractGeometryZ) = getz(geom, 0)
     GeoInterface.m(::GeoInterface.AbstractPointTrait, geom::_AbstractGeometryM) = getm(geom, 0)
 
-    function GeoInterface.getcoord(::GeometryTraits, geom::AbstractGeometry, i)
+    function GeoInterface.getcoord(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry, i)
         if i == 1
             getx(geom, 0)
         elseif i == 2

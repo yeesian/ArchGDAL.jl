@@ -13,6 +13,24 @@ import GeoFormatTypes as GFT
             @test GI.y(point) == 70
             @test GI.z(point) == nothing
             @test GI.m(point) == nothing
+            @test GI.getcoord(point, 1) == 100
+            @test GI.getcoord(point, 2) == 70
+            @show @which GI.getcoord(GI.PointTrait(), point, 3)
+            @test GI.getcoord(point, 3) == nothing
+            @test GI.getcoord(point, 4) == nothing
+        end
+        AG.createpoint(100, 70, 1) do point
+            @test GI.geomtrait(point) == GI.PointTrait()
+            @test GI.testgeometry(point)
+            @test GI.bbox(point).Z[1] == 1
+            @test GI.x(point) == 100
+            @test GI.y(point) == 70
+            @test GI.z(point) == 1
+            @test GI.m(point) == nothing
+            @test GI.getcoord(point, 1) == 100
+            @test GI.getcoord(point, 2) == 70
+            @test GI.getcoord(point, 3) == 1
+            @test GI.getcoord(point, 4) == nothing
         end
         @test GI.isgeometry(AG.IGeometry)
     end
@@ -124,10 +142,6 @@ import GeoFormatTypes as GFT
                 )
                 @test pointz isa AG.Geometry{AG.wkbPoint25D}
                 @test point == pointz
-                @test GI.x(pointz) == 100
-                @test GI.y(pointz) == 70
-                @test GI.z(pointz) == 0
-                @test GI.m(pointz) == nothing
                 @test AG.equals(point, pointz) == true
             end
             AG.createpoint((100, 70, 0)) do point3
