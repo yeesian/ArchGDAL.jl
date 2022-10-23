@@ -12,9 +12,10 @@ import ArchGDAL as AG
 
     @test AG.has_preparedgeom_support()
 
-    prep_polygon = AG.preparegeom(polygon)
+    prep_polygon = AG.preparegeom(polygon);
+    @test prep_polygon isa AG.IPreparedGeometry{AG.wkbPolygon}
     unsafe_prep_polygon = AG.unsafe_preparegeom(polygon)
-    @test isa(unsafe_prep_polygon, AG.PreparedGeometry)
+    @test unsafe_prep_polygon isa AG.PreparedGeometry{AG.wkbPolygon}
     AG.destroy(unsafe_prep_polygon)
 
     ir1 = AG.intersects(polygon, point)

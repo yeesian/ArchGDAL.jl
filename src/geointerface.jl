@@ -62,45 +62,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
 
     GeoInterface.isgeometry(::Type{<:AbstractGeometry}) = true
     @enable_geo_plots AbstractGeometry
-
-    function GeoInterface.geomtrait(geom::AbstractGeometry)
-        # TODO Dispatch directly once #266 is merged
-        gtype = getgeomtype(geom)
-        return if gtype in pointtypes
-            GeoInterface.PointTrait()
-        elseif gtype in multipointtypes
-            GeoInterface.MultiPointTrait()
-        elseif gtype in linetypes
-            GeoInterface.LineStringTrait()
-        elseif gtype == wkbLinearRing
-            GeoInterface.LinearRingTrait()
-        elseif gtype in multilinetypes
-            GeoInterface.MultiLineStringTrait()
-        elseif gtype in polygontypes
-            GeoInterface.PolygonTrait()
-        elseif gtype in multipolygontypes
-            GeoInterface.MultiPolygonTrait()
-        elseif gtype in collectiontypes
-            GeoInterface.GeometryCollectionTrait()
-        elseif gtype == wkbCircularString
-            GeoInterface.CircularStringTrait()
-        elseif gtype == wkbCompoundCurve
-            GeoInterface.CompoundCurveTrait()
-        elseif gtype == wkbCurvePolygon
-            GeoInterface.CurvePolygonTrait()
-        elseif gtype == wkbMultiSurface
-            GeoInterface.MultiSurfaceTrait()
-        elseif gtype == wkbPolyhedralSurface
-            GeoInterface.PolyhedralSurfaceTrait()
-        elseif gtype == wkbTIN
-            GeoInterface.TINTrait()
-        elseif gtype == wkbTriangle
-            GeoInterface.TriangleTrait()
-        else
-            nothing
-        end
-    end
-
     GeoInterface.is3d(::GeometryTraits, geom::AbstractGeometry) = is3d(geom)
     function GeoInterface.ismeasured(::GeometryTraits, geom::AbstractGeometry)
         return ismeasured(geom)
@@ -110,7 +71,12 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return getcoorddim(geom)
     end
 
-    function GeoInterface.getcoord(::GeometryTraits, geom::AbstractGeometry, i)
+    GeoInterface.x(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry) = getx(geom, 0)
+    GeoInterface.y(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry) = gety(geom, 0)
+    GeoInterface.z(::GeoInterface.AbstractPointTrait, geom::_AbstractGeometryZ) = getz(geom, 0)
+    GeoInterface.m(::GeoInterface.AbstractPointTrait, geom::_AbstractGeometryM) = getm(geom, 0)
+
+    function GeoInterface.getcoord(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry, i)
         if i == 1
             getx(geom, 0)
         elseif i == 2
@@ -312,4 +278,21 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         )
         return f(GeoInterface.coordinates(geom))
     end
+
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, pointtypes)...}) = GeoInterface.PointTrait()
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, multipointtypes)...}) = GeoInterface.MultiPointTrait()
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, linetypes)...}) = GeoInterface.LineStringTrait()
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, multilinetypes)...}) = GeoInterface.MultiLineStringTrait()
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, polygontypes)...}) = GeoInterface.PolygonTrait()
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, multipolygontypes)...}) = GeoInterface.MultiPolygonTrait()
+    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, collectiontypes)...}) = GeoInterface.GeometryCollectionTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbLinearRing}) = GeoInterface.LinearRingTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbCircularString}) = GeoInterface.CircularStringTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbCompoundCurve}) = GeoInterface.CompoundCurveTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbCurvePolygon}) = GeoInterface.CurvePolygonTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbMultiSurface}) = GeoInterface.MultiSurfaceTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbPolyhedralSurface}) = GeoInterface.PolyhedralSurfaceTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbTIN}) = GeoInterface.TINTrait()
+    GeoInterface.geomtrait(geom::AbstractGeometry{wkbTriangle}) = GeoInterface.TriangleTrait()
 end
+
