@@ -229,16 +229,18 @@ function _infergeomtype(ptr::GDAL.OGRGeometryH)::OGRwkbGeometryType
     end
 end
 
-mutable struct Geometry{OGRwkbGeometryType} <: AbstractGeometry{OGRwkbGeometryType}
+mutable struct Geometry{OGRwkbGeometryType} <:
+               AbstractGeometry{OGRwkbGeometryType}
     ptr::GDAL.OGRGeometryH
     Geometry{wkbUnknown}() = new{wkbUnknown}(C_NULL)
-    Geometry{T}(ptr::GDAL.OGRGeometryH) where T = new{T}(ptr)
+    Geometry{T}(ptr::GDAL.OGRGeometryH) where {T} = new{T}(ptr)
 end
 Geometry(ptr::GDAL.OGRGeometryH) = Geometry{_infergeomtype(ptr)}(ptr)
 Geometry() = Geometry{wkbUnknown}()
 _geomtype(::Geometry{T}) where {T} = T
 
-mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry{OGRwkbGeometryType}
+mutable struct IGeometry{OGRwkbGeometryType} <:
+               AbstractGeometry{OGRwkbGeometryType}
     ptr::GDAL.OGRGeometryH
 
     function IGeometry{wkbUnknown}()
@@ -246,7 +248,7 @@ mutable struct IGeometry{OGRwkbGeometryType} <: AbstractGeometry{OGRwkbGeometryT
         finalizer(destroy, geom)
         return geom
     end
-    function IGeometry{T}(ptr::GDAL.OGRGeometryH) where T
+    function IGeometry{T}(ptr::GDAL.OGRGeometryH) where {T}
         geom = new{T}(ptr)
         finalizer(destroy, geom)
         return geom
@@ -263,7 +265,7 @@ end
 mutable struct IPreparedGeometry{T} <: AbstractPreparedGeometry{T}
     ptr::GDAL.OGRPreparedGeometryH
 
-    function IPreparedGeometry{T}(ptr::GDAL.OGRPreparedGeometryH) where T
+    function IPreparedGeometry{T}(ptr::GDAL.OGRPreparedGeometryH) where {T}
         geom = new{T}(ptr)
         finalizer(destroy, geom)
         return geom

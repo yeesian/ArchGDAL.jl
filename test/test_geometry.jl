@@ -266,8 +266,15 @@ import GeoFormatTypes as GFT
 
     @testset "Testing construction of complex geometries" begin
         @testset "linestring" begin
-            @test AG.toWKT(AG.createlinestring([1.0f0, 2.0f0, 3.0f0], [4.0f0, 5.0f0, 6.0f0])) ==
-                  AG.toWKT(AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+            @test AG.toWKT(
+                      AG.createlinestring(
+                          [1.0f0, 2.0f0, 3.0f0],
+                          [4.0f0, 5.0f0, 6.0f0],
+                      ),
+                  ) ==
+                  AG.toWKT(
+                      AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),
+                  ) ==
                   "LINESTRING (1 4,2 5,3 6)"
             # create
             AG.createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
@@ -286,7 +293,8 @@ import GeoFormatTypes as GFT
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
                 AG.setpoint!(geom, 1, 10, 10)
                 @test AG.toWKT(geom) == "LINESTRING (1 4,10 10,3 6)"
-                @test GFT.val(convert(GFT.WellKnownText, geom)) == AG.toWKT(geom)
+                @test GFT.val(convert(GFT.WellKnownText, geom)) ==
+                      AG.toWKT(geom)
             end
             # unsafe_create
             geom = AG.unsafe_createlinestring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])
@@ -316,18 +324,22 @@ import GeoFormatTypes as GFT
                 @test AG.is3d(geom)
                 @test GI.testgeometry(geom)
                 @test typeof(geom) == AG.Geometry{AG.wkbLineString25D}
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
+                @test typeof(AG.getgeom(geom, 0)) ==
+                      AG.IGeometry{AG.wkbPoint25D}
                 @test AG.toWKT(geom) == "LINESTRING (1 4 7,2 5 8,3 6 9)"
                 AG.setpoint!(geom, 1, 10, 10, 10)
                 @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9)"
                 AG.addpoint!(geom, 11, 11, 11)
-                @test AG.toWKT(geom) == "LINESTRING (1 4 7,10 10 10,3 6 9,11 11 11)"
+                @test AG.toWKT(geom) ==
+                      "LINESTRING (1 4 7,10 10 10,3 6 9,11 11 11)"
             end
         end
 
         @testset "linearring" begin
             @test AG.toWKT(AG.createlinearring([1, 2, 3], [4, 5, 6])) ==
-                  AG.toWKT(AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+                  AG.toWKT(
+                      AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),
+                  ) ==
                   "LINEARRING (1 4,2 5,3 6)"
             AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.LineStringTrait()
@@ -355,7 +367,8 @@ import GeoFormatTypes as GFT
                 @test AG.is3d(geom)
                 @test GDAL.ogr_g_is3d(geom.ptr) == 1
                 @test typeof(geom) == AG.Geometry{AG.wkbLineString25D}
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
+                @test typeof(AG.getgeom(geom, 0)) ==
+                      AG.IGeometry{AG.wkbPoint25D}
                 # @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
                 @test AG.toWKT(geom) == "LINEARRING (1 4 7,2 5 8,3 6 9)"
                 AG.closerings!(geom)
@@ -369,15 +382,20 @@ import GeoFormatTypes as GFT
         end
 
         @testset "polygon" begin
-            @test AG.toWKT(AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06])) ==
-                  AG.toWKT(AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+            @test AG.toWKT(
+                      AG.createpolygon([0x01, 0x02, 0x03], [0x04, 0x05, 0x06]),
+                  ) ==
+                  AG.toWKT(
+                      AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),
+                  ) ==
                   "POLYGON ((1 4,2 5,3 6))"
             AG.createpolygon([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.PolygonTrait()
                 @test GI.testgeometry(geom)
                 @test !GI.is3d(geom)
                 @test typeof(geom) == AG.Geometry{AG.wkbPolygon}
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbLineString}
+                @test typeof(AG.getgeom(geom, 0)) ==
+                      AG.IGeometry{AG.wkbLineString}
                 @test isapprox(
                     GI.coordinates(geom),
                     [[[1, 4], [2, 5], [3, 6]]],
@@ -393,7 +411,8 @@ import GeoFormatTypes as GFT
                 @test GI.geomtrait(geom) == GI.PolygonTrait()
                 @test GI.is3d(geom)
                 @test typeof(geom) == AG.Geometry{AG.wkbPolygon25D}
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbLineString25D}
+                @test typeof(AG.getgeom(geom, 0)) ==
+                      AG.IGeometry{AG.wkbLineString25D}
                 @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9))"
                 AG.closerings!(geom)
                 @test AG.toWKT(geom) == "POLYGON ((1 4 7,2 5 8,3 6 9,1 4 7))"
@@ -402,7 +421,9 @@ import GeoFormatTypes as GFT
 
         @testset "multipoint" begin
             @test AG.toWKT(AG.createmultipoint([1, 2, 3], [4, 5, 6])) ==
-                  AG.toWKT(AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0])) ==
+                  AG.toWKT(
+                      AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]),
+                  ) ==
                   "MULTIPOINT (1 4,2 5,3 6)"
             AG.createmultipoint([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.MultiPointTrait()
@@ -425,40 +446,61 @@ import GeoFormatTypes as GFT
                 @test GI.geomtrait(geom) == GI.MultiPointTrait()
                 @test GI.is3d(geom)
                 @test typeof(geom) == AG.Geometry{AG.wkbMultiPoint25D}
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint25D}
+                @test typeof(AG.getgeom(geom, 0)) ==
+                      AG.IGeometry{AG.wkbPoint25D}
                 @test AG.toWKT(geom) == "MULTIPOINT (1 4 7,2 5 8,3 6 9)"
             end
         end
 
         @testset "multipolygon" begin
             @test AG.toWKT(
-                AG.createmultipolygon(
-                    Vector{Vector{Tuple{Int,Int}}}[
-                        Vector{Tuple{Int,Int}}[
-                            [(0, 0), (0, 4), (4, 4), (4, 0)],
-                            [(1, 1), (1, 3), (3, 3), (3, 1)],
-                        ],
-                        Vector{Tuple{Int,Int}}[
-                            [(10, 0), (10, 4), (14, 4), (14, 0)],
-                            [(11, 1), (11, 3), (13, 3), (13, 1)],
-                        ],
-                    ],
-                ),
-            ) ==
-            AG.toWKT(
-                AG.createmultipolygon(
-                    Vector{Vector{Tuple{Cdouble,Cdouble}}}[
-                        Vector{Tuple{Cdouble,Cdouble}}[
-                            [(0.0, 0.0), (0.0, 4.0), (4.0, 4.0), (4.0, 0.0)],
-                            [(1.0, 1.0), (1.0, 3.0), (3.0, 3.0), (3.0, 1.0)],
-                        ],
-                        Vector{Tuple{Cdouble,Cdouble}}[
-                            [(10.0, 0.0), (10.0, 4.0), (14.0, 4.0), (14.0, 0.0)],
-                            [(11.0, 1.0), (11.0, 3.0), (13.0, 3.0), (13.0, 1.0)],
-                        ],
-                    ],
-                ),
-            ) ==
+                      AG.createmultipolygon(
+                          Vector{Vector{Tuple{Int,Int}}}[
+                              Vector{Tuple{Int,Int}}[
+                                  [(0, 0), (0, 4), (4, 4), (4, 0)],
+                                  [(1, 1), (1, 3), (3, 3), (3, 1)],
+                              ],
+                              Vector{Tuple{Int,Int}}[
+                                  [(10, 0), (10, 4), (14, 4), (14, 0)],
+                                  [(11, 1), (11, 3), (13, 3), (13, 1)],
+                              ],
+                          ],
+                      ),
+                  ) ==
+                  AG.toWKT(
+                      AG.createmultipolygon(
+                          Vector{Vector{Tuple{Cdouble,Cdouble}}}[
+                              Vector{Tuple{Cdouble,Cdouble}}[
+                                  [
+                                      (0.0, 0.0),
+                                      (0.0, 4.0),
+                                      (4.0, 4.0),
+                                      (4.0, 0.0),
+                                  ],
+                                  [
+                                      (1.0, 1.0),
+                                      (1.0, 3.0),
+                                      (3.0, 3.0),
+                                      (3.0, 1.0),
+                                  ],
+                              ],
+                              Vector{Tuple{Cdouble,Cdouble}}[
+                                  [
+                                      (10.0, 0.0),
+                                      (10.0, 4.0),
+                                      (14.0, 4.0),
+                                      (14.0, 0.0),
+                                  ],
+                                  [
+                                      (11.0, 1.0),
+                                      (11.0, 3.0),
+                                      (13.0, 3.0),
+                                      (13.0, 1.0),
+                                  ],
+                              ],
+                          ],
+                      ),
+                  ) ==
                   "MULTIPOLYGON (" *
                   "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
                   "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
@@ -505,7 +547,9 @@ import GeoFormatTypes as GFT
         end
 
         @testset "circularstring" begin
-            AG.fromWKT("CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)") do geom
+            AG.fromWKT(
+                "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)",
+            ) do geom
                 @test typeof(geom) == AG.Geometry{AG.wkbCircularString}
                 @test GI.geomtrait(geom) == GI.CircularStringTrait()
                 # Other tests ???
@@ -523,7 +567,8 @@ import GeoFormatTypes as GFT
                 child = AG.unsafe_getgeom(geom, 0)
                 @test typeof(child) == AG.Geometry{AG.wkbCircularString}
                 AG.destroy(child)
-                @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbCircularString}
+                @test typeof(AG.getgeom(geom, 0)) ==
+                      AG.IGeometry{AG.wkbCircularString}
                 @test AG.toWKT(AG.curvegeom(AG.lineargeom(geom, 0.5))) ==
                       "CURVEPOLYGON (" *
                       "CIRCULARSTRING (-2 0,-1 -1,0 0,1 -1,2 0,0 2,-2 0)," *
@@ -541,7 +586,8 @@ import GeoFormatTypes as GFT
                         AG.polygonize(AG.forceto(lgeom, AG.wkbMultiLineString)),
                     ) == 2
                     AG.forceto(lgeom, AG.wkbMultiLineString) do mlsgeom
-                        @test typeof(mlsgeom) == AG.Geometry{AG.wkbMultiLineString}
+                        @test typeof(mlsgeom) ==
+                              AG.Geometry{AG.wkbMultiLineString}
                         AG.polygonize(mlsgeom) do plgeom
                             @test AG.ngeom(plgeom) == 2
                             @test typeof(plgeom) ==
@@ -553,7 +599,11 @@ import GeoFormatTypes as GFT
                 @test startswith(
                     AG.toWKT(
                         AG.curvegeom(
-                            AG.lineargeom(geom, 0.5, ADD_INTERMEDIATE_POINT = "NO"),
+                            AG.lineargeom(
+                                geom,
+                                0.5,
+                                ADD_INTERMEDIATE_POINT = "NO",
+                            ),
                         ),
                     ),
                     "CURVEPOLYGON (CIRCULARSTRING (",
@@ -578,7 +628,11 @@ import GeoFormatTypes as GFT
                 @test startswith(
                     AG.toWKT(
                         AG.curvegeom(
-                            AG.lineargeom(geom, ["ADD_INTERMEDIATE_POINT=NO"], 0.5),
+                            AG.lineargeom(
+                                geom,
+                                ["ADD_INTERMEDIATE_POINT=NO"],
+                                0.5,
+                            ),
                         ),
                     ),
                     "CURVEPOLYGON (CIRCULARSTRING (",
