@@ -71,12 +71,36 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return getcoorddim(geom)
     end
 
-    GeoInterface.x(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry) = getx(geom, 0)
-    GeoInterface.y(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry) = gety(geom, 0)
-    GeoInterface.z(::GeoInterface.AbstractPointTrait, geom::_AbstractGeometryZ) = getz(geom, 0)
-    GeoInterface.m(::GeoInterface.AbstractPointTrait, geom::_AbstractGeometryM) = getm(geom, 0)
+    function GeoInterface.x(
+        ::GeoInterface.AbstractPointTrait,
+        geom::AbstractGeometry,
+    )
+        return getx(geom, 0)
+    end
+    function GeoInterface.y(
+        ::GeoInterface.AbstractPointTrait,
+        geom::AbstractGeometry,
+    )
+        return gety(geom, 0)
+    end
+    function GeoInterface.z(
+        ::GeoInterface.AbstractPointTrait,
+        geom::_AbstractGeometryZ,
+    )
+        return getz(geom, 0)
+    end
+    function GeoInterface.m(
+        ::GeoInterface.AbstractPointTrait,
+        geom::_AbstractGeometryM,
+    )
+        return getm(geom, 0)
+    end
 
-    function GeoInterface.getcoord(::GeoInterface.AbstractPointTrait, geom::AbstractGeometry, i)
+    function GeoInterface.getcoord(
+        ::GeoInterface.AbstractPointTrait,
+        geom::AbstractGeometry,
+        i,
+    )
         if i == 1
             getx(geom, 0)
         elseif i == 2
@@ -279,20 +303,65 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return f(GeoInterface.coordinates(geom))
     end
 
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, pointtypes)...}) = GeoInterface.PointTrait()
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, multipointtypes)...}) = GeoInterface.MultiPointTrait()
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, linetypes)...}) = GeoInterface.LineStringTrait()
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, multilinetypes)...}) = GeoInterface.MultiLineStringTrait()
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, polygontypes)...}) = GeoInterface.PolygonTrait()
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, multipolygontypes)...}) = GeoInterface.MultiPolygonTrait()
-    GeoInterface.geomtrait(geom::Union{map(T -> AbstractGeometry{T}, collectiontypes)...}) = GeoInterface.GeometryCollectionTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbLinearRing}) = GeoInterface.LinearRingTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbCircularString}) = GeoInterface.CircularStringTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbCompoundCurve}) = GeoInterface.CompoundCurveTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbCurvePolygon}) = GeoInterface.CurvePolygonTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbMultiSurface}) = GeoInterface.MultiSurfaceTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbPolyhedralSurface}) = GeoInterface.PolyhedralSurfaceTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbTIN}) = GeoInterface.TINTrait()
-    GeoInterface.geomtrait(geom::AbstractGeometry{wkbTriangle}) = GeoInterface.TriangleTrait()
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, pointtypes)...},
+    )
+        return GeoInterface.PointTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, multipointtypes)...},
+    )
+        return GeoInterface.MultiPointTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, linetypes)...},
+    )
+        return GeoInterface.LineStringTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, multilinetypes)...},
+    )
+        return GeoInterface.MultiLineStringTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, polygontypes)...},
+    )
+        return GeoInterface.PolygonTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, multipolygontypes)...},
+    )
+        return GeoInterface.MultiPolygonTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::Union{map(T -> AbstractGeometry{T}, collectiontypes)...},
+    )
+        return GeoInterface.GeometryCollectionTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbLinearRing})
+        return GeoInterface.LinearRingTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbCircularString})
+        return GeoInterface.CircularStringTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbCompoundCurve})
+        return GeoInterface.CompoundCurveTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbCurvePolygon})
+        return GeoInterface.CurvePolygonTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbMultiSurface})
+        return GeoInterface.MultiSurfaceTrait()
+    end
+    function GeoInterface.geomtrait(
+        geom::AbstractGeometry{wkbPolyhedralSurface},
+    )
+        return GeoInterface.PolyhedralSurfaceTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbTIN})
+        return GeoInterface.TINTrait()
+    end
+    function GeoInterface.geomtrait(geom::AbstractGeometry{wkbTriangle})
+        return GeoInterface.TriangleTrait()
+    end
 end
-

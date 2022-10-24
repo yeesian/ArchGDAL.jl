@@ -103,7 +103,7 @@ end
 
 Returns a copy of the geometry with the original spatial reference system.
 """
-function clone(geom::AbstractGeometry{T}) where T
+function clone(geom::AbstractGeometry{T}) where {T}
     if geom.ptr == C_NULL
         return IGeometry{wkbUnknown}()
     else
@@ -111,7 +111,7 @@ function clone(geom::AbstractGeometry{T}) where T
     end
 end
 
-function unsafe_clone(geom::AbstractGeometry{T}) where T
+function unsafe_clone(geom::AbstractGeometry{T}) where {T}
     if geom.ptr == C_NULL
         return Geometry{wkbUnknown}()
     else
@@ -136,14 +136,24 @@ unsafe_creategeom(geomtype::OGRwkbGeometryType)::Geometry =
 # When the geometry type `T` is known, pass it wrapped in `Val` for type 
 # stability. `T` is usually equal to `geomtype`, except in the case 
 # of `geomtype == wkbLinearRing`, in which case `T` is `wkbLineString`
-creategeom(::Val{T}) where T = IGeometry{T}(GDAL.ogr_g_creategeometry(T))
-unsafe_creategeom(::Val{T}) where T = Geometry{T}(GDAL.ogr_g_creategeometry(T))
+creategeom(::Val{T}) where {T} = IGeometry{T}(GDAL.ogr_g_creategeometry(T))
+function unsafe_creategeom(::Val{T}) where {T}
+    return Geometry{T}(GDAL.ogr_g_creategeometry(T))
+end
 
 # Special-case createlinearring, because we need to pass
 # wkbLinearRing create but gdal returns a wkbLineString
 # we also don't know the type because there is no wkbLinearRing25D
-creategeom(::Val{wkbLinearRing}) = IGeometry(GDAL.ogr_g_creategeometry(wkbLinearRing))::Union{IGeometry{wkbLineString},IGeometry{wkbLineString25D}}
-unsafe_creategeom(::Val{wkbLinearRing}) = Geometry(GDAL.ogr_g_creategeometry(wkbLinearRing))::Union{Geometry{wkbLineString},Geometry{wkbLineString25D}}
+function creategeom(::Val{wkbLinearRing})
+    return IGeometry(
+        GDAL.ogr_g_creategeometry(wkbLinearRing),
+    )::Union{IGeometry{wkbLineString},IGeometry{wkbLineString25D}}
+end
+function unsafe_creategeom(::Val{wkbLinearRing})
+    return Geometry(
+        GDAL.ogr_g_creategeometry(wkbLinearRing),
+    )::Union{Geometry{wkbLineString},Geometry{wkbLineString25D}}
+end
 
 """
     haspreparedgeomsupport()
@@ -158,11 +168,13 @@ has_preparedgeom_support() = Bool(GDAL.ogrhaspreparedgeometrysupport())
 Create an prepared geometry of a geometry. This can speed up operations which interact
 with the geometry multiple times, by storing caches of calculated geometry information.
 """
-preparegeom(geom::AbstractGeometry{T}) where T =
-    IPreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom.ptr))
+function preparegeom(geom::AbstractGeometry{T}) where {T}
+    return IPreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom.ptr))
+end
 
-unsafe_preparegeom(geom::AbstractGeometry{T}) where T =
-    PreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom.ptr))
+function unsafe_preparegeom(geom::AbstractGeometry{T}) where {T}
+    return PreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom.ptr))
+end
 
 """
     forceto(geom::AbstractGeometry, targettype::OGRwkbGeometryType, [options])
@@ -1053,7 +1065,8 @@ const _AbstractGeometryZ = Union{map(x -> AbstractGeometry{x}, wkbEnumsZ)...}
 const _IGeometryZ = Union{map(x -> IGeometry{x}, wkbEnumsZ)...}
 const _GeometryZ = Union{map(x -> Geometry{x}, wkbEnumsZ)...}
 
-const _AbstractGeometry25D = Union{map(x -> AbstractGeometry{x}, wkbEnums25D)...}
+const _AbstractGeometry25D =
+    Union{map(x -> AbstractGeometry{x}, wkbEnums25D)...}
 const _IGeometry25D = Union{map(x -> IGeometry{x}, wkbEnums25D)...}
 const _Geometry25D = Union{map(x -> Geometry{x}, wkbEnums25D)...}
 
@@ -1073,7 +1086,8 @@ const _AbstractGeometryHasM = Union{_AbstractGeometryM,_AbstractGeometryZM}
 const _IGeometryHasM = Union{_IGeometryM,_IGeometryZM}
 const _GeometryHasM = Union{_GeometryM,_GeometryZM}
 
-const _AbstractGeometryNoM = Union{_AbstractGeometry,_AbstractGeometryZ,_AbstractGeometry25D}
+const _AbstractGeometryNoM =
+    Union{_AbstractGeometry,_AbstractGeometryZ,_AbstractGeometry25D}
 const _IGeometryNoM = Union{_IGeometry,_IGeometryZ,_IGeometry25D}
 const _GeometryNoM = Union{_Geometry,_GeometryZ,_Geometry25D}
 
@@ -1205,10 +1219,16 @@ Fetch a point in line string or a point geometry, at index i.
 ### Parameters
 * `i`: the vertex to fetch, from 0 to ngeom()-1, zero for a point.
 """
-getpoint(geom::AbstractGeometry, i::Integer)::Tuple{Float64,Float64,Float64} = 
+getpoint(geom::AbstractGeometry, i::Integer)::Tuple{Float64,Float64,Float64} =
     getpoint!(geom, i, Ref{Float64}(), Ref{Float64}(), Ref{Float64}())
 
-function getpoint!(geom::AbstractGeometry, i::Integer, x, y, z)::Tuple{Float64,Float64,Float64}
+function getpoint!(
+    geom::AbstractGeometry,
+    i::Integer,
+    x,
+    y,
+    z,
+)::Tuple{Float64,Float64,Float64}
     GDAL.ogr_g_getpoint(geom.ptr, i, x, y, z)
     return (x[], y[], z[])
 end
@@ -1404,13 +1424,19 @@ for (parent, child) in (
     (wkbCurvePolygonM, wkbCircularStringM),
     (wkbCurvePolygonZM, wkbCircularStringZM),
 )
-    @eval function getgeom(geom::AbstractGeometry{$parent}, i::Integer)::Union{IGeometry{wkbUnknown},IGeometry{$child}}
+    @eval function getgeom(
+        geom::AbstractGeometry{$parent},
+        i::Integer,
+    )::Union{IGeometry{wkbUnknown},IGeometry{$child}}
         geom.ptr == C_NULL && return IGeometry{wkbUnknown}()
         result = GDAL.ogr_g_getgeometryref(geom.ptr, i)
         result == C_NULL && return IGeometry{wkbUnknown}()
         return IGeometry{$child}(GDAL.ogr_g_clone(result))
     end
-    @eval function unsafe_getgeom(geom::AbstractGeometry{$parent}, i::Integer)::Union{Geometry{wkbUnknown},Geometry{$child}}
+    @eval function unsafe_getgeom(
+        geom::AbstractGeometry{$parent},
+        i::Integer,
+    )::Union{Geometry{wkbUnknown},Geometry{$child}}
         geom.ptr == C_NULL && return Geometry{wkbUnknown}()
         result = GDAL.ogr_g_getgeometryref(geom.ptr, i)
         result == C_NULL && return Geometry{wkbUnknown}()
@@ -1704,13 +1730,12 @@ for (geom, wkbgeom) in (
 end
 
 for f in (:create, :unsafe_create)
-
     V = Vector{<:Real}
     geomargs2d = (:xs, :ys), (:(xs::$V), :(ys::$V)), ""
     geomargs3d = (:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V)), "25D"
     for (args, typedargs, typesuffix) in (geomargs2d, geomargs3d)
         f1 = Symbol("$(f)linestring")
-        T = Symbol("wkbLineString" * typesuffix) 
+        T = Symbol("wkbLineString" * typesuffix)
         @eval function $f1($(typedargs...))
             geom = $f1(Val{$T}())
             for pt in zip($(args...))
@@ -1733,7 +1758,7 @@ for f in (:create, :unsafe_create)
             return Geometry{$T}(geom.ptr) # rewrap LinearRing as the corrent LineString/LineString25D
         end
         f1 = Symbol("$(f)polygon")
-        T = Symbol("wkbPolygon" * typesuffix) 
+        T = Symbol("wkbPolygon" * typesuffix)
         @eval function $f1($(typedargs...))
             geom = $f1(Val{$T}())
             subgeom = unsafe_createlinearring($(args...))
@@ -1742,7 +1767,7 @@ for f in (:create, :unsafe_create)
             return geom
         end
         f1 = Symbol("$(f)multipoint")
-        T = Symbol("wkbMultiPoint" * typesuffix) 
+        T = Symbol("wkbMultiPoint" * typesuffix)
         @eval function $f1($(typedargs...))
             geom = $f1(Val{$T}())
             for pt in zip($(args...))
@@ -1769,20 +1794,20 @@ for f in (:create, :unsafe_create)
     end
     # TODO make measures work
     # @eval function $f1(coords::Tuple{<:Real,<:Real}, m)
-        # geom = $f1(Val{wkbPointM}())
-        # addpoint!(geom, coords...)
-        # return geom
+    # geom = $f1(Val{wkbPointM}())
+    # addpoint!(geom, coords...)
+    # return geom
     # end
     # @eval function $f1(coords::Tuple{<:Real,<:Real,<:Real}, m)
-        # geom = $f1(Val{wkbPointZM}())
-        # addpoint!(geom, coords...)
-        # return geom
+    # geom = $f1(Val{wkbPointZM}())
+    # addpoint!(geom, coords...)
+    # return geom
     # end
-
 
     # Coordinates can be Vector of Real or 
     # TODO handle M and 25D
-    coordtypes = (Vector{<:Real}, Tuple{<:Real,<:Real}, Tuple{<:Real,<:Real,<:Real})
+    coordtypes =
+        (Vector{<:Real}, Tuple{<:Real,<:Real}, Tuple{<:Real,<:Real,<:Real})
 
     for typeargs in map(ct -> Vector{<:ct}, coordtypes)
         for geom in (:linestring, :linearring)
