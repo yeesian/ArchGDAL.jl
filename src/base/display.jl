@@ -272,6 +272,15 @@ function Base.show(io::IO, geom::AbstractGeometry)::Nothing
     return nothing
 end
 
+function Base.show(io::IO, geom::AbstractPreparedGeometry)::Nothing
+    if geom.ptr == C_NULL
+        print(io, "NULL Geometry")
+        return nothing
+    end
+    print(io, "Prepared Geometry")
+    return nothing
+end
+
 function Base.show(io::IO, ct::ColorTable)::Nothing
     if ct.ptr == C_NULL
         print(io, "NULL ColorTable")

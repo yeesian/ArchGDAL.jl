@@ -72,6 +72,12 @@ import ArchGDAL as AG
                            (3) 128x64 (4) 64x32 (5) 32x16 
                            (6) 16x8 """
         end
+
+        geom = AG.createpoint(10, 10)
+        pgeom = AG.preparegeom(geom)
+        @test sprint(print, geom) == "Geometry: POINT (10 10)"
+        @test sprint(print, pgeom) == "Prepared Geometry"
+
     end
 
     # untested
