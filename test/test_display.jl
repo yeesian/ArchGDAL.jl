@@ -77,7 +77,6 @@ import ArchGDAL as AG
         pgeom = AG.preparegeom(geom)
         @test sprint(print, geom) == "Geometry: POINT (10 10)"
         @test sprint(print, pgeom) == "Prepared Geometry"
-
     end
 
     # untested
