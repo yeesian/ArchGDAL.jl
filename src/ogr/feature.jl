@@ -515,6 +515,7 @@ const _FETCHFIELD = Dict{Union{OGRFieldType,OGRFieldSubType},Function}(
     OFSTBoolean => asbool,
     OFSTInt16 => asint16,
     OFSTFloat32 => assingle,
+    OFSTJSON => asstring,
 )
 
 """
