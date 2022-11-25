@@ -273,9 +273,10 @@ using Tables
                         # Add geom and field defn
                         AG.addfielddefn!(newlayer, "id", AG.OFTInteger64)
                         AG.addfielddefn!(newlayer, "name", AG.OFTString)
-                        id_idx = AG.findfieldindex(AG.layerdefn(newlayer), "id")
+                        featuredefn = AG.layerdefn(newlayer)
+                        id_idx = AG.findfieldindex(featuredefn, "id")
                         name_idx =
-                            AG.findfieldindex(AG.layerdefn(newlayer), "name")
+                            AG.findfieldindex(featuredefn, "name")
                         # Add features
                         AG.addfeature(newlayer) do newfeature
                             AG.setfield!(newfeature, id_idx, 1)
