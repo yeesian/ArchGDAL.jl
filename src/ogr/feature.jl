@@ -138,7 +138,7 @@ function findfieldindex(
     feature::AbstractFeature,
     name::Union{AbstractString,Symbol},
 )::Union{Integer,Nothing}
-    i = GDAL.ogr_f_getfieldindex(feature.ptr, name)
+    i = GC.@preserve feature GDAL.ogr_f_getfieldindex(feature.ptr, name)
     return if i == -1
         nothing
     else
@@ -747,7 +747,9 @@ The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
 function getgeomdefn(feature::AbstractFeature, i::Integer)::IGeomFieldDefnView
-    return IGeomFieldDefnView(GDAL.ogr_f_getgeomfielddefnref(feature.ptr, i))
+    return GC.@preserve feature begin
+        IGeomFieldDefnView(GDAL.ogr_f_getgeomfielddefnref(feature.ptr, i))
+    end
 end
 
 """
@@ -769,7 +771,7 @@ function findgeomindex(
     feature::AbstractFeature,
     name::Union{AbstractString,Symbol} = "",
 )::Integer
-    return GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
+    return GC.@preserve feature GDAL.ogr_f_getgeomfieldindex(feature.ptr, name)
 end
 
 """
@@ -782,7 +784,7 @@ Returns a clone of the feature geometry at index `i`.
 * `i`: geometry field to get.
 """
 function getgeom(feature::AbstractFeature, i::Integer)::IGeometry
-    result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
+    result = GC.@preserve feature GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
     return if result == C_NULL
         IGeometry()
     else
@@ -791,7 +793,7 @@ function getgeom(feature::AbstractFeature, i::Integer)::IGeometry
 end
 
 function unsafe_getgeom(feature::AbstractFeature, i::Integer)::Geometry
-    result = GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
+    result = GC.@preserve feature GDAL.ogr_f_getgeomfieldref(feature.ptr, i)
     return if result == C_NULL
         Geometry()
     else
@@ -846,7 +848,7 @@ function setgeom!(
     i::Integer,
     geom::AbstractGeometry,
 )::AbstractFeature
-    result = GDAL.ogr_f_setgeomfield(feature.ptr, i, geom.ptr)
+    result = GC.@preserve feature geom GDAL.ogr_f_setgeomfield(feature.ptr, i, geom.ptr)
     @ogrerr result "OGRErr $result: Failed to set feature geometry"
     return feature
 end
@@ -859,7 +861,9 @@ Get feature identifier.
 ### Returns
 feature id or `OGRNullFID` (`-1`) if none has been assigned.
 """
-getfid(feature::AbstractFeature) = GDAL.ogr_f_getfid(feature.ptr)::Integer
+function getfid(feature::AbstractFeature)::Integer
+    return GC.@preserve feature GDAL.ogr_f_getfid(feature.ptr)
+end
 
 """
     setfid!(feature::AbstractFeature, i::Integer)
@@ -874,7 +878,7 @@ Set the feature identifier.
 On success OGRERR_NONE, or on failure some other value.
 """
 function setfid!(feature::AbstractFeature, i::Integer)::AbstractFeature
-    result = GDAL.ogr_f_setfid(feature.ptr, i)
+    result = GC.@preserve feature GDAL.ogr_f_setfid(feature.ptr, i)
     @ogrerr result "OGRErr $result: Failed to set FID $i"
     return feature
 end
@@ -908,7 +912,9 @@ function setfrom!(
     feature2::AbstractFeature,
     forgiving::Bool = false,
 )::AbstractFeature
-    result = GDAL.ogr_f_setfrom(feature1.ptr, feature2.ptr, forgiving)
+    GC.@preserve feature1 feature2 begin
+        result = GDAL.ogr_f_setfrom(feature1.ptr, feature2.ptr, forgiving)
+    end
     @ogrerr result "OGRErr $result: Failed to set feature"
     return feature1
 end
@@ -919,12 +925,14 @@ function setfrom!(
     indices::Vector{Cint},
     forgiving::Bool = false,
 )::AbstractFeature
-    result = GDAL.ogr_f_setfromwithmap(
-        feature1.ptr,
-        feature2.ptr,
-        forgiving,
-        indices,
-    )
+    GC.@preserve feature1 feature2 begin
+        result = GDAL.ogr_f_setfromwithmap(
+            feature1.ptr,
+            feature2.ptr,
+            forgiving,
+            indices,
+        )
+    end
     @ogrerr result "OGRErr $result: Failed to set feature with map"
     return feature1
 end
@@ -934,8 +942,9 @@ end
 
 Fetch style string for this feature.
 """
-getstylestring(feature::AbstractFeature)::String =
-    GDAL.ogr_f_getstylestring(feature.ptr)
+function getstylestring(feature::AbstractFeature)::String
+    return GC.@preserve feature GDAL.ogr_f_getstylestring(feature.ptr)
+end
 
 """
     setstylestring!(feature::AbstractFeature, style::AbstractString)
@@ -949,7 +958,7 @@ function setstylestring!(
     feature::AbstractFeature,
     style::AbstractString,
 )::AbstractFeature
-    GDAL.ogr_f_setstylestring(feature.ptr, style)
+    GC.@preserve feature GDAL.ogr_f_setstylestring(feature.ptr, style)
     return feature
 end
 
@@ -958,8 +967,9 @@ end
 
 Fetch style table for this feature.
 """
-getstyletable(feature::AbstractFeature)::StyleTable =
-    StyleTable(GDAL.ogr_f_getstyletable(feature.ptr))
+function getstyletable(feature::AbstractFeature)::StyleTable
+    return GC.@preserve feature StyleTable(GDAL.ogr_f_getstyletable(feature.ptr))
+end
 
 """
     setstyletable!(feature::AbstractFeature, styletable::StyleTable)
@@ -970,7 +980,9 @@ function setstyletable!(
     feature::AbstractFeature,
     styletable::StyleTable,
 )::AbstractFeature
-    GDAL.ogr_f_setstyletable(feature.ptr, styletable.ptr)
+    GC.@preserve feature styletable begin
+        GDAL.ogr_f_setstyletable(feature.ptr, styletable.ptr)
+    end
     return feature
 end
 
@@ -993,8 +1005,9 @@ than what can be obtained with the rest of the API, but it may be useful in
 round-tripping scenarios where some characteristics of the underlying format
 are not captured otherwise by the OGR abstraction.
 """
-getnativedata(feature::AbstractFeature)::String =
-    GDAL.ogr_f_getnativedata(feature.ptr)
+function getnativedata(feature::AbstractFeature)::String
+    return GC.@preserve feature GDAL.ogr_f_getnativedata(feature.ptr)
+end
 
 """
     setnativedata!(feature::AbstractFeature, data::AbstractString)
@@ -1010,7 +1023,7 @@ function setnativedata!(
     feature::AbstractFeature,
     data::AbstractString,
 )::AbstractFeature
-    GDAL.ogr_f_setnativedata(feature.ptr, data)
+    GC.@preserve feature GDAL.ogr_f_setnativedata(feature.ptr, data)
     return feature
 end
 
@@ -1023,8 +1036,9 @@ The native media type is the identifier for the format of the native data. It
 follows the IANA RFC 2045 (see https://en.wikipedia.org/wiki/Media_type),
 e.g. \"application/vnd.geo+json\" for JSON.
 """
-getmediatype(feature::AbstractFeature)::String =
-    GDAL.ogr_f_getnativemediatype(feature.ptr)
+function getmediatype(feature::AbstractFeature)::String
+    return GC.@preserve feature GDAL.ogr_f_getnativemediatype(feature.ptr)
+end
 
 """
     setmediatype!(feature::AbstractFeature, mediatype::AbstractString)
@@ -1039,7 +1053,7 @@ function setmediatype!(
     feature::AbstractFeature,
     mediatype::AbstractString,
 )::AbstractFeature
-    GDAL.ogr_f_setnativemediatype(feature.ptr, mediatype)
+    GC.@preserve feature GDAL.ogr_f_setnativemediatype(feature.ptr, mediatype)
     return feature
 end
 
@@ -1062,7 +1076,7 @@ function fillunsetwithdefault!(
     notnull::Bool = true,
     options = StringList(C_NULL),
 )::AbstractFeature
-    GDAL.ogr_f_fillunsetwithdefault(feature.ptr, notnull, options)
+    GC.@preserve feature GDAL.ogr_f_fillunsetwithdefault(feature.ptr, notnull, options)
     return feature
 end
 
@@ -1091,8 +1105,10 @@ fails, then it will fail for all interpretations).
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-validate(
+function validate(
     feature::AbstractFeature,
     flags::FieldValidation,
     emiterror::Bool,
-)::Bool = Bool(GDAL.ogr_f_validate(feature.ptr, flags, emiterror))
+)::Bool
+    return GC.@preserve feature Bool(GDAL.ogr_f_validate(feature.ptr, flags, emiterror))
+end

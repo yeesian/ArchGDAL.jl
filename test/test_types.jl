@@ -29,8 +29,8 @@ import ImageCore
 
             # Manual defined convert for Enums
             @enum TestEnum::Bool EnumValue = false
-            @test convert(ArchGDAL.OGRFieldType, TestEnum) == AG.OFTInteger
-            @test convert(ArchGDAL.OGRFieldSubType, TestEnum) == AG.OFSTBoolean
+            @test convert(AG.OGRFieldType, TestEnum) == AG.OFTInteger
+            @test convert(AG.OGRFieldSubType, TestEnum) == AG.OFSTBoolean
         end
     end
 

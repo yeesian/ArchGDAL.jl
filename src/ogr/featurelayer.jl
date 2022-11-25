@@ -554,8 +554,9 @@ Returns a view of the schema information for this layer.
 ### Remarks
 The `featuredefn` is owned by the `layer` and should not be modified.
 """
-layerdefn(layer::AbstractFeatureLayer)::IFeatureDefnView =
-    IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
+function layerdefn(layer::AbstractFeatureLayer)::IFeatureDefnView
+    return GC.@preserve layer IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer.ptr))
+end
 
 """
     findfieldindex(layer::AbstractFeatureLayer,
@@ -585,8 +586,9 @@ Fetch the feature count in this layer, or `-1` if the count is not known.
 * `force`: flag indicating whether the count should be computed even if it is
     expensive. (`false` by default.)
 """
-nfeature(layer::AbstractFeatureLayer, force::Bool = false)::Integer =
-    GDAL.ogr_l_getfeaturecount(layer.ptr, force)
+function nfeature(layer::AbstractFeatureLayer, force::Bool = false)::Integer
+    return GC.@preserve layer GDAL.ogr_l_getfeaturecount(layer.ptr, force)
+end
 
 """
     ngeom(layer::AbstractFeatureLayer)

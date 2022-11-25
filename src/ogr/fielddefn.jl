@@ -22,21 +22,23 @@ end
 
 "Set the name of this field."
 function setname!(fielddefn::FieldDefn, name::AbstractString)::FieldDefn
-    GDAL.ogr_fld_setname(fielddefn.ptr, name)
+    GC.@preserve fielddefn GDAL.ogr_fld_setname(fielddefn.ptr, name)
     return fielddefn
 end
 
 "Fetch the name of this field."
-getname(fielddefn::AbstractFieldDefn)::String =
-    GDAL.ogr_fld_getnameref(fielddefn.ptr)
+function getname(fielddefn::AbstractFieldDefn)::String
+    return GC.@preserve fielddefn GDAL.ogr_fld_getnameref(fielddefn.ptr)
+end
 
 "Fetch the type of this field."
-gettype(fielddefn::AbstractFieldDefn)::OGRFieldType =
-    GDAL.ogr_fld_gettype(fielddefn.ptr)
+function gettype(fielddefn::AbstractFieldDefn)::OGRFieldType
+    return GC.@preserve fielddefn GDAL.ogr_fld_gettype(fielddefn.ptr)
+end
 
 "Set the type of this field."
 function settype!(fielddefn::FieldDefn, etype::OGRFieldType)::FieldDefn
-    GDAL.ogr_fld_settype(fielddefn.ptr, etype)
+    GC.@preserve fielddefn GDAL.ogr_fld_settype(fielddefn.ptr, etype)
     return fielddefn
 end
 
@@ -51,8 +53,9 @@ Fetch subtype of this field.
 ### Returns
 field subtype.
 """
-getsubtype(fielddefn::AbstractFieldDefn)::OGRFieldSubType =
-    GDAL.ogr_fld_getsubtype(fielddefn.ptr)
+function getsubtype(fielddefn::AbstractFieldDefn)::OGRFieldSubType
+    return GC.@preserve fielddefn GDAL.ogr_fld_getsubtype(fielddefn.ptr)
+end
 
 """
     setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)
@@ -70,7 +73,7 @@ OGRFeatureDefn.
 * https://gdal.org/development/rfc/rfc50_ogr_field_subtype.html
 """
 function setsubtype!(fielddefn::FieldDefn, subtype::OGRFieldSubType)::FieldDefn
-    GDAL.ogr_fld_setsubtype(fielddefn.ptr, subtype)
+    GC.@preserve fielddefn GDAL.ogr_fld_setsubtype(fielddefn.ptr, subtype)
     return fielddefn
 end
 
@@ -106,8 +109,9 @@ Get the justification for this field.
 
 Note: no driver is know to use the concept of field justification.
 """
-getjustify(fielddefn::AbstractFieldDefn)::OGRJustification =
-    GDAL.ogr_fld_getjustify(fielddefn.ptr)
+function getjustify(fielddefn::AbstractFieldDefn)::OGRJustification
+    GC.@preserve fielddefn GDAL.ogr_fld_getjustify(fielddefn.ptr)
+end
 
 """
     setjustify!(fielddefn::FieldDefn, ejustify::OGRJustification)
@@ -120,7 +124,7 @@ function setjustify!(
     fielddefn::FieldDefn,
     ejustify::OGRJustification,
 )::FieldDefn
-    GDAL.ogr_fld_setjustify(fielddefn.ptr, ejustify)
+    GC.@preserve fielddefn GDAL.ogr_fld_setjustify(fielddefn.ptr, ejustify)
     return fielddefn
 end
 
@@ -132,8 +136,9 @@ Get the formatting width for this field.
 ### Returns
 the width, zero means no specified width.
 """
-getwidth(fielddefn::AbstractFieldDefn)::Integer =
-    GDAL.ogr_fld_getwidth(fielddefn.ptr)
+function getwidth(fielddefn::AbstractFieldDefn)::Integer
+    return GC.@preserve fielddefn GDAL.ogr_fld_getwidth(fielddefn.ptr)
+end
 
 """
     setwidth!(fielddefn::FieldDefn, width::Integer)
@@ -144,7 +149,7 @@ This should never be done to an OGRFieldDefn that is already part of an
 OGRFeatureDefn.
 """
 function setwidth!(fielddefn::FieldDefn, width::Integer)::FieldDefn
-    GDAL.ogr_fld_setwidth(fielddefn.ptr, width)
+    GC.@preserve fielddefn GDAL.ogr_fld_setwidth(fielddefn.ptr, width)
     return fielddefn
 end
 
@@ -155,8 +160,9 @@ Get the formatting precision for this field.
 
 This should normally be zero for fields of types other than OFTReal.
 """
-getprecision(fielddefn::AbstractFieldDefn)::Integer =
-    GDAL.ogr_fld_getprecision(fielddefn.ptr)
+function getprecision(fielddefn::AbstractFieldDefn)::Integer
+    return GC.@preserve fielddefn GDAL.ogr_fld_getprecision(fielddefn.ptr)
+end
 
 """
     setprecision!(fielddefn::FieldDefn, precision::Integer)
@@ -166,7 +172,7 @@ Set the formatting precision for this field in characters.
 This should normally be zero for fields of types other than OFTReal.
 """
 function setprecision!(fielddefn::FieldDefn, precision::Integer)::FieldDefn
-    GDAL.ogr_fld_setprecision(fielddefn.ptr, precision)
+    GC.@preserve fielddefn GDAL.ogr_fld_setprecision(fielddefn.ptr, precision)
     return fielddefn
 end
 
@@ -191,7 +197,9 @@ function setparams!(
     nprecision::Integer = 0,
     justify::OGRJustification = OJUndefined,
 )::FieldDefn
-    GDAL.ogr_fld_set(fielddefn.ptr, name, etype, nwidth, nprecision, justify)
+    GC.@preserve fielddefn begin
+        GDAL.ogr_fld_set(fielddefn.ptr, name, etype, nwidth, nprecision, justify)
+    end
     return fielddefn
 end
 
@@ -200,8 +208,9 @@ end
 
 Return whether this field should be omitted when fetching features.
 """
-isignored(fielddefn::AbstractFieldDefn)::Bool =
-    Bool(GDAL.ogr_fld_isignored(fielddefn.ptr))
+function isignored(fielddefn::AbstractFieldDefn)::Bool
+    return GC.@preserve fielddefn Bool(GDAL.ogr_fld_isignored(fielddefn.ptr))
+end
 
 """
     setignored!(fielddefn::FieldDefn, ignore::Bool)
@@ -228,8 +237,9 @@ OGRLayer::CreateFeature()/SetFeature() is called.
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-isnullable(fielddefn::AbstractFieldDefn)::Bool =
-    Bool(GDAL.ogr_fld_isnullable(fielddefn.ptr))
+function isnullable(fielddefn::AbstractFieldDefn)::Bool
+    return GC.@preserve fielddefn Bool(GDAL.ogr_fld_isnullable(fielddefn.ptr))
+end
 
 """
     setnullable!(fielddefn::FieldDefn, nullable::Bool)
@@ -249,7 +259,7 @@ function setnullable!(
     fielddefn::T,
     nullable::Bool,
 )::T where {T<:AbstractFieldDefn}
-    GDAL.ogr_fld_setnullable(fielddefn.ptr, nullable)
+    GC.@preserve fielddefn GDAL.ogr_fld_setnullable(fielddefn.ptr, nullable)
     return fielddefn
 end
 
@@ -262,7 +272,7 @@ Get default field value
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 function getdefault(fielddefn::AbstractFieldDefn)::Union{String,Nothing}
-    result =
+    GC.@preserve fielddefn result =
         @gdal(OGR_Fld_GetDefault::Cstring, fielddefn.ptr::GDAL.OGRFieldDefnH)
     return if result == C_NULL
         nothing
@@ -297,7 +307,7 @@ GDAL_DCAP_DEFAULT_FIELDS driver metadata item.
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 function setdefault!(fielddefn::T, default)::T where {T<:AbstractFieldDefn}
-    GDAL.ogr_fld_setdefault(fielddefn.ptr, default)
+    GC.@preserve fielddefn GDAL.ogr_fld_setdefault(fielddefn.ptr, default)
     return fielddefn
 end
 
@@ -313,8 +323,11 @@ CURRENT_TIME, CURRENT_DATE or datetime literal value.
 ### References
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
-isdefaultdriverspecific(fielddefn::AbstractFieldDefn)::Bool =
-    Bool(GDAL.ogr_fld_isdefaultdriverspecific(fielddefn.ptr))
+function isdefaultdriverspecific(fielddefn::AbstractFieldDefn)::Bool
+    return GC.@preserve fielddefn begin
+        Bool(GDAL.ogr_fld_isdefaultdriverspecific(fielddefn.ptr))
+    end
+end
 
 """
     unsafe_creategeomdefn(name::AbstractString, etype::OGRwkbGeometryType)
@@ -405,8 +418,10 @@ function setspatialref!(
     spatialref::AbstractSpatialRef,
 )::GeomFieldDefn
     clonespatialref = clone(spatialref)
-    GDAL.ogr_gfld_setspatialref(geomdefn.ptr, clonespatialref.ptr)
-    geomdefn.spatialref = clonespatialref
+    GC.@preserve geomdefn clonespatialref begin
+        GDAL.ogr_gfld_setspatialref(geomdefn.ptr, clonespatialref.ptr)
+        geomdefn.spatialref = clonespatialref
+    end
     return geomdefn
 end
 
@@ -424,8 +439,9 @@ OGRLayer::CreateFeature()/SetFeature() is called.
 
 Note that not-nullable geometry fields might also contain 'empty' geometries.
 """
-isnullable(geomdefn::AbstractGeomFieldDefn)::Bool =
-    Bool(GDAL.ogr_gfld_isnullable(geomdefn.ptr))
+function isnullable(geomdefn::AbstractGeomFieldDefn)::Bool
+    return GC.@preserve geomdefn Bool(GDAL.ogr_gfld_isnullable(geomdefn.ptr))
+end
 
 """
     setnullable!(geomdefn::GeomFieldDefn, nullable::Bool)
@@ -439,7 +455,7 @@ Drivers that support writing not-null constraint will advertize the
 GDAL_DCAP_NOTNULL_GEOMFIELDS driver metadata item.
 """
 function setnullable!(geomdefn::GeomFieldDefn, nullable::Bool)::GeomFieldDefn
-    GDAL.ogr_gfld_setnullable(geomdefn.ptr, nullable)
+    GC.@preserve geomdefn GDAL.ogr_gfld_setnullable(geomdefn.ptr, nullable)
     return geomdefn
 end
 
@@ -448,8 +464,9 @@ end
 
 Return whether this field should be omitted when fetching features.
 """
-isignored(geomdefn::AbstractGeomFieldDefn)::Bool =
-    Bool(GDAL.ogr_gfld_isignored(geomdefn.ptr))
+function isignored(geomdefn::AbstractGeomFieldDefn)::Bool
+    return GC.@preserve geomdefn Bool(GDAL.ogr_gfld_isignored(geomdefn.ptr))
+end
 
 """
     setignored!(geomdefn::GeomFieldDefn, ignore::Bool)

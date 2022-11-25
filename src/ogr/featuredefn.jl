@@ -292,7 +292,7 @@ function findgeomindex(
     featuredefn::AbstractFeatureDefn,
     name::AbstractString = "",
 )::Integer
-    return GDAL.ogr_fd_getgeomfieldindex(featuredefn.ptr, name)
+    return GC.@preserve featuredefn GDAL.ogr_fd_getgeomfieldindex(featuredefn.ptr, name)
 end
 
 """
@@ -315,7 +315,9 @@ function addgeomdefn!(
     geomfielddefn::AbstractGeomFieldDefn,
 )::FeatureDefn
     # `geomfielddefn` is copied, and remains the responsibility of the caller.
-    GDAL.ogr_fd_addgeomfielddefn(featuredefn.ptr, geomfielddefn.ptr)
+    GC.@preserve featuredefn geomfielddefn begin
+        GDAL.ogr_fd_addgeomfielddefn(featuredefn.ptr, geomfielddefn.ptr)
+    end
     return featuredefn
 end
 
@@ -331,7 +333,7 @@ This method should only be called while there are no OGRFeature objects in
 existence based on this OGRFeatureDefn.
 """
 function deletegeomdefn!(featuredefn::FeatureDefn, i::Integer)::FeatureDefn
-    result = GDAL.ogr_fd_deletegeomfielddefn(featuredefn.ptr, i)
+    result = GC.@preserve featuredefn GDAL.ogr_fd_deletegeomfielddefn(featuredefn.ptr, i)
     @ogrerr result "Failed to delete geom field $i in the feature definition"
     return featuredefn
 end
@@ -345,7 +347,10 @@ function issame(
     featuredefn1::AbstractFeatureDefn,
     featuredefn2::AbstractFeatureDefn,
 )::Bool
-    return Bool(GDAL.ogr_fd_issame(featuredefn1.ptr, featuredefn2.ptr))
+    GC.@preserve featuredefn1 featuredefn2 begin
+        bool = Bool(GDAL.ogr_fd_issame(featuredefn1.ptr, featuredefn2.ptr))
+    end
+    return bool
 end
 
 """
@@ -360,7 +365,7 @@ OGRFeatures that depend on it is likely to result in a crash.
 Starting with GDAL 2.1, returns NULL in case out of memory situation.
 """
 function unsafe_createfeature(featuredefn::AbstractFeatureDefn)::Feature
-    return Feature(GDAL.ogr_f_create(featuredefn.ptr))
+    return GC.@preserve featuredefn Feature(GDAL.ogr_f_create(featuredefn.ptr))
 end
 
 """
@@ -368,5 +373,6 @@ end
 
 Fetch feature definition.
 """
-getfeaturedefn(feature::AbstractFeature)::IFeatureDefnView =
-    IFeatureDefnView(GDAL.ogr_f_getdefnref(feature.ptr))
+function getfeaturedefn(feature::AbstractFeature)::IFeatureDefnView
+    return GC.@preserve feature IFeatureDefnView(GDAL.ogr_f_getdefnref(feature.ptr))
+end
