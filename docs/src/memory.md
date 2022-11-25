@@ -45,7 +45,7 @@ mutable struct RasterBand <: AbstractRasterBand
 end
 
 unsafe_getband(dataset::AbstractDataset, i::Integer) =
-    RasterBand(GDAL.getrasterband(dataset.ptr, i))
+    RasterBand(GDAL.getrasterband(dataset, i))
 
 function destroy(rb::AbstractRasterBand)
     rb.ptr = C_NULL
@@ -79,7 +79,7 @@ mutable struct IRasterBand <: AbstractRasterBand
 end
 
 getband(dataset::AbstractDataset, i::Integer) =
-    IRasterBand(GDAL.getrasterband(dataset.ptr, i), ownedby = dataset)
+    IRasterBand(GDAL.getrasterband(dataset, i), ownedby = dataset)
 
 function destroy(rasterband::IRasterBand)
     rasterband.ptr = C_NULL

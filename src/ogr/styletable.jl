@@ -12,7 +12,7 @@ an handle to the new style manager object.
 function unsafe_createstylemanager(
     styletable::StyleTable = StyleTable(),
 )::StyleManager
-    return StyleManager(GDAL.ogr_sm_create(styletable.ptr))
+    return StyleManager(GDAL.ogr_sm_create(styletable))
 end
 
 """
@@ -22,7 +22,7 @@ Destroy Style Manager.
 * `stylemanager`: handle to the style manager to destroy.
 """
 function destroy(sm::StyleManager)::Nothing
-    GDAL.ogr_sm_destroy(sm.ptr)
+    GDAL.ogr_sm_destroy(sm)
     sm.ptr = C_NULL
     return nothing
 end
@@ -39,10 +39,10 @@ Initialize style manager from the style string.
 `true` on success, `false` on error.
 """
 initialize!(stylemanager::StyleManager, stylestring::String)::Bool =
-    Bool(GDAL.ogr_sm_initstylestring(stylemanager.ptr, stylestring))
+    Bool(GDAL.ogr_sm_initstylestring(stylemanager, stylestring))
 
 initialize!(stylemanager::StyleManager)::Bool =
-    Bool(GDAL.ogr_sm_initstylestring(stylemanager.ptr, C_NULL))
+    Bool(GDAL.ogr_sm_initstylestring(stylemanager, C_NULL))
 
 """
     npart(stylemanager::StyleManager)
@@ -61,10 +61,10 @@ the number of parts (style tools) in the style.
 function npart end
 
 npart(stylemanager::StyleManager)::Integer =
-    GDAL.ogr_sm_getpartcount(stylemanager.ptr, C_NULL)
+    GDAL.ogr_sm_getpartcount(stylemanager, C_NULL)
 
 npart(stylemanager::StyleManager, stylestring::AbstractString)::Integer =
-    GDAL.ogr_sm_getpartcount(stylemanager.ptr, stylestring)
+    GDAL.ogr_sm_getpartcount(stylemanager, stylestring)
 
 """
     unsafe_getpart(stylemanager::StyleManager, id::Integer,
@@ -86,7 +86,7 @@ function unsafe_getpart(
     id::Integer,
     stylestring = C_NULL,
 )::StyleTool
-    return StyleTool(GDAL.ogr_sm_getpart(stylemanager.ptr, id, stylestring))
+    return StyleTool(GDAL.ogr_sm_getpart(stylemanager, id, stylestring))
 end
 
 """
@@ -102,7 +102,7 @@ Add a part (style tool) to the current style.
 `true` on success, `false` on error.
 """
 addpart!(stylemanager::StyleManager, styletool::StyleTool)::Bool =
-    Bool(GDAL.ogr_sm_addpart(stylemanager.ptr, styletool.ptr))
+    Bool(GDAL.ogr_sm_addpart(stylemanager, styletool))
 
 """
     addstyle!(stylemanager::StyleManager, stylename, stylestring)
@@ -123,11 +123,11 @@ function addstyle!(
     stylename::AbstractString,
     stylestring::AbstractString,
 )::Bool
-    return Bool(GDAL.ogr_sm_addstyle(stylemanager.ptr, stylename, stylestring))
+    return Bool(GDAL.ogr_sm_addstyle(stylemanager, stylename, stylestring))
 end
 
 addstyle!(stylemanager::StyleManager, stylename::AbstractString)::Bool =
-    Bool(GDAL.ogr_sm_addstyle(stylemanager.ptr, stylename, C_NULL))
+    Bool(GDAL.ogr_sm_addstyle(stylemanager, stylename, C_NULL))
 
 """
     unsafe_createstyletool(classid::OGRSTClassId)
@@ -151,7 +151,7 @@ Destroy Style Tool.
 * `styletool`: handle to the style tool to destroy.
 """
 function destroy(styletool::StyleTool)::Nothing
-    GDAL.ogr_st_destroy(styletool.ptr)
+    GDAL.ogr_st_destroy(styletool)
     styletool.ptr = C_NULL
     return nothing
 end
@@ -168,7 +168,7 @@ Determine type of Style Tool.
 the style tool type, one of OGRSTCPen (1), OGRSTCBrush (2), OGRSTCSymbol (3) or
 OGRSTCLabel (4). Returns OGRSTCNone (0) if the OGRStyleToolH is invalid.
 """
-gettype(styletool::StyleTool)::OGRSTClassId = GDAL.ogr_st_gettype(styletool.ptr)
+gettype(styletool::StyleTool)::OGRSTClassId = GDAL.ogr_st_gettype(styletool)
 
 """
     getunit(styletool::StyleTool)
@@ -181,7 +181,7 @@ Get Style Tool units.
 ### Returns
 the style tool units.
 """
-getunit(styletool::StyleTool)::OGRSTUnitId = GDAL.ogr_st_getunit(styletool.ptr)
+getunit(styletool::StyleTool)::OGRSTUnitId = GDAL.ogr_st_getunit(styletool)
 
 """
     setunit!(styletool::StyleTool, newunit::OGRSTUnitId, scale::Real)
@@ -198,7 +198,7 @@ function setunit!(
     newunit::OGRSTUnitId,
     scale::Real,
 )::StyleTool
-    GDAL.ogr_st_setunit(styletool.ptr, newunit, scale)
+    GDAL.ogr_st_setunit(styletool, newunit, scale)
     return styletool
 end
 
@@ -220,7 +220,7 @@ Get Style Tool parameter value as a string.
 the parameter value as a string and sets `nullflag`.
 """
 asstring(styletool::StyleTool, id::Integer, nullflag::Ref{Cint})::String =
-    GDAL.ogr_st_getparamstr(styletool.ptr, id, nullflag)
+    GDAL.ogr_st_getparamstr(styletool, id, nullflag)
 
 asstring(styletool::StyleTool, id::Integer)::String =
     asstring(styletool, id, Ref{Cint}(0))
@@ -246,7 +246,7 @@ function asint(
     id::Integer,
     nullflag::Ref{Cint} = Ref{Cint}(0),
 )::Int32
-    return GDAL.ogr_st_getparamnum(styletool.ptr, id, nullflag)
+    return GDAL.ogr_st_getparamnum(styletool, id, nullflag)
 end
 
 """
@@ -270,7 +270,7 @@ function asdouble(
     id::Integer,
     nullflag::Ref{Cint} = Ref{Cint}(0),
 )::Float64
-    return GDAL.ogr_st_getparamdbl(styletool.ptr, id, nullflag)
+    return GDAL.ogr_st_getparamdbl(styletool, id, nullflag)
 end
 
 """
@@ -292,17 +292,17 @@ function setparam!(
     id::Integer,
     value::AbstractString,
 )::StyleTool
-    GDAL.ogr_st_setparamstr(styletool.ptr, id, value)
+    GDAL.ogr_st_setparamstr(styletool, id, value)
     return styletool
 end
 
 function setparam!(styletool::StyleTool, id::Integer, value::Integer)::StyleTool
-    GDAL.ogr_st_setparamnum(styletool.ptr, id, value)
+    GDAL.ogr_st_setparamnum(styletool, id, value)
     return styletool
 end
 
 function setparam!(styletool::StyleTool, id::Integer, value::Float64)::StyleTool
-    GDAL.ogr_st_setparamdbl(styletool.ptr, id, value)
+    GDAL.ogr_st_setparamdbl(styletool, id, value)
     return styletool
 end
 
@@ -318,7 +318,7 @@ Get the style string for this Style Tool.
 the style string for this style tool or "" if the styletool is invalid.
 """
 getstylestring(styletool::StyleTool)::String =
-    GDAL.ogr_st_getstylestring(styletool.ptr)
+    GDAL.ogr_st_getstylestring(styletool)
 
 """
     toRGBA(styletool::StyleTool, color::AbstractString)
@@ -342,7 +342,7 @@ function toRGBA(
     alpha = Ref{Int32}(0)
     result = Bool(
         GDAL.ogr_st_getrgbfromstring(
-            styletool.ptr,
+            styletool,
             color,
             red,
             green,
@@ -371,7 +371,7 @@ Destroy Style Table.
 * `styletable`: handle to the style table to destroy.
 """
 function destroy(st::StyleTable)::Nothing
-    GDAL.ogr_stbl_destroy(st.ptr)
+    GDAL.ogr_stbl_destroy(st)
     st.ptr = C_NULL
     return nothing
 end
@@ -394,7 +394,7 @@ function addstyle!(
     stylename::AbstractString,
     stylestring::AbstractString,
 )::Bool
-    return Bool(GDAL.ogr_stbl_addstyle(styletable.ptr, stylename, stylestring))
+    return Bool(GDAL.ogr_stbl_addstyle(styletable, stylename, stylestring))
 end
 
 """
@@ -410,7 +410,7 @@ Save a style table to a file.
 `true` on success, `false` on error
 """
 savestyletable(styletable::StyleTable, filename::AbstractString)::Bool =
-    Bool(GDAL.ogr_stbl_savestyletable(styletable.ptr, filename))
+    Bool(GDAL.ogr_stbl_savestyletable(styletable, filename))
 
 """
     loadstyletable!(styletable::StyleTable, filename::AbstractString)
@@ -425,7 +425,7 @@ Load a style table from a file.
 `true` on success, `false` on error
 """
 loadstyletable!(styletable::StyleTable, filename::AbstractString)::Bool =
-    Bool(GDAL.ogr_stbl_loadstyletable(styletable.ptr, filename))
+    Bool(GDAL.ogr_stbl_loadstyletable(styletable, filename))
 
 """
     findstylestring(styletable::StyleTable, name::AbstractString)
@@ -440,7 +440,7 @@ Get a style string by name.
 the style string matching the name or NULL if not found or error.
 """
 findstylestring(styletable::StyleTable, name::AbstractString)::String =
-    GDAL.ogr_stbl_find(styletable.ptr, name)
+    GDAL.ogr_stbl_find(styletable, name)
 
 """
     resetreading!(styletable::StyleTable)
@@ -451,7 +451,7 @@ Reset the next style pointer to 0.
 * `styletable`: handle to the style table.
 """
 function resetreading!(styletable::StyleTable)::StyleTable
-    GDAL.ogr_stbl_resetstylestringreading(styletable.ptr)
+    GDAL.ogr_stbl_resetstylestringreading(styletable)
     return styletable
 end
 
@@ -467,7 +467,7 @@ Get the next style string from the table.
 the next style string or NULL on error.
 """
 nextstyle(styletable::StyleTable)::String =
-    GDAL.ogr_stbl_getnextstyle(styletable.ptr)
+    GDAL.ogr_stbl_getnextstyle(styletable)
 
 """
     laststyle(styletable::StyleTable)
@@ -481,4 +481,4 @@ Get the style name of the last style string fetched with OGR_STBL_GetNextStyle.
 the Name of the last style string or NULL on error.
 """
 laststyle(styletable::StyleTable)::String =
-    GDAL.ogr_stbl_getlaststylename(styletable.ptr)
+    GDAL.ogr_stbl_getlaststylename(styletable)

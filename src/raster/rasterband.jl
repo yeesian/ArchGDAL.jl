@@ -31,7 +31,7 @@ function blocksize(band::AbstractRasterBand)::Vector{Cint}
     xy = Vector{Cint}(undef, 2)
     x = pointer(xy)
     y = x + sizeof(Cint)
-    GDAL.gdalgetblocksize(band.ptr, x, y)
+    GDAL.gdalgetblocksize(band, x, y)
     return xy
 end
 
@@ -49,7 +49,7 @@ end
 
 Fetch the width in pixels of this band.
 """
-width(band::AbstractRasterBand)::Integer = GDAL.gdalgetrasterbandxsize(band.ptr)
+width(band::AbstractRasterBand)::Integer = GDAL.gdalgetrasterbandxsize(band)
 
 """
     height(band::AbstractRasterBand)
@@ -57,7 +57,7 @@ width(band::AbstractRasterBand)::Integer = GDAL.gdalgetrasterbandxsize(band.ptr)
 Fetch the height in pixels of this band.
 """
 height(band::AbstractRasterBand)::Integer =
-    GDAL.gdalgetrasterbandysize(band.ptr)
+    GDAL.gdalgetrasterbandysize(band)
 
 """
     accessflag(band::AbstractRasterBand)
@@ -65,7 +65,7 @@ height(band::AbstractRasterBand)::Integer =
 Return the access flag (e.g. `OF_READONLY` or `OF_UPDATE`) for this band.
 """
 accessflag(band::AbstractRasterBand)::GDALAccess =
-    GDAL.gdalgetrasteraccess(band.ptr)
+    GDAL.gdalgetrasteraccess(band)
 
 """
     indexof(band::AbstractRasterBand)
@@ -75,7 +75,7 @@ Fetch the band number (1+) within its dataset, or 0 if unknown.
 This method may return a value of 0 to indicate overviews, or free-standing
 `RasterBand` objects without a relationship to a dataset.
 """
-indexof(band::AbstractRasterBand)::Integer = GDAL.gdalgetbandnumber(band.ptr)
+indexof(band::AbstractRasterBand)::Integer = GDAL.gdalgetbandnumber(band)
 
 """
     getdataset(band::AbstractRasterBand)
@@ -86,7 +86,7 @@ Note that some `RasterBand`s are not considered to be a part of a dataset,
 such as overviews or other "freestanding" bands.
 """
 getdataset(band::AbstractRasterBand)::Dataset =
-    Dataset(GDAL.gdalgetbanddataset(band.ptr))
+    Dataset(GDAL.gdalgetbanddataset(band))
 # ↑ GDAL wrapper checks null by default, but it is a valid result in this case
 
 """
@@ -96,7 +96,7 @@ Return a name for the units of this raster's values. For instance, it might be
 "m" for an elevation model in meters, or "ft" for feet.
 """
 getunittype(band::AbstractRasterBand)::String =
-    GDAL.gdalgetrasterunittype(band.ptr)
+    GDAL.gdalgetrasterunittype(band)
 
 """
     setunittype!(band::AbstractRasterBand, unitstring::AbstractString)
@@ -111,7 +111,7 @@ function setunittype!(
     band::T,
     unitstring::AbstractString,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrasterunittype(band.ptr, unitstring)
+    result = GDAL.gdalsetrasterunittype(band, unitstring)
     @cplerr result "Failed to set unit type"
     return band
 end
@@ -130,7 +130,7 @@ elevations in `GUInt16` bands with a precision of 0.1, starting from -100.
 For file formats that don't know this intrinsically, a value of 0 is returned.
 """
 getoffset(band::AbstractRasterBand)::Real =
-    GDAL.gdalgetrasteroffset(band.ptr, C_NULL)
+    GDAL.gdalgetrasteroffset(band, C_NULL)
 
 """
     setoffset!(band::AbstractRasterBand, value::Real)
@@ -138,7 +138,7 @@ getoffset(band::AbstractRasterBand)::Real =
 Set scaling offset.
 """
 function setoffset!(band::T, value::Real)::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrasteroffset(band.ptr, value)
+    result = GDAL.gdalsetrasteroffset(band, value)
     @cplerr result "Failed to set scaling offset."
     return band
 end
@@ -158,7 +158,7 @@ and starting from -100.
 For file formats that don't know this intrinsically a value of one is returned.
 """
 getscale(band::AbstractRasterBand)::Real =
-    GDAL.gdalgetrasterscale(band.ptr, C_NULL)
+    GDAL.gdalgetrasterscale(band, C_NULL)
 
 """
     setscale!(band::AbstractRasterBand, ratio::Real)
@@ -166,7 +166,7 @@ getscale(band::AbstractRasterBand)::Real =
 Set scaling ratio.
 """
 function setscale!(band::T, ratio::Real)::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrasterscale(band.ptr, ratio)
+    result = GDAL.gdalsetrasterscale(band, ratio)
     @cplerr result "Failed to set scaling ratio"
     return band
 end
@@ -189,7 +189,7 @@ function getnodatavalue(band::AbstractRasterBand)::Union{Float64,Nothing}
     # * `pbSuccess`   pointer to a boolean to use to indicate if a value is
     #     actually associated with this layer. May be `NULL` (default).
     hasnodatavalue = Ref(Cint(0))
-    nodatavalue = GDAL.gdalgetrasternodatavalue(band.ptr, hasnodatavalue)
+    nodatavalue = GDAL.gdalgetrasternodatavalue(band, hasnodatavalue)
     return if Bool(hasnodatavalue[])
         nodatavalue
     else
@@ -203,13 +203,13 @@ end
 Set the no data value for this band.
 """
 function setnodatavalue!(band::T, value::Real)::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrasternodatavalue(band.ptr, value)
+    result = GDAL.gdalsetrasternodatavalue(band, value)
     @cplerr result "Could not set nodatavalue"
     return band
 end
 
 function deletenodatavalue!(band::T)::T where {T<:AbstractRasterBand}
-    result = GDAL.gdaldeleterasternodatavalue(band.ptr)
+    result = GDAL.gdaldeleterasternodatavalue(band)
     @cplerr result "Could not delete nodatavalue"
     return band
 end
@@ -220,7 +220,7 @@ end
 Fetch the minimum value for this band.
 """
 minimum(band::AbstractRasterBand)::Real =
-    GDAL.gdalgetrasterminimum(band.ptr, C_NULL)
+    GDAL.gdalgetrasterminimum(band, C_NULL)
 
 """
     maximum(band::AbstractRasterBand)
@@ -228,7 +228,7 @@ minimum(band::AbstractRasterBand)::Real =
 Fetch the maximum value for this band.
 """
 maximum(band::AbstractRasterBand)::Real =
-    GDAL.gdalgetrastermaximum(band.ptr, C_NULL)
+    GDAL.gdalgetrastermaximum(band, C_NULL)
 
 """
     getdefaultRAT(band::AbstractRasterBand)
@@ -238,7 +238,7 @@ otherwise NULL is returned. The returned RAT is owned by the band and should not
 be deleted by the application.
 """
 getdefaultRAT(band::AbstractRasterBand)::RasterAttrTable =
-    RasterAttrTable(GDAL.gdalgetdefaultrat(band.ptr))
+    RasterAttrTable(GDAL.gdalgetdefaultrat(band))
 
 """
     setdefaultRAT!(band::AbstractRasterBand, rat::RasterAttrTable)
@@ -253,7 +253,7 @@ function setdefaultRAT!(
     band::T,
     rat::RasterAttrTable,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetdefaultrat(band.ptr, rat.ptr)
+    result = GDAL.gdalsetdefaultrat(band, rat)
     @cplerr result "Failed to set default raster attribute table"
     return band
 end
@@ -290,8 +290,8 @@ function copywholeraster!(
     progressfunc::Function = GDAL.gdaldummyprogress,
 )::T where {T<:AbstractRasterBand}
     result = GDAL.gdalrasterbandcopywholeraster(
-        source.ptr,
-        dest.ptr,
+        source,
+        dest,
         options,
         @cplprogress(progressfunc),
         progressdata,
@@ -306,7 +306,7 @@ end
 Return the number of overview layers available, zero if none.
 """
 noverview(band::AbstractRasterBand)::Integer =
-    GDAL.gdalgetoverviewcount(band.ptr)
+    GDAL.gdalgetoverviewcount(band)
 
 """
     getoverview(band::IRasterBand, i::Integer)
@@ -314,10 +314,10 @@ noverview(band::AbstractRasterBand)::Integer =
 Fetch overview raster band object.
 """
 getoverview(band::IRasterBand, i::Integer)::IRasterBand =
-    IRasterBand(GDAL.gdalgetoverview(band.ptr, i), ownedby = band.ownedby)
+    IRasterBand(GDAL.gdalgetoverview(band, i), ownedby = band.ownedby)
 
 unsafe_getoverview(band::AbstractRasterBand, i::Integer)::RasterBand =
-    RasterBand(GDAL.gdalgetoverview(band.ptr, i))
+    RasterBand(GDAL.gdalgetoverview(band, i))
 
 """
     sampleoverview(band::IRasterBand, nsamples::Integer)
@@ -332,13 +332,13 @@ overviews have enough samples.
 """
 function sampleoverview(band::IRasterBand, nsamples::Integer)::IRasterBand
     return IRasterBand(
-        GDAL.gdalgetrastersampleoverviewex(band.ptr, UInt64(nsamples)),
+        GDAL.gdalgetrastersampleoverviewex(band, UInt64(nsamples)),
         ownedby = band.ownedby,
     )
 end
 
 unsafe_sampleoverview(band::AbstractRasterBand, nsamples::Integer)::RasterBand =
-    RasterBand(GDAL.gdalgetrastersampleoverviewex(band.ptr, UInt64(nsamples)))
+    RasterBand(GDAL.gdalgetrastersampleoverviewex(band, UInt64(nsamples)))
 
 """
     getcolorinterp(band::AbstractRasterBand)
@@ -346,7 +346,7 @@ unsafe_sampleoverview(band::AbstractRasterBand, nsamples::Integer)::RasterBand =
 Color Interpretation value for band
 """
 getcolorinterp(band::AbstractRasterBand)::GDALColorInterp =
-    GDAL.gdalgetrastercolorinterpretation(band.ptr)
+    GDAL.gdalgetrastercolorinterpretation(band)
 
 """
     setcolorinterp!(band::AbstractRasterBand, color::GDALColorInterp)
@@ -357,7 +357,7 @@ function setcolorinterp!(
     band::T,
     color::GDALColorInterp,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrastercolorinterpretation(band.ptr, color)
+    result = GDAL.gdalsetrastercolorinterpretation(band, color)
     @cplerr result "Failed to set color interpretation"
     return band
 end
@@ -372,7 +372,7 @@ original color table remains owned by the `RasterBand`, and can't be
 depended on for long, nor should it ever be modified by the caller.)
 """
 unsafe_getcolortable(band::AbstractRasterBand)::ColorTable =
-    unsafe_clone(ColorTable(GDAL.gdalgetrastercolortable(band.ptr)))
+    unsafe_clone(ColorTable(GDAL.gdalgetrastercolortable(band)))
 
 """
     setcolortable!(band::AbstractRasterBand, colortable::ColorTable)
@@ -389,13 +389,13 @@ function setcolortable!(
     band::T,
     colortable::ColorTable,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrastercolortable(band.ptr, colortable.ptr)
+    result = GDAL.gdalsetrastercolortable(band, colortable)
     @cplwarn result "CPLError $(result): action is unsupported by the driver"
     return band
 end
 
 function clearcolortable!(band::T)::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrastercolortable(band.ptr, C_NULL)
+    result = GDAL.gdalsetrastercolortable(band, C_NULL)
     @cplwarn result "CPLError $(result): action is unsupported by the driver"
     return band
 end
@@ -439,7 +439,7 @@ function regenerateoverviews!(
     cfunc =
         @cfunction(GDAL.gdaldummyprogress, Cint, (Cdouble, Cstring, Ptr{Cvoid}))
     result = GDAL.gdalregenerateoverviews(
-        band.ptr,
+        band,
         length(overviewbands),
         [band.ptr for band in overviewbands],
         resampling,
@@ -474,7 +474,7 @@ have an empty string in the returned list. The first entry in the list is for
 raster values of zero, and so on.
 """
 getcategorynames(band::AbstractRasterBand)::Vector{String} =
-    GDAL.gdalgetrastercategorynames(band.ptr)
+    GDAL.gdalgetrastercategorynames(band)
 
 """
     setcategorynames!(band::AbstractRasterBand, names::Vector{String})
@@ -485,7 +485,7 @@ function setcategorynames!(
     band::T,
     names::Vector{String},
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrastercategorynames(band.ptr, names)
+    result = GDAL.gdalsetrastercategorynames(band, names)
     @cplerr result "Failed to set category names for this band"
     return band
 end
@@ -497,7 +497,7 @@ end
 # and ensure that new requests are referred to the underlying driver.
 # """
 # function flushcache!(band::AbstractRasterBand)
-#     result = GDAL.flushrastercache(band.ptr)
+#     result = GDAL.flushrastercache(band)
 #     @cplerr result "Failed to flush raster data cache"
 #     result
 # end
@@ -522,7 +522,7 @@ function fillraster!(
     realvalue::Real,
     imagvalue::Real = 0,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalfillraster(band.ptr, realvalue, imagvalue)
+    result = GDAL.gdalfillraster(band, realvalue, imagvalue)
     @cplerr result "Failed to fill raster band"
     return band
 end
@@ -559,10 +559,10 @@ See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
 a valid mask band.
 """
 getmaskband(band::IRasterBand)::IRasterBand =
-    IRasterBand(GDAL.gdalgetmaskband(band.ptr), ownedby = band.ownedby)
+    IRasterBand(GDAL.gdalgetmaskband(band), ownedby = band.ownedby)
 
 unsafe_getmaskband(band::AbstractRasterBand)::RasterBand =
-    RasterBand(GDAL.gdalgetmaskband(band.ptr))
+    RasterBand(GDAL.gdalgetmaskband(band))
 
 """
     maskflags(band::AbstractRasterBand)
@@ -604,7 +604,7 @@ See also: http://trac.osgeo.org/gdal/wiki/rfc15_nodatabitmask
 ### Returns
 a valid mask band.
 """
-maskflags(band::AbstractRasterBand)::Cint = GDAL.gdalgetmaskflags(band.ptr)
+maskflags(band::AbstractRasterBand)::Cint = GDAL.gdalgetmaskflags(band)
 
 """
     maskflaginfo(band::AbstractRasterBand)
@@ -655,7 +655,7 @@ function createmaskband!(
     band::T,
     nflags::Integer,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalcreatemaskband(band.ptr, nflags)
+    result = GDAL.gdalcreatemaskband(band, nflags)
     @cplerr result "Failed to create mask band"
     return band
 end

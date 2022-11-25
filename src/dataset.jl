@@ -28,8 +28,8 @@ function copywholeraster!(
     progressdata::Any = C_NULL,
 )::D where {D<:AbstractDataset}
     result = GDAL.gdaldatasetcopywholeraster(
-        source.ptr,
-        dest.ptr,
+        source,
+        dest,
         options,
         @cplprogress(progressfunc),
         progressdata,
@@ -98,9 +98,9 @@ function unsafe_copy(
 )::Dataset
     return Dataset(
         GDAL.gdalcreatecopy(
-            driver.ptr,
+            driver,
             filename,
-            dataset.ptr,
+            dataset,
             strict,
             options,
             @cplprogress(progressfunc),
@@ -157,9 +157,9 @@ function copy(
 )::IDataset
     return IDataset(
         GDAL.gdalcreatecopy(
-            driver.ptr,
+            driver,
             filename,
-            dataset.ptr,
+            dataset,
             strict,
             options,
             @cplprogress(progressfunc),
@@ -178,21 +178,21 @@ Writes the dataset to the designated filename.
 * `filename`: The filename, UTF-8 encoded.
 
 ### Keyword Arguments
-* `driver` (ArchGDAL.Driver): The driver to use, you have to manually select the right driver via `getdriver(drivername)` matching the file extension you wish. 
+* `driver` (ArchGDAL.Driver): The driver to use, you have to manually select the right driver via `getdriver(drivername)` matching the file extension you wish.
 Otherwise the driver of the source dataset will be used.
 * `options` (Vector{String}): A vector of strings containing KEY=VALUE pairs for driver-specific creation options.
 * `layer_options`: Driver specific options for layer creation. The options can either be a Vector{String} to provide the
-same options for each layer, or a Vector{Vector{String}} to provide individual options per layer, in the order of their 
-appearance in the dataset. The strings have to be KEY=VALUE pairs. If you give less individual options than there are layers, 
-the remaining layers use the default creation options. An example for two layers: 
+same options for each layer, or a Vector{Vector{String}} to provide individual options per layer, in the order of their
+appearance in the dataset. The strings have to be KEY=VALUE pairs. If you give less individual options than there are layers,
+the remaining layers use the default creation options. An example for two layers:
 `[["FORMAT=WKT", "LAUNDER=NO"], ["STRICT=NO"]]`
-* `use_gdal_copy` (Bool): Set this to false (default is true) to achieve higher write speeds at the cost of possible errors. 
+* `use_gdal_copy` (Bool): Set this to false (default is true) to achieve higher write speeds at the cost of possible errors.
 Note that when set to true, no coordinate transformations are possible while writing the features.
-* `chunksize` (Integer): Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true. 
+* `chunksize` (Integer): Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
 Default is 20000.
 * `strict` (Bool): Set this to `true` if the written dataset should be a 1:1 copy of the source data, default is `false`,
 which allows the driver to adapt if necessary.
-    
+
 ### Returns
     `nothing`
 """
@@ -204,8 +204,8 @@ function write(
     if nraster(dataset) > 0 && nlayer(dataset) > 0
         drivername = shortname(get(kwargs, :driver, getdriver(dataset)))
         error(
-            "Writing datasets with raster and vector data is not supported when using driver $drivername. 
-      Please file an issue at https://github.com/yeesian/ArchGDAL.jl/issues 
+            "Writing datasets with raster and vector data is not supported when using driver $drivername.
+      Please file an issue at https://github.com/yeesian/ArchGDAL.jl/issues
       including following dataset information: \n\n$dataset",
         )
     elseif nraster(dataset) > 0
@@ -226,7 +226,7 @@ _getlayeroptions(options::Union{Ptr{Cstring},Vector{String}}, i) = options
     writelayers(dataset, filename; kwargs...)
 
 Writes the vector dataset to the designated filename. The options are passed to the newly created dataset and
-have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written 
+have to be given as a list of strings in KEY=VALUE format. The chunksize controls the number of features written
 in each database transaction, e.g. for SQLite. This function can also be used to copy datasets on disk.
 
 Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML, MapML, ESRI Shapefile, SQLite
@@ -239,11 +239,11 @@ Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML,
 * `driver`:           The driver to use, you have to manually select the right driver for the file extension you wish
 * `options`:          A vector of strings containing KEY=VALUE pairs for driver-specific creation options
 * `layer_options`:    Driver specific options for layer creation. The options can either be a Vector{String} to provide the
-same options for each layer, or a Dict(layer_index => Vector{String}) to provide individual options per layer. 
-Note that layer indexing in GDAL starts with 0. The strings have to be KEY=VALUE pairs. An example for two layers: 
+same options for each layer, or a Dict(layer_index => Vector{String}) to provide individual options per layer.
+Note that layer indexing in GDAL starts with 0. The strings have to be KEY=VALUE pairs. An example for two layers:
 `[["FORMAT=WKT", "LAUNDER=NO"], ["STRICT=NO"]]`
 * `chunksize`:        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
-* `use_gdal_copy`:    Set this to false (default is true) to achieve higher write speeds at the cost of possible errors. 
+* `use_gdal_copy`:    Set this to false (default is true) to achieve higher write speeds at the cost of possible errors.
 Note that when set to true, no coordinate transformations are possible while writing the features.
 
 ### Returns
@@ -314,11 +314,11 @@ Dict{<:Integer, Vector{String}} to set individual options per layer.",
 
                     # iterate over features in chunks to get better speed than gdaldatasetcopylayer
                     for chunk in Iterators.partition(sourcelayer, chunksize)
-                        GDAL.ogr_l_starttransaction(targetlayer.ptr)
+                        GDAL.ogr_l_starttransaction(targetlayer)
                         for feature in chunk
                             addfeature!(targetlayer, feature)
                         end
-                        GDAL.ogr_l_committransaction(targetlayer.ptr)
+                        GDAL.ogr_l_committransaction(targetlayer)
                     end
                 end # createlayer
             end # if
@@ -361,7 +361,7 @@ function unsafe_create(
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
-        driver.ptr,
+        driver,
         filename,
         width,
         height,
@@ -382,7 +382,7 @@ function unsafe_create(
     options = StringList(C_NULL),
 )::Dataset
     result = GDAL.gdalcreate(
-        driver.ptr,
+        driver,
         filename,
         width,
         height,
@@ -434,7 +434,7 @@ function create(
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
-        driver.ptr,
+        driver,
         filename,
         width,
         height,
@@ -455,7 +455,7 @@ function create(
     options = StringList(C_NULL),
 )::IDataset
     result = GDAL.gdalcreate(
-        driver.ptr,
+        driver,
         filename,
         width,
         height,
@@ -601,14 +601,14 @@ unsafe_update(filename::AbstractString; flags = OF_UPDATE, kwargs...)::Dataset =
 
 Fetch raster width in pixels.
 """
-width(dataset::AbstractDataset)::Integer = GDAL.gdalgetrasterxsize(dataset.ptr)
+width(dataset::AbstractDataset)::Integer = GDAL.gdalgetrasterxsize(dataset)
 
 """
     height(dataset::AbstractDataset)
 
 Fetch raster height in pixels.
 """
-height(dataset::AbstractDataset)::Integer = GDAL.gdalgetrasterysize(dataset.ptr)
+height(dataset::AbstractDataset)::Integer = GDAL.gdalgetrasterysize(dataset)
 
 """
     nraster(dataset::AbstractDataset)
@@ -616,7 +616,7 @@ height(dataset::AbstractDataset)::Integer = GDAL.gdalgetrasterysize(dataset.ptr)
 Fetch the number of raster bands on this dataset.
 """
 nraster(dataset::AbstractDataset)::Integer =
-    GDAL.gdalgetrastercount(dataset.ptr)
+    GDAL.gdalgetrastercount(dataset)
 
 """
     nlayer(dataset::AbstractDataset)
@@ -624,7 +624,7 @@ nraster(dataset::AbstractDataset)::Integer =
 Fetch the number of feature layers on this dataset.
 """
 nlayer(dataset::AbstractDataset)::Integer =
-    GDAL.gdaldatasetgetlayercount(dataset.ptr)
+    GDAL.gdaldatasetgetlayercount(dataset)
 
 """
     getdriver(dataset::AbstractDataset)
@@ -632,7 +632,7 @@ nlayer(dataset::AbstractDataset)::Integer =
 Fetch the driver that the dataset was created with
 """
 getdriver(dataset::AbstractDataset)::Driver =
-    Driver(GDAL.gdalgetdatasetdriver(dataset.ptr))
+    Driver(GDAL.gdalgetdatasetdriver(dataset))
 
 """
     filelist(dataset::AbstractDataset)
@@ -648,7 +648,7 @@ The returned filenames will normally be relative or absolute paths depending on
 the path used to originally open the dataset. The strings will be UTF-8 encoded
 """
 filelist(dataset::AbstractDataset)::Vector{String} =
-    GDAL.gdalgetfilelist(dataset.ptr)
+    GDAL.gdalgetfilelist(dataset)
 
 """
     getlayer(dataset::AbstractDataset, i::Integer)
@@ -659,7 +659,7 @@ The returned layer remains owned by the `dataset` and should not be deleted by
 the application.
 """
 getlayer(dataset::AbstractDataset, i::Integer)::IFeatureLayer =
-    IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i), ownedby = dataset)
+    IFeatureLayer(GDAL.gdaldatasetgetlayer(dataset, i), ownedby = dataset)
 
 """
     getlayer(dataset::AbstractDataset)
@@ -673,17 +673,17 @@ function getlayer(dataset::AbstractDataset)::IFeatureLayer
     nlayer(dataset) == 1 ||
         error("Dataset has multiple layers. Specify the layer number or name")
     return IFeatureLayer(
-        GDAL.gdaldatasetgetlayer(dataset.ptr, 0),
+        GDAL.gdaldatasetgetlayer(dataset, 0),
         ownedby = dataset,
     )
 end
 
 unsafe_getlayer(dataset::AbstractDataset, i::Integer)::FeatureLayer =
-    FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, i))
+    FeatureLayer(GDAL.gdaldatasetgetlayer(dataset, i))
 function unsafe_getlayer(dataset::AbstractDataset)::FeatureLayer
     nlayer(dataset) == 1 ||
         error("Dataset has multiple layers. Specify the layer number or name")
-    return FeatureLayer(GDAL.gdaldatasetgetlayer(dataset.ptr, 0))
+    return FeatureLayer(GDAL.gdaldatasetgetlayer(dataset, 0))
 end
 
 """
@@ -696,13 +696,13 @@ the application.
 """
 function getlayer(dataset::AbstractDataset, name::AbstractString)::IFeatureLayer
     return IFeatureLayer(
-        GDAL.gdaldatasetgetlayerbyname(dataset.ptr, name),
+        GDAL.gdaldatasetgetlayerbyname(dataset, name),
         ownedby = dataset,
     )
 end
 
 unsafe_getlayer(dataset::AbstractDataset, name::AbstractString)::FeatureLayer =
-    FeatureLayer(GDAL.gdaldatasetgetlayerbyname(dataset.ptr, name))
+    FeatureLayer(GDAL.gdaldatasetgetlayerbyname(dataset, name))
 
 """
     deletelayer!(dataset::AbstractDataset, i::Integer)
@@ -714,7 +714,7 @@ Delete the indicated layer (at index i; between `0` to `nlayer()-1`)
 is not supported for this dataset.
 """
 function deletelayer!(dataset::T, i::Integer)::T where {T<:AbstractDataset}
-    result = GDAL.gdaldatasetdeletelayer(dataset.ptr, i)
+    result = GDAL.gdaldatasetdeletelayer(dataset, i)
     @ogrerr result "Failed to delete layer"
     return dataset
 end
@@ -746,7 +746,7 @@ the strings themselves to avoid misspelling.
 * `capability`: the capability to test.
 """
 testcapability(dataset::AbstractDataset, capability::AbstractString)::Bool =
-    Bool(GDAL.gdaldatasettestcapability(dataset.ptr, capability))
+    Bool(GDAL.gdaldatasettestcapability(dataset, capability))
 
 function listcapability(
     dataset::AbstractDataset,
@@ -803,9 +803,9 @@ function unsafe_executesql(
 )::FeatureLayer
     return FeatureLayer(
         GDAL.gdaldatasetexecutesql(
-            dataset.ptr,
+            dataset,
             query,
-            spatialfilter.ptr,
+            spatialfilter,
             dialect,
         ),
     )
@@ -828,7 +828,7 @@ function releaseresultset(
     dataset::AbstractDataset,
     layer::FeatureLayer,
 )::Nothing
-    GDAL.gdaldatasetreleaseresultset(dataset.ptr, layer.ptr)
+    GDAL.gdaldatasetreleaseresultset(dataset, layer)
     destroy(layer)
     return nothing
 end
@@ -840,10 +840,10 @@ end
 Fetch a band object for a dataset from its index.
 """
 getband(dataset::AbstractDataset, i::Integer)::IRasterBand =
-    IRasterBand(GDAL.gdalgetrasterband(dataset.ptr, i), ownedby = dataset)
+    IRasterBand(GDAL.gdalgetrasterband(dataset, i), ownedby = dataset)
 
 unsafe_getband(dataset::AbstractDataset, i::Integer)::RasterBand =
-    RasterBand(GDAL.gdalgetrasterband(dataset.ptr, i))
+    RasterBand(GDAL.gdalgetrasterband(dataset, i))
 
 """
     getgeotransform!(dataset::AbstractDataset, transform::Vector{Cdouble})
@@ -877,7 +877,7 @@ function getgeotransform!(
     transform::Vector{Cdouble},
 )::Vector{Cdouble}
     @assert length(transform) == 6
-    result = GDAL.gdalgetgeotransform(dataset.ptr, pointer(transform))
+    result = GDAL.gdalgetgeotransform(dataset, pointer(transform))
     if result != GDAL.CE_None
         # The default geotransform.
         transform .= (0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
@@ -898,7 +898,7 @@ function setgeotransform!(
     transform::Vector{Cdouble},
 )::T where {T<:AbstractDataset}
     @assert length(transform) == 6
-    result = GDAL.gdalsetgeotransform(dataset.ptr, pointer(transform))
+    result = GDAL.gdalsetgeotransform(dataset, pointer(transform))
     @cplerr result "Failed to transform raster dataset"
     return dataset
 end
@@ -908,7 +908,7 @@ end
 
 Get number of GCPs for this dataset. Zero if there are none.
 """
-ngcp(dataset::AbstractDataset)::Integer = GDAL.gdalgetgcpcount(dataset.ptr)
+ngcp(dataset::AbstractDataset)::Integer = GDAL.gdalgetgcpcount(dataset)
 
 """
     getproj(dataset::AbstractDataset)
@@ -920,7 +920,7 @@ projection definition is not available an empty (but not `NULL`) string is
 returned.
 """
 getproj(dataset::AbstractDataset)::String =
-    GDAL.gdalgetprojectionref(dataset.ptr)
+    GDAL.gdalgetprojectionref(dataset)
 
 """
     setproj!(dataset::AbstractDataset, projstring::AbstractString)
@@ -931,7 +931,7 @@ function setproj!(
     dataset::T,
     projstring::AbstractString,
 )::T where {T<:AbstractDataset}
-    result = GDAL.gdalsetprojection(dataset.ptr, projstring)
+    result = GDAL.gdalsetprojection(dataset, projstring)
     @cplerr result "Could not set projection"
     return dataset
 end
@@ -965,7 +965,7 @@ function buildoverviews!(
     progressdata = C_NULL,
 )::T where {T<:AbstractDataset}
     result = GDAL.gdalbuildoverviews(
-        dataset.ptr,
+        dataset,
         resampling,
         length(overviewlist),
         overviewlist,
@@ -979,7 +979,7 @@ function buildoverviews!(
 end
 
 function destroy(dataset::AbstractDataset)::Nothing
-    GDAL.gdalclose(dataset.ptr)
+    GDAL.gdalclose(dataset)
     dataset.ptr = C_NULL
     return nothing
 end

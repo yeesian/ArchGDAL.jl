@@ -8,7 +8,7 @@ unsafe_createcolortable(palette::GDALPaletteInterp)::ColorTable =
 
 "Destroys a color table."
 function destroy(ct::ColorTable)::Nothing
-    GDAL.gdaldestroycolortable(ct.ptr)
+    GDAL.gdaldestroycolortable(ct)
     ct.ptr = C_NULL
     return nothing
 end
@@ -22,7 +22,7 @@ function unsafe_clone(ct::ColorTable)::ColorTable
     return if ct.ptr == C_NULL
         ColorTable(C_NULL)
     else
-        ColorTable(GDAL.gdalclonecolortable(ct.ptr))
+        ColorTable(GDAL.gdalclonecolortable(ct))
     end
 end
 
@@ -35,7 +35,7 @@ Fetch palette interpretation.
 palette interpretation enumeration value, usually `GPI_RGB`.
 """
 paletteinterp(ct::ColorTable)::GDALPaletteInterp =
-    GDAL.gdalgetpaletteinterpretation(ct.ptr)
+    GDAL.gdalgetpaletteinterpretation(ct)
 
 """
     getcolorentryasrgb(ct::ColorTable, i::Integer)
@@ -54,7 +54,7 @@ tables.
 """
 function getcolorentryasrgb(ct::ColorTable, i::Integer)::GDAL.GDALColorEntry
     colorentry = Ref{GDAL.GDALColorEntry}(GDAL.GDALColorEntry(0, 0, 0, 0))
-    result = Bool(GDAL.gdalgetcolorentryasrgb(ct.ptr, i, colorentry))
+    result = Bool(GDAL.gdalgetcolorentryasrgb(ct, i, colorentry))
     result || @warn("The conversion to RGB isn't supported.")
     return colorentry[]
 end
@@ -75,6 +75,6 @@ The table is grown as needed to hold the supplied offset.
 * `entry` value to assign to table.
 """
 function setcolorentry!(ct::ColorTable, i::Integer, entry::GDAL.GDALColorEntry)
-    GDAL.gdalsetcolorentry(ct.ptr, i, Ref{GDAL.GDALColorEntry}(entry))
+    GDAL.gdalsetcolorentry(ct, i, Ref{GDAL.GDALColorEntry}(entry))
     return ct
 end
