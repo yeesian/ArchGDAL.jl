@@ -126,7 +126,7 @@ getgeomtype(layer::AbstractFeatureLayer)::OGRwkbGeometryType =
 Returns the current spatial filter for this layer.
 """
 function getspatialfilter(layer::AbstractFeatureLayer)::IGeometry
-    result = GDAL.ogr_l_getspatialfilter(Ptr{Cvoid}(layer))
+    result = GDAL.ogr_l_getspatialfilter(layer)
     return if result == C_NULL
         IGeometry(result)
     else

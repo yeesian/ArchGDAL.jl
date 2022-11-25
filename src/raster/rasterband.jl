@@ -441,7 +441,7 @@ function regenerateoverviews!(
     result = GDAL.gdalregenerateoverviews(
         band,
         length(overviewbands),
-        [band.ptr for band in overviewbands],
+        overviewbands,
         resampling,
         cfunc,
         progressdata,

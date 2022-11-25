@@ -75,7 +75,7 @@ function unsafe_gdalwarp(
         dest,
         C_NULL,
         length(datasets),
-        [ds.ptr for ds in datasets],
+        datasets,
         options,
         usage_error,
     )
@@ -110,7 +110,7 @@ function unsafe_gdalvectortranslate(
         dest,
         C_NULL,
         length(datasets),
-        [ds.ptr for ds in datasets],
+        datasets,
         options,
         usage_error,
     )
@@ -276,7 +276,7 @@ function unsafe_gdalbuildvrt(
     result = GDAL.gdalbuildvrt(
         dest,
         length(datasets),
-        [ds.ptr for ds in datasets],
+        datasets,
         C_NULL,
         options,
         usage_error,
