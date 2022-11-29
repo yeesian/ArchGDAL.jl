@@ -1778,7 +1778,9 @@ for f in (:create, :unsafe_create)
             return geom
         end
     end
+end
 
+for f in (:create, :unsafe_create)
     f1 = Symbol("$(f)point")
     @eval $f1(cs::Real...) = $f1(cs)
     @eval $f1(coords::Vector) = $f1(Tuple(coords))
