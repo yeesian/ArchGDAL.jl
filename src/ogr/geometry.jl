@@ -1729,10 +1729,11 @@ for (geom, wkbgeom) in (
     end
 end
 
-V = Vector{<:Real}
-geomargs2d = (:xs, :ys), (:(xs::$V), :(ys::$V)), ""
-geomargs3d = (:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V)), "25D"
-for (args, typedargs, typesuffix) in (geomargs2d, geomargs3d)
+let V = Vector{<:Real}
+for (args, typedargs, typesuffix) in (
+        ((:xs, :ys), (:(xs::$V), :(ys::$V)), ""), # geomargs2d
+        ((:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V)), "25D"), # geomargs3d
+    )
     for f in (:create, :unsafe_create)
         f1 = Symbol("$(f)linestring")
         T = Symbol("wkbLineString" * typesuffix)
@@ -1778,6 +1779,7 @@ for (args, typedargs, typesuffix) in (geomargs2d, geomargs3d)
             return geom
         end
     end
+end
 end
 
 for f in (:create, :unsafe_create)
