@@ -345,7 +345,6 @@ import GeoFormatTypes as GFT
                 @test GI.geomtrait(geom) == GI.LineStringTrait()
                 @test GI.testgeometry(geom)
                 @test typeof(geom) == AG.Geometry{AG.wkbLineString} # GDAL only uses the LinearRing enum during construction
-                @test AG._infergeomtype(geom) == AG.wkbLineString
                 @test !AG.is3d(geom)
                 @test GDAL.ogr_g_is3d(geom) == 0
                 @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
@@ -363,7 +362,6 @@ import GeoFormatTypes as GFT
             points = [1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]
             AG.createlinearring(points...) do geom
                 @test GI.testgeometry(geom)
-                @test AG._infergeomtype(geom) == AG.wkbLineString25D
                 @test AG.is3d(geom)
                 @test GDAL.ogr_g_is3d(geom) == 1
                 @test typeof(geom) == AG.Geometry{AG.wkbLineString25D}
