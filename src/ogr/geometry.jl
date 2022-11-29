@@ -1734,6 +1734,20 @@ for (args, typedargs, typesuffix) in (
         ((:xs, :ys), (:(xs::$V), :(ys::$V)), ""), # geomargs2d
         ((:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V)), "25D"), # geomargs3d
     )
+    @eval function createlinearring($(typedargs...))
+        geom = unsafe_createlinestring(Val{wkbLinearRing}())
+        for pt in zip($(args...))
+            addpoint!(geom, pt...)
+        end
+        return clone(geom) # rewrap LinearRing as the corrent LineString/LineString25D
+    end
+    @eval function unsafe_createlinearring($(typedargs...))
+        geom = unsafe_createlinestring(Val{wkbLinearRing}())
+        for pt in zip($(args...))
+            addpoint!(geom, pt...)
+        end
+        return unsafe_clone(geom) # rewrap LinearRing as the corrent LineString/LineString25D
+    end
     for f in (:create, :unsafe_create)
         f1 = Symbol("$(f)linestring")
         T = Symbol("wkbLineString" * typesuffix)
@@ -1743,20 +1757,6 @@ for (args, typedargs, typesuffix) in (
                 addpoint!(geom, pt...)
             end
             return geom
-        end
-        @eval function createlinearring($(typedargs...))
-            geom = $f1(Val{wkbLinearRing}())
-            for pt in zip($(args...))
-                addpoint!(geom, pt...)
-            end
-            return IGeometry{$T}(geom) # rewrap LinearRing as the corrent LineString/LineString25D
-        end
-        @eval function unsafe_createlinearring($(typedargs...))
-            geom = $f1(Val{wkbLinearRing}())
-            for pt in zip($(args...))
-                addpoint!(geom, pt...)
-            end
-            return Geometry{$T}(geom) # rewrap LinearRing as the corrent LineString/LineString25D
         end
         f1 = Symbol("$(f)polygon")
         T = Symbol("wkbPolygon" * typesuffix)
