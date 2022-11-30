@@ -344,10 +344,9 @@ import GeoFormatTypes as GFT
             AG.createlinearring([1.0, 2.0, 3.0], [4.0, 5.0, 6.0]) do geom
                 @test GI.geomtrait(geom) == GI.LineStringTrait()
                 @test GI.testgeometry(geom)
-                @test typeof(geom) == AG.Geometry{AG.wkbLineString} # GDAL only uses the LinearRing enum during construction  
-                @test AG._infergeomtype(geom.ptr) == AG.wkbLineString
+                @test typeof(geom) == AG.Geometry{AG.wkbLineString} # GDAL only uses the LinearRing enum during construction
                 @test !AG.is3d(geom)
-                @test GDAL.ogr_g_is3d(geom.ptr) == 0
+                @test GDAL.ogr_g_is3d(geom) == 0
                 @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPoint}
                 @test isapprox(
                     GI.coordinates(geom),
@@ -363,9 +362,8 @@ import GeoFormatTypes as GFT
             points = [1.0, 2.0, 3.0], [4.0, 5.0, 6.0], [7.0, 8.0, 9.0]
             AG.createlinearring(points...) do geom
                 @test GI.testgeometry(geom)
-                @test AG._infergeomtype(geom.ptr) == AG.wkbLineString25D
                 @test AG.is3d(geom)
-                @test GDAL.ogr_g_is3d(geom.ptr) == 1
+                @test GDAL.ogr_g_is3d(geom) == 1
                 @test typeof(geom) == AG.Geometry{AG.wkbLineString25D}
                 @test typeof(AG.getgeom(geom, 0)) ==
                       AG.IGeometry{AG.wkbPoint25D}
@@ -518,7 +516,7 @@ import GeoFormatTypes as GFT
             ) do geom
                 @test GI.geomtrait(geom) == GI.MultiPolygonTrait()
                 @test GI.testgeometry(geom)
-                @test GDAL.ogr_g_is3d(geom.ptr) == 0
+                @test GDAL.ogr_g_is3d(geom) == 0
                 @test !GI.is3d(geom)
                 @test typeof(geom) == AG.Geometry{AG.wkbMultiPolygon}
                 @test typeof(AG.getgeom(geom, 0)) == AG.IGeometry{AG.wkbPolygon}

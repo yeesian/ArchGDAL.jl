@@ -18,7 +18,7 @@ getdriver(name::AbstractString)::Driver = Driver(GDAL.gdalgetdriverbyname(name))
 Register a driver for use.
 """
 function register(drv::Driver)::Nothing
-    GDAL.gdalregisterdriver(drv.ptr)
+    GDAL.gdalregisterdriver(drv)
     return nothing
 end
 
@@ -28,7 +28,7 @@ end
 Deregister the passed driver.
 """
 function deregister(drv::Driver)::Nothing
-    GDAL.gdalderegisterdriver(drv.ptr)
+    GDAL.gdalderegisterdriver(drv)
     return nothing
 end
 
@@ -37,7 +37,7 @@ end
 
 Return the list of creation options of the driver [an XML string].
 """
-options(drv::Driver)::String = GDAL.gdalgetdrivercreationoptionlist(drv.ptr)
+options(drv::Driver)::String = GDAL.gdalgetdrivercreationoptionlist(drv)
 
 driveroptions(name::AbstractString)::String = options(getdriver(name))
 
@@ -46,14 +46,14 @@ driveroptions(name::AbstractString)::String = options(getdriver(name))
 
 Return the short name of a driver (e.g. `GTiff`).
 """
-shortname(drv::Driver)::String = GDAL.gdalgetdrivershortname(drv.ptr)
+shortname(drv::Driver)::String = GDAL.gdalgetdrivershortname(drv)
 
 """
     longname(drv::Driver)
 
 Return the long name of a driver (e.g. `GeoTIFF`), or empty string.
 """
-longname(drv::Driver)::String = GDAL.gdalgetdriverlongname(drv.ptr)
+longname(drv::Driver)::String = GDAL.gdalgetdriverlongname(drv)
 
 """
     ndriver()
@@ -116,7 +116,7 @@ function validate(
     drv::Driver,
     options::Vector{T},
 )::Bool where {T<:AbstractString}
-    return Bool(GDAL.gdalvalidatecreationoptions(drv.ptr, options))
+    return Bool(GDAL.gdalvalidatecreationoptions(drv, options))
 end
 
 """
@@ -132,7 +132,7 @@ function copyfiles(
     new::AbstractString,
     old::AbstractString,
 )::Nothing
-    result = GDAL.gdalcopydatasetfiles(drv.ptr, new, old)
+    result = GDAL.gdalcopydatasetfiles(drv, new, old)
     @cplerr result "Failed to copy dataset files"
     return nothing
 end
@@ -168,7 +168,7 @@ end
 
 """
     extensiondriver(filename::AbstractString)
- 
+
 Returns a driver shortname that matches the filename extension.
 
 So `extensiondriver("/my/file.tif") == "GTiff"`.

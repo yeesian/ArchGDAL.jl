@@ -725,3 +725,24 @@ Return if type and subtype are compatible.
 """
 arecompatible(dtype::OGRFieldType, subtype::OGRFieldSubType)::Bool =
     Bool(GDAL.ogr_aretypesubtypecompatible(dtype, subtype))
+
+# teach ccall how to get the pointer to pass to libgdal
+# this way the Julia compiler will track the lifetimes for us
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractGeometry) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractSpatialRef) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractDataset) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractFeature) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractFeatureDefn) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractFeatureLayer) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractFieldDefn) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractGeomFieldDefn) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractRasterBand) = x.ptr
+
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::CoordTransform) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::Driver) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::Field) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::RasterAttrTable) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::StyleManager) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::StyleTable) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::StyleTool) = x.ptr
+Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::ColorTable) = x.ptr

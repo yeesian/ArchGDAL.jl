@@ -270,7 +270,7 @@ end
 Fetch list of (non-empty) metadata domains.
 """
 metadatadomainlist(obj)::Vector{String} =
-    GDAL.gdalgetmetadatadomainlist(obj.ptr)
+    GDAL.gdalgetmetadatadomainlist(obj)
 
 """
     metadata(obj; domain::AbstractString = "")
@@ -278,7 +278,7 @@ metadatadomainlist(obj)::Vector{String} =
 Fetch metadata. Note that relatively few formats return any metadata.
 """
 metadata(obj; domain::AbstractString = "")::Vector{String} =
-    GDAL.gdalgetmetadata(obj.ptr, domain)
+    GDAL.gdalgetmetadata(obj, domain)
 
 """
     metadataitem(obj, name::AbstractString, domain::AbstractString)
@@ -297,7 +297,7 @@ function metadataitem(
     name::AbstractString;
     domain::AbstractString = "",
 )::String
-    item = GDAL.gdalgetmetadataitem(obj.ptr, name, domain)
+    item = GDAL.gdalgetmetadataitem(obj, name, domain)
     # Use `=== nothing` instead of isnothing() for performance.
     # See https://github.com/JuliaLang/julia/pull/36444 for context.
     return item === nothing ? "" : item

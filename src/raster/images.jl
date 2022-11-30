@@ -46,7 +46,7 @@ function imview(
         elseif gpi == GPI_RGB
             colorentries = GDAL.GDALColorEntry[
                 getcolorentryasrgb(colortable, i - 1) for
-                i in 1:GDAL.gdalgetcolorentrycount(colortable.ptr)
+                i in 1:GDAL.gdalgetcolorentrycount(colortable)
             ]
             c1 = Matrix{UInt8}(undef, size(imgvalues)...)
             c2 = Matrix{UInt8}(undef, size(imgvalues)...)

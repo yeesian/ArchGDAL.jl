@@ -201,7 +201,7 @@ Construct a Spatial Reference System from its WKT.
 
 # Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis 
+    axis ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
 function newspatialref(wkt::AbstractString = ""; order::Symbol = :compliant)
@@ -227,7 +227,7 @@ function maybesetaxisorder!(
 )::T where {T<:AbstractSpatialRef}
     if order == :trad
         GDAL.osrsetaxismappingstrategy(
-            spref.ptr,
+            spref,
             GDAL.OAMS_TRADITIONAL_GIS_ORDER,
         )
     elseif order != :compliant
@@ -241,7 +241,7 @@ function maybesetaxisorder!(
 end
 
 function destroy(spref::AbstractSpatialRef)::Nothing
-    GDAL.osrdestroyspatialreference(spref.ptr)
+    GDAL.osrdestroyspatialreference(spref)
     spref.ptr = C_NULL
     return nothing
 end
@@ -255,7 +255,7 @@ function clone(spref::AbstractSpatialRef)::ISpatialRef
     return if spref.ptr == C_NULL
         ISpatialRef()
     else
-        ISpatialRef(GDAL.osrclone(spref.ptr))
+        ISpatialRef(GDAL.osrclone(spref))
     end
 end
 
@@ -263,7 +263,7 @@ function unsafe_clone(spref::AbstractSpatialRef)::SpatialRef
     return if spref.ptr == C_NULL
         SpatialRef()
     else
-        SpatialRef(GDAL.osrclone(spref.ptr))
+        SpatialRef(GDAL.osrclone(spref))
     end
 end
 
@@ -293,7 +293,7 @@ directory identified by the GDAL_DATA configuration option. See CPLFindFile()
 for details.
 """
 function importEPSG!(spref::T, code::Integer)::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromepsg(spref.ptr, code)
+    result = GDAL.osrimportfromepsg(spref, code)
     @ogrerr result "Failed to initialize SRS based on EPSG"
     return spref
 end
@@ -305,7 +305,7 @@ Construct a Spatial Reference System from its EPSG GCS or PCS code.
 
 # Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis 
+    axis ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
 importEPSG(code::Integer; kwargs...)::ISpatialRef =
@@ -327,7 +327,7 @@ contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
 """
 function importEPSGA!(spref::T, code::Integer)::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromepsga(spref.ptr, code)
+    result = GDAL.osrimportfromepsga(spref, code)
     @ogrerr result "Failed to initializ SRS based on EPSGA"
     return spref
 end
@@ -369,7 +369,7 @@ function importWKT!(
     spref::T,
     wktstr::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromwkt(spref.ptr, [wktstr])
+    result = GDAL.osrimportfromwkt(spref, [wktstr])
     @ogrerr result "Failed to initialize SRS based on WKT string"
     return spref
 end
@@ -381,7 +381,7 @@ Create SRS from its WKT string.
 
 # Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis  ordering in any actions done with the crs. `:compliant`, will use axis 
+    axis  ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
 importWKT(wktstr::AbstractString; kwargs...)::ISpatialRef =
@@ -416,7 +416,7 @@ function importPROJ4!(
     spref::T,
     projstr::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromproj4(spref.ptr, projstr)
+    result = GDAL.osrimportfromproj4(spref, projstr)
     @ogrerr result "Failed to initialize SRS based on PROJ4 string"
     return spref
 end
@@ -428,7 +428,7 @@ Create SRS from its PROJ.4 string.
 
 # Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis 
+    axis ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
 importPROJ4(projstr::AbstractString; kwargs...)::ISpatialRef =
@@ -463,7 +463,7 @@ function importESRI!(
     spref::T,
     esristr::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromesri(spref.ptr, [esristr])
+    result = GDAL.osrimportfromesri(spref, [esristr])
     @ogrerr result "Failed to initialize SRS based on ESRI string"
     return spref
 end
@@ -473,7 +473,7 @@ end
 
 Create SRS from its ESRI .prj format(s).
 
-Passing the keyword argument `order=:compliant` or `order=:trad` will set the 
+Passing the keyword argument `order=:compliant` or `order=:trad` will set the
 mapping strategy to return compliant axis order or traditional lon/lat order.
 """
 importESRI(esristr::AbstractString; kwargs...)::ISpatialRef =
@@ -491,7 +491,7 @@ function importXML!(
     spref::T,
     xmlstr::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromxml(spref.ptr, xmlstr)
+    result = GDAL.osrimportfromxml(spref, xmlstr)
     @ogrerr result "Failed to initialize SRS based on XML string"
     return spref
 end
@@ -501,12 +501,12 @@ end
 
 Construct SRS from XML format (GML only currently).
 
-Passing the keyword argument `order=:compliant` or `order=:trad` will set the 
+Passing the keyword argument `order=:compliant` or `order=:trad` will set the
 mapping strategy to return compliant axis order or traditional lon/lat order.
 
 # Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis 
+    axis ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
 importXML(xmlstr::AbstractString; kwargs...)::ISpatialRef =
@@ -527,7 +527,7 @@ function importURL!(
     spref::T,
     url::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrimportfromurl(spref.ptr, url)
+    result = GDAL.osrimportfromurl(spref, url)
     @ogrerr result "Failed to initialize SRS from URL"
     return spref
 end
@@ -542,7 +542,7 @@ SetFromUserInput for you.
 
 # Keyword Arguments
 - `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis 
+    axis ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
 importURL(url::AbstractString; kwargs...)::ISpatialRef =
@@ -558,7 +558,7 @@ Convert this SRS into WKT format.
 """
 function toWKT(spref::AbstractSpatialRef)::String
     wktptr = Ref{Cstring}()
-    result = GDAL.osrexporttowkt(spref.ptr, wktptr)
+    result = GDAL.osrexporttowkt(spref, wktptr)
     @ogrerr result "Failed to convert this SRS into WKT format"
     return unsafe_string(wktptr[])
 end
@@ -575,7 +575,7 @@ Convert this SRS into a nicely formatted WKT string for display to a person.
 """
 function toWKT(spref::AbstractSpatialRef, simplify::Bool)::String
     wktptr = Ref{Cstring}()
-    result = GDAL.osrexporttoprettywkt(spref.ptr, wktptr, simplify)
+    result = GDAL.osrexporttoprettywkt(spref, wktptr, simplify)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
     return unsafe_string(wktptr[])
 end
@@ -587,7 +587,7 @@ Export coordinate system in PROJ.4 format.
 """
 function toPROJ4(spref::AbstractSpatialRef)::String
     projptr = Ref{Cstring}()
-    result = GDAL.osrexporttoproj4(spref.ptr, projptr)
+    result = GDAL.osrexporttoproj4(spref, projptr)
     @ogrerr result "Failed to export this SRS to PROJ.4 format"
     return unsafe_string(projptr[])
 end
@@ -603,7 +603,7 @@ be returned along with OGRERR_NONE.
 """
 function toXML(spref::AbstractSpatialRef)::String
     xmlptr = Ref{Cstring}()
-    result = GDAL.osrexporttoxml(spref.ptr, xmlptr, C_NULL)
+    result = GDAL.osrexporttoxml(spref, xmlptr, C_NULL)
     @ogrerr result "Failed to convert this SRS into XML"
     return unsafe_string(xmlptr[])
 end
@@ -615,7 +615,7 @@ Export coordinate system in Mapinfo style CoordSys format.
 """
 function toMICoordSys(spref::AbstractSpatialRef)::String
     ptr = Ref{Cstring}()
-    result = GDAL.osrexporttomicoordsys(spref.ptr, ptr)
+    result = GDAL.osrexporttomicoordsys(spref, ptr)
     @ogrerr result "Failed to convert this SRS into XML"
     return unsafe_string(ptr[])
 end
@@ -631,7 +631,7 @@ variety of projections and arguments, and stripping out nodes note recognised by
 ESRI (like AUTHORITY and AXIS).
 """
 function morphtoESRI!(spref::T)::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrmorphtoesri(spref.ptr)
+    result = GDAL.osrmorphtoesri(spref)
     @ogrerr result "Failed to convert in place to ESRI WKT format"
     return spref
 end
@@ -665,7 +665,7 @@ of the following (`TOWGS84` recommended for proper datum shift calculations)
         `GEOGCS`. Does not impact `PROJCS` values.
 """
 function morphfromESRI!(spref::T)::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrmorphfromesri(spref.ptr)
+    result = GDAL.osrmorphfromesri(spref)
     @ogrerr result "Failed to convert in place from ESRI WKT format"
     return spref
 end
@@ -690,7 +690,7 @@ function setattrvalue!(
     path::AbstractString,
     value::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrsetattrvalue(spref.ptr, path, value)
+    result = GDAL.osrsetattrvalue(spref, path, value)
     @ogrerr result "Failed to set attribute path to value"
     return spref
 end
@@ -699,7 +699,7 @@ function setattrvalue!(
     spref::T,
     path::AbstractString,
 )::T where {T<:AbstractSpatialRef}
-    result = GDAL.osrsetattrvalue(spref.ptr, path, C_NULL)
+    result = GDAL.osrsetattrvalue(spref, path, C_NULL)
     @ogrerr result "Failed to set attribute path"
     return spref
 end
@@ -726,7 +726,7 @@ function getattrvalue(
     name::AbstractString,
     i::Integer,
 )::Union{String,Nothing}
-    return GDAL.osrgetattrvalue(spref.ptr, name, i)
+    return GDAL.osrgetattrvalue(spref, name, i)
 end
 
 """
@@ -747,13 +747,13 @@ function unsafe_createcoordtrans(
     target::AbstractSpatialRef,
 )::CoordTransform
     return CoordTransform(
-        GDAL.octnewcoordinatetransformation(source.ptr, target.ptr),
+        GDAL.octnewcoordinatetransformation(source, target),
     )
 end
 
 "OGRCoordinateTransformation destructor."
 function destroy(obj::CoordTransform)::Nothing
-    GDAL.octdestroycoordinatetransformation(obj.ptr)
+    GDAL.octdestroycoordinatetransformation(obj)
     obj.ptr = C_NULL
     return nothing
 end
@@ -784,7 +784,7 @@ function transform!(
     @assert length(zvertices) == n
     return Bool(
         GDAL.octtransform(
-            obj.ptr,
+            obj,
             n,
             pointer(xvertices),
             pointer(yvertices),

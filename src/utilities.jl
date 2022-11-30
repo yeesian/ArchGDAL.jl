@@ -14,7 +14,7 @@ String corresponding to the information about the raster dataset.
 function gdalinfo(dataset::AbstractDataset, options = String[])::String
     gdal_info_options = GDAL.gdalinfooptionsnew(options, C_NULL)
     return try
-        GDAL.gdalinfo(dataset.ptr, gdal_info_options)
+        GDAL.gdalinfo(dataset, gdal_info_options)
     finally
         GDAL.gdalinfooptionsfree(gdal_info_options)
     end
@@ -43,7 +43,7 @@ function unsafe_gdaltranslate(
 )::Dataset
     options = GDAL.gdaltranslateoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdaltranslate(dest, dataset.ptr, options, usage_error)
+    result = GDAL.gdaltranslate(dest, dataset, options, usage_error)
     GDAL.gdaltranslateoptionsfree(options)
     return Dataset(result)
 end
@@ -75,7 +75,7 @@ function unsafe_gdalwarp(
         dest,
         C_NULL,
         length(datasets),
-        [ds.ptr for ds in datasets],
+        datasets,
         options,
         usage_error,
     )
@@ -110,7 +110,7 @@ function unsafe_gdalvectortranslate(
         dest,
         C_NULL,
         length(datasets),
-        [ds.ptr for ds in datasets],
+        datasets,
         options,
         usage_error,
     )
@@ -156,7 +156,7 @@ function unsafe_gdaldem(
     usage_error = Ref{Cint}()
     result = GDAL.gdaldemprocessing(
         dest,
-        dataset.ptr,
+        dataset,
         processing,
         colorfile,
         options,
@@ -189,7 +189,7 @@ function unsafe_gdalnearblack(
 )::Dataset
     options = GDAL.gdalnearblackoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdalnearblack(dest, C_NULL, dataset.ptr, options, usage_error)
+    result = GDAL.gdalnearblack(dest, C_NULL, dataset, options, usage_error)
     GDAL.gdalnearblackoptionsfree(options)
     return Dataset(result)
 end
@@ -217,7 +217,7 @@ function unsafe_gdalgrid(
 )::Dataset
     options = GDAL.gdalgridoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdalgrid(dest, dataset.ptr, options, usage_error)
+    result = GDAL.gdalgrid(dest, dataset, options, usage_error)
     GDAL.gdalgridoptionsfree(options)
     return Dataset(result)
 end
@@ -245,7 +245,7 @@ function unsafe_gdalrasterize(
 )::Dataset
     options = GDAL.gdalrasterizeoptionsnew(options, C_NULL)
     usage_error = Ref{Cint}()
-    result = GDAL.gdalrasterize(dest, C_NULL, dataset.ptr, options, usage_error)
+    result = GDAL.gdalrasterize(dest, C_NULL, dataset, options, usage_error)
     GDAL.gdalrasterizeoptionsfree(options)
     return Dataset(result)
 end
@@ -276,7 +276,7 @@ function unsafe_gdalbuildvrt(
     result = GDAL.gdalbuildvrt(
         dest,
         length(datasets),
-        [ds.ptr for ds in datasets],
+        datasets,
         C_NULL,
         options,
         usage_error,

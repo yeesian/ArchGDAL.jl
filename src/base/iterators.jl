@@ -4,7 +4,7 @@ function Base.iterate(
 )::Union{Nothing,Tuple{IFeature,Int64}}
     layer.ptr == C_NULL && return nothing
     state == 0 && resetreading!(layer)
-    ptr = GDAL.ogr_l_getnextfeature(layer.ptr)
+    ptr = GDAL.ogr_l_getnextfeature(layer)
     return if ptr == C_NULL
         resetreading!(layer)
         nothing

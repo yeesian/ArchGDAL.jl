@@ -147,7 +147,7 @@ function rasterio!(
     bands = isa(bands, Vector{Cint}) ? bands : Cint.(collect(bands))
     @assert nband == zbsize
     result = GDAL.gdaldatasetrasterioex(
-        dataset.ptr,
+        dataset,
         access,
         xoffset,
         yoffset,
@@ -237,7 +237,7 @@ function rasterio!(
     (rasterband == C_NULL) && error("Can't read NULL rasterband")
     xbsize, ybsize = size(buffer)
     result = GDAL.gdalrasterioex(
-        rasterband.ptr,
+        rasterband,
         access,
         xoffset,
         yoffset,
@@ -562,7 +562,7 @@ function readblock!(
     yoffset::Integer,
     buffer::T,
 )::T where {T<:Any}
-    result = GDAL.gdalreadblock(rb.ptr, xoffset, yoffset, buffer)
+    result = GDAL.gdalreadblock(rb, xoffset, yoffset, buffer)
     @cplerr result "Failed to read block at ($xoffset,$yoffset)"
     return buffer
 end
@@ -592,7 +592,7 @@ function writeblock!(
     yoffset::Integer,
     buffer,
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalwriteblock(rb.ptr, xoffset, yoffset, buffer)
+    result = GDAL.gdalwriteblock(rb, xoffset, yoffset, buffer)
     @cplerr result "Failed to write block at ($xoffset, $yoffset)"
     return rb
 end
