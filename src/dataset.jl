@@ -615,8 +615,7 @@ height(dataset::AbstractDataset)::Integer = GDAL.gdalgetrasterysize(dataset)
 
 Fetch the number of raster bands on this dataset.
 """
-nraster(dataset::AbstractDataset)::Integer =
-    GDAL.gdalgetrastercount(dataset)
+nraster(dataset::AbstractDataset)::Integer = GDAL.gdalgetrastercount(dataset)
 
 """
     nlayer(dataset::AbstractDataset)
@@ -802,12 +801,7 @@ function unsafe_executesql(
     spatialfilter::Geometry = Geometry(C_NULL),
 )::FeatureLayer
     return FeatureLayer(
-        GDAL.gdaldatasetexecutesql(
-            dataset,
-            query,
-            spatialfilter,
-            dialect,
-        ),
+        GDAL.gdaldatasetexecutesql(dataset, query, spatialfilter, dialect),
     )
 end
 
@@ -919,8 +913,7 @@ It should be suitable for use with the OGRSpatialReference class. When a
 projection definition is not available an empty (but not `NULL`) string is
 returned.
 """
-getproj(dataset::AbstractDataset)::String =
-    GDAL.gdalgetprojectionref(dataset)
+getproj(dataset::AbstractDataset)::String = GDAL.gdalgetprojectionref(dataset)
 
 """
     setproj!(dataset::AbstractDataset, projstring::AbstractString)

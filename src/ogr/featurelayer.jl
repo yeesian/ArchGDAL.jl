@@ -34,13 +34,7 @@ function createlayer(;
     options = StringList(C_NULL),
 )::IFeatureLayer
     return IFeatureLayer(
-        GDAL.gdaldatasetcreatelayer(
-            dataset,
-            name,
-            spatialref,
-            geom,
-            options,
-        ),
+        GDAL.gdaldatasetcreatelayer(dataset, name, spatialref, geom, options),
         ownedby = dataset,
         spatialref = spatialref,
     )
@@ -54,13 +48,7 @@ function unsafe_createlayer(;
     options = StringList(C_NULL),
 )::FeatureLayer
     return FeatureLayer(
-        GDAL.gdaldatasetcreatelayer(
-            dataset,
-            name,
-            spatialref,
-            geom,
-            options,
-        ),
+        GDAL.gdaldatasetcreatelayer(dataset, name, spatialref, geom, options),
         ownedby = dataset,
         spatialref = spatialref,
     )
@@ -1042,8 +1030,7 @@ Increment layer reference count.
 ### Returns
 The reference count after incrementing.
 """
-reference(layer::AbstractFeatureLayer)::Integer =
-    GDAL.ogr_l_reference(layer)
+reference(layer::AbstractFeatureLayer)::Integer = GDAL.ogr_l_reference(layer)
 
 """
     dereference(layer::AbstractFeatureLayer)
@@ -1061,8 +1048,7 @@ dereference(layer::AbstractFeatureLayer)::Integer =
 
 The current reference count for the layer object itself.
 """
-nreference(layer::AbstractFeatureLayer)::Integer =
-    GDAL.ogr_l_getrefcount(layer)
+nreference(layer::AbstractFeatureLayer)::Integer = GDAL.ogr_l_getrefcount(layer)
 
 # """
 # Flush pending changes to disk.

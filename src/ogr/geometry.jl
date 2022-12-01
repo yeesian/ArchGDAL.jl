@@ -211,9 +211,7 @@ function unsafe_forceto(
     targettype::OGRwkbGeometryType,
     options = StringList(C_NULL),
 )::Geometry
-    return Geometry(
-        GDAL.ogr_g_forceto(unsafe_clone(geom), targettype, options),
-    )
+    return Geometry(GDAL.ogr_g_forceto(unsafe_clone(geom), targettype, options))
 end
 
 """
@@ -1644,13 +1642,8 @@ function polygonfromedges(
     autoclose::Bool = false,
 )::IGeometry
     perr = Ref{GDAL.OGRErr}()
-    result = GDAL.ogrbuildpolygonfromedges(
-        lines,
-        besteffort,
-        autoclose,
-        tol,
-        perr,
-    )
+    result =
+        GDAL.ogrbuildpolygonfromedges(lines, besteffort, autoclose, tol, perr)
     @ogrerr perr[] "Failed to build polygon from edges."
     return IGeometry(result)
 end
@@ -1662,13 +1655,8 @@ function unsafe_polygonfromedges(
     autoclose::Bool = false,
 )::Geometry
     perr = Ref{GDAL.OGRErr}()
-    result = GDAL.ogrbuildpolygonfromedges(
-        lines,
-        besteffort,
-        autoclose,
-        tol,
-        perr,
-    )
+    result =
+        GDAL.ogrbuildpolygonfromedges(lines, besteffort, autoclose, tol, perr)
     @ogrerr perr[] "Failed to build polygon from edges."
     return Geometry(result)
 end
@@ -1730,61 +1718,61 @@ for (geom, wkbgeom) in (
 end
 
 let V = Vector{<:Real}
-for (args, typedargs, typesuffix) in (
+    for (args, typedargs, typesuffix) in (
         ((:xs, :ys), (:(xs::$V), :(ys::$V)), ""), # geomargs2d
         ((:xs, :ys, :zs), (:(xs::$V), :(ys::$V), :(zs::$V)), "25D"), # geomargs3d
     )
-    T = Symbol("wkbLineString" * typesuffix)
-    @eval function createlinearring($(typedargs...))
-        return createlinestring(Val{wkbLinearRing}()) do geom
-        for pt in zip($(args...))
-            addpoint!(geom, pt...)
-        end
-        # rewrap LinearRing as the corrent LineString/LineString25D
-        IGeometry{$T}(GDAL.ogr_g_clone(geom))
-        end
-    end
-    @eval function unsafe_createlinearring($(typedargs...))
-        return createlinestring(Val{wkbLinearRing}()) do geom
-        for pt in zip($(args...))
-            addpoint!(geom, pt...)
-        end
-        # rewrap LinearRing as the corrent LineString/LineString25D
-        Geometry{$T}(GDAL.ogr_g_clone(geom))
-        end
-    end
-    for f in (:create, :unsafe_create)
-        f1 = Symbol("$(f)linestring")
         T = Symbol("wkbLineString" * typesuffix)
-        @eval function $f1($(typedargs...))
-            geom = $f1(Val{$T}())
-            for pt in zip($(args...))
-                addpoint!(geom, pt...)
+        @eval function createlinearring($(typedargs...))
+            return createlinestring(Val{wkbLinearRing}()) do geom
+                for pt in zip($(args...))
+                    addpoint!(geom, pt...)
+                end
+                # rewrap LinearRing as the corrent LineString/LineString25D
+                return IGeometry{$T}(GDAL.ogr_g_clone(geom))
             end
-            return geom
         end
-        f1 = Symbol("$(f)polygon")
-        T = Symbol("wkbPolygon" * typesuffix)
-        @eval function $f1($(typedargs...))
-            geom = $f1(Val{$T}())
-            subgeom = unsafe_createlinearring($(args...))
-            result = GDAL.ogr_g_addgeometrydirectly(geom, subgeom)
-            @ogrerr result "Failed to add linearring."
-            return geom
+        @eval function unsafe_createlinearring($(typedargs...))
+            return createlinestring(Val{wkbLinearRing}()) do geom
+                for pt in zip($(args...))
+                    addpoint!(geom, pt...)
+                end
+                # rewrap LinearRing as the corrent LineString/LineString25D
+                return Geometry{$T}(GDAL.ogr_g_clone(geom))
+            end
         end
-        f1 = Symbol("$(f)multipoint")
-        T = Symbol("wkbMultiPoint" * typesuffix)
-        @eval function $f1($(typedargs...))
-            geom = $f1(Val{$T}())
-            for pt in zip($(args...))
-                subgeom = unsafe_createpoint(pt)
+        for f in (:create, :unsafe_create)
+            f1 = Symbol("$(f)linestring")
+            T = Symbol("wkbLineString" * typesuffix)
+            @eval function $f1($(typedargs...))
+                geom = $f1(Val{$T}())
+                for pt in zip($(args...))
+                    addpoint!(geom, pt...)
+                end
+                return geom
+            end
+            f1 = Symbol("$(f)polygon")
+            T = Symbol("wkbPolygon" * typesuffix)
+            @eval function $f1($(typedargs...))
+                geom = $f1(Val{$T}())
+                subgeom = unsafe_createlinearring($(args...))
                 result = GDAL.ogr_g_addgeometrydirectly(geom, subgeom)
-                @ogrerr result "Failed to add point."
+                @ogrerr result "Failed to add linearring."
+                return geom
             end
-            return geom
+            f1 = Symbol("$(f)multipoint")
+            T = Symbol("wkbMultiPoint" * typesuffix)
+            @eval function $f1($(typedargs...))
+                geom = $f1(Val{$T}())
+                for pt in zip($(args...))
+                    subgeom = unsafe_createpoint(pt)
+                    result = GDAL.ogr_g_addgeometrydirectly(geom, subgeom)
+                    @ogrerr result "Failed to add point."
+                end
+                return geom
+            end
         end
     end
-end
 end
 
 for f in (:create, :unsafe_create)

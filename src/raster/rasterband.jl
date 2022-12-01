@@ -56,8 +56,7 @@ width(band::AbstractRasterBand)::Integer = GDAL.gdalgetrasterbandxsize(band)
 
 Fetch the height in pixels of this band.
 """
-height(band::AbstractRasterBand)::Integer =
-    GDAL.gdalgetrasterbandysize(band)
+height(band::AbstractRasterBand)::Integer = GDAL.gdalgetrasterbandysize(band)
 
 """
     accessflag(band::AbstractRasterBand)
@@ -95,8 +94,7 @@ getdataset(band::AbstractRasterBand)::Dataset =
 Return a name for the units of this raster's values. For instance, it might be
 "m" for an elevation model in meters, or "ft" for feet.
 """
-getunittype(band::AbstractRasterBand)::String =
-    GDAL.gdalgetrasterunittype(band)
+getunittype(band::AbstractRasterBand)::String = GDAL.gdalgetrasterunittype(band)
 
 """
     setunittype!(band::AbstractRasterBand, unitstring::AbstractString)
@@ -157,8 +155,7 @@ and starting from -100.
 
 For file formats that don't know this intrinsically a value of one is returned.
 """
-getscale(band::AbstractRasterBand)::Real =
-    GDAL.gdalgetrasterscale(band, C_NULL)
+getscale(band::AbstractRasterBand)::Real = GDAL.gdalgetrasterscale(band, C_NULL)
 
 """
     setscale!(band::AbstractRasterBand, ratio::Real)
@@ -305,8 +302,7 @@ end
 
 Return the number of overview layers available, zero if none.
 """
-noverview(band::AbstractRasterBand)::Integer =
-    GDAL.gdalgetoverviewcount(band)
+noverview(band::AbstractRasterBand)::Integer = GDAL.gdalgetoverviewcount(band)
 
 """
     getoverview(band::IRasterBand, i::Integer)

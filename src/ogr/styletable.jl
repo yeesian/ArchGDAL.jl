@@ -341,14 +341,7 @@ function toRGBA(
     blue = Ref{Int32}(0)
     alpha = Ref{Int32}(0)
     result = Bool(
-        GDAL.ogr_st_getrgbfromstring(
-            styletool,
-            color,
-            red,
-            green,
-            blue,
-            alpha,
-        ),
+        GDAL.ogr_st_getrgbfromstring(styletool, color, red, green, blue, alpha),
     )
     result || error("Error in getting RGBA from Styletool")
     return (red[], green[], blue[], alpha[])

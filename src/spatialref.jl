@@ -226,10 +226,7 @@ function maybesetaxisorder!(
     order::Symbol,
 )::T where {T<:AbstractSpatialRef}
     if order == :trad
-        GDAL.osrsetaxismappingstrategy(
-            spref,
-            GDAL.OAMS_TRADITIONAL_GIS_ORDER,
-        )
+        GDAL.osrsetaxismappingstrategy(spref, GDAL.OAMS_TRADITIONAL_GIS_ORDER)
     elseif order != :compliant
         throw(
             ArgumentError(
@@ -746,9 +743,7 @@ function unsafe_createcoordtrans(
     source::AbstractSpatialRef,
     target::AbstractSpatialRef,
 )::CoordTransform
-    return CoordTransform(
-        GDAL.octnewcoordinatetransformation(source, target),
-    )
+    return CoordTransform(GDAL.octnewcoordinatetransformation(source, target))
 end
 
 "OGRCoordinateTransformation destructor."
