@@ -269,8 +269,7 @@ end
 
 Fetch list of (non-empty) metadata domains.
 """
-metadatadomainlist(obj)::Vector{String} =
-    GDAL.gdalgetmetadatadomainlist(obj)
+metadatadomainlist(obj)::Vector{String} = GDAL.gdalgetmetadatadomainlist(obj)
 
 """
     metadata(obj; domain::AbstractString = "")

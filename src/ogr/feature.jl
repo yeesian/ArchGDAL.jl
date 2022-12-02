@@ -82,8 +82,7 @@ Fetch number of fields on this feature.
 
 This will always be the same as the field count for the OGRFeatureDefn.
 """
-nfield(feature::AbstractFeature)::Integer =
-    GDAL.ogr_f_getfieldcount(feature)
+nfield(feature::AbstractFeature)::Integer = GDAL.ogr_f_getfieldcount(feature)
 
 """
     keys(feature::AbstractFeature)
@@ -730,8 +729,7 @@ Fetch number of geometry fields on this feature.
 
 This will always be the same as the geometry field count for OGRFeatureDefn.
 """
-ngeom(feature::AbstractFeature)::Integer =
-    GDAL.ogr_f_getgeomfieldcount(feature)
+ngeom(feature::AbstractFeature)::Integer = GDAL.ogr_f_getgeomfieldcount(feature)
 
 """
     getgeomdefn(feature::AbstractFeature, i::Integer)
@@ -919,12 +917,7 @@ function setfrom!(
     indices::Vector{Cint},
     forgiving::Bool = false,
 )::AbstractFeature
-    result = GDAL.ogr_f_setfromwithmap(
-        feature1,
-        feature2,
-        forgiving,
-        indices,
-    )
+    result = GDAL.ogr_f_setfromwithmap(feature1, feature2, forgiving, indices)
     @ogrerr result "OGRErr $result: Failed to set feature with map"
     return feature1
 end

@@ -211,14 +211,8 @@ function attributeio!(
     nrows::Integer,
     data::Vector{Float64},
 )::Vector{Float64}
-    result = GDAL.gdalratvaluesioasdouble(
-        rat,
-        access,
-        col,
-        startrow,
-        nrows,
-        data,
-    )
+    result =
+        GDAL.gdalratvaluesioasdouble(rat, access, col, startrow, nrows, data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
     return data
 end
@@ -231,14 +225,8 @@ function attributeio!(
     nrows::Integer,
     data::Vector{Cint},
 )::Vector{Cint}
-    result = GDAL.gdalratvaluesioasinteger(
-        rat,
-        access,
-        col,
-        startrow,
-        nrows,
-        data,
-    )
+    result =
+        GDAL.gdalratvaluesioasinteger(rat, access, col, startrow, nrows, data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
     return data
 end
@@ -251,14 +239,8 @@ function attributeio!(
     nrows::Integer,
     data::Vector{T},
 )::Vector{T} where {T<:AbstractString}
-    result = GDAL.gdalratvaluesioasstring(
-        rat,
-        access,
-        col,
-        startrow,
-        nrows,
-        data,
-    )
+    result =
+        GDAL.gdalratvaluesioasstring(rat, access, col, startrow, nrows, data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
     return data
 end
