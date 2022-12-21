@@ -24,8 +24,8 @@ function copywholeraster!(
     source::AbstractDataset,
     dest::D;
     options = StringList(C_NULL),
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata::Any = C_NULL,
+    progressfunc::Function = progressfunc_wrapper,
+    progressdata::Any = dummyprogress,
 )::D where {D<:AbstractDataset}
     result = GDAL.gdaldatasetcopywholeraster(
         source,
@@ -93,8 +93,8 @@ function unsafe_copy(
     driver::Driver = getdriver(dataset),
     strict::Bool = false,
     options = StringList(C_NULL),
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = progressfunc_wrapper,
+    progressdata = dummyprogress,
 )::Dataset
     return Dataset(
         GDAL.gdalcreatecopy(
@@ -152,8 +152,8 @@ function copy(
     driver::Driver = getdriver(dataset),
     strict::Bool = false,
     options = StringList(C_NULL),
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = progressfunc_wrapper,
+    progressdata = dummyprogress,
 )::IDataset
     return IDataset(
         GDAL.gdalcreatecopy(
@@ -954,8 +954,8 @@ function buildoverviews!(
     overviewlist::Vector{Cint};
     bandlist::Vector{Cint} = Cint[],
     resampling::AbstractString = "NEAREST",
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = progressfunc_wrapper,
+    progressdata = dummyprogress,
 )::T where {T<:AbstractDataset}
     result = GDAL.gdalbuildoverviews(
         dataset,
