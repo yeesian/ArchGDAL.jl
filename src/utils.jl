@@ -231,17 +231,21 @@ end
 macro cplprogress(progressfunc)
     @static if Sys.ARCH == :aarch64
         @warn "User provided progress functions are unsupported on this architecture."
-        return @cfunction(
-            GDAL.gdaldummyprogress,
-            Cint,
-            (Cdouble, Cstring, Ptr{Cvoid})
-        )
+        quote
+            @cfunction(
+                $(Expr(:$, esc(GDAL.gdaldummyprogress))),
+                Cint,
+                (Cdouble, Cstring, Ptr{Cvoid})
+            )
+        end
     else
-        return @cfunction(
-            $(esc(progressfunc)),
-            Cint,
-            (Cdouble, Cstring, Ptr{Cvoid})
-        )
+        quote
+            @cfunction(
+                $(Expr(:$, esc(progressfunc))),
+                Cint,
+                (Cdouble, Cstring, Ptr{Cvoid})
+            )
+        end
     end
 end
 
