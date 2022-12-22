@@ -228,7 +228,7 @@ macro cplwarn(code, message)
     end
 end
 
-function dummyprogress(progress, message = "")
+function showprogress(progress, message = "")
     print("$(round(Int, progress)*100)..$message")
     return true
 end
@@ -244,9 +244,9 @@ function progressfunc_wrapper(
 )::Cint
     pProgressArg == C_NULL && return true
     f = unsafe_pointer_to_objref(pProgressArg)
-    isa(f, Function) || return true
-    pszMessage == C_NULL && return f(dfComplete)
-    return f(dfComplete, unsafe_string(pszMessage))
+    isa(f, Ref) || return true
+    pszMessage == C_NULL && return f[](dfComplete)
+    return f[](dfComplete, unsafe_string(pszMessage))
 end
 
 macro cplprogress(progressfunc)

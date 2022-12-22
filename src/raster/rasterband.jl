@@ -291,7 +291,7 @@ function copywholeraster!(
         dest,
         options,
         @cplprogress(progressfunc),
-        progressdata,
+        Ref(progressdata),
     )
     @cplerr result "Failed to copy whole raster"
     return source
@@ -438,7 +438,7 @@ function regenerateoverviews!(
         overviewbands,
         resampling,
         @cplprogress(progressfunc),
-        progressdata,
+        Ref(progressdata),
     )
     @cplerr result "Failed to regenerate overviews"
     return band

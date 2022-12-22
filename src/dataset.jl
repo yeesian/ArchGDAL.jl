@@ -32,7 +32,7 @@ function copywholeraster!(
         dest,
         options,
         @cplprogress(progressfunc),
-        progressdata,
+        Ref(progressdata),
     )
     @cplerr result "Failed to copy whole raster"
     return dest
@@ -104,7 +104,7 @@ function unsafe_copy(
             strict,
             options,
             @cplprogress(progressfunc),
-            progressdata,
+            Ref(progressdata),
         ),
     )
 end
@@ -163,7 +163,7 @@ function copy(
             strict,
             options,
             @cplprogress(progressfunc),
-            progressdata,
+            Ref(progressdata),
         ),
     )
 end
@@ -965,7 +965,7 @@ function buildoverviews!(
         length(bandlist),
         bandlist,
         @cplprogress(progressfunc),
-        progressdata,
+        Ref(progressdata),
     )
     @cplerr result "Failed to build overviews"
     return dataset
