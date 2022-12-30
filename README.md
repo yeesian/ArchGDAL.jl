@@ -33,6 +33,8 @@ To test if it is installed correctly,
 pkg> test ArchGDAL
 ```
 
+Please see the [changelog](CHANGELOG.md) for any changes in the installed version.
+
 ## Getting Involved
 
 ### Community
