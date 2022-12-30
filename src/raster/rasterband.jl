@@ -283,15 +283,14 @@ function copywholeraster!(
     source::T,
     dest::AbstractRasterBand;
     options = StringList(C_NULL),
-    progressfunc::Function = progressfunc_wrapper,
-    progressdata = dummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::T where {T<:AbstractRasterBand}
     result = GDAL.gdalrasterbandcopywholeraster(
         source,
         dest,
         options,
-        @cplprogress(progressfunc),
-        Ref(progressdata),
+        @cplprogress(_progresscallback),
+        Ref(progressfunc),
     )
     @cplerr result "Failed to copy whole raster"
     return source
@@ -429,16 +428,15 @@ function regenerateoverviews!(
     band::T,
     overviewbands::Vector{<:AbstractRasterBand},
     resampling::AbstractString = "NEAREST",
-    progressfunc::Function = progressfunc_wrapper,
-    progressdata = dummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::T where {T<:AbstractRasterBand}
     result = GDAL.gdalregenerateoverviews(
         band,
         length(overviewbands),
         overviewbands,
         resampling,
-        @cplprogress(progressfunc),
-        Ref(progressdata),
+        @cplprogress(_progresscallback),
+        Ref(progressfunc),
     )
     @cplerr result "Failed to regenerate overviews"
     return band

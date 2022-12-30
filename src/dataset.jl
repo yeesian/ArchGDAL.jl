@@ -24,15 +24,14 @@ function copywholeraster!(
     source::AbstractDataset,
     dest::D;
     options = StringList(C_NULL),
-    progressfunc::Function = progressfunc_wrapper,
-    progressdata::Any = dummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::D where {D<:AbstractDataset}
     result = GDAL.gdaldatasetcopywholeraster(
         source,
         dest,
         options,
-        @cplprogress(progressfunc),
-        Ref(progressdata),
+        @cplprogress(_progresscallback),
+        Ref(progressfunc),
     )
     @cplerr result "Failed to copy whole raster"
     return dest
@@ -93,8 +92,7 @@ function unsafe_copy(
     driver::Driver = getdriver(dataset),
     strict::Bool = false,
     options = StringList(C_NULL),
-    progressfunc::Function = progressfunc_wrapper,
-    progressdata = dummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::Dataset
     return Dataset(
         GDAL.gdalcreatecopy(
@@ -103,8 +101,8 @@ function unsafe_copy(
             dataset,
             strict,
             options,
-            @cplprogress(progressfunc),
-            Ref(progressdata),
+            @cplprogress(_progresscallback),
+            Ref(progressfunc),
         ),
     )
 end
@@ -152,8 +150,7 @@ function copy(
     driver::Driver = getdriver(dataset),
     strict::Bool = false,
     options = StringList(C_NULL),
-    progressfunc::Function = progressfunc_wrapper,
-    progressdata = dummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::IDataset
     return IDataset(
         GDAL.gdalcreatecopy(
@@ -162,8 +159,8 @@ function copy(
             dataset,
             strict,
             options,
-            @cplprogress(progressfunc),
-            Ref(progressdata),
+            @cplprogress(_progresscallback),
+            Ref(progressfunc),
         ),
     )
 end
@@ -954,8 +951,7 @@ function buildoverviews!(
     overviewlist::Vector{Cint};
     bandlist::Vector{Cint} = Cint[],
     resampling::AbstractString = "NEAREST",
-    progressfunc::Function = progressfunc_wrapper,
-    progressdata = dummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::T where {T<:AbstractDataset}
     result = GDAL.gdalbuildoverviews(
         dataset,
@@ -964,8 +960,8 @@ function buildoverviews!(
         overviewlist,
         length(bandlist),
         bandlist,
-        @cplprogress(progressfunc),
-        Ref(progressdata),
+        @cplprogress(_progresscallback),
+        Ref(progressfunc),
     )
     @cplerr result "Failed to build overviews"
     return dataset
