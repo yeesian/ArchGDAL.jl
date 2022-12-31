@@ -288,7 +288,7 @@ function copywholeraster!(
         source,
         dest,
         options,
-        @_progresscallback(),
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
         Ref(progressfunc),
     )
     @cplerr result "Failed to copy whole raster"
@@ -433,7 +433,7 @@ function regenerateoverviews!(
         length(overviewbands),
         overviewbands,
         resampling,
-        @_progresscallback(),
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
         Ref(progressfunc),
     )
     @cplerr result "Failed to regenerate overviews"

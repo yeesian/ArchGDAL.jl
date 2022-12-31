@@ -256,6 +256,7 @@ function _progresscallback(
     pszMessage::Cstring,
     pProgressArg::Ptr{Cvoid},  # A pointer to Ref(_dummyprogress) by default
 )::Cint
+    @info dfComplete, pszMessage, pProgressArg
     pProgressArg == C_NULL && return true
     # User provided functions are wrapped in a Ref so the conversion to Ptr{Cvoid} works
     # Here we do the reverse, load the pointer and unwrap the ref, so we get the function.
@@ -267,15 +268,18 @@ function _progresscallback(
     return f(dfComplete, unsafe_string(pszMessage))::Bool
 end
 
-macro _progresscallback()
-    quote
-        @cfunction(
-            $(Expr(:$, esc(_progresscallback))),
-            Cint,
-            (Cdouble, Cstring, Ptr{Cvoid})
-        )
-    end
-end
+const _cprogresscallback =
+    @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid}))
+
+# macro _progresscallback()
+#     quote
+#         @cfunction(
+#             $(Expr(:$, esc(_progresscallback))),
+#             Cint,
+#             (Cdouble, Cstring, Ptr{Cvoid})
+#         )
+#     end
+# end
 
 # """
 # Load a `NULL`-terminated list of strings
