@@ -31,7 +31,7 @@ function copywholeraster!(
         dest,
         options,
         @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
-        Ref(progressfunc),
+        progressfunc,
     )
     @cplerr result "Failed to copy whole raster"
     return dest
@@ -102,7 +102,7 @@ function unsafe_copy(
             strict,
             options,
             @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
-            Ref(progressfunc),
+            progressfunc,
         ),
     )
 end
@@ -160,7 +160,7 @@ function copy(
             strict,
             options,
             @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
-            Ref(progressfunc),
+            progressfunc,
         ),
     )
 end
@@ -960,7 +960,7 @@ function buildoverviews!(
         length(bandlist),
         bandlist,
         @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
-        Ref(progressfunc),
+        progressfunc,
     )
     @cplerr result "Failed to build overviews"
     return dataset
