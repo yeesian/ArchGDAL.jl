@@ -267,24 +267,13 @@ function _progresscallback(
     return f(dfComplete, unsafe_string(pszMessage))::Bool
 end
 
-macro cplprogress(progressfunc)
-    @static if Sys.ARCH == :aarch64
-        @warn "User provided progress functions are unsupported on this architecture."
-        quote
-            @cfunction(
-                $(Expr(:$, esc(_progresscallback))),
-                Cint,
-                (Cdouble, Cstring, Ptr{Cvoid})
-            )
-        end
-    else
-        quote
-            @cfunction(
-                $(Expr(:$, esc(progressfunc))),
-                Cint,
-                (Cdouble, Cstring, Ptr{Cvoid})
-            )
-        end
+macro _progresscallback()
+    quote
+        @cfunction(
+            $(Expr(:$, esc(_progresscallback))),
+            Cint,
+            (Cdouble, Cstring, Ptr{Cvoid})
+        )
     end
 end
 

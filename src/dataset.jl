@@ -30,7 +30,7 @@ function copywholeraster!(
         source,
         dest,
         options,
-        @cplprogress(_progresscallback),
+        @_progresscallback(),
         Ref(progressfunc),
     )
     @cplerr result "Failed to copy whole raster"
@@ -101,7 +101,7 @@ function unsafe_copy(
             dataset,
             strict,
             options,
-            @cplprogress(_progresscallback),
+            @_progresscallback(),
             Ref(progressfunc),
         ),
     )
@@ -159,7 +159,7 @@ function copy(
             dataset,
             strict,
             options,
-            @cplprogress(_progresscallback),
+            @_progresscallback(),
             Ref(progressfunc),
         ),
     )
@@ -928,7 +928,7 @@ end
 
 """
     buildoverviews!(dataset::AbstractDataset, overviewlist::Vector{Cint};
-        bandlist, resampling="NEAREST", progressfunc, progressdata)
+        bandlist, resampling="NEAREST", progressfunc)
 
 Build raster overview(s).
 
@@ -943,8 +943,7 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `sampling`     one of "NEAREST" (default), "GAUSS","CUBIC","AVERAGE","MODE",
                  "AVERAGE_MAGPHASE" or "NONE" controlling the downsampling
                  method applied.
-* `progressfunc` a function to call to report progress, or `NULL`.
-* `progressdata` application data to pass to the progress function.
+* `progressfunc` a function to call to report progress
 """
 function buildoverviews!(
     dataset::T,
@@ -960,7 +959,7 @@ function buildoverviews!(
         overviewlist,
         length(bandlist),
         bandlist,
-        @cplprogress(_progresscallback),
+        @_progresscallback(),
         Ref(progressfunc),
     )
     @cplerr result "Failed to build overviews"

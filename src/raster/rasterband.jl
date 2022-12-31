@@ -257,7 +257,7 @@ end
 
 """
     copywholeraster!( source::AbstractRasterBand, dest::AbstractRasterBand;
-        [options, [progressdata, [progressfunc]]])
+        [options, [progressfunc]])
 
 Copy all raster band raster data.
 
@@ -277,7 +277,6 @@ More options may be supported in the future.
 * `dest`          the destination band
 * `options`       transfer hints in "StringList" Name=Value format.
 * `progressfunc`  progress reporting function.
-* `progressdata`  callback data for progress function.
 """
 function copywholeraster!(
     source::T,
@@ -289,7 +288,7 @@ function copywholeraster!(
         source,
         dest,
         options,
-        @cplprogress(_progresscallback),
+        @_progresscallback(),
         Ref(progressfunc),
     )
     @cplerr result "Failed to copy whole raster"
@@ -414,7 +413,6 @@ images in one file from another outside the overview architecture.
 * `resampling`      (optional) Resampling algorithm (eg. "AVERAGE"). default to
                     "NEAREST".
 * `progressfunc`    (optional) progress report function.
-* `progressdata`    (optional) progress function callback data.
 
 ### Additional Remarks
 The output bands need to exist in advance.
@@ -435,7 +433,7 @@ function regenerateoverviews!(
         length(overviewbands),
         overviewbands,
         resampling,
-        @cplprogress(_progresscallback),
+        @_progresscallback(),
         Ref(progressfunc),
     )
     @cplerr result "Failed to regenerate overviews"
