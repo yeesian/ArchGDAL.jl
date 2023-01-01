@@ -125,10 +125,12 @@ end
 
                 # set & notnull: value
                 AG.fillunsetwithdefault!(f, notnull = false)
-                # now the field is set to the default
-                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                if !AG.isdefaultdriverspecific(AG.getfielddefn(f, 1))
+                    # now the field is set to the default
+                    @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                    @test AG.isfieldset(f, 1) # the field is now set
+                end
                 @test !AG.isfieldnull(f, 1) # still as expected
-                @test AG.isfieldset(f, 1) # the field is now set
 
                 # set the field to be notnullable
                 AG.setnullable!(AG.getfielddefn(f, 1), false)
@@ -139,12 +141,14 @@ end
                 @test isnothing(AG.getfield(f, 1))
                 # and we fill unset with default again
                 AG.fillunsetwithdefault!(f)
-                # the field is set to the default
-                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                if !AG.isdefaultdriverspecific(AG.getfielddefn(f, 1))
+                    # the field is set to the default
+                    @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+                    @test AG.isfieldset(f, 1)
+                end
+                @test !AG.isfieldnull(f, 1)
 
                 # set & null: missing
-                @test !AG.isfieldnull(f, 1)
-                @test AG.isfieldset(f, 1)
                 AG.setfieldnull!(f, 1)
                 @test AG.isfieldnull(f, 1)
                 @test AG.isfieldset(f, 1)

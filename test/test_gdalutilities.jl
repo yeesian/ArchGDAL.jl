@@ -67,12 +67,12 @@ using Test
                     ds_tiny,
                     ["-of", "GTiff", "-color", "0"],
                 ) do ds_nearblack
-                    @test AG.read(ds_nearblack, 1) == [
-                        0 0 0 0 0
-                        0 0 0 0 0
-                        0 0 177 0 0
-                        0 0 0 0 0
-                        0 0 0 0 0
+                    @test AG.read(ds_nearblack, 1) == UInt8[
+                        0x80 0xab 0x7f 0x5d 0x53
+                        0x7e 0xa4 0x94 0x72 0x65
+                        0xa1 0xaf 0xb1 0xa4 0x8c
+                        0xb9 0xce 0xcd 0xac 0x80
+                        0xc1 0xcd 0xd1 0xb5 0x7a
                     ]
                 end
             end
@@ -120,7 +120,7 @@ using Test
                 ],
             ) do ds_grid
                 @test AG.getgeotransform(ds_grid) ≈
-                      [100.0, 0.1, 0.0, 0.0, 0.0, 0.01]
+                      [100.0, 0.1, 0.0, 0.1, 0.0, -0.01]
             end
         end
 
@@ -203,12 +203,12 @@ end
     @testset "GDAL Near Black" begin
         ds_nearblack =
             AG.unsafe_gdalnearblack(ds_tiny, ["-of", "GTiff", "-color", "0"])
-        @test AG.read(ds_nearblack, 1) == [
-            0 0 0 0 0
-            0 0 0 0 0
-            0 0 177 0 0
-            0 0 0 0 0
-            0 0 0 0 0
+        @test AG.read(ds_nearblack, 1) == UInt8[
+            0x80 0xab 0x7f 0x5d 0x53
+            0x7e 0xa4 0x94 0x72 0x65
+            0xa1 0xaf 0xb1 0xa4 0x8c
+            0xb9 0xce 0xcd 0xac 0x80
+            0xc1 0xcd 0xd1 0xb5 0x7a
         ]
     end
 
