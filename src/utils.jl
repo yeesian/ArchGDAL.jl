@@ -228,25 +228,41 @@ macro cplwarn(code, message)
     end
 end
 
-macro cplprogress(progressfunc)
-    @static if Sys.ARCH == :aarch64
-        @warn "User provided progress functions are unsupported on this architecture."
-        quote
-            @cfunction(
-                $(Expr(:$, esc(GDAL.gdaldummyprogress))),
-                Cint,
-                (Cdouble, Cstring, Ptr{Cvoid})
-            )
-        end
-    else
-        quote
-            @cfunction(
-                $(Expr(:$, esc(progressfunc))),
-                Cint,
-                (Cdouble, Cstring, Ptr{Cvoid})
-            )
-        end
-    end
+"""
+Default progress function, which logs no progress.
+A progress function should return true to continue, or false to abort.
+"""
+function _dummyprogress(progress::Cdouble, message = "")::Bool
+    return true
+end
+
+"""
+    _progresscallback(dfComplete::Cdouble, pszMessage::Cstring, pProgressArg::Ptr{Cvoid})::Cint
+
+The progress callback function to be passed to GDAL. Users can provide their own progress function by
+passing a function of the form `f(dfComplete::Cdouble, pszMessage::Cstring)::Bool` to the
+`progressfunc` keyword argument of the functions that implement it, which should be wrapped in a `Ref`.
+
+In essence, we pass a pointer to the (user-provided) progress function to GDAL, and GDAL passes it back to us,
+including the progress ratio and message. We then call the user-provided function with these arguments.
+
+### Parameters
+* `dfComplete` – completion ratio from 0.0 to 1.0.
+* `pszMessage` – optional message (made available as an argument to the user-defined progress function).
+* `pProgressArg` – callback data argument (i.e. user-defined progress function, see `_dummyprogress`).
+"""
+function _progresscallback(
+    dfComplete::Cdouble,
+    pszMessage::Cstring,
+    pProgressArg::Ptr{Cvoid},  # A pointer to Ref(_dummyprogress) by default
+)::Cint
+    pProgressArg == C_NULL && return true
+    # User provided functions are wrapped in a Ref so the conversion to Ptr{Cvoid} works
+    # Here we do the reverse, load the pointer and unwrap the ref, so we get the function.
+    f = unsafe_pointer_to_objref(pProgressArg)
+    isa(f, Function) || return true
+    pszMessage == C_NULL && return f(dfComplete)::Bool
+    return f(dfComplete, unsafe_string(pszMessage))::Bool
 end
 
 # """

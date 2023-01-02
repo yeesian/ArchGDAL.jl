@@ -1,6 +1,6 @@
 """
     copywholeraster(source::AbstractDataset, dest::AbstractDataset;
-        <keyword arguments>)
+        options::StringList, progressfunc::Function)
 
 Copy all dataset raster data.
 
@@ -14,6 +14,9 @@ pixel interleaved operation and `\"COMPRESSED=YES\"` to force alignment on
 target dataset block sizes to achieve best compression. More options may be
 supported in the future.
 
+For progress reporting one can pass `progressfunc` function(::Float64, ::String)::Bool
+to call to report progress.
+
 ### Additional Remarks
 This function is primarily intended to support implementation of driver
 specific `createcopy()` functions. It implements efficient copying, in
@@ -24,15 +27,14 @@ function copywholeraster!(
     source::AbstractDataset,
     dest::D;
     options = StringList(C_NULL),
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata::Any = C_NULL,
+    progressfunc::Function = _dummyprogress,
 )::D where {D<:AbstractDataset}
     result = GDAL.gdaldatasetcopywholeraster(
         source,
         dest,
         options,
-        @cplprogress(progressfunc),
-        progressdata,
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+        progressfunc,
     )
     @cplerr result "Failed to copy whole raster"
     return dest
@@ -56,10 +58,11 @@ provided template dataset.
 * `filename`      the filename for the new dataset. UTF-8 encoded.
 * `driver`        the driver to use for creating the new dataset
 * `strict`        ``true`` if the copy must be strictly equivalent, or more
-normally ``false`` if the copy may adapt as needed for the output format.
+                  normally ``false`` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
-of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
-avoid prior destruction of existing dataset.
+                  of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+                  avoid prior destruction of existing dataset.
+* `progressfunc`  a function(::Float64, ::String)::Bool to call to report progress
 
 ### Returns
 a pointer to the newly created dataset (may be read-only access).
@@ -93,8 +96,7 @@ function unsafe_copy(
     driver::Driver = getdriver(dataset),
     strict::Bool = false,
     options = StringList(C_NULL),
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = _dummyprogress,
 )::Dataset
     return Dataset(
         GDAL.gdalcreatecopy(
@@ -103,8 +105,8 @@ function unsafe_copy(
             dataset,
             strict,
             options,
-            @cplprogress(progressfunc),
-            progressdata,
+            @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+            progressfunc,
         ),
     )
 end
@@ -126,10 +128,11 @@ provided template dataset.
 * `filename`      the filename for the new dataset. UTF-8 encoded.
 * `driver`        the driver to use for creating the new dataset
 * `strict`        ``true`` if the copy must be strictly equivalent, or more
-    normally ``false`` if the copy may adapt as needed for the output format.
+                  normally ``false`` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
-of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
-avoid prior destruction of existing dataset.
+                  of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+                  avoid prior destruction of existing dataset.
+* `progressfunc`  a function(::Float64, ::String)::Bool to call to report progress
 
 ### Example
 ```
@@ -152,8 +155,7 @@ function copy(
     driver::Driver = getdriver(dataset),
     strict::Bool = false,
     options = StringList(C_NULL),
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = _dummyprogress,
 )::IDataset
     return IDataset(
         GDAL.gdalcreatecopy(
@@ -162,8 +164,8 @@ function copy(
             dataset,
             strict,
             options,
-            @cplprogress(progressfunc),
-            progressdata,
+            @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+            progressfunc,
         ),
     )
 end
@@ -931,7 +933,7 @@ end
 
 """
     buildoverviews!(dataset::AbstractDataset, overviewlist::Vector{Cint};
-        bandlist, resampling="NEAREST", progressfunc, progressdata)
+        bandlist, resampling="NEAREST", progressfunc)
 
 Build raster overview(s).
 
@@ -946,16 +948,14 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `sampling`     one of "NEAREST" (default), "GAUSS","CUBIC","AVERAGE","MODE",
                  "AVERAGE_MAGPHASE" or "NONE" controlling the downsampling
                  method applied.
-* `progressfunc` a function to call to report progress, or `NULL`.
-* `progressdata` application data to pass to the progress function.
+* `progressfunc` a function(::Float64, ::String)::Bool to call to report progress
 """
 function buildoverviews!(
     dataset::T,
     overviewlist::Vector{Cint};
     bandlist::Vector{Cint} = Cint[],
     resampling::AbstractString = "NEAREST",
-    progressfunc::Function = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = _dummyprogress,
 )::T where {T<:AbstractDataset}
     result = GDAL.gdalbuildoverviews(
         dataset,
@@ -964,8 +964,8 @@ function buildoverviews!(
         overviewlist,
         length(bandlist),
         bandlist,
-        @cplprogress(progressfunc),
-        progressdata,
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+        progressfunc,
     )
     @cplerr result "Failed to build overviews"
     return dataset

@@ -257,7 +257,7 @@ end
 
 """
     copywholeraster!( source::AbstractRasterBand, dest::AbstractRasterBand;
-        [options, [progressdata, [progressfunc]]])
+        [options, [progressfunc]])
 
 Copy all raster band raster data.
 
@@ -276,22 +276,20 @@ More options may be supported in the future.
 * `source`        the source band
 * `dest`          the destination band
 * `options`       transfer hints in "StringList" Name=Value format.
-* `progressfunc`  progress reporting function.
-* `progressdata`  callback data for progress function.
+* `progressfunc`  a function(::Float64, ::String)::Bool to call to report progress
 """
 function copywholeraster!(
     source::T,
     dest::AbstractRasterBand;
     options = StringList(C_NULL),
-    progressdata = C_NULL,
-    progressfunc::Function = GDAL.gdaldummyprogress,
+    progressfunc::Function = _dummyprogress,
 )::T where {T<:AbstractRasterBand}
     result = GDAL.gdalrasterbandcopywholeraster(
         source,
         dest,
         options,
-        @cplprogress(progressfunc),
-        progressdata,
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+        progressfunc,
     )
     @cplerr result "Failed to copy whole raster"
     return source
@@ -414,8 +412,7 @@ images in one file from another outside the overview architecture.
 ### Keyword Arguments
 * `resampling`      (optional) Resampling algorithm (eg. "AVERAGE"). default to
                     "NEAREST".
-* `progressfunc`    (optional) progress report function.
-* `progressdata`    (optional) progress function callback data.
+* `progressfunc`    (optional) a function(::Float64, ::String)::Bool to call to report progress
 
 ### Additional Remarks
 The output bands need to exist in advance.
@@ -429,18 +426,15 @@ function regenerateoverviews!(
     band::T,
     overviewbands::Vector{<:AbstractRasterBand},
     resampling::AbstractString = "NEAREST",
-    # progressfunc::Function      = GDAL.gdaldummyprogress,
-    progressdata = C_NULL,
+    progressfunc::Function = _dummyprogress,
 )::T where {T<:AbstractRasterBand}
-    cfunc =
-        @cfunction(GDAL.gdaldummyprogress, Cint, (Cdouble, Cstring, Ptr{Cvoid}))
     result = GDAL.gdalregenerateoverviews(
         band,
         length(overviewbands),
         overviewbands,
         resampling,
-        cfunc,
-        progressdata,
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+        progressfunc,
     )
     @cplerr result "Failed to regenerate overviews"
     return band

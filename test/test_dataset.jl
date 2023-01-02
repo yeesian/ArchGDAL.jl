@@ -29,6 +29,12 @@ end
     @testset "Test methods for raster dataset" begin
         AG.read("data/utmsmall.tif") do dataset
             @testset "Method 1" begin
+                io = IOBuffer()
+                function showprogress(progress, message = "")
+                    print(io, round(Int, progress*100))
+                    return true
+                end
+
                 AG.copy(
                     dataset,
                     filename = "/vsimem/utmcopy.tif",
@@ -38,7 +44,13 @@ end
                         @test AG.noverview(band) == 0
                         AG.buildoverviews!(copydataset, Cint[2, 4, 8])
                         @test AG.noverview(band) == 3
-                        AG.copywholeraster!(dataset, copydataset)
+                        AG.copywholeraster!(
+                            dataset,
+                            copydataset,
+                            progressfunc = showprogress,
+                        )
+                        seek(io, 0)
+                        @test occursin("100", String(readavailable(io)))
                         return nothing
                     end
                 end
