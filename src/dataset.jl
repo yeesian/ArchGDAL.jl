@@ -1,6 +1,6 @@
 """
     copywholeraster(source::AbstractDataset, dest::AbstractDataset;
-        <keyword arguments>)
+        options::StringList, progressfunc::Function)
 
 Copy all dataset raster data.
 
@@ -13,6 +13,9 @@ Currently the only `options` supported are : `\"INTERLEAVE=PIXEL\"` to force
 pixel interleaved operation and `\"COMPRESSED=YES\"` to force alignment on
 target dataset block sizes to achieve best compression. More options may be
 supported in the future.
+
+For progress reporting one can pass `progressfunc` function(::Float64, ::String)::Bool
+to call to report progress.
 
 ### Additional Remarks
 This function is primarily intended to support implementation of driver
@@ -55,10 +58,11 @@ provided template dataset.
 * `filename`      the filename for the new dataset. UTF-8 encoded.
 * `driver`        the driver to use for creating the new dataset
 * `strict`        ``true`` if the copy must be strictly equivalent, or more
-normally ``false`` if the copy may adapt as needed for the output format.
+                  normally ``false`` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
-of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
-avoid prior destruction of existing dataset.
+                  of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+                  avoid prior destruction of existing dataset.
+* `progressfunc`  a function(::Float64, ::String)::Bool to call to report progress
 
 ### Returns
 a pointer to the newly created dataset (may be read-only access).
@@ -124,10 +128,11 @@ provided template dataset.
 * `filename`      the filename for the new dataset. UTF-8 encoded.
 * `driver`        the driver to use for creating the new dataset
 * `strict`        ``true`` if the copy must be strictly equivalent, or more
-    normally ``false`` if the copy may adapt as needed for the output format.
+                  normally ``false`` if the copy may adapt as needed for the output format.
 * `options`       additional format dependent options controlling creation
-of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
-avoid prior destruction of existing dataset.
+                  of the output file. `The APPEND_SUBDATASET=YES` option can be specified to
+                  avoid prior destruction of existing dataset.
+* `progressfunc`  a function(::Float64, ::String)::Bool to call to report progress
 
 ### Example
 ```
@@ -943,7 +948,7 @@ returned, and CPLGetLastErrorNo() will return CPLE_NotSupported.
 * `sampling`     one of "NEAREST" (default), "GAUSS","CUBIC","AVERAGE","MODE",
                  "AVERAGE_MAGPHASE" or "NONE" controlling the downsampling
                  method applied.
-* `progressfunc` a function to call to report progress
+* `progressfunc` a function(::Float64, ::String)::Bool to call to report progress
 """
 function buildoverviews!(
     dataset::T,

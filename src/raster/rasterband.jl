@@ -276,7 +276,7 @@ More options may be supported in the future.
 * `source`        the source band
 * `dest`          the destination band
 * `options`       transfer hints in "StringList" Name=Value format.
-* `progressfunc`  progress reporting function.
+* `progressfunc`  a function(::Float64, ::String)::Bool to call to report progress
 """
 function copywholeraster!(
     source::T,
@@ -412,7 +412,7 @@ images in one file from another outside the overview architecture.
 ### Keyword Arguments
 * `resampling`      (optional) Resampling algorithm (eg. "AVERAGE"). default to
                     "NEAREST".
-* `progressfunc`    (optional) progress report function.
+* `progressfunc`    (optional) a function(::Float64, ::String)::Bool to call to report progress
 
 ### Additional Remarks
 The output bands need to exist in advance.
