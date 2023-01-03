@@ -31,7 +31,7 @@ end
             @testset "Method 1" begin
                 io = IOBuffer()
                 function showprogress(progress, message = "")
-                    print(io, round(Int, progress*100))
+                    print(io, round(Int, progress * 100))
                     return true
                 end
 
