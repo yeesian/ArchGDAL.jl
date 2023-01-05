@@ -17,6 +17,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - breaking: Updated compat for GDAL.jl 1.5 and fixed tests for GDAL 3.6. These include changes to `gdalnearblack`, `fillunsetwithdefault!` and `gdalgetgeotransform`.
+- breaking: Use `GeoInterface.convert` instead of `convert` to convert geometries from other
+  packages to ArchGDAL via the GeoInterface. Example: `GeoInterface.convert(AG.IGeometry, geom)`
 
 ## [0.9.4] - 2022-12-30
 
