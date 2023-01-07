@@ -1005,7 +1005,7 @@ import GeoFormatTypes as GFT
         GI.getgeom(::GI.LineStringTrait, geom::MyLine, i) = MyPoint()
 
         geom = MyLine()
-        ag_geom = convert(AG.IGeometry, geom)
+        ag_geom = GI.convert(AG.IGeometry, geom)
         GI.coordinates(ag_geom) == [[1, 2], [1, 2]]
     end
 end
