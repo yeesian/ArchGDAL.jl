@@ -1,5 +1,7 @@
 using Extents
 
+geointerface_geomtype(::GeoInterface.AbstractGeometryTrait) = IGeometry
+
 const lookup_method = Dict{DataType,Function}(
     GeoInterface.PointTrait => createpoint,
     GeoInterface.MultiPointTrait => createmultipoint,
