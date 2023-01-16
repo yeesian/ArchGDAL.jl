@@ -1007,9 +1007,13 @@ import GeoFormatTypes as GFT
         geom = MyLine()
         ag_geom = GI.convert(AG.IGeometry, geom)
         @test ag_geom isa AG.IGeometry{AG.wkbLineString}
-        @test GI.coordinates(ag_geom) == GI.coordinates(ag_geom) == [[1, 2], [1, 2]]
+        @test GI.coordinates(ag_geom) ==
+              GI.coordinates(ag_geom) ==
+              [[1, 2], [1, 2]]
         ag_geom1 = GI.convert(AG, geom)
         @test ag_geom1 isa AG.IGeometry{AG.wkbLineString}
-        @test GI.coordinates(ag_geom1) == GI.coordinates(ag_geom) == [[1, 2], [1, 2]]
+        @test GI.coordinates(ag_geom1) ==
+              GI.coordinates(ag_geom) ==
+              [[1, 2], [1, 2]]
     end
 end
