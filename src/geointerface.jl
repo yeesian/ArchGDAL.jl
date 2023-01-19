@@ -272,6 +272,10 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         end
     end
 
+    function GeoInterface.centroid(::GeometryTraits, geom::AbstractGeometry)
+        return centroid(geom)
+    end
+
     function GeoInterface.asbinary(::GeometryTraits, geom::AbstractGeometry)
         return toWKB(geom)
     end
