@@ -800,7 +800,7 @@ function unsafe_executesql(
     dataset::AbstractDataset,
     query::AbstractString;
     dialect::AbstractString = "",
-    spatialfilter::Geometry = Geometry(C_NULL),
+    spatialfilter::AbstractGeometry = Geometry(C_NULL),
 )::FeatureLayer
     return FeatureLayer(
         GDAL.gdaldatasetexecutesql(dataset, query, spatialfilter, dialect),
