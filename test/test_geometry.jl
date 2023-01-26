@@ -4,7 +4,7 @@ import ArchGDAL as AG
 import GeoFormatTypes as GFT
 
 @testset "test_geometry.jl" begin
-    @testset "GeoInterface" begin
+    @testset "GeoInterface" begin 
         AG.createpoint(100, 70) do point
             @test GI.geomtrait(point) == GI.PointTrait()
             @test GI.testgeometry(point)
@@ -400,6 +400,9 @@ import GeoFormatTypes as GFT
                     atol = 1e-6,
                 )
                 @test AG.toWKT(geom) == "POLYGON ((1 4,2 5,3 6))"
+                @test_throws "Points of LinearRing do not form a closed linestring" GI.centroid(geom)
+                AG.closerings!(geom)
+                @test all(GI.coordinates(GI.centroid(geom)) .== (2, 5))
             end
             AG.createpolygon(
                 [1.0, 2.0, 3.0],
@@ -542,6 +545,9 @@ import GeoFormatTypes as GFT
                       "((0 0,0 4,4 4,4 0),(1 1,1 3,3 3,3 1))," *
                       "((10 0,10 4,14 4,14 0),(11 1,11 3,13 3,13 1)))"
             end
+            @test_throws "Points of LinearRing do not form a closed linestring" GI.centroid(geom)
+            AG.closerings!(geom)            
+            @test all(GI.coordinates(GI.centroid(geom)) .== (7, 2))
         end
 
         @testset "circularstring" begin
