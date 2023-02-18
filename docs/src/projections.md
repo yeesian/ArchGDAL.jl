@@ -63,7 +63,11 @@ end
 ```
 
 ```@example projections
+using DataFrames
 import GeoFormatTypes as GFT
+
+coords = zip(rand(10), rand(10))
+df = DataFrame(geom=createpoint.(coords), name="test");
 df.geom = reproject(df.geom, GFT.EPSG(4326), GFT.EPSG(28992))
 ```
 
