@@ -62,6 +62,11 @@ ArchGDAL.createcoordtrans(source, target) do transform
 end
 ```
 
+```@example projections
+import GeoFormatTypes as GFT
+df.geom = reproject(df.geom, GFT.EPSG(4326), GFT.EPSG(28992))
+```
+
 ## Reprojecting from a layer
 ```@setup projections
 # Getting vector data
