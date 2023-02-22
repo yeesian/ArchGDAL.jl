@@ -169,6 +169,19 @@ function reproject(
     end
 end
 
+function reproject(
+    geom,
+    sourcecrs::GFT.GeoFormat,
+    targetcrs::GFT.GeoFormat;
+    kwargs...,
+)
+    if GI.isgeometry(geom)
+        reproject(to_gdal(geom), sourcecrs, targetcrs; kwargs...)
+    elseif geom isa AbstractArray
+        reproject(to_gdal.(geom), Ref(sourcecrs), Ref(targetcrs); kwargs...)
+    end
+end
+
 """
     crs2transform(f::Function, sourcecrs::GeoFormat, targetcrs::GeoFormat;
         kwargs...)

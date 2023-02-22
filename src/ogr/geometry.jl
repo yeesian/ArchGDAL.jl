@@ -1,10 +1,10 @@
 # Local convert method converts any GeoInterface geometry
 # to the equivalent ArchGDAL geometry
-function to_gdal(geom) 
+function to_gdal(geom)
     GeoInterface.isgeometry(geom) || _not_a_geom_error()
     trait = GeoInterface.geomtrait(geom)
     typ = geointerface_geomtype(trait)
-    GeoInterface.to_gdal(type, trait, geom)
+    GeoInterface.convert(type, trait, geom)
 end
 
 @noinline _not_a_geom_error() =
@@ -328,7 +328,7 @@ function toWKB(
     @ogrerr result "Failed to export geometry to WKB"
     return buffer
 end
-toWKB(geom order::OGRwkbByteOrder=wkbNDR) = toWKB(to_gdal(geom), order)
+toWKB(geom, order::OGRwkbByteOrder=wkbNDR) = toWKB(to_gdal(geom), order)
 
 """
     toISOWKB(geom::AbstractGeometry, order::OGRwkbByteOrder = wkbNDR)
@@ -348,7 +348,7 @@ function toISOWKB(
     @ogrerr result "Failed to export geometry to ISO WKB"
     return buffer
 end
-toISOWKB(geom order::OGRwkbByteOrder=wkbNDR) = toISOWKB(to_gdal(geom), order)
+toISOWKB(geom, order::OGRwkbByteOrder=wkbNDR) = toISOWKB(to_gdal(geom), order)
 
 """
     wkbsize(geom::AbstractGeometry)
@@ -429,7 +429,9 @@ Convert any GeoInterface compatible geometry to strictly 2D.
 
 A new geometry object will always be created.
 """
-flattento2d(geom::G)::G where {G<:AbstractGeometry} = flattento2d(clone(geom))
+function flattento2d(geom::G)::G where {G<:AbstractGeometry}
+    flattento2d(clone(geom))
+end
 flattento2d(geom) = flattento2d!(to_gdal(geom))
 
 """
@@ -452,7 +454,9 @@ Convert any GeoInterface compatible geometry to strictly 2D.
 
 A new geometry object will always be created.
 """
-closerings(geom::G)::G where {G<:AbstractGeometry} = closerings(clone(geom))
+function closerings(geom::G)::G where {G<:AbstractGeometry}
+    closerings(clone(geom))
+end
 closerings(geom) = closerings!(to_gdal(geom))
 
 """
@@ -606,8 +610,9 @@ always creating a new object.
 * `geom`: any GeoInterface compatible geometry.
 * `coordtransform`: transformation to apply.
 """
-transform(geom::G, coordtransform::CoordTransform)::G where {G<:AbstractGeometry} =
+function transform(geom::G, coordtransform::CoordTransform)::G where {G<:AbstractGeometry}
     transform!(clone(geom), coordtransform)
+end
 transform(geom, coordtransform::CoordTransform) =
     transform!(to_gdal(geom), coordtransform)
 
@@ -672,7 +677,7 @@ simplifypreservetopology(geom, tol::Real) = simplifypreservetopology(to_gdal(geo
 
 unsafe_simplifypreservetopology(geom::AbstractGeometry, tol::Real)::Geometry =
     Geometry(GDAL.ogr_g_simplifypreservetopology(geom, tol))
-unsafe_simplifypreservetopology(geom, tol::Real) = 
+unsafe_simplifypreservetopology(geom, tol::Real) =
     unsafe_simplifypreservetopology(to_gdal(geom), tol)
 
 """
@@ -734,8 +739,9 @@ computation is performed in 2d only
 * `geom`: the geometry to segmentize
 * `maxlength`: the maximum distance between 2 points after segmentization
 """
-segmentize(geom::G, maxlength::Real)::G where {G<:AbstractGeometry} =
+function segmentize(geom::G, maxlength::Real)::G where {G<:AbstractGeometry}
     segmentize!(clone(geom), maxlength)
+end
 segmentize(geom, maxlength::Real) = segmentize!(to_gdal(geom), maxlength)
 
 """
@@ -905,11 +911,11 @@ two geometries intersect.
 """
 intersection(g1::AbstractGeometry, g2::AbstractGeometry)::IGeometry =
     IGeometry(GDAL.ogr_g_intersection(g1, g2))
-intersection(g1, g2) = intersection(to_gdal(g1), to_gdal(g2)) 
+intersection(g1, g2) = intersection(to_gdal(g1), to_gdal(g2))
 
 unsafe_intersection(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_intersection(g1, g2))
-unsafe_intersection(g1, g2) = unsafe_intersection(to_gdal(g1), to_gdal(g2)) 
+unsafe_intersection(g1, g2) = unsafe_intersection(to_gdal(g1), to_gdal(g2))
 
 """
     union(g1::AbstractGeometry, g2::AbstractGeometry)
@@ -918,11 +924,11 @@ Returns a new geometry representing the union of the geometries.
 """
 union(g1::AbstractGeometry, g2::AbstractGeometry)::IGeometry =
     IGeometry(GDAL.ogr_g_union(g1, g2))
-union(g1, g2) = union(to_gdal(g1), to_gdal(g2)) 
+union(g1, g2) = union(to_gdal(g1), to_gdal(g2))
 
 unsafe_union(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_union(g1, g2))
-unsafe_union(g1, g2) = unsafe_union(to_gdal(g1), to_gdal(g2)) 
+unsafe_union(g1, g2) = unsafe_union(to_gdal(g1), to_gdal(g2))
 
 """
     pointonsurface(geom::AbstractGeometry)
@@ -936,11 +942,11 @@ multisurfaces (multipolygons).
 """
 pointonsurface(geom::AbstractGeometry)::IGeometry =
     IGeometry(GDAL.ogr_g_pointonsurface(geom))
-pointonsurface(g1, g2) = pointonsurface(to_gdal(g1), to_gdal(g2)) 
+pointonsurface(g1, g2) = pointonsurface(to_gdal(g1), to_gdal(g2))
 
 unsafe_pointonsurface(geom::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_pointonsurface(geom))
-unsafe_pointonsurface(g1, g2) = unsafe_pointonsurface(to_gdal(g1), to_gdal(g2)) 
+unsafe_pointonsurface(g1, g2) = unsafe_pointonsurface(to_gdal(g1), to_gdal(g2))
 
 """
     difference(g1, g2)
@@ -954,11 +960,11 @@ if the difference is empty.
 """
 difference(g1::AbstractGeometry, g2::AbstractGeometry)::IGeometry =
     IGeometry(GDAL.ogr_g_difference(g1, g2))
-difference(g1, g2) = difference(to_gdal(g1), to_gdal(g2)) 
+difference(g1, g2) = difference(to_gdal(g1), to_gdal(g2))
 
 unsafe_difference(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_difference(g1, g2))
-unsafe_difference(g1, g2) = unsafe_difference(to_gdal(g1), to_gdal(g2)) 
+unsafe_difference(g1, g2) = unsafe_difference(to_gdal(g1), to_gdal(g2))
 
 """
     symdifference(g1, g2)
@@ -968,11 +974,11 @@ or NULL if the difference is empty or an error occurs.
 """
 symdifference(g1::AbstractGeometry, g2::AbstractGeometry)::IGeometry =
     IGeometry(GDAL.ogr_g_symdifference(g1, g2))
-symdifference(g1, g2) = symdifference(to_gdal(g1), to_gdal(g2)) 
+symdifference(g1, g2) = symdifference(to_gdal(g1), to_gdal(g2))
 
 unsafe_symdifference(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_symdifference(g1, g2))
-unsafe_symdifference(g1, g2) = unsafe_symdifference(to_gdal(g1), to_gdal(g2)) 
+unsafe_symdifference(g1, g2) = unsafe_symdifference(to_gdal(g1), to_gdal(g2))
 
 """
     distance(g1, g2)
@@ -981,7 +987,7 @@ Returns the distance between the geometries or -1 if an error occurs.
 """
 distance(g1::AbstractGeometry, g2::AbstractGeometry)::Float64 =
     GDAL.ogr_g_distance(g1, g2)
-distance(g1, g2) = distance(to_gdal(g1), to_gdal(g2)) 
+distance(g1, g2) = distance(to_gdal(g1), to_gdal(g2))
 
 """
     geomlength(geom)
