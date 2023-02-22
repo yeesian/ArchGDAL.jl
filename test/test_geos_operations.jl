@@ -1,5 +1,6 @@
 using Test
 import ArchGDAL as AG
+import GeoInterface as GI
 using Extents
 
 @testset "test_geos_operations.jl" begin
@@ -122,6 +123,8 @@ using Extents
                 @test AG.toWKT(result) == wkt2
             end
             @test AG.toWKT(f(geom)) == wkt2
+            wrapped_geom = GI.convert(GI, geom)
+            @test AG.toWKT(f(wrapped_geom)) == wkt2
         end
     end
 
@@ -164,6 +167,9 @@ using Extents
                     @test AG.toWKT(result) == wkt3
                 end
                 @test AG.toWKT(f(geom1, geom2)) == wkt3
+                wrapped_geom1 = GI.convert(GI, geom1)
+                wrapped_geom2 = GI.convert(GI, geom2)
+                @test AG.toWKT(f(wrapped_geom1, wrapped_geom2)) == wkt3
             end
         end
     end
@@ -176,6 +182,9 @@ using Extents
         AG.fromWKT(wkt1) do geom1
             AG.fromWKT(wkt2) do geom2
                 @test AG.toWKT(f(geom1, geom2)) == wkt3
+                wrapped_geom1 = GI.convert(GI, geom1)
+                wrapped_geom2 = GI.convert(GI, geom2)
+                @test AG.toWKT(f(wrapped_geom1, wrapped_geom2)) == wkt3
             end
         end
     end
@@ -183,6 +192,11 @@ using Extents
     function test_predicate(f::Function, wkt1, wkt2, result::Bool)
         AG.fromWKT(wkt1) do geom1
             AG.fromWKT(wkt2) do geom2
+                # Test GDAL geoms
+                @test f(geom1, geom2) == result
+                # Test GeoInterface geoms
+                wrapped_geom1 = GI.convert(GI, geom1)
+                wrapped_geom2 = GI.convert(GI, geom2)
                 @test f(geom1, geom2) == result
             end
         end

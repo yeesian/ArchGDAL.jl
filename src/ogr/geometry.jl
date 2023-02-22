@@ -4,7 +4,7 @@ function to_gdal(geom)
     GeoInterface.isgeometry(geom) || _not_a_geom_error()
     trait = GeoInterface.geomtrait(geom)
     typ = geointerface_geomtype(trait)
-    GeoInterface.convert(type, trait, geom)
+    GeoInterface.convert(typ, trait, geom)
 end
 
 @noinline _not_a_geom_error() =
