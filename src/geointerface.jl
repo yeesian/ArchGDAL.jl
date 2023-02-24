@@ -139,6 +139,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         geom::AbstractGeometry,
         i::Integer,
     )
+        p = getpoint(geom, i - 1)
         if is3d(geom)
             return (p[1], p[2], p[3])
         else
