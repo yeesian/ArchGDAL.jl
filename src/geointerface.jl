@@ -282,15 +282,19 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
 
     function GeoInterface.convert(
         ::Type{T},
-        type::GeometryTraits,
+        trait::GeometryTraits,
         geom,
     ) where {T<:IGeometry}
-        f = get(lookup_method, typeof(type), nothing)
-        isnothing(f) && error(
-            "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
-        )
-        return f(GeoInterface.coordinates(geom))
+        f = get(lookup_method, typeof(trait), nothing)
+        isnothing(f) && _convert_error(geom, trait)
+        coords = GeoInterface.coordinates(geom)
+        @show typeof(coords)
+        return f(coords)
     end
+
+    @noinline _convert_error(geom, trait) = error(
+        "Cannot convert an object of $(typeof(geom)) with the $(typeof(trait)) trait (yet). Please report an issue.",
+    )
 
     function GeoInterface.geomtrait(
         geom::Union{map(T -> AbstractGeometry{T}, pointtypes)...},

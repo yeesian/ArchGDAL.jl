@@ -1,10 +1,11 @@
 # Local convert method converts any GeoInterface geometry
-# to the equivalent ArchGDAL geometry
+# to the equivalent ArchGDAL geometry.
+# `geom` can be points, so this is a hot path that needs to be fast.
 function to_gdal(geom)
     GeoInterface.isgeometry(geom) || _not_a_geom_error()
     trait = GeoInterface.geomtrait(geom)
     typ = geointerface_geomtype(trait)
-    GeoInterface.convert(typ, trait, geom)
+    return GeoInterface.convert(typ, trait, geom)
 end
 
 @noinline _not_a_geom_error() =
@@ -942,11 +943,11 @@ multisurfaces (multipolygons).
 """
 pointonsurface(geom::AbstractGeometry)::IGeometry =
     IGeometry(GDAL.ogr_g_pointonsurface(geom))
-pointonsurface(g1, g2) = pointonsurface(to_gdal(g1), to_gdal(g2))
+pointonsurface(g) = pointonsurface(to_gdal(g))
 
 unsafe_pointonsurface(geom::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_pointonsurface(geom))
-unsafe_pointonsurface(g1, g2) = unsafe_pointonsurface(to_gdal(g1), to_gdal(g2))
+unsafe_pointonsurface(g) = unsafe_pointonsurface(to_gdal(g1))
 
 """
     difference(g1, g2)
@@ -1697,7 +1698,6 @@ MULTICURVE or MULTISURFACE in it, by approximating curve geometries.
 * `options`: options as a null-terminated list of strings or NULL.
     See OGRGeometryFactory::curveToLineString() for valid options.
 """
-
 function lineargeom(
     geom::AbstractGeometry,
     stepsize::Real = 0;

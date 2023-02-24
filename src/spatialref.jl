@@ -177,8 +177,10 @@ function reproject(
 )
     if GI.isgeometry(geom)
         reproject(to_gdal(geom), sourcecrs, targetcrs; kwargs...)
-    elseif geom isa AbstractArray
+    elseif geom isa AbstractArray && (length(geom) > 0) && GI.isgeometry(first(geom))
         reproject(to_gdal.(geom), Ref(sourcecrs), Ref(targetcrs); kwargs...)
+    else
+        throw(ArgumentError("geom is not a GeoInterface compatible geometry"))
     end
 end
 

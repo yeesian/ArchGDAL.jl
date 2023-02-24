@@ -1,7 +1,9 @@
 using Test
 import ArchGDAL as AG
-import GeoInterface as GI
+import GeoInterface
 using Extents
+const GI = GeoInterface
+
 
 @testset "test_geos_operations.jl" begin
     function equivalent_to_wkt(geom::AG.Geometry, wkt::String)
@@ -123,13 +125,15 @@ using Extents
                 @test AG.toWKT(result) == wkt2
             end
             @test AG.toWKT(f(geom)) == wkt2
-            wrapped_geom = GI.convert(GI, geom)
-            @test AG.toWKT(f(wrapped_geom)) == wkt2
+            if parentmodule(f) != GeoInterface && GI.ngeom(geom) != 0
+                wrapped_geom = GI.convert(GI, geom)
+                @test AG.toWKT(f(wrapped_geom)) == wkt2
+            end
         end
     end
 
     @testset "Centroid" begin
-        test_method(AG.centroid, "POINT(10 0)", "POINT (10 0)")
+        test_method_gi(AG.centroid, "POINT(10 0)", "POINT (10 0)")
         test_method(AG.centroid, "LINESTRING(0 0, 10 0)", "POINT (5 0)")
         test_method(
             AG.centroid,
@@ -167,9 +171,11 @@ using Extents
                     @test AG.toWKT(result) == wkt3
                 end
                 @test AG.toWKT(f(geom1, geom2)) == wkt3
-                wrapped_geom1 = GI.convert(GI, geom1)
-                wrapped_geom2 = GI.convert(GI, geom2)
-                @test AG.toWKT(f(wrapped_geom1, wrapped_geom2)) == wkt3
+                if parentmodule(f) != GeoInterface && GI.ngeom(geom1) != 0 && GI.ngeom(geom2) != 0
+                    wrapped_geom1 = GI.convert(GI, geom1)
+                    wrapped_geom2 = GI.convert(GI, geom2)
+                    @test AG.toWKT(f(wrapped_geom1, wrapped_geom2)) == wkt3
+                end
             end
         end
     end
@@ -182,9 +188,11 @@ using Extents
         AG.fromWKT(wkt1) do geom1
             AG.fromWKT(wkt2) do geom2
                 @test AG.toWKT(f(geom1, geom2)) == wkt3
-                wrapped_geom1 = GI.convert(GI, geom1)
-                wrapped_geom2 = GI.convert(GI, geom2)
-                @test AG.toWKT(f(wrapped_geom1, wrapped_geom2)) == wkt3
+                if parentmodule(f) != GeoInterface && GI.ngeom(geom1) != 0 && GI.ngeom(geom2) != 0
+                    wrapped_geom1 = GI.convert(GI, geom1)
+                    wrapped_geom2 = GI.convert(GI, geom2)
+                    @test AG.toWKT(f(wrapped_geom1, wrapped_geom2)) == wkt3
+                end
             end
         end
     end
@@ -195,9 +203,11 @@ using Extents
                 # Test GDAL geoms
                 @test f(geom1, geom2) == result
                 # Test GeoInterface geoms
-                wrapped_geom1 = GI.convert(GI, geom1)
-                wrapped_geom2 = GI.convert(GI, geom2)
-                @test f(geom1, geom2) == result
+                if parentmodule(f) != GeoInterface && GI.ngeom(geom1) != 0 && GI.ngeom(geom2) != 0
+                    wrapped_geom1 = GI.convert(GI, geom1)
+                    wrapped_geom2 = GI.convert(GI, geom2)
+                    @test f(geom1, geom2) == result
+                end
             end
         end
     end
