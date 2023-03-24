@@ -177,6 +177,7 @@ import GeoFormatTypes as GFT
           </gml:usesCartesianCS>
         </gml:ProjectedCRS>
         """
+        cepsg = "EPSG:4326+3855"
 
         @testset "PROJ4 Format" begin
             AG.importPROJ4(proj4326) do spatialref
@@ -211,6 +212,15 @@ import GeoFormatTypes as GFT
                 @test startswith(AG.toXML(spatialref2), "<gml:ProjectedCRS")
                 AG.importXML!(spatialref2, xml4326)
                 @test startswith(AG.toXML(spatialref2), "<gml:GeographicCRS")
+            end
+        end
+
+        @testset "User provided Format" begin
+            AG.importUSER(cepsg) do spatialref
+                spatialref2 = AG.importUSER(cepsg)
+                @test contains(AG.toPROJ4(spatialref2), "+geoidgrids=")
+                AG.importUSER!(spatialref2, cepsg)
+                @test contains(AG.toPROJ4(spatialref2), "+geoidgrids=")
             end
         end
 

@@ -243,6 +243,7 @@ for gdalfunc in (
     :importPROJ4,
     :importWKT,
     :importXML,
+    :importUSER,
     :importURL,
     :lineargeom,
     :newspatialref,

@@ -312,6 +312,33 @@ unsafe_importEPSG(code::Integer; kwargs...)::SpatialRef =
     importEPSG!(unsafe_newspatialref(; kwargs...), code)
 
 """
+    importUSER(code::AbstractString; [order=:compliant])
+
+Construct a Spatial Reference System from a user provided code that is parsed by GDAL.
+This is useful when the input code is in an unknown format or a shortcut not covered by more constrained methods.
+An example is the code "EPSG:4326+3855", the shortest way to describe a combination of a horizontal and vertical crs.
+
+# Keyword Arguments
+- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
+    axis ordering in any actions done with the crs. `:compliant`, will use axis
+    ordering compliant with the relevant CRS authority.
+"""
+importUSER(code::AbstractString; kwargs...)::ISpatialRef =
+    importUSER!(newspatialref(; kwargs...), code)
+
+unsafe_importUSER(code::AbstractString; kwargs...)::SpatialRef =
+    importUSER!(unsafe_newspatialref(; kwargs...), code)
+
+function importUSER!(
+    spref::T,
+    code::AbstractString,
+)::T where {T<:AbstractSpatialRef}
+    result = GDAL.osrsetfromuserinput(spref, code)
+    @ogrerr result "Failed to initialize SRS based on user input"
+    return spref
+end
+
+"""
     importEPSGA!(spref::AbstractSpatialRef, code::Integer)
 
 Initialize SRS based on EPSG CRS code.
