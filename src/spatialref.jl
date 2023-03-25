@@ -312,7 +312,7 @@ unsafe_importEPSG(code::Integer; kwargs...)::SpatialRef =
     importEPSG!(unsafe_newspatialref(; kwargs...), code)
 
 """
-    importUSER(code::AbstractString; [order=:compliant])
+    importUserInput(code::AbstractString; [order=:compliant])
 
 Construct a Spatial Reference System from a user provided code that is parsed by GDAL.
 This is useful when the input code is in an unknown format or a shortcut not covered by more constrained methods.
@@ -323,13 +323,13 @@ An example is the code "EPSG:4326+3855", the shortest way to describe a combinat
     axis ordering in any actions done with the crs. `:compliant`, will use axis
     ordering compliant with the relevant CRS authority.
 """
-importUSER(code::AbstractString; kwargs...)::ISpatialRef =
-    importUSER!(newspatialref(; kwargs...), code)
+importUserInput(code::AbstractString; kwargs...)::ISpatialRef =
+    importUserInput!(newspatialref(; kwargs...), code)
 
-unsafe_importUSER(code::AbstractString; kwargs...)::SpatialRef =
-    importUSER!(unsafe_newspatialref(; kwargs...), code)
+unsafe_importUserInput(code::AbstractString; kwargs...)::SpatialRef =
+    importUserInput!(unsafe_newspatialref(; kwargs...), code)
 
-function importUSER!(
+function importUserInput!(
     spref::T,
     code::AbstractString,
 )::T where {T<:AbstractSpatialRef}

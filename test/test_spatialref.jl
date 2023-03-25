@@ -216,10 +216,10 @@ import GeoFormatTypes as GFT
         end
 
         @testset "User provided Format" begin
-            AG.importUSER(cepsg) do spatialref
-                spatialref2 = AG.importUSER(cepsg)
+            AG.importUserInput(cepsg) do spatialref
+                spatialref2 = AG.importUserInput(cepsg)
                 @test contains(AG.toPROJ4(spatialref2), "+geoidgrids=")
-                AG.importUSER!(spatialref2, cepsg)
+                AG.importUserInput!(spatialref2, cepsg)
                 @test contains(AG.toPROJ4(spatialref2), "+geoidgrids=")
             end
         end
