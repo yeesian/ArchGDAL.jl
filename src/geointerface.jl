@@ -139,6 +139,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         geom::AbstractGeometry,
         i::Integer,
     )
+        # This allocates 3 refs, best to use the iterator method instead
         p = getpoint(geom, i - 1)
         if is3d(geom)
             return (p[1], p[2], p[3])
@@ -151,6 +152,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         ::GeoInterface.AbstractLineStringTrait,
         geom::AbstractGeometry,
     )
+        # We need three refs, even for 2d points
         refs = Ref{Float64}(), Ref{Float64}(), Ref{Float64}()
         if is3d(geom)
             return ((p = getpoint!(geom, i - 1, refs...); (p[1], p[2], p[3])) for i in 1:GeoInterface.npoint(geom))
