@@ -22,8 +22,13 @@ Import a coordinate reference system from a `GeoFormat` into the spatial ref.
 """
 function importCRS! end
 
-function importCRS!(spref::T, x::GFT.EPSG)::T where {T<:AbstractSpatialRef}
+function importCRS!(spref::T, x::GFT.EPSG{1})::T where {T<:AbstractSpatialRef}
     importEPSG!(spref, GFT.val(x))
+    return spref
+end
+
+function importCRS!(spref::T, x::GFT.EPSG{2})::T where {T<:AbstractSpatialRef}
+    importUserInput!(spref, convert(String, x))
     return spref
 end
 

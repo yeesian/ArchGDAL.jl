@@ -250,6 +250,8 @@ import GeoFormatTypes as GFT
                   AG.toWKT(AG.importPROJ4(proj4326))
             @test AG.toWKT(AG.importCRS(GFT.EPSG(4326))) ==
                   AG.toWKT(AG.importEPSG(4326))
+            @test AG.toWKT(AG.importCRS(GFT.EPSG(4326, 3855))) ==
+                  AG.toWKT(AG.importUserInput("EPSG:4326+3855"))
             @test AG.toWKT(AG.importCRS(GFT.EPSG(4326), order = :trad)) ==
                   AG.toWKT(AG.importEPSG(4326))
             @test AG.toWKT(AG.importCRS(GFT.EPSG(4326), order = :compliant)) ==
