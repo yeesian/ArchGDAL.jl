@@ -133,7 +133,7 @@ const GI = GeoInterface
     end
 
     @testset "Centroid" begin
-        test_method_gi(AG.centroid, "POINT(10 0)", "POINT (10 0)")
+        test_method(AG.centroid, "POINT(10 0)", "POINT (10 0)")
         test_method(AG.centroid, "LINESTRING(0 0, 10 0)", "POINT (5 0)")
         test_method(
             AG.centroid,
