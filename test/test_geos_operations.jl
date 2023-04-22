@@ -28,7 +28,8 @@ const GI = GeoInterface
                 AG.pointalongline(ls, dist) do pt1
                     AG.createpoint(dest) do pt2
                         @test AG.toWKT(pt1) == AG.toWKT(pt2)
-                    end
+                        @test AG.toWKT(GI.convert(GI, pt1)) == AG.toWKT(GI.convert(GI, pt2))
+                    end                
                 end
                 @test AG.toWKT(AG.pointalongline(ls, dist)) ==
                       AG.toWKT(AG.createpoint(dest))
@@ -41,6 +42,8 @@ const GI = GeoInterface
             AG.fromWKT("POLYGON EMPTY") do g2
                 @test AG.contains(g1, g2) == false
                 @test AG.contains(g2, g1) == false
+                @test AG.contains(GI.convert(g1), GI.convert(g2)) == false
+                @test AG.contains(GI.convert(g2), GI.convert(g1)) == false
             end
         end
 
@@ -48,6 +51,8 @@ const GI = GeoInterface
             AG.fromWKT("POINT(2 2)") do g2
                 @test AG.contains(g1, g2) == true
                 @test AG.contains(g2, g1) == false
+                @test AG.contains(GI.convert(GI, g1), g2) == true
+                @test AG.contains(GI.convert(GI, g2), g1) == false
             end
         end
 
@@ -81,28 +86,35 @@ const GI = GeoInterface
                 @test AG.toWKT(g2) == "MULTILINESTRING EMPTY"
             end
             @test AG.toWKT(AG.delaunaytriangulation(g1, 0, true)) ==
+                  AG.toWKT(AG.delaunaytriangulation(GI.convert(GI, g1), 0, true)) ==
                   "MULTILINESTRING EMPTY"
         end
         AG.fromWKT("POINT(0 0)") do g1
             AG.delaunaytriangulation(g1, 0, false) do g2
-                @test AG.isempty(g2) == true
-                @test AG.toWKT(g2) == "GEOMETRYCOLLECTION EMPTY"
+                @test AG.isempty(g2) == AG.isempty(GI.convert(GI, g2)) == true
+                @test AG.toWKT(g2) == AG.toWKT(GI.convert(GI, g2)) == "GEOMETRYCOLLECTION EMPTY"
             end
             @test AG.toWKT(AG.delaunaytriangulation(g1, 0, false)) ==
+                  AG.toWKT(AG.delaunaytriangulation(GI.convert(GI, g1), 0, false)) ==
                   "GEOMETRYCOLLECTION EMPTY"
         end
         AG.fromWKT("MULTIPOINT(0 0, 5 0, 10 0)") do g1
             AG.delaunaytriangulation(g1, 0, false) do g2
-                @test AG.toWKT(g2) == "GEOMETRYCOLLECTION EMPTY"
+                @test AG.toWKT(g2) == 
+                      AG.toWKT(GI.convert(GI, g2)) == 
+                        "GEOMETRYCOLLECTION EMPTY"
             end
             AG.delaunaytriangulation(g1, 0, true) do g2
-                @test AG.toWKT(g2) == "MULTILINESTRING ((5 0,10 0),(0 0,5 0))"
+                @test AG.toWKT(g2) == 
+                      AG.toWKT(GI.convert(GI, g2)) == 
+                "MULTILINESTRING ((5 0,10 0),(0 0,5 0))"
             end
         end
         AG.fromWKT("MULTIPOINT(0 0, 10 0, 10 10, 11 10)") do g1
             AG.delaunaytriangulation(g1, 2.0, true) do g2
-                @test AG.toWKT(g2) ==
-                      "MULTILINESTRING ((0 0,10 10),(0 0,10 0),(10 0,10 10))"
+                @test AG.toWKT(g2) == 
+                      AG.toWKT(GI.convert(GI, g2)) == 
+                          "MULTILINESTRING ((0 0,10 10),(0 0,10 0),(10 0,10 10))"
             end
         end
     end
@@ -111,6 +123,7 @@ const GI = GeoInterface
         AG.fromWKT("POINT(10 10)") do g1
             AG.fromWKT("POINT(3 6)") do g2
                 @test AG.distance(g1, g2) ≈ 8.06225774829855 atol = 1e-12
+                @test AG.distance(GI.convert(GI, g1), GI.convert(GI, g2)) ≈ 8.06225774829855 atol = 1e-12
             end
         end
     end
@@ -206,7 +219,7 @@ const GI = GeoInterface
                 if parentmodule(f) != GeoInterface && GI.ngeom(geom1) != 0 && GI.ngeom(geom2) != 0
                     wrapped_geom1 = GI.convert(GI, geom1)
                     wrapped_geom2 = GI.convert(GI, geom2)
-                    @test f(geom1, geom2) == result
+                    @test f(wrapped_geom1, wrapped_geom2) == result
                 end
             end
         end
