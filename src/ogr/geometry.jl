@@ -699,7 +699,7 @@ function delaunaytriangulation(
 )::IGeometry
     return IGeometry(GDAL.ogr_g_delaunaytriangulation(geom, tol, onlyedges))
 end
-delaunaytriangulation(geom, tol::Real) = delaunaytriangulation(to_gdal(geom), tol)
+delaunaytriangulation(geom, tol::Real, onlyedges) = delaunaytriangulation(to_gdal(geom), tol, onlyedges)
 
 function unsafe_delaunaytriangulation(
     geom::AbstractGeometry,
