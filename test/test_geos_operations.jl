@@ -482,6 +482,7 @@ const GI = GeoInterface
                 @test AG.toWKT(g2) == "POLYGON EMPTY"
             end
             @test AG.toWKT(AG.simplify(g1, 0.0)) == "POLYGON EMPTY"
+            @test AG.toWKT(AG.simplify(GI.convert(GI, g1), 0.0)) == "POLYGON EMPTY"
         end
 
         AG.fromWKT(
@@ -492,6 +493,7 @@ const GI = GeoInterface
                       "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
             end
             @test AG.toWKT(AG.simplifypreservetopology(g1, 43.2)) ==
+                  AG.toWKT(AG.simplifypreservetopology(GI.convert(GI, g1), 43.2)) ==
                   "POLYGON ((56.5286666667 25.2101666667,56.529 25.2105,56.5288333333 25.2103333333,56.5286666667 25.2101666667))"
         end
     end

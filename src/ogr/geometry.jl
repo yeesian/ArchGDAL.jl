@@ -122,6 +122,7 @@ function clone(geom::AbstractGeometry{T}) where {T}
         return IGeometry{T}(GDAL.ogr_g_clone(geom))
     end
 end
+clone(geom) = clone(to_gdal(geom))
 
 function unsafe_clone(geom::AbstractGeometry{T}) where {T}
     if geom.ptr == C_NULL
@@ -188,7 +189,6 @@ preparegeom(geom) = preparegeom(to_gdal(geom))
 function unsafe_preparegeom(geom::AbstractGeometry{T}) where {T}
     return PreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom))
 end
-unsafe_preparegeom(geom) = unsafe_preparegeom(to_gdal(geom))
 
 """
     forceto(geom::AbstractGeometry, targettype::OGRwkbGeometryType, [options])
@@ -661,7 +661,6 @@ simplify(geom, tol::Real) = simplify(to_gdal(geom), tol)
 
 unsafe_simplify(geom::AbstractGeometry, tol::Real)::Geometry =
     Geometry(GDAL.ogr_g_simplify(geom, tol))
-unsafe_simplify(geom, tol::Real) = unsafe_simplify(to_gdal(geom), tol)
 
 """
     simplifypreservetopology(geom, tol::Real)
@@ -678,8 +677,6 @@ simplifypreservetopology(geom, tol::Real) = simplifypreservetopology(to_gdal(geo
 
 unsafe_simplifypreservetopology(geom::AbstractGeometry, tol::Real)::Geometry =
     Geometry(GDAL.ogr_g_simplifypreservetopology(geom, tol))
-unsafe_simplifypreservetopology(geom, tol::Real) =
-    unsafe_simplifypreservetopology(to_gdal(geom), tol)
 
 """
     delaunaytriangulation(geom, tol::Real, onlyedges::Bool)
@@ -708,8 +705,6 @@ function unsafe_delaunaytriangulation(
 )::Geometry
     return Geometry(GDAL.ogr_g_delaunaytriangulation(geom, tol, onlyedges))
 end
-unsafe_delaunaytriangulation(geom, tol::Real, onlyedges::Bool) =
-    unsafe_delaunaytriangulation(to_gdal(geom), tol, onlyedges)
 
 """
     segmentize!(geom::AbstractGeometry, maxlength::Real)
@@ -844,7 +839,6 @@ boundary(geom) = boundary(to_gdal(geom))
 
 unsafe_boundary(geom::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_boundary(geom))
-unsafe_boundary(geom) = unsafe_boundary(to_gdal(geom))
 
 """
     convexhull(geom)
@@ -860,7 +854,6 @@ convexhull(geom) = convexhull(to_gdal(geom))
 
 unsafe_convexhull(geom::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_convexhull(geom))
-unsafe_convexhull(geom) = unsafe_convexhull(to_gdal(geom))
 
 """
     buffer(geom, dist::Real, quadsegs::Integer = 30)
@@ -897,8 +890,6 @@ function unsafe_buffer(
 )::Geometry
     return Geometry(GDAL.ogr_g_buffer(geom, dist, quadsegs))
 end
-unsafe_buffer(geom, dist::Real, quadsegs::Integer = 30) =
-    unsafe_buffer(to_gdal(geom), dist, quadsegs)
 
 """
     intersection(g1, g2)
@@ -916,7 +907,6 @@ intersection(g1, g2) = intersection(to_gdal(g1), to_gdal(g2))
 
 unsafe_intersection(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_intersection(g1, g2))
-unsafe_intersection(g1, g2) = unsafe_intersection(to_gdal(g1), to_gdal(g2))
 
 """
     union(g1::AbstractGeometry, g2::AbstractGeometry)
@@ -929,7 +919,6 @@ union(g1, g2) = union(to_gdal(g1), to_gdal(g2))
 
 unsafe_union(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_union(g1, g2))
-unsafe_union(g1, g2) = unsafe_union(to_gdal(g1), to_gdal(g2))
 
 """
     pointonsurface(geom::AbstractGeometry)
@@ -947,7 +936,6 @@ pointonsurface(g) = pointonsurface(to_gdal(g))
 
 unsafe_pointonsurface(geom::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_pointonsurface(geom))
-unsafe_pointonsurface(g) = unsafe_pointonsurface(to_gdal(g1))
 
 """
     difference(g1, g2)
@@ -965,7 +953,6 @@ difference(g1, g2) = difference(to_gdal(g1), to_gdal(g2))
 
 unsafe_difference(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_difference(g1, g2))
-unsafe_difference(g1, g2) = unsafe_difference(to_gdal(g1), to_gdal(g2))
 
 """
     symdifference(g1, g2)
@@ -979,7 +966,6 @@ symdifference(g1, g2) = symdifference(to_gdal(g1), to_gdal(g2))
 
 unsafe_symdifference(g1::AbstractGeometry, g2::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_symdifference(g1, g2))
-unsafe_symdifference(g1, g2) = unsafe_symdifference(to_gdal(g1), to_gdal(g2))
 
 """
     distance(g1, g2)
@@ -1060,7 +1046,6 @@ function unsafe_centroid(geom::AbstractGeometry)::Geometry
     centroid!(geom, point)
     return point
 end
-unsafe_centroid(geom) = unsafe_centroid(to_gdal(geom))
 
 """
     pointalongline(geom, distance::Real)
@@ -1081,7 +1066,6 @@ pointalongline(geom, distance::Real) = pointalongline(to_gdal(geom), distance)
 
 unsafe_pointalongline(geom::AbstractGeometry, distance::Real)::Geometry =
     Geometry(GDAL.ogr_g_value(geom, distance))
-unsafe_pointalongline(geom, distance::Real) = unsafe_pointalongline(to_gdal(geom), distance)
 
 """
     empty!(geom::AbstractGeometry)
@@ -1284,7 +1268,6 @@ polygonize(geom) = polygonize(to_gdal(geom))
 
 unsafe_polygonize(geom::AbstractGeometry)::Geometry =
     Geometry(GDAL.ogr_g_polygonize(geom))
-unsafe_polygonize(geom) = unsafe_polygonize(to_gdal(geom))
 
 # """
 #     OGR_G_GetPoints(OGRGeometryH hGeom,
@@ -1649,6 +1632,8 @@ function removegeom!(
     @ogrerr result "Failed to remove geometry. The index could be out of range."
     return geom
 end
+
+removegeom(geom, i::Integer) = removegeom!(clone(geom), i, true) 
 
 """
     removeallgeoms!(geom::AbstractGeometry, todelete::Bool = true)
