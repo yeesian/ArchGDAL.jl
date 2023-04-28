@@ -114,9 +114,12 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         elseif i == 4 && ismeasured(geom) && is3d(geom)
             getm(geom, 0)
         else
-            return nothing
+            _getcoord_error(i)
         end
     end
+
+    @noinline _getcoord_error(i) = 
+        throw(ArgumentError("Getcoord index must be between 1 and 4. Got $i"))
 
     function GeoInterface.isempty(::GeometryTraits, geom::AbstractGeometry)
         return isempty(geom)
