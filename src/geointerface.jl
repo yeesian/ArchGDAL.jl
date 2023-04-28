@@ -118,8 +118,9 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         end
     end
 
-    @noinline _getcoord_error(i) = 
-        throw(ArgumentError("Getcoord index must be between 1 and 4. Got $i"))
+    @noinline function _getcoord_error(i)
+        throw(ArgumentError("Invalid getcoord index $i, must be between 1 and 2/3/4."))
+    end
 
     function GeoInterface.isempty(::GeometryTraits, geom::AbstractGeometry)
         return isempty(geom)
