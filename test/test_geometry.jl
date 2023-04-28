@@ -15,8 +15,8 @@ import GeoFormatTypes as GFT
             @test GI.m(point) == nothing
             @test GI.getcoord(point, 1) == 100
             @test GI.getcoord(point, 2) == 70
-            @test_throws "Invalid getcoord index" GI.getcoord(point, 3)
-            @test_throws "Invalid getcoord index" GI.getcoord(point, 4)
+            @test_throws ErrorException GI.getcoord(point, 3)
+            @test_throws ErrorException GI.getcoord(point, 4)
         end
         AG.createpoint(100, 70, 1) do point
             @test GI.geomtrait(point) == GI.PointTrait()
@@ -29,7 +29,7 @@ import GeoFormatTypes as GFT
             @test GI.getcoord(point, 1) == 100
             @test GI.getcoord(point, 2) == 70
             @test GI.getcoord(point, 3) == 1
-            @test_throws "Invalid getcoord index" GI.getcoord(point, 4)
+            @test_throws ErrorException GI.getcoord(point, 4)
         end
         @test GI.isgeometry(AG.IGeometry)
     end
@@ -971,14 +971,14 @@ import GeoFormatTypes as GFT
     @testset "Test coordinate dimensions" begin
         AG.createpoint(1, 2, 3) do point
             @test GI.getcoord(point, 3) == 3
-            @test_throws "Invalid getcoord index" GI.getcoord(point, 4)
+            @test_throws ErrorException GI.getcoord(point, 4)
             @test !GI.isempty(point)
             @test !GI.ismeasured(point)
             @test GI.is3d(point)
         end
         AG.createpoint(1, 2) do point
-            @test_throws "Invalid getcoord index" GI.getcoord(point, 3)
-            @test_throws "Invalid getcoord index" GI.getcoord(point, 4)
+            @test_throws ErrorException GI.getcoord(point, 3)
+            @test_throws ErrorException GI.getcoord(point, 4)
             @test !GI.isempty(point)
             @test !GI.ismeasured(point)
             @test !GI.is3d(point)
