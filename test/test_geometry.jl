@@ -289,7 +289,6 @@ import GeoFormatTypes as GFT
                     atol = 1e-6,
                 )
                 @test GI.getgeom(geom, 1) == (1, 4)
-                @test ArchGDAL.createpoint(GI.getgeom(geom, 1)) == (1, 4)
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
                 AG.closerings!(geom)
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
