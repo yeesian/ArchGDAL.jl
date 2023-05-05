@@ -103,7 +103,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     function GeoInterface.getcoord(
         ::GeoInterface.AbstractPointTrait,
         geom::AbstractGeometry,
-        i::Int,
+        i::Integer,
     )
         if i == 1
             getx(geom, 0)
