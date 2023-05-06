@@ -288,6 +288,9 @@ import GeoFormatTypes as GFT
                     [[1, 4], [2, 5], [3, 6]],
                     atol = 1e-6,
                 )
+                @test GI.getgeom(geom, 1) == (1, 4)
+                # Round-trip via geointeface
+                @test AG.toWKT(AG.createlinestring(collect(GI.getgeom(geom)))) == "LINESTRING (1 4,2 5,3 6)"
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
                 AG.closerings!(geom)
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
@@ -353,6 +356,9 @@ import GeoFormatTypes as GFT
                     [[1, 4], [2, 5], [3, 6]],
                     atol = 1e-6,
                 )
+                @test GI.getgeom(geom, 1) == (1, 4)
+                # Round-trip via geointeface
+                @test AG.toWKT(AG.createlinearring(collect(GI.getgeom(geom)))) == "LINEARRING (1 4,2 5,3 6)"
                 @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
                 AG.setpointcount!(geom, 5)
                 @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
