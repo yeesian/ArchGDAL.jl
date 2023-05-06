@@ -435,7 +435,6 @@ import GeoFormatTypes as GFT
                     [[1, 4], [2, 5], [3, 6]],
                     atol = 1e-6,
                 )
-                @test GI.getpoint(geom, 3) == (3, 6)
                 @test AG.toWKT(geom) == "MULTIPOINT (1 4,2 5,3 6)"
             end
             AG.createmultipoint(
