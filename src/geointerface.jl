@@ -87,21 +87,23 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
     function GeoInterface.z(
         ::GeoInterface.AbstractPointTrait,
-        geom::_AbstractGeometryZ,
+        geom::AbstractGeometry,
     )
+        geom isa _AbstractGeometry3d || throw(ArgumentError("Geometry does not have `Z` values")) 
         return getz(geom, 0)
     end
     function GeoInterface.m(
         ::GeoInterface.AbstractPointTrait,
-        geom::_AbstractGeometryM,
+        geom::AbstractGeometry,
     )
+        geom isa _AbstractGeometryHasM || throw(ArgumentError("Geometry does not have `M` values")) 
         return getm(geom, 0)
     end
 
     function GeoInterface.getcoord(
         ::GeoInterface.AbstractPointTrait,
         geom::AbstractGeometry,
-        i,
+        i::Integer,
     )
         if i == 1
             getx(geom, 0)
@@ -114,8 +116,12 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         elseif i == 4 && ismeasured(geom) && is3d(geom)
             getm(geom, 0)
         else
-            return nothing
+            _getcoord_error(i)
         end
+    end
+
+    @noinline function _getcoord_error(i)
+        throw(ArgumentError("Invalid getcoord index $i, must be between 1 and 2/3/4."))
     end
 
     function GeoInterface.isempty(::GeometryTraits, geom::AbstractGeometry)
