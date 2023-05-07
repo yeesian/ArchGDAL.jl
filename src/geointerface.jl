@@ -89,14 +89,16 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         ::GeoInterface.AbstractPointTrait,
         geom::AbstractGeometry,
     )
-        geom isa _AbstractGeometry3d || throw(ArgumentError("Geometry does not have `Z` values")) 
+        geom isa _AbstractGeometry3d ||
+            throw(ArgumentError("Geometry does not have `Z` values"))
         return getz(geom, 0)
     end
     function GeoInterface.m(
         ::GeoInterface.AbstractPointTrait,
         geom::AbstractGeometry,
     )
-        geom isa _AbstractGeometryHasM || throw(ArgumentError("Geometry does not have `M` values")) 
+        geom isa _AbstractGeometryHasM ||
+            throw(ArgumentError("Geometry does not have `M` values"))
         return getm(geom, 0)
     end
 
@@ -121,7 +123,11 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     @noinline function _getcoord_error(i)
-        throw(ArgumentError("Invalid getcoord index $i, must be between 1 and 2/3/4."))
+        throw(
+            ArgumentError(
+                "Invalid getcoord index $i, must be between 1 and 2/3/4.",
+            ),
+        )
     end
 
     function GeoInterface.isempty(::GeometryTraits, geom::AbstractGeometry)
@@ -161,9 +167,15 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         # We need three refs, even for 2d points
         refs = Ref{Float64}(), Ref{Float64}(), Ref{Float64}()
         if is3d(geom)
-            return ((p = getpoint!(geom, i - 1, refs...); (p[1], p[2], p[3])) for i in 1:GeoInterface.npoint(geom))
+            return (
+                (p = getpoint!(geom, i - 1, refs...); (p[1], p[2], p[3])) for
+                i in 1:GeoInterface.npoint(geom)
+            )
         else
-            return ((p = getpoint!(geom, i - 1, refs...); (p[1], p[2])) for i in 1:GeoInterface.npoint(geom))
+            return (
+                (p = getpoint!(geom, i - 1, refs...); (p[1], p[2])) for
+                i in 1:GeoInterface.npoint(geom)
+            )
         end
     end
 
