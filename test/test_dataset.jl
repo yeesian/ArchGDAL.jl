@@ -107,12 +107,13 @@ end
                 for dsname in ("point", "metropole")
                     AG.read("data/$dsname.geojson") do input_ds
                         try
-                            # the GPKG driver can handle field ids of type real, which is the case for point.geojson
+                            # the GPKG driver can't handle field ids of type real, which is the case for point.geojson
                             if driver == "GPKG" && dsname == "point"
                                 @test_throws GDAL.GDALError AG.write(
                                     input_ds,
                                     fname;
                                     driver = AG.getdriver(driver),
+                                    use_gdal_copy = false,
                                 )
                             else
                                 AG.write(
