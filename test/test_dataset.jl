@@ -145,10 +145,10 @@ end
                         end
                     end
                     rm("test.xsd", force = true, recursive = true)  # some driver creates this file, delete it manually
-                end
-            end
+                end # datasets
+            end # drivers
 
-            # test setting individual layer options
+            # test setting individual layer options and layer counts
             AG.create(AG.getdriver("Memory")) do point_dataset
                 # first layer
                 AG.createlayer(
@@ -207,11 +207,27 @@ end
                     @test AG.getname(gd0) == "WKT_GEOMETRY"
                     @test AG.getname(gd1) == "GEOMETRY"
                 end
+                AG.write(
+                    point_dataset,
+                    "deleteme.sqlite";
+                    driver = AG.getdriver("SQLite"),
+                    layers = [1],
+                    layer_options = Dict(
+                        1 => ["FORMAT=WKT", "LAUNDER=YES"],
+                    ),
+                    use_gdal_copy = true,
+                )
+                AG.read("deleteme.sqlite") do read_ds
+                    @test AG.nlayer(read_ds) == 1
+                    l0 = AG.getlayer(read_ds, 0)
+                    gd0 = AG.getgeomdefn(AG.layerdefn(l0))
+                    @test AG.getname(gd0) == "WKT_GEOMETRY"
+                end
                 sleep(0.05)
                 GC.gc()
                 return rm("deleteme.sqlite", force = true)
-            end
-        end
+            end # individual layer options
+        end # write functionality
 
         dataset1 = AG.read("data/point.geojson")
         @test AG.nlayer(dataset1) == 1
