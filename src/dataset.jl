@@ -307,7 +307,7 @@ Dict{<:Integer, Vector{String}} to set individual options per layer.",
         sourcelayer = getlayer(source_dataset, layeridx)
         sourcelayerdef = layerdefn(sourcelayer)
 
-        if shortname(getdriver(source_dataset)) == "GPKG"
+        if shortname(getdriver(target_dataset)) == "GPKG"
             if !any(Base.contains.(current_layer_options, "GEOMETRY_NAME"))
                 if ngeom(sourcelayer) > 0  # for GPKG there can be only one geometry column per layer
                     geometry_column_name =
