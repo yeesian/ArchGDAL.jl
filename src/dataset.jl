@@ -221,7 +221,7 @@ end
 
 # utility functions for writelayers
 function _getlayeroptions(options::Dict{<:Integer,Vector{String}}, i::Integer)
-    return get(options, i, [""])
+    return get(options, i, String[])
 end
 _getlayeroptions(options::Union{Ptr{Cstring},Vector{String}}, i) = options
 
@@ -257,9 +257,9 @@ function writelayers(
     dataset::AbstractDataset,
     filename::AbstractString;
     driver::Driver = getdriver(dataset),
-    options = [""],
+    options = String[],
     layers = 0:(nlayer(dataset)-1),
-    layer_options = [""],
+    layer_options = String[],
     chunksize::Integer = 20000,
     use_gdal_copy::Bool = true,
 )
@@ -286,7 +286,7 @@ function copylayers!(
     source_dataset::AbstractDataset,
     target_dataset::AbstractDataset;
     layers = 0:(nlayer(source_dataset)-1),
-    layer_options = [""],
+    layer_options = String[],
     chunksize::Integer = 20000,
     use_gdal_copy::Bool = true,
 )
