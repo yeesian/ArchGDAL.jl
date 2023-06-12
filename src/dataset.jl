@@ -241,14 +241,14 @@ Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML,
 ### Keyword arguments
 * `driver`:           The driver to use, you have to manually select the right driver for the file extension you wish
 * `options`:          A vector of strings containing KEY=VALUE pairs for driver-specific creation options
-* `layers`:           Specifies which layers should be written. Can be e.g. a range, Vector{Int} or tuple.
+* `layer_indices`:    Specifies which layers should be written. Can be e.g. a range, Vector{Int} or tuple.
 * `layer_options`:    Driver specific options for layer creation. The options can either be a Vector{String} to provide the
                       same options for each layer, or a Dict(layer_index => Vector{String}) to provide individual options per layer.
                       Note that layer indexing in GDAL starts with 0. The strings have to be KEY=VALUE pairs.
                       An example for two layers: `Dict(0 => ["FORMAT=WKT", "LAUNDER=NO"], 1 => ["STRICT=NO"])`
 * `chunksize`:        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
 * `use_gdal_copy`:    Set this to false (default is true) to achieve higher write speeds at the cost of possible errors.
-Note that when set to true, no coordinate transformations are possible while writing the features.
+                      Note that when set to true, no coordinate transformations are possible while writing the features.
 
 ### Returns
 nothing
@@ -258,7 +258,7 @@ function writelayers(
     filename::AbstractString;
     driver::Driver = getdriver(dataset),
     options = String[],
-    layers = 0:(nlayer(dataset)-1),
+    layer_indices = 0:(nlayer(dataset)-1),
     layer_options = String[],
     chunksize::Integer = 20000,
     use_gdal_copy::Bool = true,
@@ -267,7 +267,7 @@ function writelayers(
         return copylayers!(
             dataset,
             target;
-            layers = layers,
+            source_layer_indices = layer_indices,
             layer_options = layer_options,
             chunksize = chunksize,
             use_gdal_copy = use_gdal_copy,
@@ -277,15 +277,29 @@ function writelayers(
 end
 
 """
-    copylayers(source_dataset, target_dataset; kwargs...)
+    copylayers!(source_dataset, target_dataset; kwargs...)
 
-Copies a (sub)set of layers from source to target dataset. The keyword arguments are the same as for `writelayers`.
+Copies a (sub)set of layers from source to target dataset.
 Note that eventual layer options have to conform with the target dataset driver.
+
+Currently working drivers: FlatGeobuf, GeoJSON, GeoJSONSeq, GML, GPKG, JML, KML, MapML, ESRI Shapefile, SQLite
+
+### Keyword arguments
+* `driver`:           The driver to use, you have to manually select the right driver for the file extension you wish
+* `options`:          A vector of strings containing KEY=VALUE pairs for driver-specific creation options
+* `source_layer_indices`:    Specifies which layers should be written. Can be e.g. a range, Vector{Int} or tuple.
+* `layer_options`:    Driver specific options for layer creation. The options can either be a Vector{String} to provide the
+                      same options for each layer, or a Dict(layer_index => Vector{String}) to provide individual options per layer.
+                      Note that layer indexing in GDAL starts with 0. The strings have to be KEY=VALUE pairs.
+                      An example for two layers: `Dict(0 => ["FORMAT=WKT", "LAUNDER=NO"], 1 => ["STRICT=NO"])`
+* `chunksize`:        Number of features to write in one database transaction. Neglected when `use_gdal_copy` is true.
+* `use_gdal_copy`:    Set this to false (default is true) to achieve higher write speeds at the cost of possible errors.
+                      Note that when set to true, no coordinate transformations are possible while writing the features.
 """
 function copylayers!(
     source_dataset::AbstractDataset,
     target_dataset::AbstractDataset;
-    layers = 0:(nlayer(source_dataset)-1),
+    source_layer_indices = 0:(nlayer(source_dataset)-1),
     layer_options = String[],
     chunksize::Integer = 20000,
     use_gdal_copy::Bool = true,
@@ -301,7 +315,7 @@ Dict{<:Integer, Vector{String}} to set individual options per layer.",
             ),
         )
     end
-    for layeridx in layers
+    for layeridx in source_layer_indices
         current_layer_options = _getlayeroptions(layer_options, layeridx)
 
         sourcelayer = getlayer(source_dataset, layeridx)
