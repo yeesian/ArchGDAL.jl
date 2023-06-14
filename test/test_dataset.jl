@@ -113,6 +113,7 @@ end
                                     input_ds,
                                     fname;
                                     driver = AG.getdriver(driver),
+                                    use_gdal_copy = false
                                 )
                             else
                                 AG.write(
@@ -145,10 +146,10 @@ end
                         end
                     end
                     rm("test.xsd", force = true, recursive = true)  # some driver creates this file, delete it manually
-                end
-            end
+                end # datasets
+            end # drivers
 
-            # test setting individual layer options
+            # test setting individual layer options and layer counts
             AG.create(AG.getdriver("Memory")) do point_dataset
                 # first layer
                 AG.createlayer(
@@ -207,11 +208,40 @@ end
                     @test AG.getname(gd0) == "WKT_GEOMETRY"
                     @test AG.getname(gd1) == "GEOMETRY"
                 end
-                sleep(0.05)
-                GC.gc()
-                return rm("deleteme.sqlite", force = true)
+                AG.write(
+                    point_dataset,
+                    "deleteme.sqlite";
+                    driver = AG.getdriver("SQLite"),
+                    layer_indices = [1],
+                    layer_options = Dict(
+                        1 => ["FORMAT=WKT", "LAUNDER=YES"],
+                    ),
+                    use_gdal_copy = true,
+                )
+                AG.read("deleteme.sqlite") do read_ds
+                    @test AG.nlayer(read_ds) == 1
+                    l0 = AG.getlayer(read_ds, 0)
+                    gd0 = AG.getgeomdefn(AG.layerdefn(l0))
+                    @test AG.getname(gd0) == "WKT_GEOMETRY"
+                end
+            end # individual layer options
+            
+            #copylayers
+            AG.read("data/point.geojson") do src
+                AG.read("deleteme.sqlite"; flags=AG.OF_UPDATE) do dst
+                    AG.copylayers!(src, dst; use_gdal_copy = true)
+                    AG.copylayers!(src, dst; layer_options = ["OVERWRITE=YES"], use_gdal_copy=false)
+                    srclayer = AG.getlayer(src, 0)
+                    dstlayer = AG.getlayer(dst, 1)
+                    @test AG.getname(dstlayer) == AG.getname(srclayer)
+                    return nothing
+                end
             end
-        end
+
+            sleep(0.05)
+            GC.gc()
+            rm("deleteme.sqlite", force = true)
+        end # write functionality
 
         dataset1 = AG.read("data/point.geojson")
         @test AG.nlayer(dataset1) == 1
