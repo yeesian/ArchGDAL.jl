@@ -113,7 +113,7 @@ end
                                     input_ds,
                                     fname;
                                     driver = AG.getdriver(driver),
-                                    use_gdal_copy = false
+                                    use_gdal_copy = false,
                                 )
                             else
                                 AG.write(
@@ -213,9 +213,7 @@ end
                     "deleteme.sqlite";
                     driver = AG.getdriver("SQLite"),
                     layer_indices = [1],
-                    layer_options = Dict(
-                        1 => ["FORMAT=WKT", "LAUNDER=YES"],
-                    ),
+                    layer_options = Dict(1 => ["FORMAT=WKT", "LAUNDER=YES"]),
                     use_gdal_copy = true,
                 )
                 AG.read("deleteme.sqlite") do read_ds
@@ -225,12 +223,17 @@ end
                     @test AG.getname(gd0) == "WKT_GEOMETRY"
                 end
             end # individual layer options
-            
+
             #copylayers
             AG.read("data/point.geojson") do src
-                AG.read("deleteme.sqlite"; flags=AG.OF_UPDATE) do dst
+                AG.read("deleteme.sqlite"; flags = AG.OF_UPDATE) do dst
                     AG.copylayers!(src, dst; use_gdal_copy = true)
-                    AG.copylayers!(src, dst; layer_options = ["OVERWRITE=YES"], use_gdal_copy=false)
+                    AG.copylayers!(
+                        src,
+                        dst;
+                        layer_options = ["OVERWRITE=YES"],
+                        use_gdal_copy = false,
+                    )
                     srclayer = AG.getlayer(src, 0)
                     dstlayer = AG.getlayer(dst, 1)
                     @test AG.getname(dstlayer) == AG.getname(srclayer)
