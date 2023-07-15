@@ -112,10 +112,16 @@ end
 function unsafe_convertcrs(::Type{<:GFT.ProjString}, crsref)
     return GFT.ProjString(toPROJ4(crsref))
 end
+function unsafe_convertcrs(::Type{<:GFT.EPSG}, crsref)
+    return GFT.EPSG(toEPSG(crsref))
+end
 function unsafe_convertcrs(::Type{<:GFT.WellKnownText}, crsref)
     return GFT.WellKnownText(GFT.CRS(), toWKT(crsref))
 end
 function unsafe_convertcrs(::Type{<:GFT.ESRIWellKnownText}, crsref)
     return GFT.ESRIWellKnownText(GFT.CRS(), toWKT(morphtoESRI!(crsref)))
+end
+function unsafe_convertcrs(::Type{<:GFT.EPSG}, crsref)
+    return GFT.EPSG(toEPSG(crsref))
 end
 unsafe_convertcrs(::Type{<:GFT.GML}, crsref) = GFT.GML(toXML(crsref))
