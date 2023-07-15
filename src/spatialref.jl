@@ -617,6 +617,19 @@ function toPROJ4(spref::AbstractSpatialRef)::String
 end
 
 """
+    toEPSG(spref::AbstractSpatialRef)
+
+Export EPSG code for this coordinate system.
+"""
+function toEPSG(spref::AbstractSpatialRef)::String
+    epsg = Ref{Cstring}()
+    result = GDAL.osrretauthoritycode(spref, epsg)
+    @ogrerr result "Failed to retrieve EPSG code for this SRS"
+    return unsafe_string(epsg[])
+end
+
+
+"""
     toXML(spref::AbstractSpatialRef)
 
 Export coordinate system in XML format.
