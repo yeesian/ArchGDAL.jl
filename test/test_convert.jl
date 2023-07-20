@@ -40,6 +40,14 @@ import GeoFormatTypes as GFT
         ) == proj4326
         @test convert(GFT.CoordSys, GFT.CRS(), proj4326) isa GFT.CoordSys
         @test convert(GFT.GML, GFT.CRS(), proj4326) isa GFT.GML
+
+        epsg = GFT.EPSG(4326)
+        wkt = convert(GFT.WellKnownText, epsg)
+        @test convert(GFT.EPSG, wkt) == epsg
+
+        epsg = GFT.EPSG(3013)
+        wkt = convert(GFT.WellKnownText, epsg)
+        @test convert(GFT.EPSG, wkt) == epsg
     end
 
     @testset "geometry conversions" begin
