@@ -601,7 +601,6 @@ function toWKT(spref::AbstractSpatialRef, simplify::Bool)::String
     wktptr = Ref{Cstring}()
     result = GDAL.osrexporttoprettywkt(spref, wktptr, simplify)
 
-    println(restul)
     @ogrerr result "Failed to convert this SRS into pretty WKT"
     return unsafe_string(wktptr[])
 end
@@ -641,7 +640,6 @@ function toEPSG(spref::AbstractSpatialRef)::String
         @ogrerr result "is not an EPSG authority"
     end
 end
-
 
 """
     toXML(spref::AbstractSpatialRef)
