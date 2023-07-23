@@ -624,9 +624,10 @@ If possible, export EPSG code for this coordinate system.
 """
 function toEPSG(spref::AbstractSpatialRef)::String
     result = GDAL.osrgetauthorityname(spref.ptr, "PROJCS")
-    projcs = "PROJCS"
 
-    if isnothing(result)
+    if !isnothing(result)
+        projcs = "PROJCS"
+    else
         result = GDAL.osrgetauthorityname(spref.ptr, "GEOGCS")
         projcs = "GEOGCS"
     end
