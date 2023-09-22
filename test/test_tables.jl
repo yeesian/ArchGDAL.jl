@@ -743,7 +743,7 @@ using Tables
                 test_layer_to_table(
                     "FlatGeobuf",
                     "line",
-                    true,
+                    false,
                     true,
                     true,
                     FlatGeobuf_test_reference_geotable,
