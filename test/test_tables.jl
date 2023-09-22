@@ -163,7 +163,7 @@ using Tables
             - `"GeoJSON"` driver → 1 layer with 2 geometry columns
             - `"ESRI Shapefile"` driver → 2 layers with 1 geometry column
             1) with `wkbLineString` and `wkbMultiLineString` types
-            2) with `wkbPolygon`, `wkbMultiPolygon` types  
+            2) with `wkbPolygon`, `wkbMultiPolygon` types
             - Layers' geometry type set to `wkbUnknown` but modified by the OGR driver according to its specifications,
             - Each geometry has two additionnal fields `id::Int64` and `name::String`
 
@@ -354,11 +354,11 @@ using Tables
             """
                 map_on_test_dataset(
                     f::Function,
-                    drvshortname::AbstractString="ESRI shapefile", 
-                    geomfamily::String="line"; 
+                    drvshortname::AbstractString="ESRI shapefile",
+                    geomfamily::String="line";
                     withmissinggeom::Bool=true,
                     withmissingfield::Bool=true,
-                    withmixedgeomtypes::Bool=true, 
+                    withmixedgeomtypes::Bool=true,
                 )::AG.IDataset
 
             # Build a test dataset from scratch
@@ -367,7 +367,7 @@ using Tables
             - `"GeoJSON"` driver → 1 layer with 2 geometry columns
             - `"ESRI Shapefile"` driver → 2 layers with 1 geometry column
             1) with `wkbLineString` and `wkbMultiLineString` types
-            2) with `wkbPolygon`, `wkbMultiPolygon` types  
+            2) with `wkbPolygon`, `wkbMultiPolygon` types
             - Layers' geometry type set to `wkbUnknown` but modified by the OGR driver according to its specifications,
             - Each geometry has two additionnal fields `id::Int64` and `name::String`
 
@@ -422,15 +422,15 @@ using Tables
 
             """
                 layer_to_columntable_with_WKT(
-                    drvshortname::String, 
+                    drvshortname::String,
                     geomfamilly::String,
                     withmissinggeom::Bool,
                     withmissingfield::Bool,
                     withmixedgeomtypes::Bool,
                 )::NamedTuple
 
-            Convenience function to build new test results for `test_layer_to_table`  
-            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable  
+            Convenience function to build new test results for `test_layer_to_table`
+            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable
             Returns a `NamedTuple` with:
             - names: layer geom and field names
             - types: expected types given by `Tables.buildcolumns`
@@ -464,14 +464,14 @@ using Tables
 
             """
                 test_layer_to_table(
-                    drvshortname::String, 
+                    drvshortname::String,
                     geomfamilly::String,
                     withmissinggeom::Bool,
                     withmissingfield::Bool,
                     withmixedgeomtypes::Bool,
                     reference_geotable::Tuple)
 
-            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable  
+            Creates a dataset from scratch with `get_test_dataset` and converts it to a columntable
             And test Tables.columntable(::AG.IFeatureLayer) result against `reference_geotable`
 
             """
@@ -536,7 +536,7 @@ using Tables
                     values = (
                         Union{Missing,String}[
                             "POLYGON ((0 0,0 1,1 1))",
-                            "MULTIPOLYGON (((0 0,0 1,1 1)),((0.9 0.9,0.0 0.9,0 0)))",
+                            "MULTIPOLYGON (((0 0,0 1,1 1)),((0 0,0.0 0.9,0.9 0.9)))",
                             missing,
                             "POLYGON ((0 0,-1 0,-1 1))",
                         ],
