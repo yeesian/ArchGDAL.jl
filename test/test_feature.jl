@@ -2,8 +2,8 @@ using Test
 import ArchGDAL as AG
 import GeoInterface as GI
 
-@enum TestEnum::Bool begin
-    EnumValue = false
+@enum MyEnum::Bool begin
+    MyEnumValue = false
 end
 
 @testset "test_feature.jl" begin
@@ -282,7 +282,7 @@ end
                 AG.setfield!(feature, 15, geojsonstring)
                 AG.setfield!(feature, 16, UInt16(1.0))
                 AG.setfield!(feature, 17, UInt32(1.0))
-                AG.setfield!(feature, 18, EnumValue)
+                AG.setfield!(feature, 18, MyEnumValue)
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
