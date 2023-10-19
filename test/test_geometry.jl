@@ -9,27 +9,29 @@ import GeoFormatTypes as GFT
             @test GI.geomtrait(point) == GI.PointTrait()
             @test GI.testgeometry(point)
             @test GI.bbox(point).X[1] == 100
+            @test !GI.is3d(point)
             @test GI.x(point) == 100
             @test GI.y(point) == 70
-            @test GI.z(point) == nothing
-            @test GI.m(point) == nothing
+            @test_throws ArgumentError GI.z(point)
+            @test_throws ArgumentError GI.m(point)
             @test GI.getcoord(point, 1) == 100
             @test GI.getcoord(point, 2) == 70
-            @test GI.getcoord(point, 3) == nothing
-            @test GI.getcoord(point, 4) == nothing
+            @test_throws ArgumentError GI.getcoord(point, 3)
+            @test_throws ArgumentError GI.getcoord(point, 4)
         end
         AG.createpoint(100, 70, 1) do point
             @test GI.geomtrait(point) == GI.PointTrait()
             @test GI.testgeometry(point)
             @test GI.bbox(point).Z[1] == 1
+            @test GI.is3d(point)
             @test GI.x(point) == 100
             @test GI.y(point) == 70
             @test GI.z(point) == 1
-            @test GI.m(point) == nothing
+            @test_throws ArgumentError GI.m(point)
             @test GI.getcoord(point, 1) == 100
             @test GI.getcoord(point, 2) == 70
             @test GI.getcoord(point, 3) == 1
-            @test GI.getcoord(point, 4) == nothing
+            @test_throws ArgumentError GI.getcoord(point, 4)
         end
         @test GI.isgeometry(AG.IGeometry)
     end
@@ -288,6 +290,11 @@ import GeoFormatTypes as GFT
                     [[1, 4], [2, 5], [3, 6]],
                     atol = 1e-6,
                 )
+                @test GI.getgeom(geom, 1) == (1, 4)
+                # Round-trip via geointeface
+                @test AG.toWKT(
+                    AG.createlinestring(collect(GI.getgeom(geom))),
+                ) == "LINESTRING (1 4,2 5,3 6)"
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
                 AG.closerings!(geom)
                 @test AG.toWKT(geom) == "LINESTRING (1 4,2 5,3 6)"
@@ -353,6 +360,11 @@ import GeoFormatTypes as GFT
                     [[1, 4], [2, 5], [3, 6]],
                     atol = 1e-6,
                 )
+                @test GI.getgeom(geom, 1) == (1, 4)
+                # Round-trip via geointeface
+                @test AG.toWKT(
+                    AG.createlinearring(collect(GI.getgeom(geom))),
+                ) == "LINEARRING (1 4,2 5,3 6)"
                 @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6)"
                 AG.setpointcount!(geom, 5)
                 @test AG.toWKT(geom) == "LINEARRING (1 4,2 5,3 6,0 0,0 0)"
@@ -971,14 +983,14 @@ import GeoFormatTypes as GFT
     @testset "Test coordinate dimensions" begin
         AG.createpoint(1, 2, 3) do point
             @test GI.getcoord(point, 3) == 3
-            @test isnothing(GI.getcoord(point, 4))
+            @test_throws ArgumentError GI.getcoord(point, 4)
             @test !GI.isempty(point)
             @test !GI.ismeasured(point)
             @test GI.is3d(point)
         end
         AG.createpoint(1, 2) do point
-            @test isnothing(GI.getcoord(point, 3))
-            @test isnothing(GI.getcoord(point, 4))
+            @test_throws ArgumentError GI.getcoord(point, 3)
+            @test_throws ArgumentError GI.getcoord(point, 4)
             @test !GI.isempty(point)
             @test !GI.ismeasured(point)
             @test !GI.is3d(point)
