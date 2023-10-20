@@ -32,7 +32,7 @@ In the above example, we constructed a `SpatialRef` object from the [EPSG Code 2
 * [`ArchGDAL.importEPSG(::Int)`](@ref): based on the [EPSG code](http://spatialreference.org/ref/epsg/)
 * [`ArchGDAL.importEPSGA(::Int)`](@ref): based on the EPSGA code
 * [`ArchGDAL.importESRI(::String)`](@ref): based on ESRI projection codes
-* [`ArchGDAL.importPROJ4(::String)` based on the PROJ.4 string ([reference](http://proj4.org/usage/projections.html))
+* [`ArchGDAL.importPROJ4(::String)`](@ref): based on the PROJ.4 string ([reference](http://proj4.org/usage/projections.html))
 * [`ArchGDAL.importURL(::String)`](@ref): download from a given URL and feed it into `SetFromUserInput` for you.
 * [`ArchGDAL.importWKT(::String)`](@ref): WKT string
 * [`ArchGDAL.importXML(::String)`](@ref): XML format (GML only currently)
