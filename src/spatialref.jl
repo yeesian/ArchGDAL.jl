@@ -622,7 +622,7 @@ end
 
 Export EPSG code for this coordinate system if available.
 """
-function toEPSG(spref::AbstractSpatialRef)::String
+function toEPSG(spref::AbstractSpatialRef)::Int32
     result = GDAL.osrgetauthorityname(spref.ptr, "PROJCS")
 
     if !isnothing(result)
@@ -636,7 +636,8 @@ function toEPSG(spref::AbstractSpatialRef)::String
         error("No PROJCS or GEOGCS Authority found")
     elseif result == "EPSG"
             epsg = GDAL.osrgetauthoritycode(spref.ptr, projcs)
-        return "EPSG:$(epsg)"
+            epsg = parse(Int32, epsg)
+        return epsg
     else
         error("$result is not an EPSG authority")
     end
