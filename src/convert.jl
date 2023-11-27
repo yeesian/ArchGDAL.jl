@@ -121,7 +121,4 @@ end
 function unsafe_convertcrs(::Type{<:GFT.ESRIWellKnownText}, crsref)
     return GFT.ESRIWellKnownText(GFT.CRS(), toWKT(morphtoESRI!(crsref)))
 end
-function unsafe_convertcrs(::Type{<:GFT.EPSG}, crsref)
-    return GFT.EPSG(toEPSG(crsref))
-end
 unsafe_convertcrs(::Type{<:GFT.GML}, crsref) = GFT.GML(toXML(crsref))
