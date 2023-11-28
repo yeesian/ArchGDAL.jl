@@ -112,6 +112,9 @@ end
 function unsafe_convertcrs(::Type{<:GFT.ProjString}, crsref)
     return GFT.ProjString(toPROJ4(crsref))
 end
+function unsafe_convertcrs(::Type{<:GFT.EPSG}, crsref)
+    return GFT.EPSG(toEPSG(crsref))
+end
 function unsafe_convertcrs(::Type{<:GFT.WellKnownText}, crsref)
     return GFT.WellKnownText(GFT.CRS(), toWKT(crsref))
 end

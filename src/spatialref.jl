@@ -605,6 +605,7 @@ Convert this SRS into a nicely formatted WKT string for display to a person.
 function toWKT(spref::AbstractSpatialRef, simplify::Bool)::String
     wktptr = Ref{Cstring}()
     result = GDAL.osrexporttoprettywkt(spref, wktptr, simplify)
+
     @ogrerr result "Failed to convert this SRS into pretty WKT"
     return unsafe_string(wktptr[])
 end
@@ -619,6 +620,32 @@ function toPROJ4(spref::AbstractSpatialRef)::String
     result = GDAL.osrexporttoproj4(spref, projptr)
     @ogrerr result "Failed to export this SRS to PROJ.4 format"
     return unsafe_string(projptr[])
+end
+
+"""
+    toEPSG(spref::AbstractSpatialRef)
+
+Export EPSG code for this coordinate system if available.
+"""
+function toEPSG(spref::AbstractSpatialRef)::Int64
+    result = GDAL.osrgetauthorityname(spref.ptr, "PROJCS")
+
+    if !isnothing(result)
+        projcs = "PROJCS"
+    else
+        result = GDAL.osrgetauthorityname(spref.ptr, "GEOGCS")
+        projcs = "GEOGCS"
+    end
+
+    if isnothing(result)
+        error("No PROJCS or GEOGCS Authority found")
+    elseif result == "EPSG"
+            epsg = GDAL.osrgetauthoritycode(spref.ptr, projcs)
+            epsg = parse(Int64, epsg)
+        return epsg
+    else
+        error("$result is not an EPSG authority")
+    end
 end
 
 """
