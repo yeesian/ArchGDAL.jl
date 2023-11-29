@@ -640,8 +640,8 @@ function toEPSG(spref::AbstractSpatialRef)::Int64
     if isnothing(result)
         error("No PROJCS or GEOGCS Authority found")
     elseif result == "EPSG"
-            epsg = GDAL.osrgetauthoritycode(spref.ptr, projcs)
-            epsg = parse(Int64, epsg)
+        epsg = GDAL.osrgetauthoritycode(spref.ptr, projcs)
+        epsg = parse(Int64, epsg)
         return epsg
     else
         error("$result is not an EPSG authority")
