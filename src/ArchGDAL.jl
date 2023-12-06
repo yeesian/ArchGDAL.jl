@@ -5,7 +5,6 @@ using GDAL: GDAL
 using GeoFormatTypes: GeoFormatTypes
 import GeoInterface
 using GeoInterfaceRecipes
-using GeoInterfaceMakie: GeoInterfaceMakie as GIM
 using Tables: Tables
 using ImageCore: Normed, N0f8, N0f16, N0f32, ImageCore
 using ColorTypes: ColorTypes
