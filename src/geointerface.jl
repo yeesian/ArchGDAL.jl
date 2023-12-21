@@ -55,8 +55,23 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         GeoInterface.TriangleTrait,
     }
 
+    # Raster
+    function GeoInterface.crs(ds::AbstractDataset)
+        sr = getproj(ds)
+        return Base.isempty(sr) ? nothing : GFT.WellKnownText(GFT.CRS(), sr)
+    end
+
     # Feature
     GeoInterface.isfeature(feat::AbstractFeature) = true
+    function GeoInterface.crs(layer::AbstractFeatureLayer)
+        sr = getspatialref(layer)
+        return sr.ptr == C_NULL ? nothing : convert(GFT.WellKnownText, sr)
+    end
+    function GeoInterface.crs(geom::AbstractGeometry)
+        sr = getspatialref(geom)
+        return sr.ptr == C_NULL ? nothing : convert(GFT.WellKnownText, sr)
+    end
+
     function GeoInterface.properties(feat::AbstractFeature)
         return (; (zip(Symbol.(keys(feat)), values(feat)))...)
     end

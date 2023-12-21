@@ -1,6 +1,7 @@
 using Test
 import ArchGDAL as AG
 import GeoFormatTypes as GFT
+import GeoInterface
 
 @testset "test_spatialref.jl" begin
     @testset "Test Formats for Spatial Reference Systems" begin
@@ -185,6 +186,8 @@ import GeoFormatTypes as GFT
                 @test AG.toPROJ4(spatialref2) == proj26912
                 AG.importPROJ4!(spatialref2, AG.toPROJ4(spatialref))
                 @test AG.toPROJ4(spatialref2) == proj4326
+                @test convert(GFT.WellKnownText, spatialref) isa
+                      GFT.WellKnownText{GFT.CRS}
             end
         end
 
@@ -194,6 +197,8 @@ import GeoFormatTypes as GFT
                 @test AG.toWKT(spatialref2) == wkt26912
                 AG.importWKT!(spatialref2, AG.toWKT(spatialref))
                 @test AG.toWKT(spatialref2) == wkt4326
+                @test convert(GFT.WellKnownText, spatialref) isa
+                      GFT.WellKnownText{GFT.CRS}
             end
         end
 
@@ -203,6 +208,8 @@ import GeoFormatTypes as GFT
                 @test AG.toWKT(spatialref2) == esri26912
                 AG.importESRI!(spatialref2, AG.toWKT(spatialref))
                 @test AG.toWKT(spatialref2) == esri4326
+                @test convert(GFT.WellKnownText, spatialref) isa
+                      GFT.WellKnownText{GFT.CRS}
             end
         end
 
@@ -212,6 +219,8 @@ import GeoFormatTypes as GFT
                 @test startswith(AG.toXML(spatialref2), "<gml:ProjectedCRS")
                 AG.importXML!(spatialref2, xml4326)
                 @test startswith(AG.toXML(spatialref2), "<gml:GeographicCRS")
+                @test convert(GFT.WellKnownText, spatialref) isa
+                      GFT.WellKnownText{GFT.CRS}
             end
         end
 
@@ -221,6 +230,8 @@ import GeoFormatTypes as GFT
                 @test contains(AG.toPROJ4(spatialref2), "+geoidgrids=")
                 AG.importUserInput!(spatialref2, cepsg)
                 @test contains(AG.toPROJ4(spatialref2), "+geoidgrids=")
+                @test convert(GFT.WellKnownText, spatialref) isa
+                      GFT.WellKnownText{GFT.CRS}
             end
         end
 

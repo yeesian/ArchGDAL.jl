@@ -106,6 +106,10 @@ function Base.convert(
     return unsafe_convertcrs(target, importCRS(source))
 end
 
+function Base.convert(target::Type{<:GFT.GeoFormat}, source::AbstractSpatialRef)
+    return unsafe_convertcrs(target, source)
+end
+
 function unsafe_convertcrs(::Type{<:GFT.CoordSys}, crsref)
     return GFT.CoordSys(toMICoordSys(crsref))
 end

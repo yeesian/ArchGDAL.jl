@@ -10,11 +10,14 @@ import GeoFormatTypes as GFT
                 AG.importEPSG(4326) do target
                     AG.createcoordtrans(source, target) do transform
                         AG.fromWKT("POINT (1120351.57 741921.42)") do point
+                            @test GeoInterface.crs(point) === nothing
                             @test AG.toWKT(point) ==
                                   "POINT (1120351.57 741921.42)"
                             AG.transform!(point, transform)
                             @test GeoInterface.coordinates(point) ≈
                                   [47.3488070138318, -122.5981499431438]
+                            @test GeoInterface.crs(point) isa
+                                  GFT.WellKnownText{GFT.CRS}
                         end
                     end
                 end
@@ -116,6 +119,7 @@ import GeoFormatTypes as GFT
             @test AG.toXML(spatialref)[1:17] == "<gml:ProjectedCRS"
             @test AG.toMICoordSys(spatialref) ==
                   "Earth Projection 8, 104, \"m\", -111, 0, 0.9996, 500000, 0"
+            @test GeoInterface.crs(layer) isa GFT.WellKnownText{GFT.CRS}
             AG.nextfeature(layer) do feature
                 @test AG.toPROJ4(AG.getspatialref(AG.getgeom(feature))) ==
                       "+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs"
