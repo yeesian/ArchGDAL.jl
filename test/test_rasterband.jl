@@ -1,6 +1,8 @@
 using Test
 import GDAL
 import ArchGDAL as AG
+import GeoInterface
+import GeoFormatTypes as GFT
 
 @testset "test_rasterband.jl" begin
     @testset "Test methods for rasterband" begin
@@ -15,6 +17,9 @@ import ArchGDAL as AG
               [GA_ReadOnly] Band 1 (Gray): 100 x 100 (UInt8)
             """
             @test sprint(print, dataset) == ds_result
+
+            @test GeoInterface.crs(dataset) isa GFT.WellKnownText{GFT.CRS}
+
             rb = AG.getband(dataset, 1)
             sprint(print, rb) == """
             [GA_ReadOnly] Band 1 (Gray): 100 x 100 (UInt8)

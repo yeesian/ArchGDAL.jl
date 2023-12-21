@@ -287,6 +287,7 @@ end
         nbands = 1,
         dtype = ComplexF32,
     ) do ds
+        @test isnothing(GeoInterface.crs(ds))
         return AG.write!(ds, a, 1)
     end
 
