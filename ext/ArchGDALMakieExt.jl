@@ -1,4 +1,4 @@
-module ArchGDALGeoInterfaceMakie
+module ArchGDALMakieExt
 using GeoInterfaceMakie: GeoInterfaceMakie
 using ArchGDAL: ArchGDAL
 
