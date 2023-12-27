@@ -64,7 +64,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
 
     GeoInterface.isgeometry(::Type{<:AbstractGeometry}) = true
     @enable_geo_plots AbstractGeometry
-    #Makie plots
     GeoInterface.is3d(::GeometryTraits, geom::AbstractGeometry) = is3d(geom)
     function GeoInterface.ismeasured(::GeometryTraits, geom::AbstractGeometry)
         return ismeasured(geom)
