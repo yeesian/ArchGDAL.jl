@@ -28,6 +28,7 @@ ArchGDALMakieExt = "Makie"
 [compat]
 CEnum = "0.4, 0.5"
 ColorTypes = "0.10, 0.11"
+Dates = "<0.0.1,1"
 DiskArrays = "0.3"
 Extents = "0.1"
 GDAL = "1.5.1"
