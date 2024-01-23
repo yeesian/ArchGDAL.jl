@@ -1,6 +1,8 @@
 using Test
 using Dates
 using GDAL
+import ArchGDAL
+import Aqua
 
 # ensure all testing files are present
 include("remotefiles.jl")
@@ -37,6 +39,7 @@ include("remotefiles.jl")
         include("test_images.jl")
         include("test_utils.jl")
         include("test_prepared_geometry.jl")
+        Aqua.test_all(ArchGDAL; ambiguities = false, stale_deps = false, piracies = false)
         return nothing
     end
 end
