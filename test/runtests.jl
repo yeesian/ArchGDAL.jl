@@ -39,7 +39,12 @@ include("remotefiles.jl")
         include("test_images.jl")
         include("test_utils.jl")
         include("test_prepared_geometry.jl")
-        Aqua.test_all(ArchGDAL; ambiguities = false, stale_deps = false, piracies = false)
+        Aqua.test_all(
+            ArchGDAL;
+            ambiguities = false,
+            stale_deps = false,
+            piracies = false,
+        )
         return nothing
     end
 end
