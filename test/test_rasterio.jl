@@ -275,6 +275,180 @@ import ArchGDAL as AG
     end
 end
 
+
+@testset "Non standard buffer rasterio " begin
+    AG.read("ospy/data4/aster.img") do ds
+        @testset "version 1" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            abuffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
+            buffer = view(abuffer, :,:,:)
+            for (cols, rows) in AG.windows(band)
+                AG.rasterio!(ds, buffer, [1], rows, cols)
+                data = buffer[1:length(cols), 1:length(rows)]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 2" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            abuffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
+            buffer = view(abuffer, :,:,:)
+
+            for (cols, rows) in AG.windows(band)
+                AG.read!(ds, buffer, [1], rows, cols)
+                data = buffer[1:length(cols), 1:length(rows)]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 3" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            abuffer = Matrix{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
+            buffer = view(abuffer, :,:)
+
+            for (cols, rows) in AG.windows(band)
+                AG.read!(ds, buffer, 1, rows, cols)
+                data = buffer[1:length(cols), 1:length(rows)]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 4" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            abuffer = Matrix{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
+            buffer = view(abuffer, :,:)
+
+            for (cols, rows) in AG.windows(band)
+                AG.read!(band, buffer, rows, cols)
+                data = buffer[1:length(cols), 1:length(rows)]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 5" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            xbsize, ybsize = AG.blocksize(band)
+            abuffer = Matrix{AG.pixeltype(band)}(undef, ybsize, xbsize)
+            buffer = view(abuffer, :,:)
+
+            for ((i, j), (nrows, ncols)) in AG.blocks(band)
+                # AG.rasterio!(ds,buffer,[1],i,j,nrows,ncols)
+                # AG.read!(band, buffer, j, i, ncols, nrows)
+                AG.readblock!(band, j, i, buffer)
+                data = buffer[1:nrows, 1:ncols]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 6" begin
+            band = AG.getband(ds, 1)
+            abuffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+            buffer = view(abuffer, :,:,:)
+
+            AG.rasterio!(ds, buffer, [1])
+            count = sum(buffer .> 0)
+            total = sum(buffer)
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 7" begin
+            band = AG.getband(ds, 1)
+            abuffer =
+                Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
+            buffer = view(abuffer, :,:)
+
+            AG.read!(band, buffer)
+            count = sum(buffer .> 0)
+            total = sum(buffer)
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 8" begin
+            band = AG.getband(ds, 1)
+            abuffer =
+                Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
+            buffer = view(abuffer, :,:)
+
+                AG.read!(ds, buffer, 1)
+            count = sum(buffer .> 0)
+            total = sum(buffer)
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 9" begin
+            band = AG.getband(ds, 1)
+            abuffer =
+                Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+            buffer = view(abuffer, :,:,:)
+
+            AG.read!(ds, buffer, [1])
+            count = sum(buffer .> 0)
+            total = sum(buffer)
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        @testset "version 10" begin
+            band = AG.getband(ds, 1)
+            abuffer =
+                Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 3)
+            buffer = view(abuffer, :,:, :)
+
+            AG.read!(ds, buffer)
+            count = sum(buffer[:, :, 1] .> 0)
+            total = sum(buffer[:, :, 1])
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+
+        # check for calling with Tuple
+        @testset "version 11" begin
+            band = AG.getband(ds, 1)
+            count = 0
+            total = 0
+            abuffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
+            buffer = view(abuffer, :,:,:)
+
+            for (cols, rows) in AG.windows(band)
+                AG.rasterio!(ds, buffer, (1,), rows, cols)
+                data = buffer[1:length(cols), 1:length(rows)]
+                count += sum(data .> 0)
+                total += sum(data)
+            end
+            @test total / count ≈ 76.33891347095299
+            @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
+        end
+    end
+end
+
 @testset "Complex IO" begin
     a = rand(ComplexF32, 10, 10)
 
