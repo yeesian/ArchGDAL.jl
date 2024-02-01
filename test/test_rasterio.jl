@@ -290,6 +290,7 @@ end
                 count += sum(data .> 0)
                 total += sum(data)
             end
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -307,6 +308,7 @@ end
                 count += sum(data .> 0)
                 total += sum(data)
             end
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -324,6 +326,7 @@ end
                 count += sum(data .> 0)
                 total += sum(data)
             end
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -341,6 +344,7 @@ end
                 count += sum(data .> 0)
                 total += sum(data)
             end
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -361,6 +365,7 @@ end
                 count += sum(data .> 0)
                 total += sum(data)
             end
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -373,6 +378,7 @@ end
             AG.rasterio!(ds, buffer, [1])
             count = sum(buffer .> 0)
             total = sum(buffer)
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -386,6 +392,7 @@ end
             AG.read!(band, buffer)
             count = sum(buffer .> 0)
             total = sum(buffer)
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -399,6 +406,7 @@ end
                 AG.read!(ds, buffer, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -412,6 +420,7 @@ end
             AG.read!(ds, buffer, [1])
             count = sum(buffer .> 0)
             total = sum(buffer)
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -425,6 +434,7 @@ end
             AG.read!(ds, buffer)
             count = sum(buffer[:, :, 1] .> 0)
             total = sum(buffer[:, :, 1])
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
@@ -443,6 +453,7 @@ end
                 count += sum(data .> 0)
                 total += sum(data)
             end
+            @test buffer isa SubArray
             @test total / count ≈ 76.33891347095299
             @test total / (AG.height(ds) * AG.width(ds)) ≈ 47.55674749653172
         end
