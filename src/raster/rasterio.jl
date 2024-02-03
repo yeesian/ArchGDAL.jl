@@ -255,7 +255,10 @@ function rasterio!(
     return buffer
 end
 
-function read!(rb::AbstractRasterBand, buffer::T)::T where {T<:AbstractMatrix{<:Any}}
+function read!(
+    rb::AbstractRasterBand,
+    buffer::T,
+)::T where {T<:AbstractMatrix{<:Any}}
     rasterio!(rb, buffer, GF_Read)
     return buffer
 end
@@ -348,7 +351,10 @@ function read!(
     return buffer
 end
 
-function read!(dataset::AbstractDataset, buffer::T)::T where {T<:AbstractArray{<:Any,3}}
+function read!(
+    dataset::AbstractDataset,
+    buffer::T,
+)::T where {T<:AbstractArray{<:Any,3}}
     nband = nraster(dataset)
     @assert size(buffer, 3) == nband
     rasterio!(dataset, buffer, collect(Cint, 1:nband), GF_Read)

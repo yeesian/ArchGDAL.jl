@@ -275,7 +275,6 @@ import ArchGDAL as AG
     end
 end
 
-
 @testset "Non standard buffer rasterio " begin
     AG.read("ospy/data4/aster.img") do ds
         @testset "version 1" begin
@@ -283,7 +282,7 @@ end
             count = 0
             total = 0
             abuffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
-            buffer = view(abuffer, :,:,:)
+            buffer = view(abuffer, :, :, :)
             for (cols, rows) in AG.windows(band)
                 AG.rasterio!(ds, buffer, [1], rows, cols)
                 data = buffer[1:length(cols), 1:length(rows)]
@@ -300,7 +299,7 @@ end
             count = 0
             total = 0
             abuffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
-            buffer = view(abuffer, :,:,:)
+            buffer = view(abuffer, :, :, :)
 
             for (cols, rows) in AG.windows(band)
                 AG.read!(ds, buffer, [1], rows, cols)
@@ -318,7 +317,7 @@ end
             count = 0
             total = 0
             abuffer = Matrix{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
-            buffer = view(abuffer, :,:)
+            buffer = view(abuffer, :, :)
 
             for (cols, rows) in AG.windows(band)
                 AG.read!(ds, buffer, 1, rows, cols)
@@ -336,7 +335,7 @@ end
             count = 0
             total = 0
             abuffer = Matrix{AG.pixeltype(band)}(undef, AG.blocksize(band)...)
-            buffer = view(abuffer, :,:)
+            buffer = view(abuffer, :, :)
 
             for (cols, rows) in AG.windows(band)
                 AG.read!(band, buffer, rows, cols)
@@ -355,7 +354,7 @@ end
             total = 0
             xbsize, ybsize = AG.blocksize(band)
             abuffer = Matrix{AG.pixeltype(band)}(undef, ybsize, xbsize)
-            buffer = view(abuffer, :,:)
+            buffer = view(abuffer, :, :)
 
             for ((i, j), (nrows, ncols)) in AG.blocks(band)
                 # AG.rasterio!(ds,buffer,[1],i,j,nrows,ncols)
@@ -372,8 +371,9 @@ end
 
         @testset "version 6" begin
             band = AG.getband(ds, 1)
-            abuffer = Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
-            buffer = view(abuffer, :,:,:)
+            abuffer =
+                Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
+            buffer = view(abuffer, :, :, :)
 
             AG.rasterio!(ds, buffer, [1])
             count = sum(buffer .> 0)
@@ -387,7 +387,7 @@ end
             band = AG.getband(ds, 1)
             abuffer =
                 Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
-            buffer = view(abuffer, :,:)
+            buffer = view(abuffer, :, :)
 
             AG.read!(band, buffer)
             count = sum(buffer .> 0)
@@ -401,9 +401,9 @@ end
             band = AG.getband(ds, 1)
             abuffer =
                 Matrix{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds))
-            buffer = view(abuffer, :,:)
+            buffer = view(abuffer, :, :)
 
-                AG.read!(ds, buffer, 1)
+            AG.read!(ds, buffer, 1)
             count = sum(buffer .> 0)
             total = sum(buffer)
             @test buffer isa SubArray
@@ -415,7 +415,7 @@ end
             band = AG.getband(ds, 1)
             abuffer =
                 Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 1)
-            buffer = view(abuffer, :,:,:)
+            buffer = view(abuffer, :, :, :)
 
             AG.read!(ds, buffer, [1])
             count = sum(buffer .> 0)
@@ -429,7 +429,7 @@ end
             band = AG.getband(ds, 1)
             abuffer =
                 Array{AG.pixeltype(band)}(undef, AG.width(ds), AG.height(ds), 3)
-            buffer = view(abuffer, :,:, :)
+            buffer = view(abuffer, :, :, :)
 
             AG.read!(ds, buffer)
             count = sum(buffer[:, :, 1] .> 0)
@@ -445,7 +445,7 @@ end
             count = 0
             total = 0
             abuffer = Array{AG.pixeltype(band)}(undef, AG.blocksize(band)..., 1)
-            buffer = view(abuffer, :,:,:)
+            buffer = view(abuffer, :, :, :)
 
             for (cols, rows) in AG.windows(band)
                 AG.rasterio!(ds, buffer, (1,), rows, cols)
