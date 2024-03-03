@@ -23,6 +23,7 @@ import ArchGDAL as AG
                 @test AG.ngcp(ds) == 0
                 @test AG.write(ds, tempname()) == nothing
                 @test AG.testcapability(ds, "ODsCCreateLayer") == false
+                @test startswith(AG.gdalinfo(ds), "Driver:")
             end
             @testset "DiskArray chunk interface" begin
                 b = AG.getband(ds, 1)
