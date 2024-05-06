@@ -28,7 +28,8 @@ GDT_Unknown::GDALDataType = 0x00000000
     GDT_CInt32 = 11,
     GDT_CFloat32 = 12,
     GDT_CFloat64 = 13,
-    GDT_TypeCount = 14,
+    GDT_Int8 = 14,
+    GDT_TypeCount = 15,
 )
 
 """
