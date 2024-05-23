@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="en"><head><meta charset="UTF-8"/><meta name="viewport" content="width=device-width, initial-scale=1.0"/><title>ArchGDAL Quickstart Guide · ArchGDAL.jl</title><link rel="canonical" href="https://yeesian.com/ArchGDAL.jl/quickstart/"/><link href="https://fonts.googleapis.com/css?family=Lato|Roboto+Mono" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/fontawesome.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/solid.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.0/css/brands.min.css" rel="stylesheet" type="text/css"/><link href="https://cdnjs.cloudflare.com/ajax/libs/KaTeX/0.11.1/katex.min.css" rel="stylesheet" type="text/css"/><script>documenterBaseURL=".."</script><script src="https://cdnjs.cloudflare.com/ajax/libs/require.js/2.3.6/require.min.js" data-main="../assets/documenter.js"></script><script src="../siteinfo.js"></script><script src="../../versions.js"></script><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-dark.css" data-theme-name="documenter-dark" data-theme-primary-dark/><link class="docs-theme-link" rel="stylesheet" type="text/css" href="../assets/themes/documenter-light.css" data-theme-name="documenter-light" data-theme-primary/><script src="../assets/themeswap.js"></script></head><body><div id="documenter"><nav class="docs-sidebar"><div class="docs-package-name"><span class="docs-autofit">ArchGDAL.jl</span></div><form class="docs-search" action="../search/"><input class="docs-search-query" id="documenter-search-query" name="q" type="text" placeholder="Search docs"/></form><ul class="docs-menu"><li><a class="tocitem" href="../">ArchGDAL.jl documentation</a></li><li class="is-active"><a class="tocitem" href>ArchGDAL Quickstart Guide</a><ul class="internal"><li><a class="tocitem" href="#Opening-the-dataset"><span>Opening the dataset</span></a></li><li><a class="tocitem" href="#Dataset-Attributes"><span>Dataset Attributes</span></a></li><li><a class="tocitem" href="#Dataset-Georeferencing"><span>Dataset Georeferencing</span></a></li><li><a class="tocitem" href="#Reading-Raster-data"><span>Reading Raster data</span></a></li><li><a class="tocitem" href="#Writing-into-Dataset"><span>Writing into Dataset</span></a></li></ul></li><li><a class="tocitem" href="../datasets/">GDAL Datasets</a></li><li><a class="tocitem" href="../features/">Feature Data</a></li><li><a class="tocitem" href="../rasters/">Raster Data</a></li><li><a class="tocitem" href="../images/">Working with Images</a></li><li><a class="tocitem" href="../tables/">Tables Interface</a></li><li><a class="tocitem" href="../geometries/">Geometric Operations</a></li><li><a class="tocitem" href="../projections/">Spatial Projections</a></li><li><a class="tocitem" href="../memory/">Interactive versus Scoped Objects</a></li><li><a class="tocitem" href="../considerations/">Design Considerations</a></li><li><a class="tocitem" href="../reference/">API Reference</a></li></ul><div class="docs-version-selector field has-addons"><div class="control"><span class="docs-label button is-static is-size-7">Version</span></div><div class="docs-selector control is-expanded"><div class="select is-fullwidth is-size-7"><select id="documenter-version-selector"></select></div></div></div></nav><div class="docs-main"><header class="docs-navbar"><nav class="breadcrumb"><ul class="is-hidden-mobile"><li class="is-active"><a href>ArchGDAL Quickstart Guide</a></li></ul><ul class="is-hidden-tablet"><li class="is-active"><a href>ArchGDAL Quickstart Guide</a></li></ul></nav><div class="docs-right"><a class="docs-edit-link" href="https://github.com/yeesian/ArchGDAL.jl/blob/master/docs/src/quickstart.md" title="Edit on GitHub"><span class="docs-icon fab"></span><span class="docs-label is-hidden-touch">Edit on GitHub</span></a><a class="docs-settings-button fas fa-cog" id="documenter-settings-button" href="#" title="Settings"></a><a class="docs-sidebar-button fa fa-bars is-hidden-desktop" id="documenter-sidebar-button" href="#"></a></div></header><article class="content" id="documenter-page"><h1 id="ArchGDAL-quickstart"><a class="docs-heading-anchor" href="#ArchGDAL-quickstart">ArchGDAL quickstart</a><a id="ArchGDAL-quickstart-1"></a><a class="docs-heading-anchor-permalink" href="#ArchGDAL-quickstart" title="Permalink"></a></h1><blockquote><p>This tutorial is highly inspired by the <a href="https://rasterio.readthedocs.io/en/latest/quickstart.html">Python Quickstart</a>, and aims to provide a similar introductory guide to the ArchGDAL package.</p></blockquote><p>This guide uses a GeoTIFF image of the band 4 of a Landsat 8 image, covering a part of the United State&#39;s Colorado Plateau. This image was acquired on July 12, 2016, and can be download at <a href="https://landsatonaws.com/L8/037/034/LC08_L1TP_037034_20160712_20170221_01_T1">this link</a>. <img src="https://user-images.githubusercontent.com/4471859/87169013-a32ee600-c2cf-11ea-9d09-e82446812282.png" alt="example.tif"/></p><h2 id="Opening-the-dataset"><a class="docs-heading-anchor" href="#Opening-the-dataset">Opening the dataset</a><a id="Opening-the-dataset-1"></a><a class="docs-heading-anchor-permalink" href="#Opening-the-dataset" title="Permalink"></a></h2><p>Assuming that the ArchGDAL package is already installed, first import the package, and preferably assign an alias to the package.</p><p>In this example, we&#39;ll be fetching the raster dataset from where it is hosted.</p><pre><code class="language-julia-repl">julia&gt; dataset = AG.readraster(&quot;/vsicurl/http://landsat-pds.s3.amazonaws.com/c1/L8/037/034/LC08_L1TP_037034_20160712_20170221_01_T1/LC08_L1TP_037034_20160712_20170221_01_T1_B4.TIF&quot;)
+GDAL Dataset (Driver: GTiff/GeoTIFF)
+File(s):
+  /vsicurl/http://landsat-pds.s3.amazonaws.com/c1/L8/037/034/LC08_L1TP_037034_20160712_20170221_01_T1/LC08_L1TP_037034_20160712_20170221_01_T1_B4.TIF
+  /vsicurl/http://landsat-pds.s3.amazonaws.com/c1/L8/037/034/LC08_L1TP_037034_20160712_20170221_01_T1/LC08_L1TP_037034_20160712_20170221_01_T1_B4.TIF.ovr
+  /vsicurl/http://landsat-pds.s3.amazonaws.com/c1/L8/037/034/LC08_L1TP_037034_20160712_20170221_01_T1/LC08_L1TP_037034_20160712_20170221_01_T1_MTL.txt
+
+Dataset (width x height): 7731 x 7861 (pixels)
+Number of raster bands: 1
+  [GA_ReadOnly] Band 1 (Gray): 7731 x 7861 (UInt16)</code></pre><p>A dataset can be opened using ArchGDAL&#39;s <code>readraster(...)</code> method. This method takes in the path of a dataset as a string, and returns a GDAL Dataset object in read-only mode. </p><p>ArchGDAL can read a variety of file types using appropriate drivers. The driver used for opening the dataset can be queried as such.</p><pre><code class="language-julia-repl">julia&gt; AG.getdriver(dataset)
+Driver: GTiff/GeoTIFF</code></pre><h2 id="Dataset-Attributes"><a class="docs-heading-anchor" href="#Dataset-Attributes">Dataset Attributes</a><a id="Dataset-Attributes-1"></a><a class="docs-heading-anchor-permalink" href="#Dataset-Attributes" title="Permalink"></a></h2><p>A raster dataset can have multiple bands of information. To get the number of bands present in a dataset - </p><pre><code class="language-julia-repl">julia&gt; AG.nraster(dataset)
+1</code></pre><p>In our case, the raster dataset only has a single band. </p><p>Other properties of a raster dataset, such as the width and height can be accessed using the following functions</p><pre><code class="language-julia-repl">julia&gt; AG.width(dataset)
+7731
+
+julia&gt; AG.height(dataset)
+7861</code></pre><h2 id="Dataset-Georeferencing"><a class="docs-heading-anchor" href="#Dataset-Georeferencing">Dataset Georeferencing</a><a id="Dataset-Georeferencing-1"></a><a class="docs-heading-anchor-permalink" href="#Dataset-Georeferencing" title="Permalink"></a></h2><p>All raster datasets contain embedded georeferencing information, using which the raster image can be located at a geographic location. The georeferencing attributes are stored as the dataset&#39;s Geospatial Transform. </p><pre><code class="language-julia-repl">julia&gt; gt = AG.getgeotransform(dataset)
+6-element Vector{Float64}:
+ 358485.0
+     30.0
+      0.0
+      4.265115e6
+      0.0
+    -30.0</code></pre><p>The x-y coordinates of the top-left corner of the raster dataset are denoted by <code>gt[1]</code> and <code>gt[4]</code> values. In this case, the coordinates . The cell size is represented by <code>gt[2]</code> and <code>gt[6]</code> values, corresponding to the cell size in x and y directions respectively, and the <code>gt[3]</code> and <code>gt[5]</code> values define the rotation. In our case, the top left pixel is at an offset of 358485.0m and 4.265115e6m in x and y directions respectively, from the origin.</p><p>The Origin of the dataset is defined using what is called, a Coordinate Reference System (CRS in short). </p><pre><code class="language-julia-repl">julia&gt; p = AG.getproj(dataset)
+&quot;PROJCS[\&quot;WGS 84 / UTM zone 12N\&quot;,GEOGCS[\&quot;WGS 84\&quot;,DATUM[\&quot;WGS_1984\&quot;,SPHEROID[\&quot;WGS 84\&quot;,6378137,298.257223563,AUTHORITY[\&quot;EPSG\&quot;,\&quot;7030\&quot;]],AUTHORITY[\&quot;EPSG\&quot;,\&quot;6326\&quot;]],PRIMEM[\&quot;Greenwich\&quot;,0,AUTHORITY[\&quot;EPSG\&quot;,\&quot;8901\&quot;]],UNIT[\&quot;degree\&quot;,0.0174532925199433,AUTHORITY[\&quot;EPSG\&quot;,\&quot;9122\&quot;]],AUTHORITY[\&quot;EPSG\&quot;,\&quot;4326\&quot;]],PROJECTION[\&quot;Transverse_Mercator\&quot;],PARAMETER[\&quot;latitude_of_origin\&quot;,0],PARAMETER[\&quot;central_meridian\&quot;,-111],PARAMETER[\&quot;scale_factor\&quot;,0.9996],PARAMETER[\&quot;false_easting\&quot;,500000],PARAMETER[\&quot;false_northing\&quot;,0],UNIT[\&quot;metre\&quot;,1,AUTHORITY[\&quot;EPSG\&quot;,\&quot;9001\&quot;]],AXIS[\&quot;Easting\&quot;,EAST],AXIS[\&quot;Northing\&quot;,NORTH],AUTHORITY[\&quot;EPSG\&quot;,\&quot;32612\&quot;]]&quot;</code></pre><p>The <code>getproj(...)</code> function returns the projection of a dataset as a string representing the CRS in the OpenGIS WKT format. To convert it into other CRS representations, such as PROJ.4, <code>toPROJ4(...)</code> can be used. However, first the string representation of the CRS has to be converted into an <code>ArchGDAL.ISpatialRef</code> type using the <code>importWKT(...)</code> function.</p><pre><code class="language-julia-repl">julia&gt; AG.toPROJ4(AG.importWKT(p))
+&quot;+proj=utm +zone=12 +datum=WGS84 +units=m +no_defs&quot;</code></pre><h2 id="Reading-Raster-data"><a class="docs-heading-anchor" href="#Reading-Raster-data">Reading Raster data</a><a id="Reading-Raster-data-1"></a><a class="docs-heading-anchor-permalink" href="#Reading-Raster-data" title="Permalink"></a></h2><p>In the previous steps, we read the raster file as a dataset. To obtain the actual raster data, we can slice the array accordingly.</p><pre><code class="language-julia-repl">julia&gt; dataset[:, :, 1]
+7731×7861 Matrix{UInt16}:
+ 0x0000  0x0000  0x0000  0x0000  0x0000  …  0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000  …  0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+      ⋮                                  ⋱                               ⋮
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000  …  0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000     0x0000  0x0000  0x0000  0x0000
+ 0x0000  0x0000  0x0000  0x0000  0x0000  …  0x0000  0x0000  0x0000  0x0000</code></pre><p>Since the dimensions of the dataset are <code>[cols, rows, bands]</code>, respectively, using <code>[:, :, 1]</code> returns all the columns and rows for the first band. Accordingly other complex slice operations can also be performed. </p><p>To get the individual band</p><pre><code class="language-julia-repl">julia&gt; band = AG.getband(dataset, 1)
+[GA_ReadOnly] Band 1 (Gray): 7731 x 7861 (UInt16)
+    blocksize: 512×512, nodata: nothing, units: 1.0px + 0.0
+    overviews: (0) 2577x2621 (1) 859x874 (2) 287x292
+               (3) 96x98</code></pre><p>Band specific attributes can be easily accessed through a variety of functions</p><pre><code class="language-julia-repl">julia&gt; AG.width(band)
+7731
+
+julia&gt; AG.height(band)
+7861
+
+julia&gt; AG.getnodatavalue(band)
+
+julia&gt; AG.indexof(band)
+1</code></pre><p>The no-data value of the band can be obtained using the <code>getnodatavalue(...)</code> function, which in our case is -1.0e10. </p><h2 id="Writing-into-Dataset"><a class="docs-heading-anchor" href="#Writing-into-Dataset">Writing into Dataset</a><a id="Writing-into-Dataset-1"></a><a class="docs-heading-anchor-permalink" href="#Writing-into-Dataset" title="Permalink"></a></h2><p>Creating dummy data to be written as raster dataset.</p><pre><code class="language-julia">x = range(-4.0, 4.0, length=240)
+y = range(-3.0, 3.0, length=180)
+X = repeat(collect(x)&#39;, size(y)[1])
+Y = repeat(collect(y), 1, size(x)[1])
+Z1 = exp.(-2*log(2) .*((X.-0.5).^2 + (Y.-0.5).^2)./(1^2))
+Z2 = exp.(-3*log(2) .*((X.+0.5).^2 + (Y.+0.5).^2)./(2.5^2))
+Z = 10.0 .* (Z2 .- Z1)</code></pre><pre class="documenter-example-output">180×240 Matrix{Float64}:
+ 0.0212253   0.0229376   0.0247696   0.026728    …  0.00163782   0.00148217
+ 0.0224341   0.0242439   0.0261802   0.0282501      0.00173109   0.00156658
+ 0.023694    0.0256055   0.0276505   0.0298367      0.00182831   0.00165456
+ 0.0250059   0.0270233   0.0291816   0.0314888      0.00192955   0.00174618
+ 0.0263708   0.0284983   0.0307744   0.0332075      0.00203487   0.00184149
+ 0.0277894   0.0300313   0.0324298   0.0349939   …  0.00214433   0.00194055
+ 0.0292625   0.0316232   0.0341488   0.0368488      0.002258     0.00204341
+ 0.0307905   0.0332745   0.0359321   0.038773       0.00237591   0.00215012
+ 0.0323742   0.0349859   0.0377802   0.0407672      0.00249811   0.0022607
+ 0.0340139   0.0367579   0.0396937   0.042832       0.00262463   0.0023752
+ ⋮                                               ⋱               
+ 0.00525686  0.00568095  0.00613468  0.00661971     0.000405638  0.000367089
+ 0.00488943  0.00528388  0.00570589  0.00615702     0.000377286  0.000341431
+ 0.00454428  0.00491088  0.00530311  0.00572239     0.000350653  0.000317329
+ 0.00422034  0.00456081  0.00492507  0.00531446     0.000325656  0.000294708
+ 0.00391656  0.00423252  0.00457056  0.00493193  …  0.000302216  0.000273495
+ 0.00363193  0.00392493  0.00423841  0.00457351     0.000280253  0.000253619
+ 0.00336547  0.00363697  0.00392745  0.00423797     0.000259691  0.000235012
+ 0.00311622  0.00336762  0.00363659  0.00392411     0.000240459  0.000217607
+ 0.00288328  0.00311589  0.00336475  0.00363078     0.000222484  0.000201341</pre><p>The fictional field for this example consists of the difference of two Gaussian distributions and is represented by the array <code>Z</code>. Its contours are shown below. <img src="https://user-images.githubusercontent.com/7526346/87633084-5bd5a900-c758-11ea-8fd3-548d039f1a43.png" alt="creating-dataset"/></p><p>Once we have the data to write into a raster dataset, before performing the write operation itself, it is a good idea to define the geotransform and the coordinate reference system of the resulting dataset. For North-up raster images, only the <em>pixel-size/resolution</em> and the coordinates of the <em>upper-left</em> pixel is required. </p><pre><code class="language-julia"># Resolution
+res = (x[end] - x[1]) /240.0
+
+# Upper-left pixel coordinates
+ul_x = x[1] - res/2
+ul_y = y[1] - res/2
+
+gt = [ul_x, res, 0.0, ul_y, 0.0, res]</code></pre><pre class="documenter-example-output">6-element Vector{Float64}:
+ -4.016666666666667
+  0.03333333333333333
+  0.0
+ -3.0166666666666666
+  0.0
+  0.03333333333333333</pre><p>The coordinate reference system of the dataset needs to be a string in the WKT format. </p><pre><code class="language-julia">crs = AG.toWKT(AG.importPROJ4(&quot;+proj=latlong&quot;))</code></pre><pre class="documenter-example-output">&quot;GEOGCS[\&quot;unknown\&quot;,DATUM[\&quot;WGS_1984\&quot;,SPHEROID[\&quot;WGS 84\&quot;,6378137,298.257223563,AUTHORITY[\&quot;EPSG\&quot;,\&quot;7030\&quot;]],AUTHORITY[\&quot;EPSG\&quot;,\&quot;6326\&quot;]],PRIMEM[\&quot;Greenwich\&quot;,0,AUTHORITY[\&quot;EPSG\&quot;,\&quot;8901\&quot;]],UNIT[\&quot;degree\&quot;,0.0174532925199433,AUTHORITY[\&quot;EPSG\&quot;,\&quot;9122\&quot;]],AXIS[\&quot;Longitude\&quot;,EAST],AXIS[\&quot;Latitude\&quot;,NORTH]]&quot;</pre><p>To write this array, first a dataset has to be created. This can be done using the <code>AG.create</code> function. The first argument defines the path of the resulting dataset. The following keyword arguments are hopefully self-explanatory. </p><p>Once inside the <code>do...end</code> block, the <code>write!</code> method can be used to write the array(<code>Z</code>), in the 1st band of the opened <code>dataset</code>. Next, the geotransform and CRS can be specified using the <code>setgeotransform!</code> and <code>setproj!</code> methods.</p><pre><code class="language-julia">AG.create(
+    &quot;./temporary.tif&quot;,
+    driver = AG.getdriver(&quot;GTiff&quot;),
+    width=240,
+    height=180,
+    nbands=1,
+    dtype=Float64
+) do dataset
+    AG.write!(dataset, Z, 1)
+
+    AG.setgeotransform!(dataset, gt)
+    AG.setproj!(dataset, crs)
+end</code></pre><pre class="documenter-example-output">NULL Dataset</pre></article><nav class="docs-footer"><a class="docs-footer-prevpage" href="../">« ArchGDAL.jl documentation</a><a class="docs-footer-nextpage" href="../datasets/">GDAL Datasets »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> on <span class="colophon-date" title="Monday 5 July 2021 19:20">Monday 5 July 2021</span>. Using Julia version 1.6.1.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
