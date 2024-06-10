@@ -10,7 +10,6 @@ const lookup_method = Dict{DataType,Function}(
     GeoInterface.MultiLineStringTrait => createmultilinestring,
     GeoInterface.PolygonTrait => createpolygon,
     GeoInterface.MultiPolygonTrait => createmultipolygon,
-    GeoInterface.MultiPolygonTrait => createmultipolygon,
 )
 
 let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
