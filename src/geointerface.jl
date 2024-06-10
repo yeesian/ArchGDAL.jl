@@ -10,6 +10,7 @@ const lookup_method = Dict{DataType,Function}(
     GeoInterface.MultiLineStringTrait => createmultilinestring,
     GeoInterface.PolygonTrait => createpolygon,
     GeoInterface.MultiPolygonTrait => createmultipolygon,
+    GeoInterface.MultiPolygonTrait => createmultipolygon,
 )
 
 let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
@@ -350,6 +351,19 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
             "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
         )
         return f(GeoInterface.coordinates(geom))
+    end
+    function GeoInterface.convert(
+        ::Type{T},
+        type::GeoInterface.GeometryCollectionTrait,
+        geom,
+    ) where {T<:IGeometry}
+        collection = creategeomcollection()
+        map(GeoInterface.getgeom(geom)) do g
+            trait = GeoInterface.geomtrait(g)
+            t = geointerface_geomtype(trait)
+            addgeom!(collection, GeoInterface.convert(t, trait, g))
+        end
+        return collection
     end
 
     function GeoInterface.geomtrait(
