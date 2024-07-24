@@ -70,9 +70,10 @@ const mdarray_drivers = [
                 @test AG.getgroupnames(root) == ["group"]
                 @test AG.getgroupnames(group) == []
 
-                dimx = AG.createdimension(group, "x", "", "", 3)
+                nx, ny = 3, 4
+                dimx = AG.createdimension(group, "x", "", "", nx)
                 @test !AG.isnull(dimx)
-                dimy = AG.createdimension(group, "y", "", "", 4)
+                dimy = AG.createdimension(group, "y", "", "", ny)
                 @test !AG.isnull(dimy)
 
                 datatype = AG.extendeddatatypecreate(Float32)
@@ -97,7 +98,7 @@ const mdarray_drivers = [
 
                 # @test AG.iswritable(mdarray)
 
-                data = Float32[100 * x + y for y in 1:4, x in 1:3]
+                data = Float32[100 * x + y for y in 1:ny, x in 1:nx]
 
                 success = AG.write(mdarray, data)
                 @test success
@@ -143,9 +144,21 @@ const mdarray_drivers = [
 
                 # @test !AG.iswritable(mdarray)
 
-                dims = AG.getdimensions(mdarray)
-                @test length(dims) == 2
-                # TODO: Check name, length
+                dimensions = AG.getdimensions(mdarray)
+                @test length(dimensions) == 2
+                dimx, dimy = dimensions
+                @test all(!AG.isnull(dim) for dim in dimensions)
+                @test AG.getname(dimx) == "x"
+                @test AG.getname(dimy) == "y"
+                nx, ny = AG.getsize(dimx), AG.getsize(dimy)
+                @test (nx, ny) == (3, 4)
+                @test AG.getfullname(dimx) == "/group/x"
+                @test AG.gettype(dimx) == ""
+                @test AG.getdirection(dimx) == ""
+                xvar = AG.getindexingvariable(dimx)
+                @test AG.isnull(xvar)
+                # TODO: setindexingvariable!
+                # TODO: rename!
 
                 mdarray1 = AG.openmdarrayfromfullname(root, "/group/mdarray")
                 @test !AG.isnull(mdarray1)
@@ -170,10 +183,10 @@ const mdarray_drivers = [
                 @test !AG.isnull(datatype)
                 # TODO: Check class
 
-                data = Array{Float32}(undef, 4, 3)
+                data = Array{Float32}(undef, ny, nx)
                 success = AG.read!(mdarray, data)
                 @test success
-                @test data == Float32[100 * x + y for y in 1:4, x in 1:3]
+                @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
 
                 err = AG.close(dataset)
                 @test err == GDAL.CE_None
@@ -214,9 +227,10 @@ const mdarray_drivers = [
                         @test AG.getgroupnames(root) == ["group"]
                         @test AG.getgroupnames(group) == []
 
-                        AG.createdimension(group, "x", "", "", 3) do dimx
+                        nx, ny = 3, 4
+                        AG.createdimension(group, "x", "", "", nx) do dimx
                             @test !AG.isnull(dimx)
-                            AG.createdimension(group, "y", "", "", 4) do dimy
+                            AG.createdimension(group, "y", "", "", ny) do dimy
                                 @test !AG.isnull(dimy)
 
                                 AG.getdimensions(root) do dims
@@ -251,7 +265,7 @@ const mdarray_drivers = [
                                         # @test AG.iswritable(mdarray)
 
                                         data = Float32[
-                                            100 * x + y for y in 1:4, x in 1:3
+                                            100 * x + y for y in 1:ny, x in 1:nx
                                         ]
 
                                         success = AG.write(mdarray, data)
@@ -294,9 +308,26 @@ const mdarray_drivers = [
 
                                     # @test !AG.iswritable(mdarray)
 
-                                    AG.getdimensions(mdarray) do dims
-                                        @test length(dims) == 2
-                                        # TODO: Check name, length
+                                    AG.getdimensions(mdarray) do dimensions
+                                        @test length(dimensions) == 2
+                                        dimx, dimy = dimensions
+                                        @test all(
+                                            !AG.isnull(dim) for
+                                            dim in dimensions
+                                        )
+                                        @test AG.getname(dimx) == "x"
+                                        @test AG.getname(dimy) == "y"
+                                        nx, ny =
+                                            AG.getsize(dimx), AG.getsize(dimy)
+                                        @test (nx, ny) == (3, 4)
+                                        @test AG.getfullname(dimx) == "/group/x"
+                                        @test AG.gettype(dimx) == ""
+                                        @test AG.getdirection(dimx) == ""
+                                        AG.getindexingvariable(dimx) do xvar
+                                            @test AG.isnull(xvar)
+                                        end
+                                        # TODO: setindexingvariable!
+                                        # TODO: rename!
 
                                         datatype = AG.getdatatype(mdarray)
                                         @test !AG.isnull(datatype)
@@ -349,11 +380,11 @@ const mdarray_drivers = [
                                             @test AG.isnull(doesnotexist)
                                         end
 
-                                        data = Array{Float32}(undef, 4, 3)
+                                        data = Array{Float32}(undef, ny, nx)
                                         success = AG.read!(mdarray, data)
                                         @test success
                                         @test data == Float32[
-                                            100 * x + y for y in 1:4, x in 1:3
+                                            100 * x + y for y in 1:ny, x in 1:nx
                                         ]
                                     end
                                 end
