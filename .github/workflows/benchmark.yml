@@ -4,12 +4,12 @@ on: [pull_request]
 
 jobs:
   Benchmark:
-    runs-on: macos-latest
+    runs-on: macos-13
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
         with:
-          version: lts
+          version: 1.6
       - uses: julia-actions/julia-buildpkg@latest
       - name: Install dependencies
         run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
