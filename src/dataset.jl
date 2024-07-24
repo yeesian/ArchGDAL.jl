@@ -1013,9 +1013,20 @@ function buildoverviews!(
     return dataset
 end
 
-function destroy(dataset::AbstractDataset)::Nothing
-    GDAL.gdalclose(dataset)
+# TODO: Wrap `GDAL.CPLErr`
+function close(dataset::AbstractDataset)::GDAL.CPLErr
+    dataset.ptr == C_NULL && return GDAL.CE_Failure
+    if dataset.children !== nothing
+        destroy.(dataset.children)
+        Base.empty!(dataset.children)
+    end
+    err = GDAL.gdalclose(dataset)
     dataset.ptr = C_NULL
+    return err
+end
+
+function destroy(dataset::AbstractDataset)::Nothing
+    close(dataset)
     return nothing
 end
 
