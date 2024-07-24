@@ -5,8 +5,6 @@ using GDAL
 import ArchGDAL as AG
 import Aqua
 
-include("test_mdarray.jl")
-
 # ensure all testing files are present
 include("remotefiles.jl")
 

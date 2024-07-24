@@ -224,6 +224,7 @@ function destroy(dimension::AbstractDimension)::Nothing
     return nothing
 end
 
+destroy(attributes::AbstractVector{<:AbstractAttribute}) = destroy.(attributes)
 destroy(dimensions::AbstractVector{<:AbstractDimension}) = destroy.(dimensions)
 
 ################################################################################

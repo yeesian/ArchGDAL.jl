@@ -1,6 +1,8 @@
 using Test
 import ArchGDAL as AG
 
+# TODO: Test vsizip driver
+
 # There should be more drivers... Anyone willing to update GDAL?
 # Possible drivers: at least HDF4, HDF5, TileDB
 const mdarray_drivers = [
