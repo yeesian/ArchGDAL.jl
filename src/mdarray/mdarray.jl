@@ -594,38 +594,35 @@ end
 
 ################################################################################
 
-const AbstractAttributeOrMDArray = Union{AbstractAttribute,AbstractMDArray}
-
-function getname(mdarray::AbstractAttributeOrMDArray)::AbstractString
+function getname(mdarray::AbstractMDArray)::AbstractString
     @assert !isnull(mdarray)
     return GDAL.gdalmdarraygetname(mdarray)
 end
 
-function getfullname(mdarray::AbstractAttributeOrMDArray)::AbstractString
+function getfullname(mdarray::AbstractMDArray)::AbstractString
     @assert !isnull(mdarray)
     return GDAL.gdalmdarraygetfullname(mdarray)
 end
 
-function gettotalelementscount(mdarray::AbstractAttributeOrMDArray)::Int64
+function gettotalelementscount(mdarray::AbstractMDArray)::Int64
     @assert !isnull(mdarray)
     return Int64(GDAL.gdalmdarraygettotalelementscount(mdarray))
 end
 
-function Base.length(mdarray::AbstractAttributeOrMDArray)
+function Base.length(mdarray::AbstractMDArray)
     @assert !isnull(mdarray)
     return Int(gettotalelementscount(mdarray))
 end
 
-function getdimensioncount(mdarray::AbstractAttributeOrMDArray)::Int
+function getdimensioncount(mdarray::AbstractMDArray)::Int
     @assert !isnull(mdarray)
     return Int(GDAL.gdalmdarraygetdimensioncount(mdarray))
 end
 
-Base.ndims(mdarray::AbstractAttributeOrMDArray)::Int =
-    getdimensioncount(mdarray)
+Base.ndims(mdarray::AbstractMDArray)::Int = getdimensioncount(mdarray)
 
 function getdimensions(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
 )::AbstractVector{<:AbstractDimension}
     @assert !isnull(mdarray)
     dimensionscountref = Ref{Csize_t}()
@@ -640,7 +637,7 @@ function getdimensions(
 end
 
 function unsafe_getdimensions(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
 )::AbstractVector{<:AbstractDimension}
     @assert !isnull(mdarray)
     dimensionscountref = Ref{Csize_t}()
@@ -654,22 +651,18 @@ function unsafe_getdimensions(
     return dimensions
 end
 
-function unsafe_getdatatype(
-    mdarray::AbstractAttributeOrMDArray,
-)::AbstractExtendedDataType
+function unsafe_getdatatype(mdarray::AbstractMDArray)::AbstractExtendedDataType
     @assert !isnull(mdarray)
     return ExtendedDataType(GDAL.gdalmdarraygetdatatype(mdarray))
 end
 
-function getdatatype(
-    mdarray::AbstractAttributeOrMDArray,
-)::AbstractExtendedDataType
+function getdatatype(mdarray::AbstractMDArray)::AbstractExtendedDataType
     @assert !isnull(mdarray)
     return IExtendedDataType(GDAL.gdalmdarraygetdatatype(mdarray))
 end
 
 function getblocksize(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     options::OptionList = nothing,
 )::AbstractVector{Int64}
     @assert !isnull(mdarray)
@@ -685,7 +678,7 @@ function getblocksize(
 end
 
 function getprocessingchunksize(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     maxchunkmemory::Integer,
 )::AbstractVector{Int64}
     @assert !isnull(mdarray)
@@ -707,7 +700,7 @@ const RangeLike{D} = Union{
 }
 
 function read!(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     arraystartidx::IndexLike{D},
     count::IndexLike{D},
     arraystep::Union{Nothing,IndexLike{D}},
@@ -738,7 +731,7 @@ function read!(
 end
 
 function read!(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     region::RangeLike{D},
     buffer::StridedArray{T,D},
 )::Bool where {T,D}
@@ -750,7 +743,7 @@ function read!(
 end
 
 function read!(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     indices::CartesianIndices{D},
     arraystep::Union{Nothing,IndexLike{D}},
     buffer::StridedArray{T,D},
@@ -762,7 +755,7 @@ function read!(
 end
 
 function read!(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     indices::CartesianIndices{D},
     buffer::StridedArray{T,D},
 )::Bool where {T,D}
@@ -770,14 +763,14 @@ function read!(
 end
 
 function read!(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     buffer::StridedArray{T,D},
 )::Bool where {T,D}
     return read!(mdarray, axes(buffer), buffer)
 end
 
 function write(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     arraystartidx::IndexLike{D},
     count::IndexLike{D},
     arraystep::Union{Nothing,IndexLike{D}},
@@ -808,7 +801,7 @@ function write(
 end
 
 function write(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     region::RangeLike{D},
     buffer::StridedArray{T,D},
 )::Bool where {T,D}
@@ -820,7 +813,7 @@ function write(
 end
 
 function write(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     indices::CartesianIndices{D},
     arraystep::Union{Nothing,IndexLike{D}},
     buffer::StridedArray{T,D},
@@ -832,7 +825,7 @@ function write(
 end
 
 function write(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     indices::CartesianIndices{D},
     buffer::StridedArray{T,D},
 )::Bool where {T,D}
@@ -840,7 +833,7 @@ function write(
 end
 
 function write(
-    mdarray::AbstractAttributeOrMDArray,
+    mdarray::AbstractMDArray,
     buffer::StridedArray{T,D},
 )::Bool where {T,D}
     return write(mdarray, axes(buffer), buffer)
@@ -849,4 +842,123 @@ end
 function rename!(mdarray::AbstractMDArray, newname::AbstractString)::Bool
     @assert !isnull(mdarray)
     return GDAL.gdalmdarrayrename(mdarray, newname)
+end
+
+################################################################################
+
+function unsafe_getattribute(
+    mdarray::AbstractMDArray,
+    name::AbstractString,
+)::AbstractAttribute
+    @assert !isnull(mdarray)
+    return Attribute(
+        GDAL.gdalmdarraygetattribute(mdarray, name),
+        mdarray.dataset.value,
+    )
+end
+
+function getattribute(
+    mdarray::AbstractMDArray,
+    name::AbstractString,
+)::AbstractAttribute
+    @assert !isnull(mdarray)
+    return IAttribute(
+        GDAL.gdalmdarraygetattribute(mdarray, name),
+        mdarray.dataset.value,
+    )
+end
+
+function unsafe_getattributes(
+    mdarray::AbstractMDArray,
+    options::OptionList = nothing,
+)::AbstractVector{<:AbstractAttribute}
+    @assert !isnull(mdarray)
+    count = Ref{Csize_t}()
+    ptr = GDAL.gdalmdarraygetattributes(
+        mdarray,
+        count,
+        CSLConstListWrapper(options),
+    )
+    dataset = mdarray.dataset.value
+    attributes = AbstractAttribute[
+        Attribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+    ]
+    GDAL.vsifree(ptr)
+    return attributes
+end
+
+function getattributes(
+    mdarray::AbstractMDArray,
+    options::OptionList = nothing,
+)::AbstractVector{<:AbstractAttribute}
+    @assert !isnull(mdarray)
+    count = Ref{Csize_t}()
+    ptr = GDAL.gdalmdarraygetattributes(
+        mdarray,
+        count,
+        CSLConstListWrapper(options),
+    )
+    dataset = mdarray.dataset.value
+    attributes = AbstractAttribute[
+        IAttribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+    ]
+    GDAL.vsifree(ptr)
+    return attributes
+end
+
+function unsafe_createattribute(
+    mdarray::AbstractMDArray,
+    name::AbstractString,
+    dimensions::AbstractVector{<:Integer},
+    datatype::AbstractExtendedDataType,
+    options::OptionList = nothing,
+)::AbstractAttribute
+    @assert !isnull(mdarray)
+    @assert !isnull(datatype)
+    return Attribute(
+        GDAL.gdalmdarraycreateattribute(
+            mdarray,
+            name,
+            length(dimensions),
+            dimensions,
+            datatype,
+            CSLConstListWrapper(options),
+        ),
+        mdarray.dataset.value,
+    )
+end
+
+function createattribute(
+    mdarray::AbstractMDArray,
+    name::AbstractString,
+    dimensions::AbstractVector{<:Integer},
+    datatype::AbstractExtendedDataType,
+    options::OptionList = nothing,
+)::AbstractAttribute
+    @assert !isnull(mdarray)
+    @assert !isnull(datatype)
+    return IAttribute(
+        GDAL.gdalmdarraycreateattribute(
+            mdarray,
+            name,
+            length(dimensions),
+            dimensions,
+            datatype,
+            CSLConstListWrapper(options),
+        ),
+        mdarray.dataset.value,
+    )
+end
+
+function deleteattribute(
+    mdarray::AbstractMDArray,
+    name::AbstractString,
+    options::OptionList = nothing,
+)::Bool
+    @assert !isnull(mdarray)
+    return GDAL.gdalmdarraydeleteattribute(
+        mdarray,
+        name,
+        CSLConstListWrapper(options),
+    )
 end

@@ -44,7 +44,6 @@ end
 
 mutable struct IEDTComponent <: AbstractEDTComponent
     ptr::GDAL.GDALEDTComponentH
-    dataset::WeakRef            # AbstractDataset
 
     function IEDTComponent(ptr::GDAL.GDALEDTComponentH)
         edtcomponent = new(ptr)
@@ -224,6 +223,9 @@ function destroy(dimension::AbstractDimension)::Nothing
     return nothing
 end
 
+function destroy(edtcomponents::AbstractVector{<:AbstractEDTComponent})
+    return destroy.(edtcomponents)
+end
 destroy(attributes::AbstractVector{<:AbstractAttribute}) = destroy.(attributes)
 destroy(dimensions::AbstractVector{<:AbstractDimension}) = destroy.(dimensions)
 

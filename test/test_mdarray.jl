@@ -27,6 +27,119 @@ const mdarray_drivers = [
     ),
 ]
 
+# Attributes with complex values are not supported by Zarr (?)
+const scalar_attribute_types = [
+    String,
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+    Float32,
+    Float64,
+    # Complex{Int16},
+    # Complex{Int32},
+    # Complex{Float32},
+    # Complex{Float64},
+]
+const attribute_types =
+    [scalar_attribute_types..., [Vector{T} for T in scalar_attribute_types]...]
+
+# Can't have `\0` or `/` in attribute names
+# For netCDF:
+# - first character must be alphanumeric or underscore or >= 128,
+# - next characters cannot be iscontrol or DEL,
+# - last character cannot be isspace
+const attribute_names = [
+    "attribute",
+    "αβγ",
+    # [string(ch) for ch in Char(1):Char(256) if ch != '/']...,
+    [
+        string(ch) for ch in [
+            ('A':'Z')...,
+            ('a':'z')...,
+            ('0':'9')...,
+            '_',
+            (Char(128):Char(256))...,
+        ]
+    ]...,
+]
+
+get_attribute_value(::Type{String}) = "string"
+get_attribute_value(::Type{T}) where {T<:Real} = T(32)
+get_attribute_value(::Type{T}) where {T<:Complex} = T(32, 33)
+get_attribute_value(::Type{Vector{String}}) = String["string", "", "αβγ"]
+function get_attribute_value(::Type{Vector{T}}) where {T<:Integer}
+    # Can't store large Int64 values (JSON...)
+    tmin =
+        T == Int64 ? 1000 * T(typemin(Int32)) :
+        T == UInt64 ? 1000 * T(typemin(UInt32)) : typemin(T)
+    tmax =
+        T == Int64 ? 1000 * T(typemax(Int32)) :
+        T == UInt64 ? 1000 * T(typemax(UInt32)) : typemax(T)
+    return T[32, tmin, tmax, 0]
+end
+function get_attribute_value(::Type{Vector{T}}) where {T<:Real}
+    return T[
+        32,
+        typemin(T),
+        typemax(T),
+        T(+0.0),
+        T(-0.0),
+        eps(T),
+        prevfloat(T(1)),
+        nextfloat(T(1)),
+        T(Inf),
+        T(-Inf),
+        T(NaN),
+    ]
+end
+function get_attribute_value(::Type{Vector{T}}) where {T<:Complex{<:Integer}}
+    return T[T(32, 33), T(typemin(real(T)), typemax(real(T))), T(0)]
+end
+function get_attribute_value(::Type{Vector{T}}) where {T<:Complex{<:Real}}
+    return T[
+        T(32, 33),
+        T(typemin(real(T)), typemax(real(T))),
+        T(0),
+        T(+0.0, -0.0),
+        T(eps(real(T))),
+        T(prevfloat(real(T)(1)), nextfloat(real(T)(1))),
+        T(Inf, -Inf),
+        T(NaN),
+    ]
+end
+
+function write_attributes(loc::Union{AG.AbstractGroup,AG.AbstractMDArray})
+    for name in attribute_names
+        @test AG.writeattribute(loc, name, name)
+    end
+    for T in attribute_types
+        @test AG.writeattribute(loc, "$T", get_attribute_value(T))
+    end
+    return nothing
+end
+function test_attributes(loc::Union{AG.AbstractGroup,AG.AbstractMDArray})
+    for name in attribute_names
+        @test isequal(AG.readattribute(loc, name), name)
+        if !isequal(AG.readattribute(loc, name), name)
+            @show loc name
+            @assert false
+        end
+    end
+    for T in attribute_types
+        @test isequal(AG.readattribute(loc, "$T"), get_attribute_value(T))
+        if !isequal(AG.readattribute(loc, "$T"), get_attribute_value(T))
+            @show loc T
+            @assert false
+        end
+    end
+    return nothing
+end
+
 @testset "test_mdarray.jl" begin
     @testset "$drivername" for (
         drivername,
@@ -72,6 +185,8 @@ const mdarray_drivers = [
                 @test AG.getgroupnames(root) == ["group"]
                 @test AG.getgroupnames(group) == []
 
+                write_attributes(group)
+
                 nx, ny = 3, 4
                 dimx = AG.createdimension(group, "x", "", "", nx)
                 @test !AG.isnull(dimx)
@@ -104,6 +219,8 @@ const mdarray_drivers = [
 
                 success = AG.write(mdarray, data)
                 @test success
+
+                write_attributes(mdarray)
 
                 if drivername != "MEM"
                     err = AG.close(dataset)
@@ -140,6 +257,8 @@ const mdarray_drivers = [
 
                 group = AG.opengroup(root, "group")
                 @test !AG.isnull(group)
+
+                test_attributes(group)
 
                 mdarray = AG.openmdarray(group, "mdarray")
                 @test !AG.isnull(mdarray)
@@ -183,12 +302,15 @@ const mdarray_drivers = [
 
                 datatype = AG.getdatatype(mdarray)
                 @test !AG.isnull(datatype)
-                # TODO: Check class
+                @test AG.getclass(datatype) == GDAL.GEDTC_NUMERIC
+                @test AG.getnumericdatatype(datatype) == AG.GDT_Float32
 
                 data = Array{Float32}(undef, ny, nx)
                 success = AG.read!(mdarray, data)
                 @test success
                 @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
+
+                test_attributes(mdarray)
 
                 err = AG.close(dataset)
                 @test err == GDAL.CE_None
@@ -228,6 +350,8 @@ const mdarray_drivers = [
 
                         @test AG.getgroupnames(root) == ["group"]
                         @test AG.getgroupnames(group) == []
+
+                        write_attributes(group)
 
                         nx, ny = 3, 4
                         AG.createdimension(group, "x", "", "", nx) do dimx
@@ -272,6 +396,9 @@ const mdarray_drivers = [
 
                                         success = AG.write(mdarray, data)
                                         @test success
+
+                                        write_attributes(mdarray)
+                                        return
                                     end
                                 end
                             end
@@ -305,6 +432,8 @@ const mdarray_drivers = [
                             AG.opengroup(root, "group") do group
                                 @test !AG.isnull(group)
 
+                                test_attributes(group)
+
                                 AG.openmdarray(group, "mdarray") do mdarray
                                     @test !AG.isnull(mdarray)
 
@@ -333,7 +462,10 @@ const mdarray_drivers = [
 
                                         datatype = AG.getdatatype(mdarray)
                                         @test !AG.isnull(datatype)
-                                        # TODO: Check class
+                                        @test AG.getclass(datatype) ==
+                                              GDAL.GEDTC_NUMERIC
+                                        @test AG.getnumericdatatype(datatype) ==
+                                              AG.GDT_Float32
 
                                         AG.openmdarrayfromfullname(
                                             root,
@@ -388,6 +520,9 @@ const mdarray_drivers = [
                                         @test data == Float32[
                                             100 * x + y for y in 1:ny, x in 1:nx
                                         ]
+
+                                        test_attributes(mdarray)
+                                        return
                                     end
                                 end
                             end

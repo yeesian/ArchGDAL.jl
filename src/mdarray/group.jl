@@ -459,3 +459,116 @@ function subsetdimensionfromselection(
         group.dataset.value,
     )
 end
+
+################################################################################
+
+function unsafe_getattribute(
+    group::AbstractGroup,
+    name::AbstractString,
+)::AbstractAttribute
+    @assert !isnull(group)
+    return Attribute(
+        GDAL.gdalgroupgetattribute(group, name),
+        group.dataset.value,
+    )
+end
+
+function getattribute(
+    group::AbstractGroup,
+    name::AbstractString,
+)::AbstractAttribute
+    @assert !isnull(group)
+    return IAttribute(
+        GDAL.gdalgroupgetattribute(group, name),
+        group.dataset.value,
+    )
+end
+
+function unsafe_getattributes(
+    group::AbstractGroup,
+    options::OptionList = nothing,
+)::AbstractVector{<:AbstractAttribute}
+    @assert !isnull(group)
+    count = Ref{Csize_t}()
+    ptr =
+        GDAL.gdalgroupgetattributes(group, count, CSLConstListWrapper(options))
+    dataset = group.dataset.value
+    attributes = AbstractAttribute[
+        Attribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+    ]
+    GDAL.vsifree(ptr)
+    return attributes
+end
+
+function getattributes(
+    group::AbstractGroup,
+    options::OptionList = nothing,
+)::AbstractVector{<:AbstractAttribute}
+    @assert !isnull(group)
+    count = Ref{Csize_t}()
+    ptr =
+        GDAL.gdalgroupgetattributes(group, count, CSLConstListWrapper(options))
+    dataset = group.dataset.value
+    attributes = AbstractAttribute[
+        IAttribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+    ]
+    GDAL.vsifree(ptr)
+    return attributes
+end
+
+function unsafe_createattribute(
+    group::AbstractGroup,
+    name::AbstractString,
+    dimensions::AbstractVector{<:Integer},
+    datatype::AbstractExtendedDataType,
+    options::OptionList = nothing,
+)::AbstractAttribute
+    @assert !isnull(group)
+    @assert !isnull(datatype)
+    return Attribute(
+        GDAL.gdalgroupcreateattribute(
+            group,
+            name,
+            length(dimensions),
+            dimensions,
+            datatype,
+            CSLConstListWrapper(options),
+        ),
+        group.dataset.value,
+    )
+end
+
+function createattribute(
+    group::AbstractGroup,
+    name::AbstractString,
+    dimensions::AbstractVector{<:Integer},
+    datatype::AbstractExtendedDataType,
+    options::OptionList = nothing,
+)::AbstractAttribute
+    @assert !isnull(group)
+    @assert !isnull(datatype)
+    return IAttribute(
+        GDAL.gdalgroupcreateattribute(
+            group,
+            name,
+            length(dimensions),
+            dimensions,
+            datatype,
+            CSLConstListWrapper(options),
+        ),
+        group.dataset.value,
+    )
+end
+
+function deleteattribute(
+    group::AbstractGroup,
+    name::AbstractString,
+    options::OptionList = nothing,
+)::Bool
+    @assert !isnull(group)
+    return GDAL.gdalgroupdeleteattribute(
+        group,
+        name,
+        CSLConstListWrapper(options),
+    )
+end

@@ -1,5 +1,25 @@
 # GDALAttribute
 
+const NumericAttributeType = Union{
+    Int8,
+    Int16,
+    Int32,
+    Int64,
+    UInt8,
+    UInt16,
+    UInt32,
+    UInt64,
+    Float32,
+    Float64,
+    Complex{Int16},
+    Complex{Int32},
+    Complex{Float32},
+    Complex{Float64},
+}
+const ScalarAttributeType = Union{AbstractString,NumericAttributeType}
+const AttributeType =
+    Union{ScalarAttributeType,AbstractVector{<:ScalarAttributeType}}
+
 function getdimensionssize(attribute::AbstractAttribute)::NTuple{<:Any,Int}
     @assert !isnull(attribute)
     count = Ref{Csize_t}()
@@ -18,76 +38,48 @@ function readasraw(attribute::AbstractAttribute)::AbstractVector{UInt8}
     return raw
 end
 
-function readasstring(attribute::AbstractAttribute)::String
+function read(attribute::AbstractAttribute)::AttributeType
     @assert !isnull(attribute)
-    stringptr = GDAL.gdalattributereadasstring(attribute)
-    string = unsafe_string(stringptr)
-    # do not free
-    return string
-end
+    rank = getdimensioncount(attribute)
+    length = gettotalelementscount(attribute)
+    rank == 0 && @assert length == 1
+    datatype = getdatatype(attribute)
+    class = getclass(datatype)
 
-function readasint(attribute::AbstractAttribute)::Int32
-    @assert !isnull(attribute)
-    return GDAL.gdalattributereadasint(attribute)
-end
+    if class == GDAL.GEDTC_NUMERIC
+        # Read a numeric attribute
+        T = convert(DataType, getnumericdatatype(datatype))
+        @assert T <: NumericAttributeType
+        count = Ref{Csize_t}()
+        ptr = GDAL.gdalattributereadasraw(attribute, count)
+        @assert count[] == length * sizeof(T)
+        if rank == 0
+            # Read a scalar
+            value = unsafe_load(convert(Ptr{T}, ptr))
+            GDAL.gdalattributefreerawresult(attribute, ptr, count[])
+            return value
+        else
+            # Read a vector
+            values = T[unsafe_load(convert(Ptr{T}, ptr), n) for n in 1:length]
+            GDAL.gdalattributefreerawresult(attribute, ptr, count[])
+            return values
+        end
 
-function readasint64(attribute::AbstractAttribute)::Int64
-    @assert !isnull(attribute)
-    return GDAL.gdalattributereadasint64(attribute)
-end
+    elseif class == GDAL.GEDTC_STRING
+        # Read a string attribute
+        if rank == 0
+            return GDAL.gdalattributereadasstring(attribute)
+        else
+            return GDAL.gdalattributereadasstringarray(attribute)
+        end
 
-function readasdouble(attribute::AbstractAttribute)::Float64
-    @assert !isnull(attribute)
-    return GDAL.gdalattributereadasdouble(attribute)
+    elseif class == GDAL.GEDTC_COMPOUND
+        # Read a compound attribute
+        error("unimplemented")
+    else
+        error("internal error")
+    end
 end
-
-function readasstringarray(attribute::AbstractAttribute)::Vector{String}
-    @assert !isnull(attribute)
-    return GDAL.gdalattributereadasstringarray(attribute)
-end
-
-function readasintarray(attribute::AbstractAttribute)::Vector{Int32}
-    @assert !isnull(attribute)
-    count = Ref{Csize_t}()
-    ptr = GDAL.gdalattributereadasintarray(attribute, count)
-    ptr == C_NULL && return Int32[]
-    values = Int32[unsafe_load(ptr, n) for n in 1:count[]]
-    GDAL.vsifree(ptr)
-    return values
-end
-
-function readasint64array(attribute::AbstractAttribute)::Vector{Int64}
-    @assert !isnull(attribute)
-    count = Ref{Csize_t}()
-    ptr = GDAL.gdalattributereadasint64array(attribute, count)
-    ptr == C_NULL && return Int64[]
-    values = Int64[unsafe_load(ptr, n) for n in 1:count[]]
-    GDAL.vsifree(ptr)
-    return values
-end
-
-function readasdoublearray(attribute::AbstractAttribute)::Vector{Float64}
-    @assert !isnull(attribute)
-    count = Ref{Csize_t}()
-    ptr = GDAL.gdalattributereadasdoublearray(attribute, count)
-    ptr == C_NULL && return Float64[]
-    values = Float64[unsafe_load(ptr, n) for n in 1:count[]]
-    GDAL.vsifree(ptr)
-    return values
-end
-
-read(::Type{String}, attribute)::String = readasstring(attribute)
-read(::Type{Int32}, attribute)::Int32 = readasint(attribute)
-read(::Type{Int64}, attribute)::Int64 = readasint64(attribute)
-read(::Type{Float64}, attribute)::Float64 = readasdouble(attribute)
-read(::Type{Vector{String}}, attribute)::Vector{String} =
-    readasstringarray(attribute)
-read(::Type{Vector{Int32}}, attribute)::Vector{Int32} =
-    readasintarray(attribute)
-read(::Type{Vector{Int64}}, attribute)::Vector{Int64} =
-    readasint64array(attribute)
-read(::Type{Vector{Float64}}, attribute)::Vector{Float64} =
-    readasdoublearray(attribute)
 
 function writerraw(
     attribute::AbstractAttribute,
@@ -102,19 +94,21 @@ function write(attribute::AbstractAttribute, value::AbstractString)::Bool
     return Bool(GDAL.gdalattributewritestring(attribute, value))
 end
 
-function write(attribute::AbstractAttribute, value::Int32)::Bool
+function write(attribute::AbstractAttribute, value::NumericAttributeType)::Bool
     @assert !isnull(attribute)
-    return Bool(GDAL.gdalattributewriteint(attribute, value))
-end
+    rank = getdimensioncount(attribute)
+    @assert rank == 0
+    length = gettotalelementscount(attribute)
+    @assert length == 1
+    datatype = getdatatype(attribute)
+    class = getclass(datatype)
+    @assert class == GDAL.GEDTC_NUMERIC
+    T = convert(DataType, getnumericdatatype(datatype))
 
-function write(attribute::AbstractAttribute, value::Int64)::Bool
-    @assert !isnull(attribute)
-    return Bool(GDAL.gdalattributewriteint64(attribute, value))
-end
-
-function write(attribute::AbstractAttribute, value::Float64)::Bool
-    @assert !isnull(attribute)
-    return Bool(GDAL.gdalattributewritedouble(attribute, value))
+    valueT = convert(T, value)::T
+    return Bool(
+        GDAL.gdalattributewriteraw(attribute, Ref(valueT), sizeof(valueT)),
+    )
 end
 
 function write(
@@ -132,270 +126,269 @@ end
 
 function write(
     attribute::AbstractAttribute,
-    values::AbstractVector{Int32},
+    values::AbstractVector{<:NumericAttributeType},
 )::Bool
     @assert !isnull(attribute)
-    return Bool(
-        GDAL.gdalattributewriteintarray(attribute, values, length(values)),
-    )
-end
+    rank = getdimensioncount(attribute)
+    @assert rank == 1
+    length = gettotalelementscount(attribute)
+    datatype = getdatatype(attribute)
+    class = getclass(datatype)
+    @assert class == GDAL.GEDTC_NUMERIC
+    T = convert(DataType, getnumericdatatype(datatype))
 
-function write(
-    attribute::AbstractAttribute,
-    values::AbstractVector{Int64},
-)::Bool
-    @assert !isnull(attribute)
-    return Bool(
-        GDAL.gdalattributewriteint64array(attribute, values, length(values)),
-    )
-end
-
-function write(
-    attribute::AbstractAttribute,
-    values::AbstractVector{Float64},
-)::Bool
-    @assert !isnull(attribute)
-    return Bool(
-        GDAL.gdalattributewritedoublearray(attribute, values, length(values)),
-    )
+    valuesT = convert(Vector{T}, values)::Vector{T}
+    return Bool(GDAL.gdalattributewriteraw(attribute, valuesT, sizeof(valuesT)))
 end
 
 ################################################################################
 
-# For GDALGroup
-
-function unsafe_getattribute(
-    group::AbstractGroup,
-    name::AbstractString,
-)::AbstractAttribute
-    @assert !isnull(group)
-    return Attribute(
-        GDAL.gdalgroupgetattribute(group, name),
-        group.dataset.value,
-    )
+function getname(attribute::AbstractAttribute)::AbstractString
+    @assert !isnull(attribute)
+    return GDAL.gdalattributegetname(attribute)
 end
 
-function getattribute(
-    group::AbstractGroup,
-    name::AbstractString,
-)::AbstractAttribute
-    @assert !isnull(group)
-    return IAttribute(
-        GDAL.gdalgroupgetattribute(group, name),
-        group.dataset.value,
-    )
+function getfullname(attribute::AbstractAttribute)::AbstractString
+    @assert !isnull(attribute)
+    return GDAL.gdalattributegetfullname(attribute)
 end
 
-function unsafe_getattributes(
-    group::AbstractGroup,
-    options::OptionList = nothing,
-)::AbstractVector{<:AbstractAttribute}
-    @assert !isnull(group)
-    count = Ref{Csize_t}()
-    ptr =
-        GDAL.gdalgroupgetattributes(group, count, CSLConstListWrapper(options))
-    dataset = group.dataset.value
-    attributes = AbstractAttribute[
-        Attribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+function gettotalelementscount(attribute::AbstractAttribute)::Int64
+    @assert !isnull(attribute)
+    return Int64(GDAL.gdalattributegettotalelementscount(attribute))
+end
+
+function Base.length(attribute::AbstractAttribute)
+    @assert !isnull(attribute)
+    return Int(gettotalelementscount(attribute))
+end
+
+function getdimensioncount(attribute::AbstractAttribute)::Int
+    @assert !isnull(attribute)
+    return Int(GDAL.gdalattributegetdimensioncount(attribute))
+end
+
+Base.ndims(attribute::AbstractAttribute)::Int = getdimensioncount(attribute)
+
+function getdimensions(
+    attribute::AbstractAttribute,
+)::AbstractVector{<:AbstractDimension}
+    @assert !isnull(attribute)
+    dimensionscountref = Ref{Csize_t}()
+    dimensionshptr =
+        GDAL.gdalattributegetdimensions(attribute, dimensionscountref)
+    dataset = attribute.dataset.value
+    dimensions = AbstractDimension[
+        IDimension(unsafe_load(dimensionshptr, n), dataset) for
+        n in 1:dimensionscountref[]
     ]
-    GDAL.vsifree(ptr)
-    return attributes
+    GDAL.vsifree(dimensionshptr)
+    return dimensions
 end
 
-function getattributes(
-    group::AbstractGroup,
-    options::OptionList = nothing,
-)::AbstractVector{<:AbstractAttribute}
-    @assert !isnull(group)
-    count = Ref{Csize_t}()
-    ptr =
-        GDAL.gdalgroupgetattributes(group, count, CSLConstListWrapper(options))
-    dataset = group.dataset.value
-    attributes = AbstractAttribute[
-        IAttribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+function unsafe_getdimensions(
+    attribute::AbstractAttribute,
+)::AbstractVector{<:AbstractDimension}
+    @assert !isnull(attribute)
+    dimensionscountref = Ref{Csize_t}()
+    dimensionshptr =
+        GDAL.gdalattributegetdimensions(attribute, dimensionscountref)
+    dataset = attribute.dataset.value
+    dimensions = AbstractDimension[
+        Dimension(unsafe_load(dimensionshptr, n), dataset) for
+        n in 1:dimensionscountref[]
     ]
-    GDAL.vsifree(ptr)
-    return attributes
+    GDAL.vsifree(dimensionshptr)
+    return dimensions
 end
 
-function unsafe_createattribute(
-    group::AbstractGroup,
-    name::AbstractString,
-    dimensions::AbstractVector{<:AbstractDimension},
-    datatype::AbstractExtendedDataType,
+function unsafe_getdatatype(
+    attribute::AbstractAttribute,
+)::AbstractExtendedDataType
+    @assert !isnull(attribute)
+    return ExtendedDataType(GDAL.gdalattributegetdatatype(attribute))
+end
+
+function getdatatype(attribute::AbstractAttribute)::AbstractExtendedDataType
+    @assert !isnull(attribute)
+    return IExtendedDataType(GDAL.gdalattributegetdatatype(attribute))
+end
+
+function getblocksize(
+    attribute::AbstractAttribute,
     options::OptionList = nothing,
-)::AbstractAttribute
-    @assert !isnull(group)
-    @assert all(!isnull(dim) for dim in dimensions)
-    @assert !isnull(datatype)
-    return Attribute(
-        GDAL.gdalgroupcreateattribute(
-            group,
-            name,
-            length(dimensions),
-            DimensionHList(dimensions),
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
-    )
-end
-
-function createattribute(
-    group::AbstractGroup,
-    name::AbstractString,
-    dimensions::AbstractVector{<:AbstractDimension},
-    datatype::AbstractExtendedDataType,
-    options::OptionList = nothing,
-)::AbstractAttribute
-    @assert !isnull(group)
-    @assert all(!isnull(dim) for dim in dimensions)
-    @assert !isnull(datatype)
-    return IAttribute(
-        GDAL.gdalgroupcreateattribute(
-            group,
-            name,
-            length(dimensions),
-            DimensionHList(dimensions),
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
-    )
-end
-
-function deleteattribute(
-    group::AbstractGroup,
-    name::AbstractString,
-    options::OptionList = nothing,
-)::Bool
-    @assert !isnull(group)
-    return GDAL.gdalgroupdeleteattribute(
-        group,
-        name,
-        CSLConstListWrapper(options),
-    )
-end
-
-################################################################################
-
-# For GDALMDArray
-
-function unsafe_getattribute(
-    mdarray::AbstractMDArray,
-    name::AbstractString,
-)::AbstractAttribute
-    @assert !isnull(mdarray)
-    return Attribute(
-        GDAL.gdalmdarraygetattribute(mdarray, name),
-        mdarray.dataset.value,
-    )
-end
-
-function getattribute(
-    mdarray::AbstractMDArray,
-    name::AbstractString,
-)::AbstractAttribute
-    @assert !isnull(mdarray)
-    return IAttribute(
-        GDAL.gdalmdarraygetattribute(mdarray, name),
-        mdarray.dataset.value,
-    )
-end
-
-function unsafe_getattributes(
-    mdarray::AbstractMDArray,
-    options::OptionList = nothing,
-)::AbstractVector{<:AbstractAttribute}
-    @assert !isnull(mdarray)
+)::AbstractVector{Int64}
+    @assert !isnull(attribute)
     count = Ref{Csize_t}()
-    ptr = GDAL.gdalmdarraygetattributes(
-        mdarray,
+    blocksizeptr = GDAL.gdalattributegetblocksize(
+        attribute,
         count,
         CSLConstListWrapper(options),
     )
-    dataset = mdarray.dataset.value
-    attributes = AbstractAttribute[
-        Attribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
-    ]
-    GDAL.vsifree(ptr)
-    return attributes
+    blocksize = Int64[unsafe_load(blocksizeptr, n) for n in 1:count[]]
+    GDAL.vsifree(blocksizeptr)
+    return blocksize
 end
 
-function getattributes(
-    mdarray::AbstractMDArray,
-    options::OptionList = nothing,
-)::AbstractVector{<:AbstractAttribute}
-    @assert !isnull(mdarray)
+function getprocessingchunksize(
+    attribute::AbstractAttribute,
+    maxchunkmemory::Integer,
+)::AbstractVector{Int64}
+    @assert !isnull(attribute)
     count = Ref{Csize_t}()
-    ptr = GDAL.gdalmdarraygetattributes(
-        mdarray,
+    chunksizeptr = GDAL.gdalattributegetprocessingchunksize(
+        attribute,
         count,
-        CSLConstListWrapper(options),
+        maxchunkmemory,
     )
-    dataset = mdarray.dataset.value
-    attributes = AbstractAttribute[
-        IAttribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
-    ]
-    GDAL.vsifree(ptr)
-    return attributes
+    chunksize = Int64[unsafe_load(chunksizeptr, n) for n in 1:count[]]
+    GDAL.vsifree(chunksizeptr)
+    return chunksize
 end
 
-function unsafe_createattribute(
-    mdarray::AbstractMDArray,
-    name::AbstractString,
-    dimensions::AbstractVector{<:AbstractDimension},
-    datatype::AbstractExtendedDataType,
-    options::OptionList = nothing,
-)::AbstractAttribute
-    @assert !isnull(mdarray)
-    @assert all(!isnull(dim) for dim in dimensions)
-    @assert !isnull(datatype)
-    return Attribute(
-        GDAL.gdalmdarraycreateattribute(
-            mdarray,
-            name,
-            length(dimensions),
-            DimensionHList(dimensions),
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
-    )
-end
+# processperchunk
 
-function createattribute(
-    mdarray::AbstractMDArray,
-    name::AbstractString,
-    dimensions::AbstractVector{<:AbstractDimension},
-    datatype::AbstractExtendedDataType,
-    options::OptionList = nothing,
-)::AbstractAttribute
-    @assert !isnull(mdarray)
-    @assert all(!isnull(dim) for dim in dimensions)
-    @assert !isnull(datatype)
-    return IAttribute(
-        GDAL.gdalmdarraycreateattribute(
-            mdarray,
-            name,
-            length(dimensions),
-            DimensionHList(dimensions),
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
-    )
-end
+# function read!(
+#     attribute::AbstractAttribute,
+#     arraystartidx::IndexLike{D},
+#     count::IndexLike{D},
+#     arraystep::Union{Nothing,IndexLike{D}},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     @assert !isnull(attribute)
+#     @assert length(arraystartidx) == D
+#     @assert length(count) == D
+#     @assert arraystep === nothing ? true : length(arraystep) == D
+#     gdal_arraystartidx = UInt64[arraystartidx[n] - 1 for n in D:-1:1]
+#     gdal_count = Csize_t[count[n] for n in D:-1:1]
+#     gdal_arraystep =
+#         arraystep === nothing ? nothing : Int64[arraystep[n] for n in D:-1:1]
+#     gdal_bufferstride = Cptrdiff_t[stride(buffer, n) for n in D:-1:1]
+#     return extendeddatatypecreate(T) do bufferdatatype
+#         return GDAL.gdalattributeread(
+#             attribute,
+#             gdal_arraystartidx,
+#             gdal_count,
+#             gdal_arraystep,
+#             gdal_bufferstride,
+#             bufferdatatype,
+#             buffer,
+#             buffer,
+#             sizeof(buffer),
+#         )
+#     end
+# end
+# 
+# function read!(
+#     attribute::AbstractAttribute,
+#     region::RangeLike{D},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     @assert length(region) == D
+#     arraystartidx = first.(region)
+#     count = length.(region)
+#     arraystep = step.(region)
+#     return read!(attribute, arraystartidx, count, arraystep, buffer)
+# end
+# 
+# function read!(
+#     attribute::AbstractAttribute,
+#     indices::CartesianIndices{D},
+#     arraystep::Union{Nothing,IndexLike{D}},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     @assert length(region) == D
+#     arraystartidx = first.(indices)
+#     count = length.(indices)
+#     return read!(attribute, arraystartidx, count, arraystep, buffer)
+# end
+# 
+# function read!(
+#     attribute::AbstractAttribute,
+#     indices::CartesianIndices{D},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     return read!(attribute, indices, nothing, buffer)
+# end
+# 
+# function read!(
+#     attribute::AbstractAttribute,
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     return read!(attribute, axes(buffer), buffer)
+# end
+# 
+# function write(
+#     attribute::AbstractAttribute,
+#     arraystartidx::IndexLike{D},
+#     count::IndexLike{D},
+#     arraystep::Union{Nothing,IndexLike{D}},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     @assert !isnull(attribute)
+#     @assert length(arraystartidx) == D
+#     @assert length(count) == D
+#     @assert arraystep === nothing ? true : length(arraystep) == D
+#     gdal_arraystartidx = UInt64[arraystartidx[n] - 1 for n in D:-1:1]
+#     gdal_count = Csize_t[count[n] for n in D:-1:1]
+#     gdal_arraystep =
+#         arraystep === nothing ? nothing : Int64[arraystep[n] for n in D:-1:1]
+#     gdal_bufferstride = Cptrdiff_t[stride(buffer, n) for n in D:-1:1]
+#     return extendeddatatypecreate(T) do bufferdatatype
+#         return GDAL.gdalattributewrite(
+#             attribute,
+#             gdal_arraystartidx,
+#             gdal_count,
+#             gdal_arraystep,
+#             gdal_bufferstride,
+#             bufferdatatype,
+#             buffer,
+#             buffer,
+#             sizeof(buffer),
+#         )
+#     end
+# end
+# 
+# function write(
+#     attribute::AbstractAttribute,
+#     region::RangeLike{D},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     @assert length(region) == D
+#     arraystartidx = first.(region)
+#     count = length.(region)
+#     arraystep = step.(region)
+#     return write(attribute, arraystartidx, count, arraystep, buffer)
+# end
+# 
+# function write(
+#     attribute::AbstractAttribute,
+#     indices::CartesianIndices{D},
+#     arraystep::Union{Nothing,IndexLike{D}},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     @assert length(region) == D
+#     arraystartidx = first.(indices)
+#     count = length.(indices)
+#     return write(attribute, arraystartidx, count, arraystep, buffer)
+# end
+# 
+# function write(
+#     attribute::AbstractAttribute,
+#     indices::CartesianIndices{D},
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     return write(attribute, indices, nothing, buffer)
+# end
+# 
+# function write(
+#     attribute::AbstractAttribute,
+#     buffer::StridedArray{T,D},
+# )::Bool where {T,D}
+#     return write(attribute, axes(buffer), buffer)
+# end
 
-function deleteattribute(
-    mdarray::AbstractMDArray,
-    name::AbstractString,
-    options::OptionList = nothing,
-)::Bool
-    @assert !isnull(mdarray)
-    return GDAL.gdalmdarraydeleteattribute(
-        mdarray,
-        name,
-        CSLConstListWrapper(options),
-    )
+function rename!(attribute::AbstractAttribute, newname::AbstractString)::Bool
+    @assert !isnull(attribute)
+    return GDAL.gdalattributerename(attribute, newname)
 end
