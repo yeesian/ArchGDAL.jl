@@ -222,6 +222,10 @@ end
 
                 write_attributes(mdarray)
 
+                success =
+                    AG.writemdarray(group, "primes", UInt8[2, 3, 5, 7, 251])
+                @test success
+
                 if drivername != "MEM"
                     err = AG.close(dataset)
                     @test err == GDAL.CE_None
@@ -310,7 +314,14 @@ end
                 @test success
                 @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
 
+                data = AG.read(mdarray)
+                @test data !== nothing
+                @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
+
                 test_attributes(mdarray)
+
+                primes = AG.readmdarray(group, "primes")
+                @test primes == UInt8[2, 3, 5, 7, 251]
 
                 err = AG.close(dataset)
                 @test err == GDAL.CE_None
@@ -398,6 +409,14 @@ end
                                         @test success
 
                                         write_attributes(mdarray)
+
+                                        success = AG.writemdarray(
+                                            group,
+                                            "primes",
+                                            UInt8[2, 3, 5, 7, 251],
+                                        )
+                                        @test success
+
                                         return
                                     end
                                 end
@@ -521,7 +540,17 @@ end
                                             100 * x + y for y in 1:ny, x in 1:nx
                                         ]
 
+                                        data = AG.read(mdarray)
+                                        @test data !== nothing
+                                        @test data == Float32[
+                                            100 * x + y for y in 1:ny, x in 1:nx
+                                        ]
+
                                         test_attributes(mdarray)
+
+                                        primes = AG.readmdarray(group, "primes")
+                                        @test primes == UInt8[2, 3, 5, 7, 251]
+
                                         return
                                     end
                                 end

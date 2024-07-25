@@ -769,6 +769,22 @@ function read!(
     return read!(mdarray, axes(buffer), buffer)
 end
 
+function read(mdarray::AbstractMDArray)::Union{Nothing,AbstractArray}
+    getdimensions(mdarray) do dimensions
+        D = length(dimensions)
+        sz = [getsize(dimensions[d]) for d in D:-1:1]
+        getdatatype(mdarray) do datatype
+            class = getclass(datatype)
+            @assert class == GDAL.GEDTC_NUMERIC
+            T = convert(DataType, getnumericdatatype(datatype))
+            buffer = Array{T}(undef, sz...)
+            success = read!(mdarray, buffer)
+            !success && return nothing
+            return buffer
+        end
+    end
+end
+
 function write(
     mdarray::AbstractMDArray,
     arraystartidx::IndexLike{D},

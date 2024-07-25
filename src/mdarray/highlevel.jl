@@ -1,5 +1,33 @@
 # High-level functions
 
+function writemdarray(
+    group::AbstractGroup,
+    name::AbstractString,
+    value::StridedArray{T,D},
+    options::OptionList = nothing,
+)::Bool where {T<:NumericAttributeType,D}
+    dimensions = AbstractDimension[
+        createdimension(group, "$name.$d", "", "", size(value, d)) for
+        d in D:-1:1
+    ]
+    extendeddatatypecreate(T) do datatype
+        createmdarray(group, name, dimensions, datatype, options) do mdarray
+            return write(mdarray, value)
+        end
+    end
+end
+
+function readmdarray(
+    group::AbstractGroup,
+    name::AbstractString,
+    options::OptionList = nothing,
+)::Union{Nothing,AbstractArray}
+    openmdarray(group, name, options) do mdarray
+        isnull(mdarray) && return nothing
+        return read(mdarray)
+    end
+end
+
 function writeattribute(
     group::Union{AbstractGroup,AbstractMDArray},
     name::AbstractString,
