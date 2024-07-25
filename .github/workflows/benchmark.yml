@@ -4,18 +4,18 @@ on: [pull_request]
 
 jobs:
   Benchmark:
-    runs-on: macos-13
+    runs-on: macos-latest
     steps:
       - uses: actions/checkout@v4
       - uses: julia-actions/setup-julia@latest
         with:
           version: 1.6
       - uses: julia-actions/julia-buildpkg@latest
-      #TODO - name: Install dependencies
-      #TODO   run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
-      #TODO - name: Run benchmarks
-      #TODO   run: julia -e 'using BenchmarkCI; BenchmarkCI.judge()'
-      #TODO - name: Print judgement
-      #TODO   run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
-      #TODO   env:
-      #TODO     GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      - name: Install dependencies
+        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
+      - name: Run benchmarks
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge()'
+      - name: Print judgement
+        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
