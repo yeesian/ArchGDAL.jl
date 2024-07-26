@@ -1016,8 +1016,11 @@ end
 # TODO: Wrap `GDAL.CPLErr`
 function close(dataset::AbstractDataset)::GDAL.CPLErr
     dataset.ptr == C_NULL && return GDAL.CE_Failure
-    if dataset.children !== nothing
-        destroy.(dataset.children)
+    if !isnothing(dataset.children)
+        for child in dataset.children
+            value = child.value
+            !isnothing(value) && destroy(value)
+        end
         Base.empty!(dataset.children)
     end
     err = GDAL.gdalclose(dataset)

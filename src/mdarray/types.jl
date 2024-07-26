@@ -4,14 +4,14 @@ abstract type AbstractExtendedDataType end
 abstract type AbstractEDTComponent end
 # needs to have a `ptr::GDALEDTComponentH` attribute
 
+# TODO: <: AbstractDict
 abstract type AbstractGroup end
 # needs to have a `ptr::GDAL.GDALGroupH` attribute
 
-# TODO: Add `<: AbstractDiskArray`
-# TODO: Put `{T,D}` into the type signature?
-abstract type AbstractMDArray end
+abstract type AbstractMDArray{T,D} <: AbstractDiskArray{T,D} end
 # needs to have a `ptr::GDAL.GDALMDArrayH` attribute
 
+# TODO: <: DenseArray{T,D}
 abstract type AbstractAttribute end
 # needs to have a `ptr::GDAL.GDALAttributeH` attribute
 
@@ -75,23 +75,33 @@ mutable struct IGroup <: AbstractGroup
     end
 end
 
-mutable struct MDArray <: AbstractMDArray
+mutable struct MDArray{T,D} <: AbstractMDArray{T,D}
     ptr::GDAL.GDALMDArrayH
     dataset::WeakRef            # AbstractDataset
 
-    function MDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
-        mdarray = new(ptr, WeakRef(dataset))
+    function MDArray{T,D}(
+        ptr::GDAL.GDALMDArrayH,
+        dataset::AbstractDataset,
+    ) where {T,D}
+        T::Type
+        D::Int
+        mdarray = new{T,D}(ptr, WeakRef(dataset))
         add_child!(dataset, mdarray)
         return mdarray
     end
 end
 
-mutable struct IMDArray <: AbstractMDArray
+mutable struct IMDArray{T,D} <: AbstractMDArray{T,D}
     ptr::GDAL.GDALMDArrayH
     dataset::WeakRef            # AbstractDataset
 
-    function IMDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
-        mdarray = new(ptr, WeakRef(dataset))
+    function IMDArray{T,D}(
+        ptr::GDAL.GDALMDArrayH,
+        dataset::AbstractDataset,
+    ) where {T,D}
+        T::Type
+        D::Int
+        mdarray = new{T,D}(ptr, WeakRef(dataset))
         add_child!(dataset, mdarray)
         ptr != C_NULL && finalizer(destroy, mdarray)
         return mdarray
@@ -258,7 +268,7 @@ function CSLConstListWrapper(strings::AbstractVector{<:AbstractString})
 end
 
 function Base.cconvert(::Type{GDAL.CSLConstList}, wrapper::CSLConstListWrapper)
-    wrapper.cstrings === nothing &&
+    isnothing(wrapper.cstrings) &&
         return Base.cconvert(GDAL.CSLConstList, C_NULL)
     return Base.cconvert(GDAL.CSLConstList, wrapper.cstrings)
 end

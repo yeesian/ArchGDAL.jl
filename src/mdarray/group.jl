@@ -24,10 +24,9 @@ function unsafe_openmdarray(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(group)
-    return MDArray(
-        GDAL.gdalgroupopenmdarray(group, name, CSLConstListWrapper(options)),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupopenmdarray(group, name, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could not open mdarray \"$name\"")
+    return MDArray(ptr, group.dataset.value)
 end
 
 function openmdarray(
@@ -36,10 +35,9 @@ function openmdarray(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(group)
-    return IMDArray(
-        GDAL.gdalgroupopenmdarray(group, name, CSLConstListWrapper(options)),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupopenmdarray(group, name, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could not open mdarray \"$name\"")
+    return IMDArray(ptr, group.dataset.value)
 end
 
 function getgroupnames(
@@ -56,10 +54,9 @@ function unsafe_opengroup(
     options::OptionList = nothing,
 )::AbstractGroup
     @assert !isnull(group)
-    return Group(
-        GDAL.gdalgroupopengroup(group, name, CSLConstListWrapper(options)),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupopengroup(group, name, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could no open group \"$name\"")
+    return Group(ptr, group.dataset.value)
 end
 
 function opengroup(
@@ -68,10 +65,9 @@ function opengroup(
     options::OptionList = nothing,
 )::AbstractGroup
     @assert !isnull(group)
-    return IGroup(
-        GDAL.gdalgroupopengroup(group, name, CSLConstListWrapper(options)),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupopengroup(group, name, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could no open group \"$name\"")
+    return IGroup(ptr, group.dataset.value)
 end
 
 function getvectorlayernames(
@@ -159,10 +155,9 @@ function unsafe_creategroup(
     options::OptionList = nothing,
 )::AbstractGroup
     @assert !isnull(group)
-    return Group(
-        GDAL.gdalgroupcreategroup(group, name, CSLConstListWrapper(options)),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupcreategroup(group, name, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could not create group \"$name\"")
+    return Group(ptr, group.dataset.value)
 end
 
 function creategroup(
@@ -171,10 +166,9 @@ function creategroup(
     options::OptionList = nothing,
 )::AbstractGroup
     @assert !isnull(group)
-    return IGroup(
-        GDAL.gdalgroupcreategroup(group, name, CSLConstListWrapper(options)),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupcreategroup(group, name, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could not create group \"$name\"")
+    return IGroup(ptr, group.dataset.value)
 end
 
 function deletegroup(
@@ -196,17 +190,16 @@ function unsafe_createdimension(
     options::OptionList = nothing,
 )::AbstractDimension
     @assert !isnull(group)
-    return Dimension(
-        GDAL.gdalgroupcreatedimension(
-            group,
-            name,
-            type,
-            direction,
-            size,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupcreatedimension(
+        group,
+        name,
+        type,
+        direction,
+        size,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create dimension \"$name\"")
+    return Dimension(ptr, group.dataset.value)
 end
 
 function createdimension(
@@ -218,17 +211,16 @@ function createdimension(
     options::OptionList = nothing,
 )::AbstractDimension
     @assert !isnull(group)
-    return IDimension(
-        GDAL.gdalgroupcreatedimension(
-            group,
-            name,
-            type,
-            direction,
-            size,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupcreatedimension(
+        group,
+        name,
+        type,
+        direction,
+        size,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create dimension \"$name\"")
+    return IDimension(ptr, group.dataset.value)
 end
 
 function unsafe_createmdarray(
@@ -241,18 +233,18 @@ function unsafe_createmdarray(
     @assert !isnull(group)
     @assert all(!isnull(dim) for dim in dimensions)
     @assert !isnull(datatype)
-    return MDArray(
-        GDAL.gdalgroupcreatemdarray(
-            group,
-            name,
-            length(dimensions),
-            DimensionHList(dimensions),
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupcreatemdarray(
+        group,
+        name,
+        length(dimensions),
+        DimensionHList(dimensions),
+        datatype,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create mdarray \"$name\"")
+    return MDArray(ptr, group.dataset.value)
 end
+
 function createmdarray(
     group::AbstractGroup,
     name::AbstractString,
@@ -263,17 +255,16 @@ function createmdarray(
     @assert !isnull(group)
     @assert all(!isnull(dim) for dim in dimensions)
     @assert !isnull(datatype)
-    return IMDArray(
-        GDAL.gdalgroupcreatemdarray(
-            group,
-            name,
-            length(dimensions),
-            DimensionHList(dimensions),
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupcreatemdarray(
+        group,
+        name,
+        length(dimensions),
+        DimensionHList(dimensions),
+        datatype,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create mdarray \"$name\"")
+    return IMDArray(ptr, group.dataset.value)
 end
 
 function deletemdarray(
@@ -305,14 +296,13 @@ function unsafe_openmdarrayfromfullname(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(group)
-    return MDArray(
-        GDAL.gdalgroupopenmdarrayfromfullname(
-            group,
-            fullname,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupopenmdarrayfromfullname(
+        group,
+        fullname,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not open mdarray \"$fullname\"")
+    return MDArray(ptr, group.dataset.value)
 end
 
 function openmdarrayfromfullname(
@@ -321,14 +311,13 @@ function openmdarrayfromfullname(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(group)
-    return IMDArray(
-        GDAL.gdalgroupopenmdarrayfromfullname(
-            group,
-            fullname,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupopenmdarrayfromfullname(
+        group,
+        fullname,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not open mdarray \"$fullname\"")
+    return IMDArray(ptr, group.dataset.value)
 end
 
 function unsafe_resolvemdarray(
@@ -338,15 +327,14 @@ function unsafe_resolvemdarray(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(group)
-    return MDArray(
-        GDAL.gdalgroupresolvemdarray(
-            group,
-            name,
-            startingpath,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupresolvemdarray(
+        group,
+        name,
+        startingpath,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not resolve mdarray \"$name\"")
+    return MDArray(ptr, group.dataset.value)
 end
 
 function resolvemdarray(
@@ -356,15 +344,14 @@ function resolvemdarray(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(group)
-    return IMDArray(
-        GDAL.gdalgroupresolvemdarray(
-            group,
-            name,
-            startingpath,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupresolvemdarray(
+        group,
+        name,
+        startingpath,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not resolve mdarray \"$name\"")
+    return IMDArray(ptr, group.dataset.value)
 end
 
 function unsafe_opengroupfromfullname(
@@ -373,14 +360,13 @@ function unsafe_opengroupfromfullname(
     options::OptionList = nothing,
 )::AbstractGroup
     @assert !isnull(group)
-    return Group(
-        GDAL.gdalgroupopengroupfromfullname(
-            group,
-            fullname,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupopengroupfromfullname(
+        group,
+        fullname,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not open group \"$fullname\"")
+    return Group(ptr, group.dataset.value)
 end
 
 function opengroupfromfullname(
@@ -389,14 +375,13 @@ function opengroupfromfullname(
     options::OptionList = nothing,
 )::AbstractGroup
     @assert !isnull(group)
-    return IGroup(
-        GDAL.gdalgroupopengroupfromfullname(
-            group,
-            fullname,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupopengroupfromfullname(
+        group,
+        fullname,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not open group \"$fullname\"")
+    return IGroup(ptr, group.dataset.value)
 end
 
 # function unsafe_opendimensionfromfullname(
@@ -467,10 +452,9 @@ function unsafe_getattribute(
     name::AbstractString,
 )::AbstractAttribute
     @assert !isnull(group)
-    return Attribute(
-        GDAL.gdalgroupgetattribute(group, name),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupgetattribute(group, name)
+    ptr == C_NULL && error("Could not open attribute \"$name\"")
+    return Attribute(ptr, group.dataset.value)
 end
 
 function getattribute(
@@ -478,10 +462,9 @@ function getattribute(
     name::AbstractString,
 )::AbstractAttribute
     @assert !isnull(group)
-    return IAttribute(
-        GDAL.gdalgroupgetattribute(group, name),
-        group.dataset.value,
-    )
+    ptr = GDAL.gdalgroupgetattribute(group, name)
+    ptr == C_NULL && error("Could not open attribute \"$name\"")
+    return IAttribute(ptr, group.dataset.value)
 end
 
 function unsafe_getattributes(
@@ -525,17 +508,16 @@ function unsafe_createattribute(
 )::AbstractAttribute
     @assert !isnull(group)
     @assert !isnull(datatype)
-    return Attribute(
-        GDAL.gdalgroupcreateattribute(
-            group,
-            name,
-            length(dimensions),
-            dimensions,
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupcreateattribute(
+        group,
+        name,
+        length(dimensions),
+        dimensions,
+        datatype,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create attribute \"$name\"")
+    return Attribute(ptr, group.dataset.value)
 end
 
 function createattribute(
@@ -547,17 +529,16 @@ function createattribute(
 )::AbstractAttribute
     @assert !isnull(group)
     @assert !isnull(datatype)
-    return IAttribute(
-        GDAL.gdalgroupcreateattribute(
-            group,
-            name,
-            length(dimensions),
-            dimensions,
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        group.dataset.value,
+    ptr = GDAL.gdalgroupcreateattribute(
+        group,
+        name,
+        length(dimensions),
+        dimensions,
+        datatype,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create attribute \"$name\"")
+    return IAttribute(ptr, group.dataset.value)
 end
 
 function deleteattribute(

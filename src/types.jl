@@ -48,19 +48,19 @@ end
 # Each child must have a `destroy` function.
 mutable struct Dataset <: AbstractDataset
     ptr::GDAL.GDALDatasetH
-    children::Union{Nothing,Vector{Any}}
+    children::Union{Nothing,Vector{WeakRef}}
 
     function Dataset(ptr::GDAL.GDALDatasetH = C_NULL; hard_close::Bool = false)
-        return new(ptr, hard_close ? [] : nothing)
+        return new(ptr, hard_close ? WeakRef[] : nothing)
     end
 end
 
 mutable struct IDataset <: AbstractDataset
     ptr::GDAL.GDALDatasetH
-    children::Union{Nothing,Vector{Any}}
+    children::Union{Nothing,Vector{WeakRef}}
 
     function IDataset(ptr::GDAL.GDALDatasetH = C_NULL; hard_close::Bool = false)
-        dataset = new(ptr, hard_close ? [] : nothing)
+        dataset = new(ptr, hard_close ? WeakRef[] : nothing)
         finalizer(destroy, dataset)
         return dataset
     end
@@ -69,8 +69,8 @@ end
 function add_child!(dataset::AbstractDataset, obj::Any)::Nothing
     isnull(obj) && return nothing
     @assert !isnull(dataset)
-    dataset.children === nothing && return nothing
-    push!(dataset.children, obj)
+    isnothing(dataset.children) && return nothing
+    push!(dataset.children, WeakRef(obj))
     return nothing
 end
 
@@ -640,11 +640,11 @@ end
 
 for T in (GDALOpenFlag, FieldValidation)
     eval(quote
-        Base.:&(x::$T, y::UInt32)::UInt32 = UInt32(x) & y
-        Base.:&(x::UInt32, y::$T)::UInt32 = x & UInt32(y)
+        Base.:&(x::$T, y::Unsigned)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:&(x::Unsigned, y::$T)::UInt32 = UInt32(x) & UInt32(y)
         Base.:&(x::$T, y::$T)::UInt32 = UInt32(x) & UInt32(y)
-        Base.:|(x::$T, y::UInt32)::UInt32 = UInt32(x) | y
-        Base.:|(x::UInt32, y::$T)::UInt32 = x | UInt32(y)
+        Base.:|(x::$T, y::Unsigned)::UInt32 = UInt32(x) | UInt32(y)
+        Base.:|(x::Unsigned, y::$T)::UInt32 = UInt32(x) | UInt32(y)
         Base.:|(x::$T, y::$T)::UInt32 = UInt32(x) | UInt32(y)
     end)
 end

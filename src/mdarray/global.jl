@@ -48,7 +48,7 @@ function unsafe_open(
     siblingfiles::OptionList,
     hard_close::Union{Nothing,Bool} = nothing,
 )::AbstractDataset
-    if hard_close === nothing
+    if isnothing(hard_close)
         # We hard-close the dataset if it is a writable multidim dataset
         hard_close =
             (openflags & OF_MULTIDIM_RASTER != 0) &&
@@ -74,7 +74,7 @@ function open(
     siblingfiles::OptionList,
     hard_close::Union{Nothing,Bool} = nothing,
 )::AbstractDataset
-    if hard_close === nothing
+    if isnothing(hard_close)
         # We hard-close the dataset if it is a writable multidim dataset
         hard_close =
             (openflags & OF_MULTIDIM_RASTER != 0) &&

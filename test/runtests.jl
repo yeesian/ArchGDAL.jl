@@ -3,7 +3,7 @@ using Dates
 using GDAL
 #TODO import ArchGDAL
 import ArchGDAL as AG
-import Aqua
+using Aqua
 
 # ensure all testing files are present
 include("remotefiles.jl")

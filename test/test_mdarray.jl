@@ -1,5 +1,6 @@
 using Test
 import ArchGDAL as AG
+using GDAL
 
 # TODO: Test vsizip driver
 
@@ -115,27 +116,19 @@ end
 
 function write_attributes(loc::Union{AG.AbstractGroup,AG.AbstractMDArray})
     for name in attribute_names
-        @test AG.writeattribute(loc, name, name)
+        AG.writeattribute(loc, name, name)
     end
     for T in attribute_types
-        @test AG.writeattribute(loc, "$T", get_attribute_value(T))
+        AG.writeattribute(loc, "$T", get_attribute_value(T))
     end
     return nothing
 end
 function test_attributes(loc::Union{AG.AbstractGroup,AG.AbstractMDArray})
     for name in attribute_names
         @test isequal(AG.readattribute(loc, name), name)
-        if !isequal(AG.readattribute(loc, name), name)
-            @show loc name
-            @assert false
-        end
     end
     for T in attribute_types
         @test isequal(AG.readattribute(loc, "$T"), get_attribute_value(T))
-        if !isequal(AG.readattribute(loc, "$T"), get_attribute_value(T))
-            @show loc T
-            @assert false
-        end
     end
     return nothing
 end
@@ -216,15 +209,11 @@ end
                 # @test AG.iswritable(mdarray)
 
                 data = Float32[100 * x + y for y in 1:ny, x in 1:nx]
-
-                success = AG.write(mdarray, data)
-                @test success
+                AG.write(mdarray, data)
 
                 write_attributes(mdarray)
 
-                success =
-                    AG.writemdarray(group, "primes", UInt8[2, 3, 5, 7, 251])
-                @test success
+                AG.writemdarray(group, "primes", UInt8[2, 3, 5, 7, 251])
 
                 if drivername != "MEM"
                     err = AG.close(dataset)
@@ -280,42 +269,43 @@ end
                 @test AG.getfullname(dimx) == "/group/x"
                 @test AG.gettype(dimx) == ""
                 @test AG.getdirection(dimx) == ""
-                xvar = AG.getindexingvariable(dimx)
-                @test AG.isnull(xvar)
+                @test_throws ErrorException AG.getindexingvariable(dimx)
                 # TODO: setindexingvariable!
                 # TODO: rename!
 
                 mdarray1 = AG.openmdarrayfromfullname(root, "/group/mdarray")
                 @test !AG.isnull(mdarray1)
                 @test AG.getfullname(mdarray1) == "/group/mdarray"
-                @test AG.isnull(
-                    AG.openmdarrayfromfullname(root, "/group/doesnotexist"),
+                @test_throws ErrorException AG.openmdarrayfromfullname(
+                    root,
+                    "/group/doesnotexist",
                 )
-
                 mdarray2 = AG.resolvemdarray(group, "mdarray", "")
                 @test !AG.isnull(mdarray2)
                 @test AG.getfullname(mdarray2) == "/group/mdarray"
-                @test AG.isnull(AG.resolvemdarray(group, "doesnotexist", ""))
+                @test_throws ErrorException AG.resolvemdarray(
+                    group,
+                    "doesnotexist",
+                    "",
+                )
 
                 group1 = AG.opengroupfromfullname(root, "/group")
                 @test !AG.isnull(group1)
                 @test AG.getfullname(group1) == "/group"
-                @test AG.isnull(
-                    AG.opengroupfromfullname(group, "/doesnotexist"),
+                @test_throws ErrorException AG.opengroupfromfullname(
+                    group,
+                    "/doesnotexist",
                 )
-
                 datatype = AG.getdatatype(mdarray)
                 @test !AG.isnull(datatype)
                 @test AG.getclass(datatype) == GDAL.GEDTC_NUMERIC
                 @test AG.getnumericdatatype(datatype) == AG.GDT_Float32
 
                 data = Array{Float32}(undef, ny, nx)
-                success = AG.read!(mdarray, data)
-                @test success
+                AG.read!(mdarray, data)
                 @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
 
                 data = AG.read(mdarray)
-                @test data !== nothing
                 @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
 
                 test_attributes(mdarray)
@@ -346,78 +336,89 @@ end
                 ) do dataset
                     @test !AG.isnull(dataset)
 
-                    root = AG.getrootgroup(dataset)
-                    @test !AG.isnull(root)
+                    AG.getrootgroup(dataset) do root
+                        @test !AG.isnull(root)
 
-                    rootname = AG.getname(root)
-                    @test rootname == "/"
-                    rootfullname = AG.getfullname(root)
-                    @test rootfullname == "/"
+                        rootname = AG.getname(root)
+                        @test rootname == "/"
+                        rootfullname = AG.getfullname(root)
+                        @test rootfullname == "/"
 
-                    AG.creategroup(root, "group") do group
-                        @test !AG.isnull(group)
-                        @test AG.getname(group) == "group"
-                        @test AG.getfullname(group) == "/group"
+                        AG.creategroup(root, "group") do group
+                            @test !AG.isnull(group)
+                            @test AG.getname(group) == "group"
+                            @test AG.getfullname(group) == "/group"
 
-                        @test AG.getgroupnames(root) == ["group"]
-                        @test AG.getgroupnames(group) == []
+                            @test AG.getgroupnames(root) == ["group"]
+                            @test AG.getgroupnames(group) == []
 
-                        write_attributes(group)
+                            write_attributes(group)
 
-                        nx, ny = 3, 4
-                        AG.createdimension(group, "x", "", "", nx) do dimx
-                            @test !AG.isnull(dimx)
-                            AG.createdimension(group, "y", "", "", ny) do dimy
-                                @test !AG.isnull(dimy)
+                            nx, ny = 3, 4
+                            AG.createdimension(group, "x", "", "", nx) do dimx
+                                @test !AG.isnull(dimx)
+                                AG.createdimension(
+                                    group,
+                                    "y",
+                                    "",
+                                    "",
+                                    ny,
+                                ) do dimy
+                                    @test !AG.isnull(dimy)
 
-                                AG.getdimensions(root) do dims
-                                    @test dims == []
-                                end
-                                AG.getdimensions(group) do dimensions
-                                    @test length(dimensions) == 2
-                                end
+                                    AG.getdimensions(root) do dims
+                                        @test dims == []
+                                    end
+                                    AG.getdimensions(group) do dimensions
+                                        @test length(dimensions) == 2
+                                    end
 
-                                AG.extendeddatatypecreate(Float32) do datatype
-                                    @test !AG.isnull(datatype)
+                                    AG.extendeddatatypecreate(
+                                        Float32,
+                                    ) do datatype
+                                        @test !AG.isnull(datatype)
 
-                                    AG.createmdarray(
-                                        group,
-                                        "mdarray",
-                                        [dimx, dimy],
-                                        datatype,
-                                        mdarraycreateoptions,
-                                    ) do mdarray
-                                        @test !AG.isnull(mdarray)
-
-                                        @test AG.getmdarraynames(root) == []
-                                        @test AG.getmdarraynames(group) ==
-                                              ["mdarray"]
-
-                                        @test AG.getvectorlayernames(root) == []
-                                        @test AG.getvectorlayernames(group) ==
-                                              []
-
-                                        @test AG.getstructuralinfo(group) == []
-
-                                        # @test AG.iswritable(mdarray)
-
-                                        data = Float32[
-                                            100 * x + y for y in 1:ny, x in 1:nx
-                                        ]
-
-                                        success = AG.write(mdarray, data)
-                                        @test success
-
-                                        write_attributes(mdarray)
-
-                                        success = AG.writemdarray(
+                                        AG.createmdarray(
                                             group,
-                                            "primes",
-                                            UInt8[2, 3, 5, 7, 251],
-                                        )
-                                        @test success
+                                            "mdarray",
+                                            [dimx, dimy],
+                                            datatype,
+                                            mdarraycreateoptions,
+                                        ) do mdarray
+                                            @test !AG.isnull(mdarray)
 
-                                        return
+                                            @test AG.getmdarraynames(root) == []
+                                            @test AG.getmdarraynames(group) ==
+                                                  ["mdarray"]
+
+                                            @test AG.getvectorlayernames(
+                                                root,
+                                            ) == []
+                                            @test AG.getvectorlayernames(
+                                                group,
+                                            ) == []
+
+                                            @test AG.getstructuralinfo(group) ==
+                                                  []
+
+                                            # @test AG.iswritable(mdarray)
+
+                                            data = Float32[
+                                                100 * x + y for y in 1:ny,
+                                                x in 1:nx
+                                            ]
+                                            AG.write(mdarray, data)
+
+                                            write_attributes(mdarray)
+
+                                            AG.writemdarray(
+                                                group,
+                                                "primes",
+                                                UInt8[2, 3, 5, 7, 251],
+                                            )
+
+                                            return
+                                        end
                                     end
                                 end
                             end
@@ -473,8 +474,9 @@ end
                                         @test AG.getfullname(dimx) == "/group/x"
                                         @test AG.gettype(dimx) == ""
                                         @test AG.getdirection(dimx) == ""
-                                        AG.getindexingvariable(dimx) do xvar
-                                            @test AG.isnull(xvar)
+                                        @test_throws ErrorException AG.getindexingvariable(
+                                            dimx,
+                                        ) do xvar
                                         end
                                         # TODO: setindexingvariable!
                                         # TODO: rename!
@@ -494,11 +496,10 @@ end
                                             @test AG.getfullname(mdarray1) ==
                                                   "/group/mdarray"
                                         end
-                                        AG.openmdarrayfromfullname(
+                                        @test_throws ErrorException AG.openmdarrayfromfullname(
                                             root,
                                             "/group/doesnotexist",
                                         ) do doesnotexist
-                                            @test AG.isnull(doesnotexist)
                                         end
 
                                         AG.resolvemdarray(
@@ -510,12 +511,11 @@ end
                                             @test AG.getfullname(mdarray2) ==
                                                   "/group/mdarray"
                                         end
-                                        AG.resolvemdarray(
+                                        @test_throws ErrorException AG.resolvemdarray(
                                             root,
                                             "doesnotexist",
                                             "",
                                         ) do doesnotexist
-                                            @test AG.isnull(doesnotexist)
                                         end
 
                                         AG.opengroupfromfullname(
@@ -526,22 +526,19 @@ end
                                             @test AG.getfullname(group1) ==
                                                   "/group"
                                         end
-                                        AG.opengroupfromfullname(
+                                        @test_throws ErrorException AG.opengroupfromfullname(
                                             root,
                                             "/doesnotexist",
                                         ) do doesnotexist
-                                            @test AG.isnull(doesnotexist)
                                         end
 
                                         data = Array{Float32}(undef, ny, nx)
-                                        success = AG.read!(mdarray, data)
-                                        @test success
+                                        AG.read!(mdarray, data)
                                         @test data == Float32[
                                             100 * x + y for y in 1:ny, x in 1:nx
                                         ]
 
                                         data = AG.read(mdarray)
-                                        @test data !== nothing
                                         @test data == Float32[
                                             100 * x + y for y in 1:ny, x in 1:nx
                                         ]

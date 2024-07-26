@@ -29,26 +29,26 @@ function unsafe_getindexingvariable(
     dimension::AbstractDimension,
 )::AbstractMDArray
     @assert !isnull(dimension)
-    return MDArray(
-        GDAL.gdaldimensiongetindexingvariable(dimension),
-        dimension.dataset.value,
-    )
+    ptr = GDAL.gdaldimensiongetindexingvariable(dimension)
+    ptr == C_NULL && error("Could not get indexing variable for dimension")
+    return MDArray(ptr, dimension.dataset.value)
 end
 
 function getindexingvariable(dimension::AbstractDimension)::AbstractMDArray
     @assert !isnull(dimension)
-    return IMDArray(
-        GDAL.gdaldimensiongetindexingvariable(dimension),
-        dimension.dataset.value,
-    )
+    ptr = GDAL.gdaldimensiongetindexingvariable(dimension)
+    ptr == C_NULL && error("Could not get indexing variable for dimension")
+    return IMDArray(ptr, dimension.dataset.value)
 end
 
 function setindexingvariable!(
     dimension::AbstractDimension,
     indexingvariable::AbstractMDArray,
-)::Bool
+)::Nothing
     @assert !isnull(dimension)
-    return GDAL.gdaldimensionsetindexingvariable(dimension, indexingvariable)
+    success = GDAL.gdaldimensionsetindexingvariable(dimension, indexingvariable)
+    success == 0 && error("Could not set indexing variable for dimension")
+    return nothing
 end
 
 function rename!(dimension::AbstractDimension, newname::AbstractString)::Bool

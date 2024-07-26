@@ -1,5 +1,25 @@
 # GDALMDArray
 
+function MDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
+    @assert ptr != C_NULL
+    datatype = IExtendedDataType(GDAL.gdalmdarraygetdatatype(ptr))
+    class = getclass(datatype)
+    @assert class == GDAL.GEDTC_NUMERIC
+    T = convert(DataType, getnumericdatatype(datatype))
+    D = Int(GDAL.gdalmdarraygetdimensioncount(ptr))
+    return MDArray{T,D}(ptr, dataset)
+end
+
+function IMDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
+    @assert ptr != C_NULL
+    datatype = IExtendedDataType(GDAL.gdalmdarraygetdatatype(ptr))
+    class = getclass(datatype)
+    @assert class == GDAL.GEDTC_NUMERIC
+    T = convert(DataType, getnumericdatatype(datatype))
+    D = Int(GDAL.gdalmdarraygetdimensioncount(ptr))
+    return IMDArray{T,D}(ptr, dataset)
+end
+
 # function iswritable(mdarray::AbstractMDArray)::Bool
 #     return GDAL.gdalmdarrayiswritable(mdarray)
 # end
@@ -172,7 +192,7 @@ function setoffset!(
     return GDAL.gdalmdarraysetoffset(
         mdarray,
         offset,
-        storagetype === nothing ? GDAL.GDT_Unknown :
+        isnothing(storagetype) ? GDAL.GDT_Unknown :
         convert(GDAL.GDALDataType, storagetype),
     )
 end
@@ -186,7 +206,7 @@ function setscale!(
     return GDAL.gdalmdarraysetscale(
         mdarray,
         offset,
-        storagetype === nothing ? GDAL.GDT_Unknown :
+        isnothing(storagetype) ? GDAL.GDT_Unknown :
         convert(GDAL.GDALDataType, storagetype),
     )
 end
@@ -196,10 +216,9 @@ function unsafe_getview(
     viewexpr::AbstractString,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return MDArray(
-        GDAL.gdalmdarraygetview(mdarray, viewexpr),
-        mdarray.dataset.value,
-    )
+    ptr = GDAL.gdalmdarraygetview(mdarray, viewexpr)
+    ptr == C_NULL && error("Could not get view \"$vierexpr\"")
+    return MDArray(ptr, mdarray.dataset.value)
 end
 
 function getview(
@@ -207,10 +226,9 @@ function getview(
     viewexpr::AbstractString,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return IMDArray(
-        GDAL.gdalmdarraygetview(mdarray, viewexpr),
-        mdarray.dataset.value,
-    )
+    ptr = GDAL.gdalmdarraygetview(mdarray, viewexpr)
+    ptr == C_NULL && error("Could not get view \"$vierexpr\"")
+    return IMDArray(ptr, mdarray.dataset.value)
 end
 
 function unsafe_getindex(
@@ -252,12 +270,16 @@ end
 # TODO: Return a `LinearAlgebra.Adjoint` instead?
 function unsafe_transpose(mdarray::AbstractMDArray)::AbstractMDArray
     @assert !isnull(mdarray)
-    return MDArray(GDAL.gdalmdarraytranspose(mdarray), mdarray.dataset.value)
+    ptr = GDAL.gdalmdarraytranspose(mdarray)
+    ptr == C_NULL && error("Could not transpose mdarray")
+    return MDArray(ptr, mdarray.dataset.value)
 end
 
 function transpose(mdarray::AbstractMDArray)::AbstractMDArray
     @assert !isnull(mdarray)
-    return IMDArray(GDAL.gdalmdarraytranspose(mdarray), mdarray.dataset.value)
+    ptr = GDAL.gdalmdarraytranspose(mdarray)
+    ptr == C_NULL && error("Could not transpose mdarray")
+    return IMDArray(ptr, mdarray.dataset.value)
 end
 
 function unsafe_getunscaled(
@@ -267,15 +289,14 @@ function unsafe_getunscaled(
     overriddendstnodata = Float64(NaN),
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return MDArray(
-        GDAL.gdalmdarraygetunscaled(
-            mdarray,
-            overriddenscale,
-            overriddenoffset,
-            overriddendstnodata,
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraygetunscaled(
+        mdarray,
+        overriddenscale,
+        overriddenoffset,
+        overriddendstnodata,
     )
+    ptr == C_NULL && error("Could not get unscaled mdarray")
+    return MDArray(ptr, mdarray.dataset.value)
 end
 
 function getunscaled(
@@ -285,15 +306,14 @@ function getunscaled(
     overriddendstnodata = Float64(NaN),
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return IMDArray(
-        GDAL.gdalmdarraygetunscaled(
-            mdarray,
-            overriddenscale,
-            overriddenoffset,
-            overriddendstnodata,
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraygetunscaled(
+        mdarray,
+        overriddenscale,
+        overriddenoffset,
+        overriddendstnodata,
     )
+    ptr == C_NULL && error("Could not get unscaled mdarray")
+    return IMDArray(ptr, mdarray.dataset.value)
 end
 
 function unsafe_getmask(
@@ -301,10 +321,9 @@ function unsafe_getmask(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return MDArray(
-        GDAL.gdalmdarraygetmask(mdarray, CSLConstListWrapper(options)),
-        mdarray.dataset.value,
-    )
+    ptr = GDAL.gdalmdarraygetmask(mdarray, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could not get mask for mdarray")
+    return MDArray(ptr, mdarray.dataset.value)
 end
 
 function getmask(
@@ -312,10 +331,9 @@ function getmask(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return IMDArray(
-        GDAL.gdalmdarraygetmask(mdarray, CSLConstListWrapper(options)),
-        mdarray.dataset.value,
-    )
+    ptr = GDAL.gdalmdarraygetmask(mdarray, CSLConstListWrapper(options))
+    ptr == C_NULL && error("Could not get mask for mdarray")
+    return IMDArray(ptr, mdarray.dataset.value)
 end
 
 # TODO: Wrap GDAL.GDALRIOResampleAlg
@@ -327,17 +345,16 @@ function unsafe_getresampled(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return MDArray(
-        GDAL.gdalmdarraygetresampled(
-            mdarray,
-            newdims === nothing ? 0 : length(newdims),
-            newdims === nothing ? C_NULL : DimensionHList(newdims),
-            resamplealg,
-            targetsrs == nothing ? C_NULL : targetsrs,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraygetresampled(
+        mdarray,
+        isnothing(newdims) ? 0 : length(newdims),
+        isnothing(newdims) ? C_NULL : DimensionHList(newdims),
+        resamplealg,
+        isnothing(targetsrs) ? C_NULL : targetsrs,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not get resampled mdarray")
+    return MDArray(ptr, mdarray.dataset.value)
 end
 
 function getresampled(
@@ -348,17 +365,16 @@ function getresampled(
     options::OptionList = nothing,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    return IMDArray(
-        GDAL.gdalmdarraygetresampled(
-            mdarray,
-            newdims === nothing ? 0 : length(newdims),
-            newdims === nothing ? C_NULL : DimensionHList(newdims),
-            resamplealg,
-            targetsrs == nothing ? C_NULL : targetsrs,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraygetresampled(
+        mdarray,
+        isnothing(newdims) ? 0 : length(newdims),
+        isnothing(newdims) ? C_NULL : DimensionHList(newdims),
+        resamplealg,
+        isnothing(targetsrs) ? C_NULL : targetsrs,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not get resampled mdarray")
+    return IMDArray(ptr, mdarray.dataset.value)
 end
 
 function unsafe_getgridded(
@@ -371,16 +387,15 @@ function unsafe_getgridded(
     @assert !isnull(mdarray)
     @assert !isnull(xarray)
     @assert !isnull(yarray)
-    return MDArray(
-        GDAL.gdalmdarraygetgridded(
-            mdarray,
-            gridoptions,
-            xarray,
-            yarray,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraygetgridded(
+        mdarray,
+        gridoptions,
+        xarray,
+        yarray,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not get gridded mdarray")
+    return MDArray(ptr, mdarray.dataset.value)
 end
 
 function getgridded(
@@ -393,16 +408,15 @@ function getgridded(
     @assert !isnull(mdarray)
     @assert !isnull(xarray)
     @assert !isnull(yarray)
-    return IMDArray(
-        GDAL.gdalmdarraygetgridded(
-            mdarray,
-            gridoptions,
-            xarray,
-            yarray,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraygetgridded(
+        mdarray,
+        gridoptions,
+        xarray,
+        yarray,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not get gridded mdarray")
+    return IMDArray(ptr, mdarray.dataset.value)
 end
 
 function unsafe_asclassicdataset(
@@ -413,13 +427,13 @@ function unsafe_asclassicdataset(
     options::OptionList = nothing,
 )::AbstractDataset
     @assert !isnull(mdarray)
-    @assert rootgroup === nothing || !isnull(rootgroup)
+    @assert isnothing(rootgroup) || !isnull(rootgroup)
     return Dataset(
         GDAL.gdalmdarrayasclassicdataset(
             mdarray,
             xdim,
             ydim,
-            rootgroup === nothing ? C_NULL : rootgroup,
+            isnothing(rootgroup) ? C_NULL : rootgroup,
             CSLConstListWrapper(options),
         ),
     )
@@ -433,13 +447,13 @@ function asclassicdataset(
     options::OptionList = nothing,
 )::AbstractDataset
     @assert !isnull(mdarray)
-    @assert rootgroup === nothing || !isnull(rootgroup)
+    @assert isnothing(rootgroup) || !isnull(rootgroup)
     return IDataset(
         GDAL.gdalmdarrayasclassicdataset(
             mdarray,
             xdim,
             ydim,
-            rootgroup === nothing ? C_NULL : rootgroup,
+            isnothing(rootgroup) ? C_NULL : rootgroup,
             CSLConstListWrapper(options),
         ),
     )
@@ -447,14 +461,18 @@ end
 
 function unsafe_asmdarray(rasterband::AbstractRasterBand)::AbstractMDArray
     @assert !isnull(rasterband)
+    ptr = GADL.gdalrasterbandasmdarray(rasterband)
+    ptr == C_NULL && error("Could not get view rasterband view as mdarray")
     # TODO: Find dataset
-    return MDArray(GADL.gdalrasterbandasmdarray(rasterband))
+    return MDArray(ptr)
 end
 
 function asmdarray(rasterband::AbstractRasterBand)::AbstractMDArray
     @assert !isnull(rasterband)
+    ptr = GADL.gdalrasterbandasmdarray(rasterband)
+    ptr == C_NULL && error("Could not get view rasterband view as mdarray")
     # TODO: Find dataset
-    return IMDArray(GADL.gdalrasterbandasmdarray(rasterband))
+    return IMDArray(ptr)
 end
 
 # TODO: Wrap GDAL.CPLErr
@@ -513,7 +531,7 @@ function computestatistics(
         C_NULL,
         CSLConstListWrapper(options),
     )
-    return succeess, min[], max[], mean[], stddev[], Int64(validcount[])
+    return Bool(succeess), min[], max[], mean[], stddev[], Int64(validcount[])
 end
 
 function clearstatistics(mdarray::AbstractMDArray)::Nothing
@@ -546,8 +564,8 @@ function adviseread(
     @assert !isnull(mdarray)
     return GDAL.gdalmdarrayadviseread(
         mdarray,
-        arraystartidx === nothing ? C_NULL : arraystartidx,
-        count === nothing ? C_NULL : count,
+        isnothing(arraystartidx) ? C_NULL : arraystartidx,
+        isnothing(count) ? C_NULL : count,
         CSLConstListWrapper(options),
     )
 end
@@ -614,10 +632,11 @@ function Base.length(mdarray::AbstractMDArray)
     return Int(gettotalelementscount(mdarray))
 end
 
-function getdimensioncount(mdarray::AbstractMDArray)::Int
-    @assert !isnull(mdarray)
-    return Int(GDAL.gdalmdarraygetdimensioncount(mdarray))
-end
+# function getdimensioncount(mdarray::AbstractMDArray)::Int
+#     @assert !isnull(mdarray)
+#     return Int(GDAL.gdalmdarraygetdimensioncount(mdarray))
+# end
+getdimensioncount(mdarray::AbstractMDArray{<:Any,D}) where {D} = D
 
 Base.ndims(mdarray::AbstractMDArray)::Int = getdimensioncount(mdarray)
 
@@ -651,6 +670,13 @@ function unsafe_getdimensions(
     return dimensions
 end
 
+function Base.size(mdarray::AbstractMDArray)
+    getdimensions(mdarray) do dimensions
+        D = length(dimensions)
+        return ntuple(d -> getsize(dimensions[D-d+1]), D)
+    end
+end
+
 function unsafe_getdatatype(mdarray::AbstractMDArray)::AbstractExtendedDataType
     @assert !isnull(mdarray)
     return ExtendedDataType(GDAL.gdalmdarraygetdatatype(mdarray))
@@ -660,6 +686,8 @@ function getdatatype(mdarray::AbstractMDArray)::AbstractExtendedDataType
     @assert !isnull(mdarray)
     return IExtendedDataType(GDAL.gdalmdarraygetdatatype(mdarray))
 end
+
+Base.eltype(mdarray::AbstractMDArray{T}) where {T} = T
 
 function getblocksize(
     mdarray::AbstractMDArray,
@@ -672,9 +700,17 @@ function getblocksize(
         count,
         CSLConstListWrapper(options),
     )
-    blocksize = Int64[unsafe_load(blocksizeptr, n) for n in 1:count[]]
+    blocksize = Int64[unsafe_load(blocksizeptr, n) for n in count[]:-1:1]
     GDAL.vsifree(blocksizeptr)
     return blocksize
+end
+
+DiskArrays.haschunks(::AbstractMDArray) = DiskArrays.Chunked()
+function DiskArrays.eachchunk(
+    mdarray::AbstractMDArray{<:Any,D},
+)::NTuple{D,Int} where {D}
+    blocksize = getblocksize(mdarray)
+    return DiskArrays.GridChunks(mdarray, Int.(blocksize))
 end
 
 function getprocessingchunksize(
@@ -685,7 +721,7 @@ function getprocessingchunksize(
     count = Ref{Csize_t}()
     chunksizeptr =
         GDAL.gdalmdarraygetprocessingchunksize(mdarray, count, maxchunkmemory)
-    chunksize = Int64[unsafe_load(chunksizeptr, n) for n in 1:count[]]
+    chunksize = Int64[unsafe_load(chunksizeptr, n) for n in count[]:-1:1]
     GDAL.vsifree(chunksizeptr)
     return chunksize
 end
@@ -705,18 +741,18 @@ function read!(
     count::IndexLike{D},
     arraystep::Union{Nothing,IndexLike{D}},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     @assert !isnull(mdarray)
     @assert length(arraystartidx) == D
     @assert length(count) == D
-    @assert arraystep === nothing ? true : length(arraystep) == D
+    @assert isnothing(arraystep) ? true : length(arraystep) == D
     gdal_arraystartidx = UInt64[arraystartidx[n] - 1 for n in D:-1:1]
     gdal_count = Csize_t[count[n] for n in D:-1:1]
     gdal_arraystep =
-        arraystep === nothing ? nothing : Int64[arraystep[n] for n in D:-1:1]
+        isnothing(arraystep) ? nothing : Int64[arraystep[n] for n in D:-1:1]
     gdal_bufferstride = Cptrdiff_t[stride(buffer, n) for n in D:-1:1]
     return extendeddatatypecreate(T) do bufferdatatype
-        return GDAL.gdalmdarrayread(
+        success = GDAL.gdalmdarrayread(
             mdarray,
             gdal_arraystartidx,
             gdal_count,
@@ -727,6 +763,8 @@ function read!(
             buffer,
             sizeof(buffer),
         )
+        success == 0 && error("Could not read mdarray")
+        return nothing
     end
 end
 
@@ -734,7 +772,7 @@ function read!(
     mdarray::AbstractMDArray,
     region::RangeLike{D},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     @assert length(region) == D
     arraystartidx = first.(region)
     count = length.(region)
@@ -747,7 +785,7 @@ function read!(
     indices::CartesianIndices{D},
     arraystep::Union{Nothing,IndexLike{D}},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     @assert length(region) == D
     arraystartidx = first.(indices)
     count = length.(indices)
@@ -758,18 +796,18 @@ function read!(
     mdarray::AbstractMDArray,
     indices::CartesianIndices{D},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     return read!(mdarray, indices, nothing, buffer)
 end
 
 function read!(
     mdarray::AbstractMDArray,
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     return read!(mdarray, axes(buffer), buffer)
 end
 
-function read(mdarray::AbstractMDArray)::Union{Nothing,AbstractArray}
+function read(mdarray::AbstractMDArray)::AbstractArray
     getdimensions(mdarray) do dimensions
         D = length(dimensions)
         sz = [getsize(dimensions[d]) for d in D:-1:1]
@@ -778,11 +816,20 @@ function read(mdarray::AbstractMDArray)::Union{Nothing,AbstractArray}
             @assert class == GDAL.GEDTC_NUMERIC
             T = convert(DataType, getnumericdatatype(datatype))
             buffer = Array{T}(undef, sz...)
-            success = read!(mdarray, buffer)
-            !success && return nothing
+            read!(mdarray, buffer)
             return buffer
         end
     end
+end
+
+function DiskArrays.readblock!(
+    mdarray::AbstractMDArray{<:Any,D},
+    aout,
+    r::Vararg{AbstractUnitRange,D},
+)::Nothing where {D}
+    success == read!(mdarray, r, aout)
+    @assert success
+    return nothing
 end
 
 function write(
@@ -791,18 +838,18 @@ function write(
     count::IndexLike{D},
     arraystep::Union{Nothing,IndexLike{D}},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     @assert !isnull(mdarray)
     @assert length(arraystartidx) == D
     @assert length(count) == D
-    @assert arraystep === nothing ? true : length(arraystep) == D
+    @assert isnothing(arraystep) ? true : length(arraystep) == D
     gdal_arraystartidx = UInt64[arraystartidx[n] - 1 for n in D:-1:1]
     gdal_count = Csize_t[count[n] for n in D:-1:1]
     gdal_arraystep =
-        arraystep === nothing ? nothing : Int64[arraystep[n] for n in D:-1:1]
+        isnothing(arraystep) ? nothing : Int64[arraystep[n] for n in D:-1:1]
     gdal_bufferstride = Cptrdiff_t[stride(buffer, n) for n in D:-1:1]
     return extendeddatatypecreate(T) do bufferdatatype
-        return GDAL.gdalmdarraywrite(
+        success = GDAL.gdalmdarraywrite(
             mdarray,
             gdal_arraystartidx,
             gdal_count,
@@ -813,6 +860,8 @@ function write(
             buffer,
             sizeof(buffer),
         )
+        success == 0 && error("Could not write mdarray")
+        return nothing
     end
 end
 
@@ -820,7 +869,7 @@ function write(
     mdarray::AbstractMDArray,
     region::RangeLike{D},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     @assert length(region) == D
     arraystartidx = first.(region)
     count = length.(region)
@@ -833,7 +882,7 @@ function write(
     indices::CartesianIndices{D},
     arraystep::Union{Nothing,IndexLike{D}},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     @assert length(region) == D
     arraystartidx = first.(indices)
     count = length.(indices)
@@ -844,15 +893,25 @@ function write(
     mdarray::AbstractMDArray,
     indices::CartesianIndices{D},
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     return write(mdarray, indices, nothing, buffer)
 end
 
 function write(
     mdarray::AbstractMDArray,
     buffer::StridedArray{T,D},
-)::Bool where {T,D}
+)::Nothing where {T,D}
     return write(mdarray, axes(buffer), buffer)
+end
+
+function DiskArrays.writeblock!(
+    mdarray::AbstractMDArray{<:Any,D},
+    ain,
+    r::Vararg{AbstractUnitRange,D},
+)::Nothing where {D}
+    success == write(mdarray, r, ain)
+    @assert success
+    return nothing
 end
 
 function rename!(mdarray::AbstractMDArray, newname::AbstractString)::Bool
@@ -867,10 +926,9 @@ function unsafe_getattribute(
     name::AbstractString,
 )::AbstractAttribute
     @assert !isnull(mdarray)
-    return Attribute(
-        GDAL.gdalmdarraygetattribute(mdarray, name),
-        mdarray.dataset.value,
-    )
+    ptr = GDAL.gdalmdarraygetattribute(mdarray, name)
+    ptr == C_NULL && error("Could not get attribute \"$name\"")
+    return Attribute(ptr, mdarray.dataset.value)
 end
 
 function getattribute(
@@ -878,10 +936,9 @@ function getattribute(
     name::AbstractString,
 )::AbstractAttribute
     @assert !isnull(mdarray)
-    return IAttribute(
-        GDAL.gdalmdarraygetattribute(mdarray, name),
-        mdarray.dataset.value,
-    )
+    ptr = GDAL.gdalmdarraygetattribute(mdarray, name)
+    ptr == C_NULL && error("Could not get attribute \"$name\"")
+    return IAttribute(ptr, mdarray.dataset.value)
 end
 
 function unsafe_getattributes(
@@ -931,17 +988,16 @@ function unsafe_createattribute(
 )::AbstractAttribute
     @assert !isnull(mdarray)
     @assert !isnull(datatype)
-    return Attribute(
-        GDAL.gdalmdarraycreateattribute(
-            mdarray,
-            name,
-            length(dimensions),
-            dimensions,
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraycreateattribute(
+        mdarray,
+        name,
+        length(dimensions),
+        dimensions,
+        datatype,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create attribute \"$name\"")
+    return Attribute(ptr, mdarray.dataset.value)
 end
 
 function createattribute(
@@ -953,17 +1009,16 @@ function createattribute(
 )::AbstractAttribute
     @assert !isnull(mdarray)
     @assert !isnull(datatype)
-    return IAttribute(
-        GDAL.gdalmdarraycreateattribute(
-            mdarray,
-            name,
-            length(dimensions),
-            dimensions,
-            datatype,
-            CSLConstListWrapper(options),
-        ),
-        mdarray.dataset.value,
+    ptr = GDAL.gdalmdarraycreateattribute(
+        mdarray,
+        name,
+        length(dimensions),
+        dimensions,
+        datatype,
+        CSLConstListWrapper(options),
     )
+    ptr == C_NULL && error("Could not create attribute \"$name\"")
+    return IAttribute(ptr, mdarray.dataset.value)
 end
 
 function deleteattribute(

@@ -5,14 +5,15 @@ function writemdarray(
     name::AbstractString,
     value::StridedArray{T,D},
     options::OptionList = nothing,
-)::Bool where {T<:NumericAttributeType,D}
+)::Nothing where {T<:NumericAttributeType,D}
     dimensions = AbstractDimension[
         createdimension(group, "$name.$d", "", "", size(value, d)) for
         d in D:-1:1
     ]
     extendeddatatypecreate(T) do datatype
         createmdarray(group, name, dimensions, datatype, options) do mdarray
-            return write(mdarray, value)
+            write(mdarray, value)
+            return nothing
         end
     end
 end
@@ -21,9 +22,8 @@ function readmdarray(
     group::AbstractGroup,
     name::AbstractString,
     options::OptionList = nothing,
-)::Union{Nothing,AbstractArray}
+)::AbstractArray
     openmdarray(group, name, options) do mdarray
-        isnull(mdarray) && return nothing
         return read(mdarray)
     end
 end
@@ -32,10 +32,11 @@ function writeattribute(
     group::Union{AbstractGroup,AbstractMDArray},
     name::AbstractString,
     value::AbstractString,
-)::Bool
+)::Nothing
     extendeddatatypecreatestring(length(value)) do datatype
         createattribute(group, name, UInt64[], datatype) do attribute
-            return write(attribute, value)
+            write(attribute, value)
+            return nothing
         end
     end
 end
@@ -44,10 +45,11 @@ function writeattribute(
     group::Union{AbstractGroup,AbstractMDArray},
     name::AbstractString,
     value::NumericAttributeType,
-)::Bool
+)::Nothing
     extendeddatatypecreate(typeof(value)) do datatype
         createattribute(group, name, UInt64[], datatype) do attribute
-            return write(attribute, value)
+            write(attribute, value)
+            return nothing
         end
     end
 end
@@ -56,7 +58,7 @@ function writeattribute(
     group::Union{AbstractGroup,AbstractMDArray},
     name::AbstractString,
     values::AbstractVector{<:AbstractString},
-)::Bool
+)::Nothing
     extendeddatatypecreatestring(0) do datatype
         createattribute(
             group,
@@ -64,7 +66,8 @@ function writeattribute(
             UInt64[length(values)],
             datatype,
         ) do attribute
-            return write(attribute, values)
+            write(attribute, values)
+            return nothing
         end
     end
 end
@@ -73,7 +76,7 @@ function writeattribute(
     group::Union{AbstractGroup,AbstractMDArray},
     name::AbstractString,
     values::AbstractVector{<:NumericAttributeType},
-)::Bool
+)::Nothing
     extendeddatatypecreate(eltype(values)) do datatype
         createattribute(
             group,
@@ -81,7 +84,8 @@ function writeattribute(
             UInt64[length(values)],
             datatype,
         ) do attribute
-            return write(attribute, values)
+            write(attribute, values)
+            return nothing
         end
     end
 end
@@ -89,9 +93,8 @@ end
 function readattribute(
     group::Union{AbstractGroup,AbstractMDArray},
     name::AbstractString,
-)::Union{Nothing,AttributeType}
+)::AttributeType
     getattribute(group, name) do attribute
-        isnull(attribute) && return nothing
         return read(attribute)
     end
 end
