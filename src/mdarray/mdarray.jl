@@ -1,6 +1,6 @@
 # GDALMDArray
 
-function MDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
+function MDArray(ptr::GDAL.GDALMDArrayH, dataset::WeakRef)
     @assert ptr != C_NULL
     datatype = IExtendedDataType(GDAL.gdalmdarraygetdatatype(ptr))
     class = getclass(datatype)
@@ -10,7 +10,7 @@ function MDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
     return MDArray{T,D}(ptr, dataset)
 end
 
-function IMDArray(ptr::GDAL.GDALMDArrayH, dataset::AbstractDataset)
+function IMDArray(ptr::GDAL.GDALMDArrayH, dataset::WeakRef)
     @assert ptr != C_NULL
     datatype = IExtendedDataType(GDAL.gdalmdarraygetdatatype(ptr))
     class = getclass(datatype)
@@ -218,7 +218,7 @@ function unsafe_getview(
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraygetview(mdarray, viewexpr)
     ptr == C_NULL && error("Could not get view \"$vierexpr\"")
-    return MDArray(ptr, mdarray.dataset.value)
+    return MDArray(ptr, mdarray.dataset)
 end
 
 function getview(
@@ -228,7 +228,7 @@ function getview(
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraygetview(mdarray, viewexpr)
     ptr == C_NULL && error("Could not get view \"$vierexpr\"")
-    return IMDArray(ptr, mdarray.dataset.value)
+    return IMDArray(ptr, mdarray.dataset)
 end
 
 function unsafe_getindex(
@@ -272,14 +272,14 @@ function unsafe_transpose(mdarray::AbstractMDArray)::AbstractMDArray
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraytranspose(mdarray)
     ptr == C_NULL && error("Could not transpose mdarray")
-    return MDArray(ptr, mdarray.dataset.value)
+    return MDArray(ptr, mdarray.dataset)
 end
 
 function transpose(mdarray::AbstractMDArray)::AbstractMDArray
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraytranspose(mdarray)
     ptr == C_NULL && error("Could not transpose mdarray")
-    return IMDArray(ptr, mdarray.dataset.value)
+    return IMDArray(ptr, mdarray.dataset)
 end
 
 function unsafe_getunscaled(
@@ -296,7 +296,7 @@ function unsafe_getunscaled(
         overriddendstnodata,
     )
     ptr == C_NULL && error("Could not get unscaled mdarray")
-    return MDArray(ptr, mdarray.dataset.value)
+    return MDArray(ptr, mdarray.dataset)
 end
 
 function getunscaled(
@@ -313,7 +313,7 @@ function getunscaled(
         overriddendstnodata,
     )
     ptr == C_NULL && error("Could not get unscaled mdarray")
-    return IMDArray(ptr, mdarray.dataset.value)
+    return IMDArray(ptr, mdarray.dataset)
 end
 
 function unsafe_getmask(
@@ -323,7 +323,7 @@ function unsafe_getmask(
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraygetmask(mdarray, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could not get mask for mdarray")
-    return MDArray(ptr, mdarray.dataset.value)
+    return MDArray(ptr, mdarray.dataset)
 end
 
 function getmask(
@@ -333,7 +333,7 @@ function getmask(
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraygetmask(mdarray, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could not get mask for mdarray")
-    return IMDArray(ptr, mdarray.dataset.value)
+    return IMDArray(ptr, mdarray.dataset)
 end
 
 # TODO: Wrap GDAL.GDALRIOResampleAlg
@@ -354,7 +354,7 @@ function unsafe_getresampled(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not get resampled mdarray")
-    return MDArray(ptr, mdarray.dataset.value)
+    return MDArray(ptr, mdarray.dataset)
 end
 
 function getresampled(
@@ -374,7 +374,7 @@ function getresampled(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not get resampled mdarray")
-    return IMDArray(ptr, mdarray.dataset.value)
+    return IMDArray(ptr, mdarray.dataset)
 end
 
 function unsafe_getgridded(
@@ -395,7 +395,7 @@ function unsafe_getgridded(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not get gridded mdarray")
-    return MDArray(ptr, mdarray.dataset.value)
+    return MDArray(ptr, mdarray.dataset)
 end
 
 function getgridded(
@@ -416,7 +416,7 @@ function getgridded(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not get gridded mdarray")
-    return IMDArray(ptr, mdarray.dataset.value)
+    return IMDArray(ptr, mdarray.dataset)
 end
 
 function unsafe_asclassicdataset(
@@ -546,10 +546,9 @@ function getcoordinatevariables(
     count = Ref{Csize_t}()
     coordinatevariablesptr =
         GDAL.gdalmdarraygetcoordinatevariables(mdarray, count)
-    dataset = mdarray.dataset.value
     coordinatevariables = AbstractMDArray[
-        IMDArray(unsafe_load(coordinatevariablesptr, n), dataset) for
-        n in 1:count[]
+        IMDArray(unsafe_load(coordinatevariablesptr, n), mdarray.dataset)
+        for n in 1:count[]
     ]
     GDAL.vsifree(coordinatevariablesptr)
     return coordinatevariables
@@ -607,7 +606,7 @@ end
 
 function getrootgroup(mdarray::AbstractMDArray)::AbstractGroup
     @assert !isnull(mdarray)
-    return Group(GDAL.gdalmdarraygetrootgroup(mdarray), mdarray.dataset.value)
+    return Group(GDAL.gdalmdarraygetrootgroup(mdarray), mdarray.dataset)
 end
 
 ################################################################################
@@ -646,9 +645,8 @@ function getdimensions(
     @assert !isnull(mdarray)
     dimensionscountref = Ref{Csize_t}()
     dimensionshptr = GDAL.gdalmdarraygetdimensions(mdarray, dimensionscountref)
-    dataset = mdarray.dataset.value
     dimensions = AbstractDimension[
-        IDimension(unsafe_load(dimensionshptr, n), dataset) for
+        IDimension(unsafe_load(dimensionshptr, n), mdarray.dataset) for
         n in 1:dimensionscountref[]
     ]
     GDAL.vsifree(dimensionshptr)
@@ -661,9 +659,8 @@ function unsafe_getdimensions(
     @assert !isnull(mdarray)
     dimensionscountref = Ref{Csize_t}()
     dimensionshptr = GDAL.gdalmdarraygetdimensions(mdarray, dimensionscountref)
-    dataset = mdarray.dataset.value
     dimensions = AbstractDimension[
-        Dimension(unsafe_load(dimensionshptr, n), dataset) for
+        Dimension(unsafe_load(dimensionshptr, n), mdarray.dataset) for
         n in 1:dimensionscountref[]
     ]
     GDAL.vsifree(dimensionshptr)
@@ -689,17 +686,10 @@ end
 
 Base.eltype(mdarray::AbstractMDArray{T}) where {T} = T
 
-function getblocksize(
-    mdarray::AbstractMDArray,
-    options::OptionList = nothing,
-)::AbstractVector{Int64}
+function getblocksize(mdarray::AbstractMDArray)::AbstractVector{Int64}
     @assert !isnull(mdarray)
     count = Ref{Csize_t}()
-    blocksizeptr = GDAL.gdalmdarraygetblocksize(
-        mdarray,
-        count,
-        CSLConstListWrapper(options),
-    )
+    blocksizeptr = GDAL.gdalmdarraygetblocksize(mdarray, count)
     blocksize = Int64[unsafe_load(blocksizeptr, n) for n in count[]:-1:1]
     GDAL.vsifree(blocksizeptr)
     return blocksize
@@ -928,7 +918,7 @@ function unsafe_getattribute(
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraygetattribute(mdarray, name)
     ptr == C_NULL && error("Could not get attribute \"$name\"")
-    return Attribute(ptr, mdarray.dataset.value)
+    return Attribute(ptr, mdarray.dataset)
 end
 
 function getattribute(
@@ -938,7 +928,7 @@ function getattribute(
     @assert !isnull(mdarray)
     ptr = GDAL.gdalmdarraygetattribute(mdarray, name)
     ptr == C_NULL && error("Could not get attribute \"$name\"")
-    return IAttribute(ptr, mdarray.dataset.value)
+    return IAttribute(ptr, mdarray.dataset)
 end
 
 function unsafe_getattributes(
@@ -952,9 +942,8 @@ function unsafe_getattributes(
         count,
         CSLConstListWrapper(options),
     )
-    dataset = mdarray.dataset.value
     attributes = AbstractAttribute[
-        Attribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+        Attribute(unsafe_load(ptr, n), mdarray.dataset) for n in 1:count[]
     ]
     GDAL.vsifree(ptr)
     return attributes
@@ -971,9 +960,8 @@ function getattributes(
         count,
         CSLConstListWrapper(options),
     )
-    dataset = mdarray.dataset.value
     attributes = AbstractAttribute[
-        IAttribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+        IAttribute(unsafe_load(ptr, n), mdarray.dataset) for n in 1:count[]
     ]
     GDAL.vsifree(ptr)
     return attributes
@@ -997,7 +985,7 @@ function unsafe_createattribute(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create attribute \"$name\"")
-    return Attribute(ptr, mdarray.dataset.value)
+    return Attribute(ptr, mdarray.dataset)
 end
 
 function createattribute(
@@ -1018,7 +1006,7 @@ function createattribute(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create attribute \"$name\"")
-    return IAttribute(ptr, mdarray.dataset.value)
+    return IAttribute(ptr, mdarray.dataset)
 end
 
 function deleteattribute(

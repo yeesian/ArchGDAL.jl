@@ -177,9 +177,8 @@ function getdimensions(
     dimensionscountref = Ref{Csize_t}()
     dimensionshptr =
         GDAL.gdalattributegetdimensions(attribute, dimensionscountref)
-    dataset = attribute.dataset.value
     dimensions = AbstractDimension[
-        IDimension(unsafe_load(dimensionshptr, n), dataset) for
+        IDimension(unsafe_load(dimensionshptr, n), attribute.dataset) for
         n in 1:dimensionscountref[]
     ]
     GDAL.vsifree(dimensionshptr)
@@ -193,9 +192,8 @@ function unsafe_getdimensions(
     dimensionscountref = Ref{Csize_t}()
     dimensionshptr =
         GDAL.gdalattributegetdimensions(attribute, dimensionscountref)
-    dataset = attribute.dataset.value
     dimensions = AbstractDimension[
-        Dimension(unsafe_load(dimensionshptr, n), dataset) for
+        Dimension(unsafe_load(dimensionshptr, n), attribute.dataset) for
         n in 1:dimensionscountref[]
     ]
     GDAL.vsifree(dimensionshptr)

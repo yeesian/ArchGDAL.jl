@@ -56,8 +56,8 @@ mutable struct Group <: AbstractGroup
     ptr::GDAL.GDALGroupH
     dataset::WeakRef            # AbstractDataset
 
-    function Group(ptr::GDAL.GDALGroupH, dataset::AbstractDataset)
-        group = new(ptr, WeakRef(dataset))
+    function Group(ptr::GDAL.GDALGroupH, dataset::WeakRef)
+        group = new(ptr, dataset)
         add_child!(dataset, group)
         return group
     end
@@ -67,8 +67,8 @@ mutable struct IGroup <: AbstractGroup
     ptr::GDAL.GDALGroupH
     dataset::WeakRef            # AbstractDataset
 
-    function IGroup(ptr::GDAL.GDALGroupH, dataset::AbstractDataset)
-        group = new(ptr, WeakRef(dataset))
+    function IGroup(ptr::GDAL.GDALGroupH, dataset::WeakRef)
+        group = new(ptr, dataset)
         add_child!(dataset, group)
         ptr != C_NULL && finalizer(destroy, group)
         return group
@@ -79,13 +79,10 @@ mutable struct MDArray{T,D} <: AbstractMDArray{T,D}
     ptr::GDAL.GDALMDArrayH
     dataset::WeakRef            # AbstractDataset
 
-    function MDArray{T,D}(
-        ptr::GDAL.GDALMDArrayH,
-        dataset::AbstractDataset,
-    ) where {T,D}
+    function MDArray{T,D}(ptr::GDAL.GDALMDArrayH, dataset::WeakRef) where {T,D}
         T::Type
         D::Int
-        mdarray = new{T,D}(ptr, WeakRef(dataset))
+        mdarray = new{T,D}(ptr, dataset)
         add_child!(dataset, mdarray)
         return mdarray
     end
@@ -95,13 +92,10 @@ mutable struct IMDArray{T,D} <: AbstractMDArray{T,D}
     ptr::GDAL.GDALMDArrayH
     dataset::WeakRef            # AbstractDataset
 
-    function IMDArray{T,D}(
-        ptr::GDAL.GDALMDArrayH,
-        dataset::AbstractDataset,
-    ) where {T,D}
+    function IMDArray{T,D}(ptr::GDAL.GDALMDArrayH, dataset::WeakRef) where {T,D}
         T::Type
         D::Int
-        mdarray = new{T,D}(ptr, WeakRef(dataset))
+        mdarray = new{T,D}(ptr, dataset)
         add_child!(dataset, mdarray)
         ptr != C_NULL && finalizer(destroy, mdarray)
         return mdarray
@@ -112,8 +106,8 @@ mutable struct Attribute <: AbstractAttribute
     ptr::GDAL.GDALAttributeH
     dataset::WeakRef            # AbstractDataset
 
-    function Attribute(ptr::GDAL.GDALAttributeH, dataset::AbstractDataset)
-        attribute = new(ptr, WeakRef(dataset))
+    function Attribute(ptr::GDAL.GDALAttributeH, dataset::WeakRef)
+        attribute = new(ptr, dataset)
         add_child!(dataset, attribute)
         return attribute
     end
@@ -123,8 +117,8 @@ mutable struct IAttribute <: AbstractAttribute
     ptr::GDAL.GDALAttributeH
     dataset::WeakRef            # AbstractDataset
 
-    function IAttribute(ptr::GDAL.GDALAttributeH, dataset::AbstractDataset)
-        attribute = new(ptr, WeakRef(dataset))
+    function IAttribute(ptr::GDAL.GDALAttributeH, dataset::WeakRef)
+        attribute = new(ptr, dataset)
         add_child!(dataset, attribute)
         ptr != C_NULL && finalizer(destroy, attribute)
         return attribute
@@ -135,8 +129,8 @@ mutable struct Dimension <: AbstractDimension
     ptr::GDAL.GDALDimensionH
     dataset::WeakRef            # AbstractDataset
 
-    function Dimension(ptr::GDAL.GDALDimensionH, dataset::AbstractDataset)
-        dimension = new(ptr, WeakRef(dataset))
+    function Dimension(ptr::GDAL.GDALDimensionH, dataset::WeakRef)
+        dimension = new(ptr, dataset)
         add_child!(dataset, dimension)
         return dimension
     end
@@ -146,8 +140,8 @@ mutable struct IDimension <: AbstractDimension
     ptr::GDAL.GDALDimensionH
     dataset::WeakRef            # AbstractDataset
 
-    function IDimension(ptr::GDAL.GDALDimensionH, dataset::AbstractDataset)
-        dimension = new(ptr, WeakRef(dataset))
+    function IDimension(ptr::GDAL.GDALDimensionH, dataset::WeakRef)
+        dimension = new(ptr, dataset)
         add_child!(dataset, dimension)
         ptr != C_NULL && finalizer(destroy, dimension)
         return dimension

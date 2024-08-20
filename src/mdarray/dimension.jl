@@ -31,14 +31,14 @@ function unsafe_getindexingvariable(
     @assert !isnull(dimension)
     ptr = GDAL.gdaldimensiongetindexingvariable(dimension)
     ptr == C_NULL && error("Could not get indexing variable for dimension")
-    return MDArray(ptr, dimension.dataset.value)
+    return MDArray(ptr, dimension.dataset)
 end
 
 function getindexingvariable(dimension::AbstractDimension)::AbstractMDArray
     @assert !isnull(dimension)
     ptr = GDAL.gdaldimensiongetindexingvariable(dimension)
     ptr == C_NULL && error("Could not get indexing variable for dimension")
-    return IMDArray(ptr, dimension.dataset.value)
+    return IMDArray(ptr, dimension.dataset)
 end
 
 function setindexingvariable!(

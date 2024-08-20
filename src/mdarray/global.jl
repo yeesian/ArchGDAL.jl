@@ -100,10 +100,10 @@ end
 
 function unsafe_getrootgroup(dataset::AbstractDataset)::AbstractGroup
     @assert !isnull(dataset)
-    return Group(GDAL.gdaldatasetgetrootgroup(dataset), dataset)
+    return Group(GDAL.gdaldatasetgetrootgroup(dataset), WeakRef(dataset))
 end
 
 function getrootgroup(dataset::AbstractDataset)::AbstractGroup
     @assert !isnull(dataset)
-    return Group(GDAL.gdaldatasetgetrootgroup(dataset), dataset)
+    return Group(GDAL.gdaldatasetgetrootgroup(dataset), WeakRef(dataset))
 end

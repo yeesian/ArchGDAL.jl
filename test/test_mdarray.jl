@@ -153,6 +153,7 @@ end
                     drivercreateoptions,
                 )
                 @test !AG.isnull(dataset)
+                @test match(r"GDAL Dataset", string(dataset)) !== nothing
 
                 files = AG.filelist(dataset)
                 if drivername in ["MEM"]
@@ -165,6 +166,7 @@ end
 
                 root = AG.getrootgroup(dataset)
                 @test !AG.isnull(root)
+                @test match(r"ArchGDAL.Group", string(root)) !== nothing
                 rootname = AG.getname(root)
                 @test rootname == "/"
                 rootfullname = AG.getfullname(root)
@@ -172,6 +174,7 @@ end
 
                 group = AG.creategroup(root, "group")
                 @test !AG.isnull(group)
+                @test match(r"ArchGDAL.IGroup", string(group)) !== nothing
                 @test AG.getname(group) == "group"
                 @test AG.getfullname(group) == "/group"
 
@@ -183,11 +186,14 @@ end
                 nx, ny = 3, 4
                 dimx = AG.createdimension(group, "x", "", "", nx)
                 @test !AG.isnull(dimx)
+                @test match(r"ArchGDAL.IDimension", string(dimx)) !== nothing
                 dimy = AG.createdimension(group, "y", "", "", ny)
                 @test !AG.isnull(dimy)
 
                 datatype = AG.extendeddatatypecreate(Float32)
                 @test !AG.isnull(datatype)
+                @test match(r"ArchGDAL.IExtendedDataType", string(datatype)) !==
+                      nothing
 
                 mdarray = AG.createmdarray(
                     group,
@@ -197,6 +203,7 @@ end
                     mdarraycreateoptions,
                 )
                 @test !AG.isnull(mdarray)
+                @test match(r"ArchGDAL.IMDArray", string(mdarray)) !== nothing
 
                 @test AG.getmdarraynames(root) == []
                 @test AG.getmdarraynames(group) == ["mdarray"]

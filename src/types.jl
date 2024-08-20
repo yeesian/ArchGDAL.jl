@@ -66,8 +66,12 @@ mutable struct IDataset <: AbstractDataset
     end
 end
 
-function add_child!(dataset::AbstractDataset, obj::Any)::Nothing
+function add_child!(dataset::WeakRef, obj::Any)::Nothing
     isnull(obj) && return nothing
+    dataset = dataset.value
+    # It is fine if the dataset does not exist any more
+    isnothing(dataset) && return nothing
+    dataset::AbstractDataset
     @assert !isnull(dataset)
     isnothing(dataset.children) && return nothing
     push!(dataset.children, WeakRef(obj))

@@ -26,7 +26,7 @@ function unsafe_openmdarray(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupopenmdarray(group, name, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could not open mdarray \"$name\"")
-    return MDArray(ptr, group.dataset.value)
+    return MDArray(ptr, group.dataset)
 end
 
 function openmdarray(
@@ -37,7 +37,7 @@ function openmdarray(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupopenmdarray(group, name, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could not open mdarray \"$name\"")
-    return IMDArray(ptr, group.dataset.value)
+    return IMDArray(ptr, group.dataset)
 end
 
 function getgroupnames(
@@ -56,7 +56,7 @@ function unsafe_opengroup(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupopengroup(group, name, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could no open group \"$name\"")
-    return Group(ptr, group.dataset.value)
+    return Group(ptr, group.dataset)
 end
 
 function opengroup(
@@ -67,7 +67,7 @@ function opengroup(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupopengroup(group, name, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could no open group \"$name\"")
-    return IGroup(ptr, group.dataset.value)
+    return IGroup(ptr, group.dataset)
 end
 
 function getvectorlayernames(
@@ -120,9 +120,8 @@ function unsafe_getdimensions(
         dimensionscountref,
         CSLConstListWrapper(options),
     )
-    dataset = group.dataset.value
     dimensions = AbstractDimension[
-        Dimension(unsafe_load(dimensionshptr, n), dataset) for
+        Dimension(unsafe_load(dimensionshptr, n), group.dataset) for
         n in 1:dimensionscountref[]
     ]
     GDAL.vsifree(dimensionshptr)
@@ -140,9 +139,8 @@ function getdimensions(
         dimensionscountref,
         CSLConstListWrapper(options),
     )
-    dataset = group.dataset.value
     dimensions = AbstractDimension[
-        IDimension(unsafe_load(dimensionshptr, n), dataset) for
+        IDimension(unsafe_load(dimensionshptr, n), group.dataset) for
         n in 1:dimensionscountref[]
     ]
     GDAL.vsifree(dimensionshptr)
@@ -157,7 +155,7 @@ function unsafe_creategroup(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupcreategroup(group, name, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could not create group \"$name\"")
-    return Group(ptr, group.dataset.value)
+    return Group(ptr, group.dataset)
 end
 
 function creategroup(
@@ -168,7 +166,7 @@ function creategroup(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupcreategroup(group, name, CSLConstListWrapper(options))
     ptr == C_NULL && error("Could not create group \"$name\"")
-    return IGroup(ptr, group.dataset.value)
+    return IGroup(ptr, group.dataset)
 end
 
 function deletegroup(
@@ -199,7 +197,7 @@ function unsafe_createdimension(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create dimension \"$name\"")
-    return Dimension(ptr, group.dataset.value)
+    return Dimension(ptr, group.dataset)
 end
 
 function createdimension(
@@ -220,7 +218,7 @@ function createdimension(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create dimension \"$name\"")
-    return IDimension(ptr, group.dataset.value)
+    return IDimension(ptr, group.dataset)
 end
 
 function unsafe_createmdarray(
@@ -242,7 +240,7 @@ function unsafe_createmdarray(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create mdarray \"$name\"")
-    return MDArray(ptr, group.dataset.value)
+    return MDArray(ptr, group.dataset)
 end
 
 function createmdarray(
@@ -264,7 +262,7 @@ function createmdarray(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create mdarray \"$name\"")
-    return IMDArray(ptr, group.dataset.value)
+    return IMDArray(ptr, group.dataset)
 end
 
 function deletemdarray(
@@ -302,7 +300,7 @@ function unsafe_openmdarrayfromfullname(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not open mdarray \"$fullname\"")
-    return MDArray(ptr, group.dataset.value)
+    return MDArray(ptr, group.dataset)
 end
 
 function openmdarrayfromfullname(
@@ -317,7 +315,7 @@ function openmdarrayfromfullname(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not open mdarray \"$fullname\"")
-    return IMDArray(ptr, group.dataset.value)
+    return IMDArray(ptr, group.dataset)
 end
 
 function unsafe_resolvemdarray(
@@ -334,7 +332,7 @@ function unsafe_resolvemdarray(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not resolve mdarray \"$name\"")
-    return MDArray(ptr, group.dataset.value)
+    return MDArray(ptr, group.dataset)
 end
 
 function resolvemdarray(
@@ -351,7 +349,7 @@ function resolvemdarray(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not resolve mdarray \"$name\"")
-    return IMDArray(ptr, group.dataset.value)
+    return IMDArray(ptr, group.dataset)
 end
 
 function unsafe_opengroupfromfullname(
@@ -366,7 +364,7 @@ function unsafe_opengroupfromfullname(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not open group \"$fullname\"")
-    return Group(ptr, group.dataset.value)
+    return Group(ptr, group.dataset)
 end
 
 function opengroupfromfullname(
@@ -381,7 +379,7 @@ function opengroupfromfullname(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not open group \"$fullname\"")
-    return IGroup(ptr, group.dataset.value)
+    return IGroup(ptr, group.dataset)
 end
 
 # function unsafe_opendimensionfromfullname(
@@ -391,7 +389,7 @@ end
 # )::AbstractDimension
 #     @assert !isnull(group)
 #     return Dimension(
-#         GDAL.gdalgroupopendimensionfromfullname(group, fullname, CSLConstListWrapper(options)), group.dataset.value
+#         GDAL.gdalgroupopendimensionfromfullname(group, fullname, CSLConstListWrapper(options)), group.dataset
 #     )
 # end
 # 
@@ -402,7 +400,7 @@ end
 # )::AbstractDimension
 #     @assert !isnull(group)
 #     return IDimension(
-#         GDAL.gdalgroupopendimensionfromfullname(group, fullname, CSLConstListWrapper(options)), group.dataset.value
+#         GDAL.gdalgroupopendimensionfromfullname(group, fullname, CSLConstListWrapper(options)), group.dataset
 #     )
 # end
 
@@ -425,7 +423,7 @@ function unsafe_subsetdimensionfromselection(
             selection,
             CSLConstListWrapper(options),
         ),
-        group.dataset.value,
+        group.dataset,
     )
 end
 
@@ -441,7 +439,7 @@ function subsetdimensionfromselection(
             selection,
             CSLConstListWrapper(options),
         ),
-        group.dataset.value,
+        group.dataset,
     )
 end
 
@@ -454,7 +452,7 @@ function unsafe_getattribute(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupgetattribute(group, name)
     ptr == C_NULL && error("Could not open attribute \"$name\"")
-    return Attribute(ptr, group.dataset.value)
+    return Attribute(ptr, group.dataset)
 end
 
 function getattribute(
@@ -464,7 +462,7 @@ function getattribute(
     @assert !isnull(group)
     ptr = GDAL.gdalgroupgetattribute(group, name)
     ptr == C_NULL && error("Could not open attribute \"$name\"")
-    return IAttribute(ptr, group.dataset.value)
+    return IAttribute(ptr, group.dataset)
 end
 
 function unsafe_getattributes(
@@ -475,9 +473,8 @@ function unsafe_getattributes(
     count = Ref{Csize_t}()
     ptr =
         GDAL.gdalgroupgetattributes(group, count, CSLConstListWrapper(options))
-    dataset = group.dataset.value
     attributes = AbstractAttribute[
-        Attribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+        Attribute(unsafe_load(ptr, n), group.dataset) for n in 1:count[]
     ]
     GDAL.vsifree(ptr)
     return attributes
@@ -491,9 +488,8 @@ function getattributes(
     count = Ref{Csize_t}()
     ptr =
         GDAL.gdalgroupgetattributes(group, count, CSLConstListWrapper(options))
-    dataset = group.dataset.value
     attributes = AbstractAttribute[
-        IAttribute(unsafe_load(ptr, n), dataset) for n in 1:count[]
+        IAttribute(unsafe_load(ptr, n), group.dataset) for n in 1:count[]
     ]
     GDAL.vsifree(ptr)
     return attributes
@@ -517,7 +513,7 @@ function unsafe_createattribute(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create attribute \"$name\"")
-    return Attribute(ptr, group.dataset.value)
+    return Attribute(ptr, group.dataset)
 end
 
 function createattribute(
@@ -538,7 +534,7 @@ function createattribute(
         CSLConstListWrapper(options),
     )
     ptr == C_NULL && error("Could not create attribute \"$name\"")
-    return IAttribute(ptr, group.dataset.value)
+    return IAttribute(ptr, group.dataset)
 end
 
 function deleteattribute(
