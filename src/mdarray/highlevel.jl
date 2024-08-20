@@ -7,8 +7,7 @@ function writemdarray(
     options::OptionList = nothing,
 )::Nothing where {T<:NumericAttributeType,D}
     dimensions = AbstractDimension[
-        createdimension(group, "$name.$d", "", "", size(value, d)) for
-        d in D:-1:1
+        createdimension(group, "$name.$d", "", "", size(value, d)) for d in 1:D
     ]
     extendeddatatypecreate(T) do datatype
         createmdarray(group, name, dimensions, datatype, options) do mdarray

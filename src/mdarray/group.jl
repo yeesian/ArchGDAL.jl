@@ -235,7 +235,7 @@ function unsafe_createmdarray(
         group,
         name,
         length(dimensions),
-        DimensionHList(dimensions),
+        DimensionHList(reverse(dimensions)),
         datatype,
         CSLConstListWrapper(options),
     )
@@ -257,7 +257,7 @@ function createmdarray(
         group,
         name,
         length(dimensions),
-        DimensionHList(dimensions),
+        DimensionHList(reverse(dimensions)),
         datatype,
         CSLConstListWrapper(options),
     )

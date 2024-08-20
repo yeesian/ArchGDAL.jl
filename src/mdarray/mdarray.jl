@@ -254,7 +254,7 @@ function unsafe_getindex(
     indices::Integer...,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    viewexpr = "[" * join(indices, ",") * "]"
+    viewexpr = "[" * join(reverse(indices), ",") * "]"
     return unsafe_getview(mdarray, viewexpr)
 end
 
@@ -263,7 +263,7 @@ function getindex(
     indices::Integer...,
 )::AbstractMDArray
     @assert !isnull(mdarray)
-    viewexpr = "[" * join(indices, ",") * "]"
+    viewexpr = "[" * join(reverse(indices), ",") * "]"
     return getview(mdarray, viewexpr)
 end
 
@@ -348,7 +348,7 @@ function unsafe_getresampled(
     ptr = GDAL.gdalmdarraygetresampled(
         mdarray,
         isnothing(newdims) ? 0 : length(newdims),
-        isnothing(newdims) ? C_NULL : DimensionHList(newdims),
+        isnothing(newdims) ? C_NULL : DimensionHList(reverse(newdims)),
         resamplealg,
         isnothing(targetsrs) ? C_NULL : targetsrs,
         CSLConstListWrapper(options),
@@ -368,7 +368,7 @@ function getresampled(
     ptr = GDAL.gdalmdarraygetresampled(
         mdarray,
         isnothing(newdims) ? 0 : length(newdims),
-        isnothing(newdims) ? C_NULL : DimensionHList(newdims),
+        isnothing(newdims) ? C_NULL : DimensionHList(reverse(newdims)),
         resamplealg,
         isnothing(targetsrs) ? C_NULL : targetsrs,
         CSLConstListWrapper(options),
@@ -563,7 +563,7 @@ function adviseread(
     @assert !isnull(mdarray)
     return GDAL.gdalmdarrayadviseread(
         mdarray,
-        isnothing(arraystartidx) ? C_NULL : arraystartidx,
+        isnothing(arraystartidx) ? C_NULL : reverse(arraystartidx),
         isnothing(count) ? C_NULL : count,
         CSLConstListWrapper(options),
     )
@@ -647,7 +647,7 @@ function getdimensions(
     dimensionshptr = GDAL.gdalmdarraygetdimensions(mdarray, dimensionscountref)
     dimensions = AbstractDimension[
         IDimension(unsafe_load(dimensionshptr, n), mdarray.dataset) for
-        n in 1:dimensionscountref[]
+        n in dimensionscountref[]:-1:1
     ]
     GDAL.vsifree(dimensionshptr)
     return dimensions
@@ -661,7 +661,7 @@ function unsafe_getdimensions(
     dimensionshptr = GDAL.gdalmdarraygetdimensions(mdarray, dimensionscountref)
     dimensions = AbstractDimension[
         Dimension(unsafe_load(dimensionshptr, n), mdarray.dataset) for
-        n in 1:dimensionscountref[]
+        n in dimensionscountref[]:-1:1
     ]
     GDAL.vsifree(dimensionshptr)
     return dimensions
@@ -670,7 +670,7 @@ end
 function Base.size(mdarray::AbstractMDArray)
     getdimensions(mdarray) do dimensions
         D = length(dimensions)
-        return ntuple(d -> getsize(dimensions[D-d+1]), D)
+        return ntuple(d -> getsize(dimensions[d]), D)
     end
 end
 
@@ -800,7 +800,7 @@ end
 function read(mdarray::AbstractMDArray)::AbstractArray
     getdimensions(mdarray) do dimensions
         D = length(dimensions)
-        sz = [getsize(dimensions[d]) for d in D:-1:1]
+        sz = [getsize(dimensions[d]) for d in 1:D]
         getdatatype(mdarray) do datatype
             class = getclass(datatype)
             @assert class == GDAL.GEDTC_NUMERIC

@@ -215,7 +215,7 @@ end
 
                 # @test AG.iswritable(mdarray)
 
-                data = Float32[100 * x + y for y in 1:ny, x in 1:nx]
+                data = Float32[x + 100 * y for x in 1:nx, y in 1:ny]
                 AG.write(mdarray, data)
 
                 write_attributes(mdarray)
@@ -308,12 +308,12 @@ end
                 @test AG.getclass(datatype) == GDAL.GEDTC_NUMERIC
                 @test AG.getnumericdatatype(datatype) == AG.GDT_Float32
 
-                data = Array{Float32}(undef, ny, nx)
+                data = Array{Float32}(undef, nx, ny)
                 AG.read!(mdarray, data)
-                @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
+                @test data == Float32[x + 100 * y for x in 1:nx, y in 1:ny]
 
                 data = AG.read(mdarray)
-                @test data == Float32[100 * x + y for y in 1:ny, x in 1:nx]
+                @test data == Float32[x + 100 * y for x in 1:nx, y in 1:ny]
 
                 test_attributes(mdarray)
 
@@ -411,8 +411,8 @@ end
                                             # @test AG.iswritable(mdarray)
 
                                             data = Float32[
-                                                100 * x + y for y in 1:ny,
-                                                x in 1:nx
+                                                x + 100 * y for x in 1:nx,
+                                                y in 1:ny
                                             ]
                                             AG.write(mdarray, data)
 
@@ -539,15 +539,15 @@ end
                                         ) do doesnotexist
                                         end
 
-                                        data = Array{Float32}(undef, ny, nx)
+                                        data = Array{Float32}(undef, nx, ny)
                                         AG.read!(mdarray, data)
                                         @test data == Float32[
-                                            100 * x + y for y in 1:ny, x in 1:nx
+                                            x + 100 * y for x in 1:nx, y in 1:ny
                                         ]
 
                                         data = AG.read(mdarray)
                                         @test data == Float32[
-                                            100 * x + y for y in 1:ny, x in 1:nx
+                                            x + 100 * y for x in 1:nx, y in 1:ny
                                         ]
 
                                         test_attributes(mdarray)
