@@ -568,10 +568,14 @@ function adviseread(
     @assert !isnull(mdarray)
     @assert isnothing(arraystartix) ? true : length(arraystartidx) == D
     @assert isnothing(count) ? true : length(count == D)
+    gdal_arraystartidx =
+        isnothing(arraystartidx) ? C_NULL :
+        UInt64[arraystartidx[d] - 1 for d in D:-1:1]
+    gdal_count = isnothing(count) ? C_NULL : Csize_t[count[d] for d in D:-1:1]
     return GDAL.gdalmdarrayadviseread(
         mdarray,
-        isnothing(arraystartidx) ? C_NULL : reverse(arraystartidx),
-        isnothing(count) ? C_NULL : count,
+        gdal_arraystartidx,
+        gdal_count,
         CSLConstListWrapper(options),
     )
 end
@@ -743,11 +747,11 @@ function read!(
     @assert length(arraystartidx) == D
     @assert length(count) == D
     @assert isnothing(arraystep) ? true : length(arraystep) == D
-    gdal_arraystartidx = UInt64[arraystartidx[n] - 1 for n in D:-1:1]
-    gdal_count = Csize_t[count[n] for n in D:-1:1]
+    gdal_arraystartidx = UInt64[arraystartidx[d] - 1 for d in D:-1:1]
+    gdal_count = Csize_t[count[d] for d in D:-1:1]
     gdal_arraystep =
-        isnothing(arraystep) ? nothing : Int64[arraystep[n] for n in D:-1:1]
-    gdal_bufferstride = Cptrdiff_t[stride(buffer, n) for n in D:-1:1]
+        isnothing(arraystep) ? C_NULL : Int64[arraystep[d] for d in D:-1:1]
+    gdal_bufferstride = Cptrdiff_t[stride(buffer, d) for d in D:-1:1]
     return extendeddatatypecreate(T) do bufferdatatype
         success = GDAL.gdalmdarrayread(
             mdarray,
@@ -840,11 +844,11 @@ function write(
     @assert length(arraystartidx) == D
     @assert length(count) == D
     @assert isnothing(arraystep) ? true : length(arraystep) == D
-    gdal_arraystartidx = UInt64[arraystartidx[n] - 1 for n in D:-1:1]
-    gdal_count = Csize_t[count[n] for n in D:-1:1]
+    gdal_arraystartidx = UInt64[arraystartidx[d] - 1 for d in D:-1:1]
+    gdal_count = Csize_t[count[d] for d in D:-1:1]
     gdal_arraystep =
-        isnothing(arraystep) ? nothing : Int64[arraystep[n] for n in D:-1:1]
-    gdal_bufferstride = Cptrdiff_t[stride(buffer, n) for n in D:-1:1]
+        isnothing(arraystep) ? C_NULL : Int64[arraystep[d] for d in D:-1:1]
+    gdal_bufferstride = Cptrdiff_t[stride(buffer, d) for d in D:-1:1]
     return extendeddatatypecreate(T) do bufferdatatype
         success = GDAL.gdalmdarraywrite(
             mdarray,
