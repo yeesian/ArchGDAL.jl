@@ -134,7 +134,7 @@ end
 
 function resize!(
     mdarray::AbstractMDArray,
-    newdimsizes::AbstractVector{<:Integer},
+    newdimsizes::VectorLike{<:Integer},
     options::OptionList = nothing,
 )::Bool
     @assert !isnull(mdarray)
@@ -339,7 +339,7 @@ end
 # TODO: Wrap GDAL.GDALRIOResampleAlg
 function unsafe_getresampled(
     mdarray::AbstractMDArray,
-    newdims::Union{Nothing,AbstractVector{<:AbstractDimension}},
+    newdims::Union{Nothing,VectorLike{<:AbstractDimension}},
     resamplealg::GDAL.GDALRIOResampleAlg,
     targetsrs::Union{Nothing,AbstractSpatialRef},
     options::OptionList = nothing,
@@ -359,7 +359,7 @@ end
 
 function getresampled(
     mdarray::AbstractMDArray,
-    newdims::Union{Nothing,AbstractVector{<:AbstractDimension}},
+    newdims::Union{Nothing,VectorLike{<:AbstractDimension}},
     resamplealg::GDAL.GDALRIOResampleAlg,
     targetsrs::Union{Nothing,AbstractSpatialRef},
     options::OptionList = nothing,
@@ -540,27 +540,34 @@ function clearstatistics(mdarray::AbstractMDArray)::Nothing
 end
 
 function getcoordinatevariables(
-    mdarray::AbstractMDArray,
-)::AbstractVector{<:AbstractMDArray}
+    mdarray::AbstractMDArray{<:Any,D},
+)::NTuple{D,T where T<:AbstractMDArray} where {D}
     @assert !isnull(mdarray)
     count = Ref{Csize_t}()
     coordinatevariablesptr =
         GDAL.gdalmdarraygetcoordinatevariables(mdarray, count)
-    coordinatevariables = AbstractMDArray[
-        IMDArray(unsafe_load(coordinatevariablesptr, n), mdarray.dataset)
-        for n in 1:count[]
-    ]
+    coordinatevariables = reverse(
+        ntuple(
+            d -> IMDArray(
+                unsafe_load(coordinatevariablesptr, d),
+                mdarray.dataset,
+            ),
+            count[],
+        ),
+    )
     GDAL.vsifree(coordinatevariablesptr)
     return coordinatevariables
 end
 
 function adviseread(
-    mdarray::AbstractMDArray,
-    arraystartidx::Union{Nothing,AbstractVector{<:Integer}},
-    count::Union{Nothing,AbstractVector{<:Integer}},
+    mdarray::AbstractMDArray{<:Any,D},
+    arraystartidx::Union{Nothing,IndexLike{D}},
+    count::Union{Nothing,IndexLike{D}},
     options::OptionList = nothing,
-)::Bool
+)::Bool where {D}
     @assert !isnull(mdarray)
+    @assert isnothing(arraystartix) ? true : length(arraystartidx) == D
+    @assert isnothing(count) ? true : length(count == D)
     return GDAL.gdalmdarrayadviseread(
         mdarray,
         isnothing(arraystartidx) ? C_NULL : reverse(arraystartidx),
@@ -640,36 +647,40 @@ getdimensioncount(mdarray::AbstractMDArray{<:Any,D}) where {D} = D
 Base.ndims(mdarray::AbstractMDArray)::Int = getdimensioncount(mdarray)
 
 function getdimensions(
-    mdarray::AbstractMDArray,
-)::AbstractVector{<:AbstractDimension}
+    mdarray::AbstractMDArray{<:Any,D},
+)::NTuple{D,T where T<:AbstractDimension} where {D}
     @assert !isnull(mdarray)
     dimensionscountref = Ref{Csize_t}()
     dimensionshptr = GDAL.gdalmdarraygetdimensions(mdarray, dimensionscountref)
-    dimensions = AbstractDimension[
-        IDimension(unsafe_load(dimensionshptr, n), mdarray.dataset) for
-        n in dimensionscountref[]:-1:1
-    ]
+    dimensions = reverse(
+        ntuple(
+            d ->
+                IDimension(unsafe_load(dimensionshptr, d), mdarray.dataset),
+            dimensionscountref[],
+        ),
+    )
     GDAL.vsifree(dimensionshptr)
     return dimensions
 end
 
 function unsafe_getdimensions(
-    mdarray::AbstractMDArray,
-)::AbstractVector{<:AbstractDimension}
+    mdarray::AbstractMDArray{<:Any,D},
+)::NTuple{D,T where T<:AbstractDimension} where {D}
     @assert !isnull(mdarray)
     dimensionscountref = Ref{Csize_t}()
     dimensionshptr = GDAL.gdalmdarraygetdimensions(mdarray, dimensionscountref)
-    dimensions = AbstractDimension[
-        Dimension(unsafe_load(dimensionshptr, n), mdarray.dataset) for
-        n in dimensionscountref[]:-1:1
-    ]
+    dimensions = reverse(
+        ntuple(
+            d -> Dimension(unsafe_load(dimensionshptr, d), mdarray.dataset),
+            dimensionscountref[],
+        ),
+    )
     GDAL.vsifree(dimensionshptr)
     return dimensions
 end
 
-function Base.size(mdarray::AbstractMDArray)
+function Base.size(mdarray::AbstractMDArray{<:Any,D})::NTuple{D,Int} where {D}
     getdimensions(mdarray) do dimensions
-        D = length(dimensions)
         return ntuple(d -> getsize(dimensions[d]), D)
     end
 end
@@ -686,44 +697,40 @@ end
 
 Base.eltype(mdarray::AbstractMDArray{T}) where {T} = T
 
-function getblocksize(mdarray::AbstractMDArray)::AbstractVector{Int64}
+function getblocksize(
+    mdarray::AbstractMDArray{<:Any,D},
+)::NTuple{D,Int} where {D}
     @assert !isnull(mdarray)
     count = Ref{Csize_t}()
     blocksizeptr = GDAL.gdalmdarraygetblocksize(mdarray, count)
-    blocksize = Int64[unsafe_load(blocksizeptr, n) for n in count[]:-1:1]
+    blocksize = reverse(ntuple(d -> Int(unsafe_load(blocksizeptr, d)), count[]))
     GDAL.vsifree(blocksizeptr)
     return blocksize
 end
 
 DiskArrays.haschunks(::AbstractMDArray) = DiskArrays.Chunked()
+
 function DiskArrays.eachchunk(
     mdarray::AbstractMDArray{<:Any,D},
 )::NTuple{D,Int} where {D}
     blocksize = getblocksize(mdarray)
-    return DiskArrays.GridChunks(mdarray, Int.(blocksize))
+    return DiskArrays.GridChunks(mdarray, blocksize)
 end
 
 function getprocessingchunksize(
     mdarray::AbstractMDArray,
     maxchunkmemory::Integer,
-)::AbstractVector{Int64}
+)::AbstractVector{Int}
     @assert !isnull(mdarray)
     count = Ref{Csize_t}()
     chunksizeptr =
         GDAL.gdalmdarraygetprocessingchunksize(mdarray, count, maxchunkmemory)
-    chunksize = Int64[unsafe_load(chunksizeptr, n) for n in count[]:-1:1]
+    chunksize = Int[unsafe_load(chunksizeptr, n) for n in count[]:-1:1]
     GDAL.vsifree(chunksizeptr)
     return chunksize
 end
 
 # processperchunk
-
-const IndexLike{D} =
-    Union{AbstractVector{<:Integer},CartesianIndex{D},NTuple{D,<:Integer}}
-const RangeLike{D} = Union{
-    AbstractVector{<:AbstractRange{<:Integer}},
-    NTuple{D,<:AbstractRange{<:Integer}},
-}
 
 function read!(
     mdarray::AbstractMDArray,

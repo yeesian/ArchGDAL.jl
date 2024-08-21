@@ -176,6 +176,20 @@ isnull(x::StyleTool) = x.ptr == C_NULL
 
 ################################################################################
 
+const VectorLike{T} = Union{AbstractVector{<:T},NTuple{<:Any,X where X<:T}}
+
+const IndexLike{D} = Union{
+    AbstractVector{<:Integer},
+    CartesianIndex{D},
+    NTuple{D,I where I<:Integer},
+}
+const RangeLike{D} = Union{
+    AbstractVector{<:AbstractRange{<:Integer}},
+    NTuple{D,R where R<:AbstractRange{<:Integer}},
+}
+
+################################################################################
+
 Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractExtendedDataType) = x.ptr
 Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractEDTComponent) = x.ptr
 Base.unsafe_convert(::Type{Ptr{Cvoid}}, x::AbstractGroup) = x.ptr
@@ -227,11 +241,11 @@ function destroy(dimension::AbstractDimension)::Nothing
     return nothing
 end
 
-function destroy(edtcomponents::AbstractVector{<:AbstractEDTComponent})
+function destroy(edtcomponents::VectorLike{<:AbstractEDTComponent})
     return destroy.(edtcomponents)
 end
-destroy(attributes::AbstractVector{<:AbstractAttribute}) = destroy.(attributes)
-destroy(dimensions::AbstractVector{<:AbstractDimension}) = destroy.(dimensions)
+destroy(attributes::VectorLike{<:AbstractAttribute}) = destroy.(attributes)
+destroy(dimensions::VectorLike{<:AbstractDimension}) = destroy.(dimensions)
 
 ################################################################################
 
@@ -279,6 +293,9 @@ struct DimensionHList
         ]
         return new(dimensionhs, dimensions)
     end
+end
+function DimensionHList(dimensions::NTuple{<:Any,T where T<:AbstractDimension})
+    return DimensionHList([dimensions...])
 end
 
 function Base.cconvert(

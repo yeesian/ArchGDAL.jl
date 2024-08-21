@@ -175,7 +175,6 @@ function deletegroup(
     options::OptionList = nothing,
 )::Bool
     @assert !isnull(group)
-    # TODO: Do we need to set group.ptr = C_NULL?
     return GDAL.gdalgroupdeletegroup(group, name, CSLConstListWrapper(options))
 end
 
@@ -224,7 +223,7 @@ end
 function unsafe_createmdarray(
     group::AbstractGroup,
     name::AbstractString,
-    dimensions::AbstractVector{<:AbstractDimension},
+    dimensions::VectorLike{<:AbstractDimension},
     datatype::AbstractExtendedDataType,
     options::OptionList = nothing,
 )::AbstractMDArray
@@ -246,7 +245,7 @@ end
 function createmdarray(
     group::AbstractGroup,
     name::AbstractString,
-    dimensions::AbstractVector{<:AbstractDimension},
+    dimensions::VectorLike{<:AbstractDimension},
     datatype::AbstractExtendedDataType,
     options::OptionList = nothing,
 )::AbstractMDArray
@@ -498,7 +497,7 @@ end
 function unsafe_createattribute(
     group::AbstractGroup,
     name::AbstractString,
-    dimensions::AbstractVector{<:Integer},
+    dimensions::VectorLike{<:Integer},
     datatype::AbstractExtendedDataType,
     options::OptionList = nothing,
 )::AbstractAttribute
@@ -508,7 +507,7 @@ function unsafe_createattribute(
         group,
         name,
         length(dimensions),
-        dimensions,
+        reverse(dimensions),
         datatype,
         CSLConstListWrapper(options),
     )
@@ -519,7 +518,7 @@ end
 function createattribute(
     group::AbstractGroup,
     name::AbstractString,
-    dimensions::AbstractVector{<:Integer},
+    dimensions::VectorLike{<:Integer},
     datatype::AbstractExtendedDataType,
     options::OptionList = nothing,
 )::AbstractAttribute
@@ -529,7 +528,7 @@ function createattribute(
         group,
         name,
         length(dimensions),
-        dimensions,
+        reverse(dimensions),
         datatype,
         CSLConstListWrapper(options),
     )

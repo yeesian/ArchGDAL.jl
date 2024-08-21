@@ -24,9 +24,9 @@ function getdimensionssize(attribute::AbstractAttribute)::NTuple{<:Any,Int}
     @assert !isnull(attribute)
     count = Ref{Csize_t}()
     sizeptr = GDAL.gdalattributegetdimensionssize(attribute, count)
-    size = ntuple(n -> unsafe_load(sizeptr, n), count[])
+    size = reverse(ntuple(d -> Int(unsafe_load(sizeptr, d), count[])))
     GDAL.vsifree(sizeptr)
-    return Int.(size)
+    return size
 end
 
 function readasraw(attribute::AbstractAttribute)::AbstractVector{UInt8}
@@ -158,7 +158,7 @@ function gettotalelementscount(attribute::AbstractAttribute)::Int64
     return Int64(GDAL.gdalattributegettotalelementscount(attribute))
 end
 
-function Base.length(attribute::AbstractAttribute)
+function Base.length(attribute::AbstractAttribute)::Int
     @assert !isnull(attribute)
     return Int(gettotalelementscount(attribute))
 end
@@ -178,8 +178,8 @@ function getdimensions(
     dimensionshptr =
         GDAL.gdalattributegetdimensions(attribute, dimensionscountref)
     dimensions = AbstractDimension[
-        IDimension(unsafe_load(dimensionshptr, n), attribute.dataset) for
-        n in 1:dimensionscountref[]
+        IDimension(unsafe_load(dimensionshptr, d), attribute.dataset) for
+        d in dimensionscountref[]:-1:1
     ]
     GDAL.vsifree(dimensionshptr)
     return dimensions
@@ -193,8 +193,8 @@ function unsafe_getdimensions(
     dimensionshptr =
         GDAL.gdalattributegetdimensions(attribute, dimensionscountref)
     dimensions = AbstractDimension[
-        Dimension(unsafe_load(dimensionshptr, n), attribute.dataset) for
-        n in 1:dimensionscountref[]
+        Dimension(unsafe_load(dimensionshptr, d), attribute.dataset) for
+        d in dimensionscountref[]:-1:1
     ]
     GDAL.vsifree(dimensionshptr)
     return dimensions
@@ -215,7 +215,7 @@ end
 function getblocksize(
     attribute::AbstractAttribute,
     options::OptionList = nothing,
-)::AbstractVector{Int64}
+)::NTuple{<:Any,Int}
     @assert !isnull(attribute)
     count = Ref{Csize_t}()
     blocksizeptr = GDAL.gdalattributegetblocksize(
@@ -223,7 +223,7 @@ function getblocksize(
         count,
         CSLConstListWrapper(options),
     )
-    blocksize = Int64[unsafe_load(blocksizeptr, n) for n in 1:count[]]
+    blocksize = reverse(ntuple(d -> Int(unsafe_load(blocksizeptr, d)), count[]))
     GDAL.vsifree(blocksizeptr)
     return blocksize
 end
@@ -231,7 +231,7 @@ end
 function getprocessingchunksize(
     attribute::AbstractAttribute,
     maxchunkmemory::Integer,
-)::AbstractVector{Int64}
+)::NTuple{<:AnyInt}
     @assert !isnull(attribute)
     count = Ref{Csize_t}()
     chunksizeptr = GDAL.gdalattributegetprocessingchunksize(
@@ -239,7 +239,7 @@ function getprocessingchunksize(
         count,
         maxchunkmemory,
     )
-    chunksize = Int64[unsafe_load(chunksizeptr, n) for n in 1:count[]]
+    chunksize = reverse(ntuple(d -> Int(unsafe_load(chunksizeptr, d)), count[]))
     GDAL.vsifree(chunksizeptr)
     return chunksize
 end

@@ -153,7 +153,7 @@ end
                     drivercreateoptions,
                 )
                 @test !AG.isnull(dataset)
-                @test match(r"GDAL Dataset", string(dataset)) !== nothing
+                @test match(r"^GDAL Dataset", string(dataset)) !== nothing
 
                 files = AG.filelist(dataset)
                 if drivername in ["MEM"]
@@ -166,7 +166,7 @@ end
 
                 root = AG.getrootgroup(dataset)
                 @test !AG.isnull(root)
-                @test match(r"ArchGDAL.Group", string(root)) !== nothing
+                @test match(r"^ArchGDAL.Group", string(root)) !== nothing
                 rootname = AG.getname(root)
                 @test rootname == "/"
                 rootfullname = AG.getfullname(root)
@@ -174,7 +174,7 @@ end
 
                 group = AG.creategroup(root, "group")
                 @test !AG.isnull(group)
-                @test match(r"ArchGDAL.IGroup", string(group)) !== nothing
+                @test match(r"^ArchGDAL.IGroup", string(group)) !== nothing
                 @test AG.getname(group) == "group"
                 @test AG.getfullname(group) == "/group"
 
@@ -186,24 +186,41 @@ end
                 nx, ny = 3, 4
                 dimx = AG.createdimension(group, "x", "", "", nx)
                 @test !AG.isnull(dimx)
-                @test match(r"ArchGDAL.IDimension", string(dimx)) !== nothing
+                @test match(r"^ArchGDAL.IDimension", string(dimx)) !== nothing
                 dimy = AG.createdimension(group, "y", "", "", ny)
                 @test !AG.isnull(dimy)
 
                 datatype = AG.extendeddatatypecreate(Float32)
                 @test !AG.isnull(datatype)
-                @test match(r"ArchGDAL.IExtendedDataType", string(datatype)) !==
-                      nothing
+                @test match(
+                    r"^ArchGDAL.IExtendedDataType",
+                    string(datatype),
+                ) !== nothing
+
+                if drivername != "netCDF"
+                    # netCDF does not support deleting MDArrays
+                    mdarray0 = AG.createmdarray(
+                        group,
+                        "mdarray0",
+                        [dimx, dimy],
+                        datatype,
+                        mdarraycreateoptions,
+                    )
+                    @test !AG.isnull(mdarray0)
+                    success = AG.deletemdarray(group, "mdarray0")
+                    @test success
+                end
 
                 mdarray = AG.createmdarray(
                     group,
                     "mdarray",
-                    [dimx, dimy],
+                    (dimx, dimy),
                     datatype,
                     mdarraycreateoptions,
                 )
                 @test !AG.isnull(mdarray)
-                @test match(r"ArchGDAL.IMDArray", string(mdarray)) !== nothing
+                @test match(r"^3×4 ArchGDAL.IMDArray", string(mdarray)) !==
+                      nothing
 
                 @test AG.getmdarraynames(root) == []
                 @test AG.getmdarraynames(group) == ["mdarray"]
@@ -385,10 +402,28 @@ end
                                     ) do datatype
                                         @test !AG.isnull(datatype)
 
+                                        if drivername != "netCDF"
+                                            # netCDF does not support deleting MDArrays
+                                            AG.createmdarray(
+                                                group,
+                                                "mdarray0",
+                                                [dimx, dimy],
+                                                datatype,
+                                                mdarraycreateoptions,
+                                            ) do mdarray0
+                                                @test !AG.isnull(mdarray0)
+                                            end
+                                            success = AG.deletemdarray(
+                                                group,
+                                                "mdarray0",
+                                            )
+                                            @test success
+                                        end
+
                                         AG.createmdarray(
                                             group,
                                             "mdarray",
-                                            [dimx, dimy],
+                                            (dimx, dimy),
                                             datatype,
                                             mdarraycreateoptions,
                                         ) do mdarray
