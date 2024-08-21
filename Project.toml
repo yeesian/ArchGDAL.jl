@@ -19,13 +19,19 @@ GeoInterfaceRecipes = "0329782f-3d07-4b52-b9f6-d3137cf03c7a"
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
+[weakdeps]
+Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+
+[extensions]
+ArchGDALMakieExt = "Makie"
+
 [compat]
 CEnum = "0.4, 0.5"
 ColorTypes = "0.10, 0.11"
-Dates = "<0.0.1,1"
+Dates = "<0.0.1, 1"
 DiskArrays = "0.3, 0.4"
 Extents = "0.1"
-GDAL = "1.7"
+GDAL = "1.8"
 GeoFormatTypes = "0.4.2"
 GeoInterface = "1"
 GeoInterfaceMakie = "0.1"
@@ -35,11 +41,5 @@ Makie = "0.20, 0.21"
 Tables = "1"
 julia = "1.6"
 
-[extensions]
-ArchGDALMakieExt = "Makie"
-
 [extras]
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
-
-[weakdeps]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"

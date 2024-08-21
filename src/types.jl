@@ -35,20 +35,47 @@ mutable struct CoordTransform
     ptr::GDAL.OGRCoordinateTransformationH
 end
 
+# In the multidim API, underlying files are closed only when all
+# objects potentially pointing to them (groups, arrays, attributes,
+# dimensions) have been released. Their lifetime is not connected with
+# the one of the GDALDataset.
+#
+# To handle this in Julia, each multidim dataset can hold a list of
+# its children. This allows us to "hard close" a dataset when using
+# the interactive API. Being able to close a dataset at a particular
+# time is important when writing.
+#
+# Each child must have a `destroy` function.
 mutable struct Dataset <: AbstractDataset
     ptr::GDAL.GDALDatasetH
+    children::Union{Nothing,Vector{WeakRef}}
 
-    Dataset(ptr::GDAL.GDALDatasetH = C_NULL) = new(ptr)
+    function Dataset(ptr::GDAL.GDALDatasetH = C_NULL; hard_close::Bool = false)
+        return new(ptr, hard_close ? WeakRef[] : nothing)
+    end
 end
 
 mutable struct IDataset <: AbstractDataset
     ptr::GDAL.GDALDatasetH
+    children::Union{Nothing,Vector{WeakRef}}
 
-    function IDataset(ptr::GDAL.GDALDatasetH = C_NULL)
-        dataset = new(ptr)
+    function IDataset(ptr::GDAL.GDALDatasetH = C_NULL; hard_close::Bool = false)
+        dataset = new(ptr, hard_close ? WeakRef[] : nothing)
         finalizer(destroy, dataset)
         return dataset
     end
+end
+
+function add_child!(dataset::WeakRef, obj::Any)::Nothing
+    isnull(obj) && return nothing
+    dataset = dataset.value
+    # It is fine if the dataset does not exist any more
+    isnothing(dataset) && return nothing
+    dataset::AbstractDataset
+    @assert !isnull(dataset)
+    isnothing(dataset.children) && return nothing
+    push!(dataset.children, WeakRef(obj))
+    return nothing
 end
 
 mutable struct Driver
@@ -615,13 +642,14 @@ end
     wkbNDR::GDAL.wkbNDR,
 )
 
-import Base.|
-
 for T in (GDALOpenFlag, FieldValidation)
     eval(quote
-        |(x::$T, y::UInt8)::UInt8 = UInt8(x) | y
-        |(x::UInt8, y::$T)::UInt8 = x | UInt8(y)
-        |(x::$T, y::$T)::UInt8 = UInt8(x) | UInt8(y)
+        Base.:&(x::$T, y::Unsigned)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:&(x::Unsigned, y::$T)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:&(x::$T, y::$T)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:|(x::$T, y::Unsigned)::UInt32 = UInt32(x) | UInt32(y)
+        Base.:|(x::Unsigned, y::$T)::UInt32 = UInt32(x) | UInt32(y)
+        Base.:|(x::$T, y::$T)::UInt32 = UInt32(x) | UInt32(y)
     end)
 end
 

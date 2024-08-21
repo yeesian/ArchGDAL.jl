@@ -1,8 +1,9 @@
 using Test
 using Dates
 using GDAL
-import ArchGDAL
-import Aqua
+#TODO import ArchGDAL
+import ArchGDAL as AG
+using Aqua
 
 # ensure all testing files are present
 include("remotefiles.jl")
@@ -31,6 +32,7 @@ include("remotefiles.jl")
         include("test_gdalutilities.jl")
         include("test_gdalutilities_errors.jl")
         include("test_rasterattrtable.jl")
+        include("test_mdarray.jl")
         include("test_ospy_examples.jl")
         include("test_geos_operations.jl")
         include("test_cookbook_geometry.jl")
