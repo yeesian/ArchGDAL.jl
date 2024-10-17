@@ -39,7 +39,8 @@ function Tables.columnnames(
 end
 
 function schema_names(featuredefn::IFeatureDefnView)
-    fielddefns = (getfielddefn(featuredefn, i) for i in 0:nfield(featuredefn)-1)
+    fielddefns =
+        (getfielddefn(featuredefn, i) for i in 0:(nfield(featuredefn)-1))
     field_names = (Symbol(getname(fielddefn)) for fielddefn in fielddefns)
     geom_names = collect(
         Symbol(getname(getgeomdefn(featuredefn, i - 1))) for

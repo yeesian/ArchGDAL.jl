@@ -101,6 +101,7 @@ using Tables
             function clean_test_dataset_files()
                 for (drvshortname, file_extension) in
                     TEST_DS_DRIVERS_FILE_EXTENSIONS
+
                     isfile(
                         joinpath(
                             @__DIR__,
@@ -207,7 +208,8 @@ using Tables
                         multi1 = (
                             name = "multiline1",
                             geom = AG.createmultilinestring([
-                                [(i, i + 1) for i in j:j+3] for j in 1.0:5.0:6.0
+                                [(i, i + 1) for i in j:(j+3)] for
+                                j in 1.0:5.0:6.0
                             ]),
                         ),
                         simple2 = (
@@ -417,7 +419,7 @@ using Tables
             tupleoftuples_equal = (
                 (x, y) ->
                     length(x) == length(y) &&
-                        all([all(x[i] .=== y[i]) for i in 1:length(x)])
+                    all([all(x[i] .=== y[i]) for i in 1:length(x)])
             )
 
             """
@@ -454,7 +456,7 @@ using Tables
                     layer = AG.getlayer(ds, 0)
                     return (
                         names = keys(Tables.columntable(layer)),
-                        types = eltype.(values(Tables.columntable(layer)),),
+                        types = eltype.(values(Tables.columntable(layer))),
                         values = wellknownvalues(
                             values(Tables.columntable(layer)),
                         ),
