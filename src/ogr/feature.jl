@@ -90,7 +90,7 @@ nfield(feature::AbstractFeature)::Integer = GDAL.ogr_f_getfieldcount(feature)
 Fetch the keys or names on this feature.
 """
 function Base.keys(feature::AbstractFeature)
-    return (getname(getfielddefn(feature, i)) for i in 0:nfield(feature)-1)
+    return (getname(getfielddefn(feature, i)) for i in 0:(nfield(feature)-1))
 end
 
 """
@@ -99,7 +99,7 @@ end
 Fetch the values this feature.
 """
 function Base.values(feature::AbstractFeature)
-    return (getfield(feature, i) for i in 0:nfield(feature)-1)
+    return (getfield(feature, i) for i in 0:(nfield(feature)-1))
 end
 
 """
