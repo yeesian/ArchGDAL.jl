@@ -101,7 +101,6 @@ using Tables
             function clean_test_dataset_files()
                 for (drvshortname, file_extension) in
                     TEST_DS_DRIVERS_FILE_EXTENSIONS
-
                     isfile(
                         joinpath(
                             @__DIR__,
@@ -419,7 +418,7 @@ using Tables
             tupleoftuples_equal = (
                 (x, y) ->
                     length(x) == length(y) &&
-                    all([all(x[i] .=== y[i]) for i in 1:length(x)])
+                        all([all(x[i] .=== y[i]) for i in 1:length(x)])
             )
 
             """
