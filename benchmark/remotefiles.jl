@@ -16,10 +16,12 @@ julia> open(filepath/filename) do f
        end
 ```
 """
-remotefiles = [(
-    "data/road.zip",
-    "058bdc549d0fc5bfb6deaef138e48758ca79ae20df79c2fb4c40cb878f48bfd8",
-),]
+remotefiles = [
+    (
+        "data/road.zip",
+        "058bdc549d0fc5bfb6deaef138e48758ca79ae20df79c2fb4c40cb878f48bfd8",
+    ),
+]
 
 function verify(path::AbstractString, hash::AbstractString)
     @assert occursin(r"^[0-9a-f]{64}$", hash)
