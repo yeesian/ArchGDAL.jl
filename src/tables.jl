@@ -1,5 +1,25 @@
-function Tables.schema(layer::AbstractFeatureLayer)::Nothing
-    return nothing
+function Tables.schema(
+    layer::AbstractFeatureLayer,
+)::Union{Nothing,Tables.Schema}
+    # If the layer has no features, calculate the schema from the layer
+    # otherwise let the features build the schema on the fly
+    # If we always build the schema, all isnullable (by default true) fields
+    # will result in columns with Union{Missing}.
+    nfeature(layer) == 0 || return nothing
+    ld = layerdefn(layer)
+    geom_names, field_names, _, fielddefns = schema_names(ld)
+    names = (geom_names..., field_names...)
+    types = Type[_datatype(getgeomdefn(ld, i - 1)) for i in 1:ngeom(ld)]
+    append!(types, map(_datatype, fielddefns))
+    return Tables.Schema(names, types)
+end
+
+function _datatype(fielddefn::IFieldDefnView)
+    return T = convert(DataType, getfieldtype(fielddefn))
+end
+
+function _datatype(fielddefn::IGeomFieldDefnView)
+    return IGeometry{gettype(fielddefn)}
 end
 
 Tables.istable(::Type{<:AbstractFeatureLayer})::Bool = true
