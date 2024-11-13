@@ -26,6 +26,7 @@ Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 [extensions]
 ArchGDALMakieExt = "Makie"
 ArchGDALJLD2Ext = "JLD2"
+
 [compat]
 CEnum = "0.4, 0.5"
 ColorTypes = "0.10, 0.11, 0.12"
