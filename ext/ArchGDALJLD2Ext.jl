@@ -5,19 +5,19 @@ import GeoInterface as GI
 import JLD2
 
 struct ArchGDALSerializedGeometry
-    wkbtype::AG.OGRwkbGeometryType
-    coords::Vector
+    # TODO: add spatial reference
+    wkb::Vector{UInt8}
 end
 
 
-JLD2.writeas(::Type{<: AG.AbstractGeometry{WKBType}}) where WKBType = ArchGDALSerializedGeometry{WKBType}
+JLD2.writeas(::Type{<: AG.AbstractGeometry}) = ArchGDALSerializedGeometry
 
-function JLD2.wconvert(::Type{<: ArchGDALSerializedGeometry{WKBType}}, x::AG.AbstractGeometry{WKBType}) where WKBType
-    return ArchGDALSerializedGeometry{WKBType}(GI.coordinates(x))
+function JLD2.wconvert(::Type{<: ArchGDALSerializedGeometry}, x::AG.AbstractGeometry)
+    return ArchGDALSerializedGeometry(AG.toWKB(x))
 end
 
-function JLD2.rconvert(::Type{<: AG.AbstractGeometry{WKBType}}, x::ArchGDALSerializedGeometry{WKBType}) where WKBType
-    return AG.lookup_method[typeof(x.trait)](x.coords)
+function JLD2.rconvert(::Type{<: AG.AbstractGeometry}, x::ArchGDALSerializedGeometry)
+    return AG.fromWKB(x.wkb)
 end
 
 end
