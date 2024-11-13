@@ -335,12 +335,14 @@ Fetch field value as a list of integers.
 * `pnCount`: an integer to put the list count (number of integers) into.
 
 ### Returns
-the field value, copied from GDAL to Julia.
+the field value. This list is internal, and should not be modified, or freed.
+Its lifetime may be very brief. If *pnCount is zero on return the returned
+pointer may be NULL or non-NULL.
 """
 function asintlist(feature::AbstractFeature, i::Integer)::Vector{Int32}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasintegerlist(feature, i, n)
-    return (n.x == 0) ? Int32[] : copy(unsafe_wrap(Vector{Int32}, ptr, n.x))
+    return (n.x == 0) ? Int32[] : unsafe_wrap(Vector{Int32}, ptr, n.x)
 end
 
 """
@@ -361,7 +363,7 @@ pointer may be NULL or non-NULL.
 function asint64list(feature::AbstractFeature, i::Integer)::Vector{Int64}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasinteger64list(feature, i, n)
-    return (n.x == 0) ? Int64[] : copy(unsafe_wrap(Vector{Int64}, ptr, n.x))
+    return (n.x == 0) ? Int64[] : unsafe_wrap(Vector{Int64}, ptr, n.x)
 end
 
 """
@@ -382,7 +384,7 @@ pointer may be NULL or non-NULL.
 function asdoublelist(feature::AbstractFeature, i::Integer)::Vector{Float64}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasdoublelist(feature, i, n)
-    return (n.x == 0) ? Float64[] : copy(unsafe_wrap(Vector{Float64}, ptr, n.x))
+    return (n.x == 0) ? Float64[] : unsafe_wrap(Vector{Float64}, ptr, n.x)
 end
 
 """
@@ -399,7 +401,7 @@ the field value. This list is internal, and should not be modified, or freed.
 Its lifetime may be very brief.
 """
 asstringlist(feature::AbstractFeature, i::Integer)::Vector{String} =
-    copy(GDAL.ogr_f_getfieldasstringlist(feature, i))
+    GDAL.ogr_f_getfieldasstringlist(feature, i)
 
 """
     asbinary(feature::AbstractFeature, i::Integer)
@@ -417,7 +419,7 @@ Its lifetime may be very brief.
 function asbinary(feature::AbstractFeature, i::Integer)::Vector{UInt8}
     n = Ref{Cint}()
     ptr = GDAL.ogr_f_getfieldasbinary(feature, i, n)
-    return (n.x == 0) ? UInt8[] : copy(unsafe_wrap(Vector{UInt8}, ptr, n.x))
+    return (n.x == 0) ? UInt8[] : unsafe_wrap(Vector{UInt8}, ptr, n.x)
 end
 
 """
