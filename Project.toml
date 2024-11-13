@@ -44,3 +44,4 @@ julia = "1.6"
 
 [extras]
 Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
+JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
