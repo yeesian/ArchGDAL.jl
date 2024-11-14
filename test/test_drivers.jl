@@ -83,7 +83,7 @@ import ArchGDAL as AG
                 "RandomWrite" => false,
                 "RandomRead" => true,
                 "CurveGeometries" => false,
-                "FastGetExtent" => false,
+                "FastGetExtent" => true,
                 "Transactions" => false,
                 "AlterFieldDefn" => false,
             )
