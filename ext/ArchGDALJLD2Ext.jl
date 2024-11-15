@@ -9,14 +9,19 @@ struct ArchGDALSerializedGeometry
     wkb::Vector{UInt8}
 end
 
+JLD2.writeas(::Type{<:AG.AbstractGeometry}) = ArchGDALSerializedGeometry
 
-JLD2.writeas(::Type{<: AG.AbstractGeometry}) = ArchGDALSerializedGeometry
-
-function JLD2.wconvert(::Type{<: ArchGDALSerializedGeometry}, x::AG.AbstractGeometry)
+function JLD2.wconvert(
+    ::Type{<:ArchGDALSerializedGeometry},
+    x::AG.AbstractGeometry,
+)
     return ArchGDALSerializedGeometry(AG.toWKB(x))
 end
 
-function JLD2.rconvert(::Type{<: AG.AbstractGeometry}, x::ArchGDALSerializedGeometry)
+function JLD2.rconvert(
+    ::Type{<:AG.AbstractGeometry},
+    x::ArchGDALSerializedGeometry,
+)
     return AG.fromWKB(x.wkb)
 end
 
