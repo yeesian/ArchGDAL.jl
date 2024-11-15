@@ -3,9 +3,9 @@ import GDAL
 import ArchGDAL as AG
 
 "Test both that an ErrorException is thrown and that the message is as expected"
-function eval_ogrerr(err, expected_message)
-    @test (@test_throws ErrorException AG.@ogrerr err "e:").value.msg ==
-          "e: ($expected_message)"
+function eval_ogrerr(err, expected_message, placeholder = "")
+    @test (@test_throws ErrorException AG.@ogrerr err "e $(placeholder):").value.msg ==
+          "e $(placeholder): ($expected_message)"
 end
 
 @testset "test_utils.jl" begin
@@ -18,7 +18,7 @@ end
 
     @testset "OGR Errors" begin
         @test isnothing(AG.@ogrerr GDAL.OGRERR_NONE "not an error")
-        eval_ogrerr(GDAL.OGRERR_NOT_ENOUGH_DATA, "Not enough data.")
+        eval_ogrerr(GDAL.OGRERR_NOT_ENOUGH_DATA, "Not enough data.", "foo")
         eval_ogrerr(GDAL.OGRERR_NOT_ENOUGH_MEMORY, "Not enough memory.")
         eval_ogrerr(
             GDAL.OGRERR_UNSUPPORTED_GEOMETRY_TYPE,

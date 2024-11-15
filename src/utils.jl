@@ -207,7 +207,7 @@ macro ogrerr(code, message)
                 "Unknown error."
             end
 
-            error($message * " ($detailmsg)")
+            error($(esc(message)) * " ($detailmsg)")
         end
     end
 end
@@ -215,7 +215,7 @@ end
 macro cplerr(code, message)
     return quote
         if $(esc(code)) != GDAL.CE_None
-            error($message)
+            error($(esc(message)))
         end
     end
 end
@@ -223,7 +223,7 @@ end
 macro cplwarn(code, message)
     return quote
         if $(esc(code)) != GDAL.CE_None
-            @warn $message
+            @warn $(esc(message))
         end
     end
 end
