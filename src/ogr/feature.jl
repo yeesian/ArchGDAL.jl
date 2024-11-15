@@ -536,11 +536,12 @@ function getfield(feature::AbstractFeature, i::Integer)
         _fieldtype = getfieldtype(getfielddefn(feature, i))
         try
             _fetchfield = _FETCHFIELD[_fieldtype]
-            if _fieldtype in (OFTIntegerList, OFTRealList, OFTStringList, OFTInteger64List)
+            if _fieldtype in
+               (OFTIntegerList, OFTRealList, OFTStringList, OFTInteger64List)
                 # copy to ensure that GDAL does not free / overwrite the memory.
                 # the docs for the field fetcher functions mention that the returned 
                 # pointer is not valid for very long.
-                return Base.copy(_fetchfield(feature, i)) 
+                return Base.copy(_fetchfield(feature, i))
             else
                 # for static types, we can just return the returned value.
                 return _fetchfield(feature, i)
