@@ -786,6 +786,45 @@ using Tables
                     )
                 end
             end
+            @testset "Handle empty layers" begin
+                AG.read(
+                    joinpath(@__DIR__, "data/multi_geom.csv"),
+                    options = [
+                        "GEOM_POSSIBLE_NAMES=point,linestring",
+                        "KEEP_GEOM_COLUMNS=NO",
+                    ],
+                ) do ds
+                    layer = AG.copy(AG.getlayer(ds, 0))
+
+                    # With features, no schema is defined
+                    @test isnothing(Tables.schema(layer))
+                    # And tables are built up from features
+                    table = Tables.columntable(layer)
+                    @test Tables.columnnames(table) ==
+                          (:point, :linestring, :id, :zoom, :location)
+                    @test Tables.rowcount(table) == 2
+
+                    for i in 1:AG.nfeature(layer)
+                        AG.deletefeature!(layer, i)
+                    end
+
+                    # Without features, schema is still defined and table is empty
+                    @test Tables.schema(layer) == Tables.Schema(
+                        (:point, :linestring, :id, :zoom, :location),
+                        (
+                            AG.IGeometry{AG.wkbUnknown},
+                            AG.IGeometry{AG.wkbUnknown},
+                            String,
+                            String,
+                            String,
+                        ),
+                    )
+                    table = Tables.columntable(layer)
+                    @test Tables.rowcount(table) == 0
+                    @test Tables.columnnames(table) ==
+                          (:point, :linestring, :id, :zoom, :location)
+                end
+            end
 
             clean_test_dataset_files()
         end
