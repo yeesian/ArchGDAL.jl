@@ -3,7 +3,7 @@ uuid = "c9ce4bd3-c3d5-55b8-8973-c0e20141b8c3"
 keywords = ["GDAL", "IO"]
 license = "MIT"
 desc = "A high level API for GDAL - Geospatial Data Abstraction Library"
-version = "0.10.5"
+version = "0.10.6"
 
 [deps]
 CEnum = "fa961155-64e5-5f13-b03f-caf6b980ea82"

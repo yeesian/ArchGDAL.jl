@@ -1,6 +1,12 @@
 using Test
 import ArchGDAL as AG
 import GeoFormatTypes as GFT
+using FixedPointNumbers
+
+struct CustomInt <: Integer
+    value::Int64
+end
+Base.convert(::Type{Int64}, x::CustomInt) = x.value
 
 @testset "test_convert.jl" begin
 
@@ -67,10 +73,12 @@ import GeoFormatTypes as GFT
         @test convert(AG.OGRFieldType, UInt32) == AG.OFTInteger64
         @test convert(AG.OGRFieldType, Int32) == AG.OFTInteger
         @test convert(AG.OGRFieldType, Int64) == AG.OFTInteger64
+        @test convert(AG.OGRFieldType, CustomInt) == AG.OFTInteger64
 
         @test convert(AG.OGRFieldType, Float16) == AG.OFTReal
         @test convert(AG.OGRFieldType, Float32) == AG.OFTReal
         @test convert(AG.OGRFieldType, Float64) == AG.OFTReal
+        @test convert(AG.OGRFieldType, N0f16) == AG.OFTReal
 
         # Reverse conversion should result in default type, not subtype
         @test convert(DataType, AG.OFSTBoolean) == Bool
