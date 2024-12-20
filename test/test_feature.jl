@@ -1,6 +1,7 @@
 using Test
 import ArchGDAL as AG
 import GeoInterface as GI
+using FixedPointNumbers
 
 @enum MyEnum::Bool begin
     MyEnumValue = false
@@ -264,6 +265,12 @@ end
                 AG.setsubtype!(fielddefn, AG.OFSTBoolean)
                 return AG.addfielddefn!(layer, fielddefn)
             end
+            AG.createfielddefn("fixedpointfield", AG.OFTReal) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("customintfield", AG.OFTInteger64) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
             AG.createfeature(layer) do feature
                 geojsonstring = "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ 4, 44 ], [ 5, 44 ], [ 5, 45 ], [ 4, 45 ], [ 4, 44 ] ] ] }"
                 AG.setfield!(feature, 0, Int64(1))
@@ -285,6 +292,8 @@ end
                 AG.setfield!(feature, 16, UInt16(1.0))
                 AG.setfield!(feature, 17, UInt32(1.0))
                 AG.setfield!(feature, 18, MyEnumValue)
+                AG.setfield!(feature, 19, N0f16(1.0))
+                AG.setfield!(feature, 20, CustomInt(1))
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
@@ -305,6 +314,8 @@ end
                 @test AG.getfield(feature, 16) === Int32(1) # Widened from UInt16
                 @test AG.getfield(feature, 17) === Int64(1) # Widened from UInt32
                 @test AG.getfield(feature, 18) === false  # Enum is lost
+                @test AG.getfield(feature, 19) === 1.0  # FixedPointNumber is lost
+                @test AG.getfield(feature, 20) === 1  # CustomInt is lost
 
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)

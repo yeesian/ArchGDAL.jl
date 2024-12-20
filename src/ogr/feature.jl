@@ -628,6 +628,22 @@ end
 function setfield!(
     feature::AbstractFeature,
     i::Integer,
+    value::Integer,
+)::AbstractFeature
+    return setfield!(feature, i, convert(Int64, value))
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    value::Real,
+)::AbstractFeature
+    return setfield!(feature, i, convert(Float64, value))
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
     value::Enum,
 )::AbstractFeature
     return setfield!(feature, i, Integer(value))
