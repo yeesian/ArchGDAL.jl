@@ -19,6 +19,7 @@ end
                   (index 1) pointname => point-a
                 """
                 @test GI.isfeature(f2)
+                @test GI.trait(f2) isa GI.FeatureTrait
                 @test GI.isgeometry(GI.geometry(f2))
                 AG.getgeom(f1) do g1
                     @test sprint(print, g1) == "Geometry: POINT (100 0)"

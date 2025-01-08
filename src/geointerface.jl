@@ -62,6 +62,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     # Feature
+    GeoInterface.trait(feat::AbstractFeature) = GeoInterface.FeatureTrait()
     GeoInterface.isfeature(feat::AbstractFeature) = true
     function GeoInterface.crs(layer::AbstractFeatureLayer)
         sr = getspatialref(layer)
