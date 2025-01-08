@@ -179,6 +179,55 @@ import GeoInterface
         </gml:ProjectedCRS>
         """
         cepsg = "EPSG:4326+3855"
+        projjson = """
+        {
+          "\$schema": "https://proj.org/schemas/v0.4/projjson.schema.json",
+          "type": "GeographicCRS",
+          "name": "Monte Mario (Rome)",
+          "datum": {
+            "type": "GeodeticReferenceFrame",
+            "name": "Monte Mario (Rome)",
+            "ellipsoid": {
+              "name": "International 1924",
+              "semi_major_axis": 6378388,
+              "inverse_flattening": 297
+            },
+            "prime_meridian": {
+              "name": "Rome",
+              "longitude": 12.4523333333333
+            }
+          },
+          "coordinate_system": {
+            "subtype": "ellipsoidal",
+            "axis": [
+              {
+                "name": "Geodetic latitude",
+                "abbreviation": "Lat",
+                "direction": "north",
+                "unit": "degree"
+              },
+              {
+                "name": "Geodetic longitude",
+                "abbreviation": "Lon",
+                "direction": "east",
+                "unit": "degree"
+              }
+            ]
+          },
+          "scope": "Geodesy, onshore minerals management.",
+          "area": "Italy - onshore and offshore; San Marino, Vatican City State.",
+          "bbox": {
+            "south_latitude": 34.76,
+            "west_longitude": 5.93,
+            "north_latitude": 47.1,
+            "east_longitude": 18.99
+          },
+          "id": {
+            "authority": "EPSG",
+            "code": 4806
+          }
+        }
+        """
 
         @testset "PROJ4 Format" begin
             AG.importPROJ4(proj4326) do spatialref
@@ -271,6 +320,13 @@ import GeoInterface
                   AG.toWKT(AG.importXML(xml4326))
             @test AG.toWKT(AG.importCRS(GFT.KML(""))) ==
                   AG.toWKT(AG.importEPSG(4326))
+
+            # WKT is never fully identical
+            @test occursin("Monte Mario (Rome)", AG.toWKT(AG.importCRS(GFT.ProjJSON(projjson))))
+            @test_throws ErrorException AG.importCRS(
+                GFT.ProjJSON(Dict("type"=>""))
+            )
+
             @test_throws ArgumentError AG.importCRS(
                 GFT.EPSG(4326),
                 order = :unknown,

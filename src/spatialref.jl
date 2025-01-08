@@ -61,8 +61,15 @@ function importCRS!(spref::T, x::GFT.GML)::T where {T<:AbstractSpatialRef}
     return spref
 end
 
-function importCRS!(spref::T, x::GFT.KML)::T where {T<:AbstractSpatialRef}
+function importCRS!(spref::T, ::GFT.KML)::T where {T<:AbstractSpatialRef}
     importCRS!(spref, GFT.EPSG(4326))
+    return spref
+end
+
+function importCRS!(spref::T, x::GFT.ProjJSON) where {T<:AbstractSpatialRef}
+    json = GFT.val(x)
+    isa(json, Dict) && error("ProjJSON must be provided as a String.")
+    importUserInput!(spref, json)
     return spref
 end
 
