@@ -322,9 +322,12 @@ import GeoInterface
                   AG.toWKT(AG.importEPSG(4326))
 
             # WKT is never fully identical
-            @test occursin("Monte Mario (Rome)", AG.toWKT(AG.importCRS(GFT.ProjJSON(projjson))))
+            @test occursin(
+                "Monte Mario (Rome)",
+                AG.toWKT(AG.importCRS(GFT.ProjJSON(projjson))),
+            )
             @test_throws ErrorException AG.importCRS(
-                GFT.ProjJSON(Dict("type"=>""))
+                GFT.ProjJSON(Dict("type" => "")),
             )
 
             @test_throws ArgumentError AG.importCRS(
