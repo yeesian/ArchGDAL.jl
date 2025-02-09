@@ -21,9 +21,10 @@ us to be able to index into it like we would an array.
 Constructing a RasterDataset will error if the raster bands do not have all the
 same size and a common element data type.
 """
-struct RasterDataset{T,DS<:AbstractDataset} <: AbstractDiskArray{T,3}
+struct RasterDataset{T,DS<:AbstractDataset,C} <: AbstractDiskArray{T,3}
     ds::DS
     size::Tuple{Int,Int,Int}
+    chunks::C
 end
 
 function RasterDataset(
@@ -33,7 +34,12 @@ function RasterDataset(
         throw(ArgumentError("The Dataset does not contain any raster bands"))
     end
     s = _common_size(ds)
-    return RasterDataset{pixeltype(ds),typeof(ds)}(ds, s)
+    subchunks = DiskArrays.eachchunk(getband(ds, 1))
+    chunks = DiskArrays.GridChunks(
+        subchunks.chunks...,
+        DiskArrays.RegularChunks(1, 0, s[3]),
+    )
+    return RasterDataset{pixeltype(ds),typeof(ds),typeof(chunks)}(ds, s, chunks)
 end
 
 # Forward a few functions
@@ -138,14 +144,8 @@ indexing.
 readraster(s::String; kwargs...)::RasterDataset =
     RasterDataset(read(s; kwargs...))
 
-function DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks
-    subchunks = DiskArrays.eachchunk(getband(ds, 1))
-    return DiskArrays.GridChunks(
-        subchunks.chunks...,
-        DiskArrays.RegularChunks(1, 0, size(ds, 3)),
-    )
-end
-
+DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks =
+    ds.chunks
 DiskArrays.haschunks(::RasterDataset)::DiskArrays.Chunked = DiskArrays.Chunked()
 DiskArrays.haschunks(::AbstractRasterBand)::DiskArrays.Chunked =
     DiskArrays.Chunked()
