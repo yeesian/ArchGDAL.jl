@@ -21,7 +21,7 @@ us to be able to index into it like we would an array.
 Constructing a RasterDataset will error if the raster bands do not have all the
 same size and a common element data type.
 """
-struct RasterDataset{T,DS<:AbstractDataset,C} <: AbstractDiskArray{T,3}
+struct RasterDataset{T,DS<:AbstractDataset,C<:DiskArrays.GridChunks} <: AbstractDiskArray{T,3}
     ds::DS
     size::Tuple{Int,Int,Int}
     chunks::C
