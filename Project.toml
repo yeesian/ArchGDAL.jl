@@ -14,17 +14,13 @@ Extents = "411431e0-e8b7-467b-b5e0-f676ba4f2910"
 GDAL = "add2ef01-049f-52c4-9ee2-e494f65e021a"
 GeoFormatTypes = "68eda718-8dee-11e9-39e7-89f7f65f511f"
 GeoInterface = "cf35fbd7-0cd7-5166-be24-54bfbe79505f"
-GeoInterfaceMakie = "0edc0954-3250-4c18-859d-ec71c1660c08"
-GeoInterfaceRecipes = "0329782f-3d07-4b52-b9f6-d3137cf03c7a"
 ImageCore = "a09fc81d-aa75-5fe9-8630-4744c3626534"
 Tables = "bd369af6-aec1-5ad0-b16a-f7cc5008161c"
 
 [weakdeps]
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 
 [extensions]
-ArchGDALMakieExt = "Makie"
 ArchGDALJLD2Ext = "JLD2"
 
 [compat]
@@ -36,14 +32,10 @@ Extents = "0.1"
 GDAL = "1.7"
 GeoFormatTypes = "0.4.2"
 GeoInterface = "1"
-GeoInterfaceMakie = "0.1"
-GeoInterfaceRecipes = "1.0"
 ImageCore = "0.8, 0.9, 0.10"
-Makie = "0.20, 0.21, 0.22"
-Tables = "1"
 JLD2 = "0.4, 0.5"
+Tables = "1"
 julia = "1.10"
 
 [extras]
-Makie = "ee78f7c6-11fb-53f2-987a-cfe4a2b5a57a"
 JLD2 = "033835bb-8acc-5ee8-8aae-3f567f8a3819"

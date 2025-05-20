@@ -2,7 +2,6 @@
 
 ```@setup projections
 using ArchGDAL; const AG = ArchGDAL
-using Plots
 ```
 
 (This is based entirely on the [GDAL/OSR Tutorial](https://gdal.org/tutorials/osr_api_tut.html) and [Python GDAL/OGR Cookbook](https://pcjericks.github.io/py-gdalogr-cookbook/projection.html).)
@@ -78,25 +77,23 @@ ds = AG.read("/vsicurl/https://raw.githubusercontent.com/yeesian/ArchGDALDataset
 layer = AG.getlayer(ds, 0)
 ```
 ```@example projections
-# Plotting with native GEOJSON geographic CRS
+# native GEOJSON geographic CRS
 p_WGS_84 = AG.getfeature(layer, 0) do feature
     AG.getgeom(feature, 0) do geom
-        plot(geom; fa=0.1, title="WGS 84")
+        geom
     end
 end
 
-# Plotting with local projected CRS
+# local projected CRS
 p_Lambert_93 = AG.getfeature(layer, 0) do feature
     AG.getgeom(feature, 0) do geom
         source = AG.getspatialref(geom)
         target = AG.importEPSG(2154)
         AG.createcoordtrans(source, target) do transform
-            plot(AG.transform!(geom, transform); fa=0.1, title="Lambert 93")
+            AG.transform!(geom, transform)
         end
     end
 end
-
-plot(p_WGS_84, p_Lambert_93; size=(600, 200), layout=(1,2))
 ```
 
 ## References
