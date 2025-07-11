@@ -150,7 +150,7 @@ end
     extensions()
 
 Returns a `Dict{String,String}` of all of the file extensions that can be read
-by GDAL,  with their respective drivers' `shortname`s.
+by GDAL, with their respective drivers' `shortname`s.
 """
 function extensions()::Dict{String,String}
     extdict = Dict{String,String}()
@@ -171,7 +171,7 @@ end
 
 Returns a driver shortname that matches the filename extension.
 
-So `extensiondriver("/my/file.tif") == "GTiff"`.
+So `extensiondriver("/my/file.tif") == "LIBERTIFF"`.
 """
 function extensiondriver(filename::AbstractString)::String
     split = splitext(filename)

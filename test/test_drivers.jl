@@ -51,9 +51,11 @@ import ArchGDAL as AG
         @test sprint(print, AG.identifydriver("data/utmsmall.tif")) ==
               "Driver: GTiff/GeoTIFF"
 
-        driver = AG.getdriver("GTiff")
+        driver = AG.getdriver("GPX")
         @test isnothing(AG.deregister(driver))
         @test isnothing(AG.register(driver))
+
+        driver = AG.getdriver("GTiff")
         @test AG.validate(driver, ["COMPRESS=LZW", "INTERLEAVE=PIXEL"]) == true
         @test AG.validate(driver, ["COMPRESS=LZW"]) == true
         @test AG.validate(driver, ["INTERLEAVE=PIXEL"]) == true
@@ -77,7 +79,7 @@ import ArchGDAL as AG
                 "StringsAsUTF8" => true,
                 "CreateGeomField" => false,
                 "ReorderFields" => false,
-                "MeasuredGeometries" => true,
+                "MeasuredGeometries" => false,
                 "FastSetNextByIndex" => true,
                 "CreateField" => false,
                 "RandomWrite" => false,
@@ -92,14 +94,14 @@ import ArchGDAL as AG
 
     @testset "Test extensions list" begin
         exts = AG.extensions()
-        @test exts[".tif"] == "GTiff"
+        @test exts[".tif"] == "LIBERTIFF"
         @test exts[".grb"] == "GRIB"
         @test exts[".geojson"] == "GeoJSON"
     end
 
     @testset "Test getting extensiondriver" begin
-        @test AG.extensiondriver("filename.tif") == "GTiff"
-        @test AG.extensiondriver(".tif") == "GTiff"
+        @test AG.extensiondriver("filename.tif") == "LIBERTIFF"
+        @test AG.extensiondriver(".tif") == "LIBERTIFF"
         @test AG.extensiondriver("filename.asc") == "AAIGrid"
         @test AG.extensiondriver(".asc") == "AAIGrid"
         @test_throws ArgumentError AG.extensiondriver(".not_an_extension")
