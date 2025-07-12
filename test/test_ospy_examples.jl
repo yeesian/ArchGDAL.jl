@@ -117,7 +117,7 @@ import ArchGDAL as AG
                     end
                 end
                 @test sprint(print, output) == """
-                GDAL Dataset (Driver: Memory/Memory)
+                GDAL Dataset (Driver: Memory/In Memory raster, vector and multidimensional raster)
                 File(s): 
 
                 Number of feature layers: 1
@@ -141,7 +141,7 @@ import ArchGDAL as AG
                     return AG.copy(results, name = "hw1b", dataset = output)
                 end
                 @test sprint(print, output) == """
-                GDAL Dataset (Driver: Memory/Memory)
+                GDAL Dataset (Driver: Memory/In Memory raster, vector and multidimensional raster)
                 File(s): 
 
                 Number of feature layers: 1
@@ -372,7 +372,7 @@ import ArchGDAL as AG
                     AG.write!(outDS, ndvi, 1, j, i, ncols, nrows)
                 end
                 @test sprint(print, outDS) == """
-                    GDAL Dataset (Driver: MEM/In Memory Raster)
+                    GDAL Dataset (Driver: MEM/In Memory raster, vector and multidimensional raster)
                     File(s): 
 
                     Dataset (width x height): 5665 x 5033 (pixels)
@@ -470,7 +470,7 @@ import ArchGDAL as AG
                     AG.write!(dsout, data2, 1, xOffset2, yOffset2, cols, rows)
 
                     @test sprint(print, dsout) == """
-                    GDAL Dataset (Driver: MEM/In Memory Raster)
+                    GDAL Dataset (Driver: MEM/In Memory raster, vector and multidimensional raster)
                     File(s): 
 
                     Dataset (width x height): 4500 x 3000 (pixels)
