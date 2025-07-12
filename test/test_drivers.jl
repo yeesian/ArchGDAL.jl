@@ -94,9 +94,11 @@ import ArchGDAL as AG
 
     @testset "Test extensions list" begin
         exts = AG.extensions()
+        @test exts[".tiff"] == "GTiff"
         @test exts[".tif"] == "GTiff"
         @test exts[".grb"] == "GRIB"
         @test exts[".geojson"] == "GeoJSON"
+        @test exts[".json"] == "GeoJSON"
     end
 
     @testset "Test getting extensiondriver" begin

@@ -158,14 +158,16 @@ function extensions()::Dict{String,String}
         driver = getdriver(i)
         if !(driver.ptr == C_NULL)
             # exts is a space-delimited list in a String, so split it
-            name = shortname(driver)
-            # Skip LIBERTIFF and COG to ensure GTiff is the .tif driver (#475)
-            name in ("LIBERTIFF", "COG") && continue
             for ext in split(metadataitem(driver, "DMD_EXTENSIONS"))
-                extdict[".$ext"] = name
+                extdict[".$ext"] = shortname(driver)
             end
         end
     end
+    # Multiple drivers support this, manually ensure these are the defaults (#475).
+    extdict[".tiff"] = "GTiff"
+    extdict[".tif"] = "GTiff"
+    extdict[".json"] = "GeoJSON"
+    extdict[".geojson"] = "GeoJSON"
     return extdict
 end
 
