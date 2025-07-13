@@ -51,9 +51,11 @@ import ArchGDAL as AG
         @test sprint(print, AG.identifydriver("data/utmsmall.tif")) ==
               "Driver: GTiff/GeoTIFF"
 
-        driver = AG.getdriver("GTiff")
+        driver = AG.getdriver("GPX")
         @test isnothing(AG.deregister(driver))
         @test isnothing(AG.register(driver))
+
+        driver = AG.getdriver("GTiff")
         @test AG.validate(driver, ["COMPRESS=LZW", "INTERLEAVE=PIXEL"]) == true
         @test AG.validate(driver, ["COMPRESS=LZW"]) == true
         @test AG.validate(driver, ["INTERLEAVE=PIXEL"]) == true
@@ -77,7 +79,7 @@ import ArchGDAL as AG
                 "StringsAsUTF8" => true,
                 "CreateGeomField" => false,
                 "ReorderFields" => false,
-                "MeasuredGeometries" => true,
+                "MeasuredGeometries" => false,
                 "FastSetNextByIndex" => true,
                 "CreateField" => false,
                 "RandomWrite" => false,
@@ -92,9 +94,11 @@ import ArchGDAL as AG
 
     @testset "Test extensions list" begin
         exts = AG.extensions()
+        @test exts[".tiff"] == "GTiff"
         @test exts[".tif"] == "GTiff"
         @test exts[".grb"] == "GRIB"
         @test exts[".geojson"] == "GeoJSON"
+        @test exts[".json"] == "GeoJSON"
     end
 
     @testset "Test getting extensiondriver" begin
