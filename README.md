@@ -72,11 +72,11 @@ $ julia --project
 3. Activate the environment corresponding to `Project.toml`):
 
 ```julia
-(@v1.6) pkg> activate .
-  Activating environment at `~/.julia/environments/v1.6/Project.toml`
+(@v1.10) pkg> activate .
+  Activating environment at `~/.julia/environments/v1.10/Project.toml`
 ```
 
-4. Manage the dependencies using Pkg in https://pkgdocs.julialang.org/v1.6/managing-packages/, e.g.
+4. Manage the dependencies using Pkg in https://pkgdocs.julialang.org/v1.10/managing-packages/, e.g.
 
 ```julia
 (ArchGDAL) pkg> st

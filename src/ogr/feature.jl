@@ -90,7 +90,7 @@ nfield(feature::AbstractFeature)::Integer = GDAL.ogr_f_getfieldcount(feature)
 Fetch the keys or names on this feature.
 """
 function Base.keys(feature::AbstractFeature)
-    return (getname(getfielddefn(feature, i)) for i in 0:nfield(feature)-1)
+    return (getname(getfielddefn(feature, i)) for i in 0:(nfield(feature)-1))
 end
 
 """
@@ -99,7 +99,7 @@ end
 Fetch the values this feature.
 """
 function Base.values(feature::AbstractFeature)
-    return (getfield(feature, i) for i in 0:nfield(feature)-1)
+    return (getfield(feature, i) for i in 0:(nfield(feature)-1))
 end
 
 """
@@ -529,14 +529,23 @@ null, it will return `missing`.
 """
 function getfield(feature::AbstractFeature, i::Integer)
     return if !isfieldset(feature, i)
-        nothing
+        return nothing
     elseif isfieldnull(feature, i)
-        missing
+        return missing
     else
         _fieldtype = getfieldtype(getfielddefn(feature, i))
         try
             _fetchfield = _FETCHFIELD[_fieldtype]
-            _fetchfield(feature, i)
+            if _fieldtype in
+               (OFTIntegerList, OFTRealList, OFTStringList, OFTInteger64List)
+                # copy to ensure that GDAL does not free / overwrite the memory.
+                # the docs for the field fetcher functions mention that the returned 
+                # pointer is not valid for very long.
+                return Base.copy(_fetchfield(feature, i))
+            else
+                # for static types, we can just return the returned value.
+                return _fetchfield(feature, i)
+            end
         catch e
             if e isa KeyError
                 error(
@@ -614,6 +623,22 @@ function setfield!(
 )::AbstractFeature
     GDAL.ogr_f_setfieldinteger64(feature, i, value)
     return feature
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    value::Integer,
+)::AbstractFeature
+    return setfield!(feature, i, convert(Int64, value))
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    value::Real,
+)::AbstractFeature
+    return setfield!(feature, i, convert(Float64, value))
 end
 
 function setfield!(

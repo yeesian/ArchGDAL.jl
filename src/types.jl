@@ -374,6 +374,14 @@ function Base.convert(og::Type{OGRFieldType}, ::Type{<:Enum{T}}) where {T}
     return Base.convert(og, T)
 end
 
+function Base.convert(::Type{OGRFieldType}, ::Type{<:Real})
+    return OFTReal
+end
+
+function Base.convert(::Type{OGRFieldType}, ::Type{<:Integer})
+    return OFTInteger64
+end
+
 @convert(
     OGRFieldSubType::GDAL.OGRFieldSubType,
     OFSTNone::GDAL.OFSTNone,
@@ -418,6 +426,10 @@ end
 
 function Base.convert(og::Type{OGRFieldSubType}, ::Type{<:Enum{T}}) where {T}
     return Base.convert(og, T)
+end
+
+function Base.convert(::Type{OGRFieldSubType}, ::Type{<:Real})
+    return OFSTNone
 end
 
 @convert(

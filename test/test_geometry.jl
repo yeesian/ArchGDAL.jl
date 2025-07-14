@@ -2,6 +2,7 @@ using Test
 import GeoInterface as GI
 import ArchGDAL as AG
 import GeoFormatTypes as GFT
+import JLD2
 
 @testset "test_geometry.jl" begin
     @testset "GeoInterface" begin
@@ -1027,5 +1028,20 @@ import GeoFormatTypes as GFT
         @test GI.coordinates(ag_geom1) ==
               GI.coordinates(ag_geom) ==
               [[1, 2], [1, 2]]
+    end
+
+    @testset "JLD2 serialization" begin
+        filepath = joinpath(tempdir(), "test_geometry.jld2")
+        geom = AG.fromWKT(
+            "MULTIPOLYGON (" *
+            "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+            "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+            "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+            "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))",
+        )
+
+        JLD2.save_object(filepath, geom)
+        geom2 = JLD2.load_object(filepath)
+        @test AG.toWKT(geom2) == AG.toWKT(geom)
     end
 end

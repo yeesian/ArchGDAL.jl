@@ -1,6 +1,7 @@
 using Test
 import ArchGDAL as AG
 import GeoInterface as GI
+using FixedPointNumbers
 
 @enum MyEnum::Bool begin
     MyEnumValue = false
@@ -18,6 +19,7 @@ end
                   (index 1) pointname => point-a
                 """
                 @test GI.isfeature(f2)
+                @test GI.trait(f2) isa GI.FeatureTrait
                 @test GI.isgeometry(GI.geometry(f2))
                 AG.getgeom(f1) do g1
                     @test sprint(print, g1) == "Geometry: POINT (100 0)"
@@ -97,99 +99,101 @@ end
             @test AG.validate(f, AG.F_VAL_ALLOW_DIFFERENT_GEOM_DIM, false) ==
                   true
 
-            @testset "Missing and Null Semantics" begin
-                @test isnothing(AG.getdefault(f, 1))
-                AG.setdefault!(AG.getfielddefn(f, 1), "default value")
-                @test AG.getdefault(f, 1) == "default value"
+            # This testset is commented because GDAL 3.9 has disabled most of this behaviour in C
+            # https://gdal.org/en/latest/development/rfc/rfc97_feature_and_fielddefn_sealing.html
+            # @testset "Missing and Null Semantics" begin
+            #     @test isnothing(AG.getdefault(f, 1))
+            #     AG.setdefault!(AG.getfielddefn(f, 1), "default value")
+            #     @test AG.getdefault(f, 1) == "default value"
 
-                @test AG.isfieldsetandnotnull(f, 1)
-                @test AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1)
-                @test AG.getfield(f, 1) == "point-a"
+            #     @test AG.isfieldsetandnotnull(f, 1)
+            #     @test AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
+            #     @test AG.getfield(f, 1) == "point-a"
 
-                AG.unsetfield!(f, 1)
-                @test !AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1) # carried over from earlier
-                @test isnothing(AG.getfield(f, 1))
+            #     AG.unsetfield!(f, 1)
+            #     @test !AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1) # carried over from earlier
+            #     @test isnothing(AG.getfield(f, 1))
 
-                # unset & notnull: missing
-                AG.fillunsetwithdefault!(f)
-                # nothing has changed
-                @test isnothing(AG.getfield(f, 1))
-                # because it is a nullable field
-                @test AG.isnullable(AG.getfielddefn(f, 1))
-                # even though it is not a null value
-                @test !AG.isfieldnull(f, 1)
-                # the field is still not set
-                @test !AG.isfieldset(f, 1)
+            #     # unset & notnull: missing
+            #     AG.fillunsetwithdefault!(f)
+            #     # nothing has changed
+            #     @test isnothing(AG.getfield(f, 1))
+            #     # because it is a nullable field
+            #     @test AG.isnullable(AG.getfielddefn(f, 1))
+            #     # even though it is not a null value
+            #     @test !AG.isfieldnull(f, 1)
+            #     # the field is still not set
+            #     @test !AG.isfieldset(f, 1)
 
-                # set & notnull: value
-                AG.fillunsetwithdefault!(f, notnull = false)
-                if !AG.isdefaultdriverspecific(AG.getfielddefn(f, 1))
-                    # now the field is set to the default
-                    @test AG.getfield(f, 1) == AG.getdefault(f, 1)
-                    @test AG.isfieldset(f, 1) # the field is now set
-                end
-                @test !AG.isfieldnull(f, 1) # still as expected
+            #     # set & notnull: value
+            #     AG.fillunsetwithdefault!(f, notnull = false)
+            #     if !AG.isdefaultdriverspecific(AG.getfielddefn(f, 1))
+            #         # now the field is set to the default
+            #         @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+            #         @test AG.isfieldset(f, 1) # the field is now set
+            #     end
+            #     @test !AG.isfieldnull(f, 1) # still as expected
 
-                # set the field to be notnullable
-                AG.setnullable!(AG.getfielddefn(f, 1), false)
-                # now if we unset the field
-                AG.unsetfield!(f, 1)
-                @test !AG.isfieldnull(f, 1)
-                @test !AG.isfieldset(f, 1)
-                @test isnothing(AG.getfield(f, 1))
-                # and we fill unset with default again
-                AG.fillunsetwithdefault!(f)
-                if !AG.isdefaultdriverspecific(AG.getfielddefn(f, 1))
-                    # the field is set to the default
-                    @test AG.getfield(f, 1) == AG.getdefault(f, 1)
-                    @test AG.isfieldset(f, 1)
-                end
-                @test !AG.isfieldnull(f, 1)
+            #     # set the field to be notnullable
+            #     AG.setnullable!(AG.getfielddefn(f, 1), false)
+            #     # now if we unset the field
+            #     AG.unsetfield!(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
+            #     @test !AG.isfieldset(f, 1)
+            #     @test isnothing(AG.getfield(f, 1))
+            #     # and we fill unset with default again
+            #     AG.fillunsetwithdefault!(f)
+            #     if !AG.isdefaultdriverspecific(AG.getfielddefn(f, 1))
+            #         # the field is set to the default
+            #         @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+            #         @test AG.isfieldset(f, 1)
+            #     end
+            #     @test !AG.isfieldnull(f, 1)
 
-                # set & null: missing
-                AG.setfieldnull!(f, 1)
-                @test AG.isfieldnull(f, 1)
-                @test AG.isfieldset(f, 1)
-                @test ismissing(AG.getfield(f, 1))
+            #     # set & null: missing
+            #     AG.setfieldnull!(f, 1)
+            #     @test AG.isfieldnull(f, 1)
+            #     @test AG.isfieldset(f, 1)
+            #     @test ismissing(AG.getfield(f, 1))
 
-                # unset & null: N/A (but nothing otherwise)
-                AG.unsetfield!(f, 1)
-                # Observe that OGRUnset and OGRNull are mutually exclusive
-                @test !AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1) # notice the field is notnull
+            #     # unset & null: N/A (but nothing otherwise)
+            #     AG.unsetfield!(f, 1)
+            #     # Observe that OGRUnset and OGRNull are mutually exclusive
+            #     @test !AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1) # notice the field is notnull
 
-                # setting the field for a notnullable column
-                AG.setnullable!(AG.getfielddefn(f, 1), false)
-                AG.setfield!(f, 1, "value")
-                @test AG.getfield(f, 1) == "value"
-                @test AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1)
-                AG.setfield!(f, 1, missing)
-                @test AG.getfield(f, 1) == AG.getdefault(f, 1)
-                @test AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1)
-                AG.setfield!(f, 1, nothing)
-                @test isnothing(AG.getfield(f, 1))
-                @test !AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1)
+            #     # setting the field for a notnullable column
+            #     AG.setnullable!(AG.getfielddefn(f, 1), false)
+            #     AG.setfield!(f, 1, "value")
+            #     @test AG.getfield(f, 1) == "value"
+            #     @test AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
+            #     AG.setfield!(f, 1, missing)
+            #     @test AG.getfield(f, 1) == AG.getdefault(f, 1)
+            #     @test AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
+            #     AG.setfield!(f, 1, nothing)
+            #     @test isnothing(AG.getfield(f, 1))
+            #     @test !AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
 
-                # setting the field for a nullable column
-                AG.setnullable!(AG.getfielddefn(f, 1), true)
-                AG.setfield!(f, 1, "value")
-                @test AG.getfield(f, 1) == "value"
-                @test AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1)
-                AG.setfield!(f, 1, missing)
-                @test ismissing(AG.getfield(f, 1))
-                @test AG.isfieldset(f, 1)
-                @test AG.isfieldnull(f, 1) # different from that of notnullable
-                AG.setfield!(f, 1, nothing)
-                @test isnothing(AG.getfield(f, 1))
-                @test !AG.isfieldset(f, 1)
-                @test !AG.isfieldnull(f, 1)
-            end
+            #     # setting the field for a nullable column
+            #     AG.setnullable!(AG.getfielddefn(f, 1), true)
+            #     AG.setfield!(f, 1, "value")
+            #     @test AG.getfield(f, 1) == "value"
+            #     @test AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
+            #     AG.setfield!(f, 1, missing)
+            #     @test ismissing(AG.getfield(f, 1))
+            #     @test AG.isfieldset(f, 1)
+            #     @test AG.isfieldnull(f, 1) # different from that of notnullable
+            #     AG.setfield!(f, 1, nothing)
+            #     @test isnothing(AG.getfield(f, 1))
+            #     @test !AG.isfieldset(f, 1)
+            #     @test !AG.isfieldnull(f, 1)
+            # end
         end
     end
 
@@ -262,6 +266,12 @@ end
                 AG.setsubtype!(fielddefn, AG.OFSTBoolean)
                 return AG.addfielddefn!(layer, fielddefn)
             end
+            AG.createfielddefn("fixedpointfield", AG.OFTReal) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
+            AG.createfielddefn("customintfield", AG.OFTInteger64) do fielddefn
+                return AG.addfielddefn!(layer, fielddefn)
+            end
             AG.createfeature(layer) do feature
                 geojsonstring = "{ \"type\": \"Polygon\", \"coordinates\": [ [ [ 4, 44 ], [ 5, 44 ], [ 5, 45 ], [ 4, 45 ], [ 4, 44 ] ] ] }"
                 AG.setfield!(feature, 0, Int64(1))
@@ -283,6 +293,8 @@ end
                 AG.setfield!(feature, 16, UInt16(1.0))
                 AG.setfield!(feature, 17, UInt32(1.0))
                 AG.setfield!(feature, 18, MyEnumValue)
+                AG.setfield!(feature, 19, N0f16(1.0))
+                AG.setfield!(feature, 20, CustomInt(1))
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)
@@ -303,6 +315,8 @@ end
                 @test AG.getfield(feature, 16) === Int32(1) # Widened from UInt16
                 @test AG.getfield(feature, 17) === Int64(1) # Widened from UInt32
                 @test AG.getfield(feature, 18) === false  # Enum is lost
+                @test AG.getfield(feature, 19) === 1.0  # FixedPointNumber is lost
+                @test AG.getfield(feature, 20) === 1  # CustomInt is lost
 
                 AG.addfeature(layer) do newfeature
                     AG.setfrom!(newfeature, feature)

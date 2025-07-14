@@ -101,6 +101,7 @@ using Tables
             function clean_test_dataset_files()
                 for (drvshortname, file_extension) in
                     TEST_DS_DRIVERS_FILE_EXTENSIONS
+
                     isfile(
                         joinpath(
                             @__DIR__,
@@ -207,7 +208,8 @@ using Tables
                         multi1 = (
                             name = "multiline1",
                             geom = AG.createmultilinestring([
-                                [(i, i + 1) for i in j:j+3] for j in 1.0:5.0:6.0
+                                [(i, i + 1) for i in j:(j+3)] for
+                                j in 1.0:5.0:6.0
                             ]),
                         ),
                         simple2 = (
@@ -417,7 +419,7 @@ using Tables
             tupleoftuples_equal = (
                 (x, y) ->
                     length(x) == length(y) &&
-                        all([all(x[i] .=== y[i]) for i in 1:length(x)])
+                    all([all(x[i] .=== y[i]) for i in 1:length(x)])
             )
 
             """
@@ -454,7 +456,7 @@ using Tables
                     layer = AG.getlayer(ds, 0)
                     return (
                         names = keys(Tables.columntable(layer)),
-                        types = eltype.(values(Tables.columntable(layer)),),
+                        types = eltype.(values(Tables.columntable(layer))),
                         values = wellknownvalues(
                             values(Tables.columntable(layer)),
                         ),
@@ -783,6 +785,45 @@ using Tables
                         multigeom_test_layer,
                         CSV_multigeom_test_reference_geotable,
                     )
+                end
+            end
+            @testset "Handle empty layers" begin
+                AG.read(
+                    joinpath(@__DIR__, "data/multi_geom.csv"),
+                    options = [
+                        "GEOM_POSSIBLE_NAMES=point,linestring",
+                        "KEEP_GEOM_COLUMNS=NO",
+                    ],
+                ) do ds
+                    layer = AG.copy(AG.getlayer(ds, 0))
+
+                    # With features, no schema is defined
+                    @test isnothing(Tables.schema(layer))
+                    # And tables are built up from features
+                    table = Tables.columntable(layer)
+                    @test Tables.columnnames(table) ==
+                          (:point, :linestring, :id, :zoom, :location)
+                    @test Tables.rowcount(table) == 2
+
+                    for i in 1:AG.nfeature(layer)
+                        AG.deletefeature!(layer, i)
+                    end
+
+                    # Without features, schema is still defined and table is empty
+                    @test Tables.schema(layer) == Tables.Schema(
+                        (:point, :linestring, :id, :zoom, :location),
+                        (
+                            AG.IGeometry{AG.wkbUnknown},
+                            AG.IGeometry{AG.wkbUnknown},
+                            String,
+                            String,
+                            String,
+                        ),
+                    )
+                    table = Tables.columntable(layer)
+                    @test Tables.rowcount(table) == 0
+                    @test Tables.columnnames(table) ==
+                          (:point, :linestring, :id, :zoom, :location)
                 end
             end
 

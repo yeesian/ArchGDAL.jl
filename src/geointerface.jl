@@ -62,6 +62,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     # Feature
+    GeoInterface.trait(feat::AbstractFeature) = GeoInterface.FeatureTrait()
     GeoInterface.isfeature(feat::AbstractFeature) = true
     function GeoInterface.crs(layer::AbstractFeatureLayer)
         sr = getspatialref(layer)
@@ -78,7 +79,6 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     GeoInterface.geometry(feat::AbstractFeature) = getgeom(feat, 0)
 
     GeoInterface.isgeometry(::Type{<:AbstractGeometry}) = true
-    @enable_geo_plots AbstractGeometry
     GeoInterface.is3d(::GeometryTraits, geom::AbstractGeometry) = is3d(geom)
     function GeoInterface.ismeasured(::GeometryTraits, geom::AbstractGeometry)
         return ismeasured(geom)

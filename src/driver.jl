@@ -150,7 +150,7 @@ end
     extensions()
 
 Returns a `Dict{String,String}` of all of the file extensions that can be read
-by GDAL,  with their respective drivers' `shortname`s.
+by GDAL, with their respective drivers' `shortname`s.
 """
 function extensions()::Dict{String,String}
     extdict = Dict{String,String}()
@@ -163,6 +163,11 @@ function extensions()::Dict{String,String}
             end
         end
     end
+    # Multiple drivers support this, manually ensure these are the defaults (#475).
+    extdict[".tiff"] = "GTiff"
+    extdict[".tif"] = "GTiff"
+    extdict[".json"] = "GeoJSON"
+    extdict[".geojson"] = "GeoJSON"
     return extdict
 end
 
