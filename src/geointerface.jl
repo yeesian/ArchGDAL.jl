@@ -415,7 +415,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     # coordtype implementations - guarded against old GeoInterface versions
-    if :coordtype in names(GeoInterface; all = true)
+    if isdefined(GeoInterface, :coordtype)
         # ArchGDAL always uses Float64 for coordinates
         function GeoInterface.coordtype(::GeoInterface.AbstractGeometryTrait, ::AbstractGeometry)
             return Float64
