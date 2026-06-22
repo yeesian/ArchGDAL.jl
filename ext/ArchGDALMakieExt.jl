@@ -1,7 +1,10 @@
 module ArchGDALMakieExt
-using GeoInterfaceMakie: GeoInterfaceMakie
-using ArchGDAL: ArchGDAL
 
-GeoInterfaceMakie.@enable ArchGDAL.IGeometry
-GeoInterfaceMakie.@enable ArchGDAL.Geometry
+import ArchGDAL
+import GeoInterface
+import Makie
+
+GeoInterface.@enable_makie Makie ArchGDAL.IGeometry
+GeoInterface.@enable_makie Makie ArchGDAL.Geometry
+
 end
