@@ -22,16 +22,9 @@ jobs:
           - 'nightly'
         os:
           - ubuntu-latest
-          - macOS-latest
           - windows-latest
         arch:
           - x64
-        exclude:
-          # macOS-latest runners are Apple Silicon (arm64); requesting x64 runs
-          # Julia and the GDAL_jll binaries under Rosetta emulation. Test the
-          # architecture macOS users actually run on instead.
-          - os: macOS-latest
-            arch: x64
         include:
           - os: macOS-latest
             arch: aarch64
