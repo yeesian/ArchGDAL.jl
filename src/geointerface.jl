@@ -413,4 +413,21 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     function GeoInterface.geomtrait(geom::AbstractGeometry{wkbTriangle})
         return GeoInterface.TriangleTrait()
     end
+
+    # coordtype implementations - guarded against old GeoInterface versions
+    if isdefined(GeoInterface, :coordtype)
+        # ArchGDAL always uses Float64 for coordinates
+        function GeoInterface.coordtype(::GeoInterface.AbstractGeometryTrait, ::AbstractGeometry)
+            return Float64
+        end
+
+        function GeoInterface.coordtype(::GeoInterface.FeatureTrait, ::AbstractFeature)
+            return Float64
+        end
+
+        # AbstractFeatureLayer acts like a FeatureCollection in ArchGDAL
+        function GeoInterface.coordtype(::GeoInterface.FeatureCollectionTrait, ::AbstractFeatureLayer)
+            return Float64
+        end
+    end
 end
