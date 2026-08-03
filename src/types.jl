@@ -145,15 +145,33 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     end
 end
 
+# `fidcolumn` records the name of the FID column of the layer the feature was
+# read from, mirroring GDAL's own convention for `OGR_L_GetFIDColumn`: it is
+# `Symbol("")` when the driver exposes no FID column, and for features that do
+# not originate from a layer at all (e.g. `createfeature(featuredefn)`), which
+# have no FID assigned yet. It is fixed for the lifetime of the feature, so it
+# is captured once at construction rather than re-queried from the layer.
 mutable struct Feature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
+    fidcolumn::Symbol
+
+    function Feature(
+        ptr::GDAL.OGRFeatureH = C_NULL,
+        fidcolumn::Symbol = Symbol(""),
+    )
+        return new(ptr, fidcolumn)
+    end
 end
 
 mutable struct IFeature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
+    fidcolumn::Symbol
 
-    function IFeature(ptr::GDAL.OGRFeatureH = C_NULL)
-        feature = new(ptr)
+    function IFeature(
+        ptr::GDAL.OGRFeatureH = C_NULL,
+        fidcolumn::Symbol = Symbol(""),
+    )
+        feature = new(ptr, fidcolumn)
         finalizer(destroy, feature)
         return feature
     end

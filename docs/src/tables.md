@@ -26,3 +26,37 @@ dataset1 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=
 
 DataFrames.DataFrame(ArchGDAL.getlayer(dataset1, 0))
 ```
+
+## Feature IDs
+
+Database-like formats (GeoPackage, PostGIS, SQLite, ...) give every feature a
+persistent primary key, the *FID*. GDAL models it separately from the ordinary
+fields, so it does not appear among the field definitions. Where a driver
+reports such a column, via
+[`ArchGDAL.fidcolumnname`](@ref), it is included as the leading column of the
+table, under the name the driver gives it:
+
+```julia
+julia> dataset2 = ArchGDAL.read("data/rivers.gpkg")
+
+julia> ArchGDAL.fidcolumnname(ArchGDAL.getlayer(dataset2, 0))
+"fid"
+
+julia> DataFrames.DataFrame(ArchGDAL.getlayer(dataset2, 0))
+357×5 DataFrame
+ Row │ fid    geom                     property_0  property_1      property_2
+     │ Int64  IGeometry                String      String          String
+─────┼──────────────────────────────────────────────────────────────────────────
+   1 │     1  Geometry: wkbLineString  6           Sutlej          null
+   2 │     2  Geometry: wkbLineString  4           Svernaya Dvina  null
+  ⋮  │   ⋮               ⋮                 ⋮             ⋮              ⋮
+```
+
+This matches what QGIS and R's `sf` show for the same data, and the values agree
+with [`ArchGDAL.getfid`](@ref) on the individual features.
+
+Formats that carry no such column — ESRI Shapefile, FlatGeobuf and the like —
+report `""` and are unaffected, gaining no extra column. A driver that reports a
+FID column which is *also* an ordinary field (the GeoJSON driver does this for
+`id`, where both hold the same value) keeps just the field, so the column is
+never duplicated.
