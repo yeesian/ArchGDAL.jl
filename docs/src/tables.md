@@ -29,34 +29,29 @@ DataFrames.DataFrame(ArchGDAL.getlayer(dataset1, 0))
 
 ## Feature IDs
 
-Database-like formats (GeoPackage, PostGIS, SQLite, ...) give every feature a
-persistent primary key, the *FID*. GDAL models it separately from the ordinary
-fields, so it does not appear among the field definitions. Where a driver
-reports such a column, via
-[`ArchGDAL.fidcolumnname`](@ref), it is included as the leading column of the
-table, under the name the driver gives it:
+Database-like formats (GeoPackage, PostGIS, SQLite, ...) give each feature a
+persistent primary key, the *FID*, which GDAL keeps out of the field
+definitions. Where a driver reports one through
+[`ArchGDAL.fidcolumnname`](@ref), it leads the table under that name, and its
+values match [`ArchGDAL.getfid`](@ref):
 
 ```julia
-julia> dataset2 = ArchGDAL.read("data/rivers.gpkg")
+julia> layer = ArchGDAL.getlayer(ArchGDAL.read("rivers.gpkg"), 0);
 
-julia> ArchGDAL.fidcolumnname(ArchGDAL.getlayer(dataset2, 0))
-"fid"
+julia> ArchGDAL.fidcolumnname(layer)
+"id"
 
-julia> DataFrames.DataFrame(ArchGDAL.getlayer(dataset2, 0))
+julia> DataFrames.DataFrame(layer)
 357×5 DataFrame
- Row │ fid    geom                     property_0  property_1      property_2
+ Row │ id     geom                     property_0  property_1      property_2
      │ Int64  IGeometry                String      String          String
-─────┼──────────────────────────────────────────────────────────────────────────
+─────┼────────────────────────────────────────────────────────────────────────
    1 │     1  Geometry: wkbLineString  6           Sutlej          null
    2 │     2  Geometry: wkbLineString  4           Svernaya Dvina  null
   ⋮  │   ⋮               ⋮                 ⋮             ⋮              ⋮
 ```
 
-This matches what QGIS and R's `sf` show for the same data, and the values agree
-with [`ArchGDAL.getfid`](@ref) on the individual features.
-
-Formats that carry no such column — ESRI Shapefile, FlatGeobuf and the like —
-report `""` and are unaffected, gaining no extra column. A driver that reports a
-FID column which is *also* an ordinary field (the GeoJSON driver does this for
-`id`, where both hold the same value) keeps just the field, so the column is
-never duplicated.
+Formats without one, such as ESRI Shapefile and FlatGeobuf, report `""` and
+gain no column. Where a driver reports a FID column that is also an ordinary
+field — GeoJSON does this for `id`, both holding the same value — the field
+wins, so the column is never duplicated.

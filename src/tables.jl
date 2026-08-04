@@ -4,23 +4,14 @@ const FIDTYPE = Int64
 """
     _fidcolumn(layer::AbstractFeatureLayer)
 
-The name to expose the FID of `layer`'s features under, or `Symbol("")` if it
-should not be exposed as a column at all.
+The name to expose `layer`'s FID under, or `Symbol("")` for none.
 
-Database-like drivers (GPKG, PostGIS, SQLite, ...) back the FID with a real
-primary key column that OGR models separately from the fields, leaving it
-absent from the field definitions and so invisible to the rest of the tables
-interface. Those get a leading column named after the driver's FID column,
-matching what QGIS and R's `sf` show for the same data. Drivers without such a
-column (ESRI Shapefile, FlatGeobuf, ...) report `""` and gain no extra column.
+Database-like drivers (GPKG, PostGIS, SQLite, ...) back the FID with a primary
+key that OGR keeps out of the field definitions; others report `""`.
 
-Some drivers report a FID column that *is* also a field: the GeoJSON driver
-promotes an `id` field to the FID while still listing `id` among the fields,
-with both carrying the same value. The field wins there, so that the column is
-not duplicated and the values stay reachable under the name they already had.
-
-This resolves to a fixed answer for the whole layer, so it is queried once when
-features start being read rather than per feature or per column.
+Also `Symbol("")` when a field already claims the name: the GeoJSON driver
+promotes an `id` field to the FID yet still lists `id` as a field, both holding
+the same value. The field wins, so the column is not duplicated.
 """
 function _fidcolumn(layer::AbstractFeatureLayer)::Symbol
     fidcolumn = Symbol(fidcolumnname(layer))
@@ -86,8 +77,8 @@ function Tables.getcolumn(row::AbstractFeature, i::Int)
 end
 
 function Tables.getcolumn(row::AbstractFeature, name::Symbol)
-    # `Symbol("")` doubles as "no FID column" and as the name of an unnamed
-    # geometry column, so an empty name must never resolve to the FID.
+    # `Symbol("")` is both "no FID column" and the name of an unnamed geometry
+    # column, so it must never resolve to the FID.
     if name !== Symbol("") && name === row.fidcolumn
         return getfid(row)
     end

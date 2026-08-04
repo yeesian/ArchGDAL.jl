@@ -676,9 +676,8 @@ using Tables
             end
 
             @testset "Conversion to table for GPKG driver" begin
-                # GPKG is a database-like driver, so it exposes a FID column
-                # ("fid") ahead of the geometry and field columns. Note this is
-                # distinct from the regular integer field also named `id`.
+                # The leading `fid` is the FID column, distinct from the
+                # ordinary integer field named `id`.
                 GPKG_test_reference_geotable = (
                     names = (:fid, :geom, :id, :name),
                     types = (
@@ -876,21 +875,16 @@ using Tables
                     @test AG.fidcolumnname(layer) == "fid"
 
                     rows = collect(Tables.rows(layer))
-                    # The FID leads the columns, as QGIS and R's `sf` show it
                     @test Tables.columnnames(rows[1]) == (:fid, :geom, :name)
-
-                    # ...by name
                     @test Tables.getcolumn(rows[1], :fid) == 1
                     @test Tables.getcolumn(rows[2], :fid) == 2
-                    # ...and by index, which the other columns shift past
+                    @test [Tables.getcolumn(r, :fid) for r in rows] == [AG.getfid(r) for r in rows]
+
+                    # The FID takes index 1, shifting the other columns past it
                     @test Tables.getcolumn(rows[1], 1) == 1
-                    @test Tables.getcolumn(rows[2], 1) == 2
                     @test Tables.getcolumn(rows[1], 2) == "a"
                     @test AG.toWKT(Tables.getcolumn(rows[1], 3)) ==
                           "POINT (1 1)"
-
-                    # The FID agrees with the feature-level accessor
-                    @test [Tables.getcolumn(r, :fid) for r in rows] == [AG.getfid(r) for r in rows]
 
                     table = Tables.columntable(layer)
                     @test Tables.columnnames(table) == (:fid, :geom, :name)
@@ -900,8 +894,6 @@ using Tables
             end
 
             @testset "The FID column is named after the driver's" begin
-                # GPKG lets the FID column be renamed; the exposed column
-                # follows it rather than being hardcoded to `fid`.
                 gpkg_with(dir, options = ["FID=my_id"]) do layer
                     @test AG.fidcolumnname(layer) == "my_id"
                     rows = collect(Tables.rows(layer))
@@ -912,40 +904,31 @@ using Tables
             end
 
             @testset "Empty layers carry the FID in their schema" begin
-                gpkg_with(dir) do layer
-                    copied = AG.copy(layer)
-                    for i in 1:AG.nfeature(copied)
-                        AG.deletefeature!(copied, i)
+                # Only a featureless layer reports a schema; otherwise it is
+                # built from the rows.
+                empty_gpkg = joinpath(dir, "empty.gpkg")
+                AG.create(empty_gpkg, driver = AG.getdriver("GPKG")) do ds
+                    AG.createlayer(
+                        name = "pts",
+                        dataset = ds,
+                        geom = AG.wkbPoint,
+                    ) do layer
+                        AG.addfielddefn!(layer, "name", AG.OFTString)
                     end
-                    # The in-memory copy is no longer a GPKG, so drive the
-                    # layer-level schema through the original instead.
-                    @test AG.nfeature(copied) == 0
-
-                    empty_gpkg = joinpath(dir, "empty.gpkg")
-                    AG.create(empty_gpkg, driver = AG.getdriver("GPKG")) do ds
-                        AG.createlayer(
-                            name = "pts",
-                            dataset = ds,
-                            geom = AG.wkbPoint,
-                        ) do lyr
-                            AG.addfielddefn!(lyr, "name", AG.OFTString)
-                        end
-                    end
-                    AG.read(empty_gpkg) do ds
-                        lyr = AG.getlayer(ds, 0)
-                        @test AG.nfeature(lyr) == 0
-                        @test Tables.schema(lyr) == Tables.Schema(
-                            (:fid, :geom, :name),
-                            (Int64, AG.IGeometry{AG.wkbPoint}, String),
-                        )
-                    end
+                end
+                AG.read(empty_gpkg) do ds
+                    layer = AG.getlayer(ds, 0)
+                    @test AG.nfeature(layer) == 0
+                    @test Tables.schema(layer) == Tables.Schema(
+                        (:fid, :geom, :name),
+                        (Int64, AG.IGeometry{AG.wkbPoint}, String),
+                    )
                 end
             end
 
             @testset "A field of the same name hides the FID column" begin
                 # The GeoJSON driver promotes an `id` field to the FID while
-                # still listing `id` among the fields, both carrying the same
-                # value. Exposing the FID too would produce a duplicate column.
+                # still listing `id` as a field, both holding the same value.
                 path = joinpath(dir, "id_field.geojson")
                 isfile(path) && rm(path)
                 AG.create(path, driver = AG.getdriver("GeoJSON")) do ds
@@ -967,15 +950,15 @@ using Tables
                     layer = AG.getlayer(ds, 0)
                     @test AG.fidcolumnname(layer) == "id"
                     row = first(Tables.rows(layer))
-                    # The FID and the field really do collide...
                     @test AG.getfid(row) == 42
                     @test AG.getfield(row, :id) == 42
-                    # ...so `id` appears exactly once, as the field
+
+                    # `id` appears once, as the field; duplicating it would
+                    # make `columntable` throw
                     names = Tables.columnnames(row)
                     @test names == (Symbol(""), :id, :name)
                     @test count(==(:id), names) == 1
                     @test Tables.getcolumn(row, :id) == 42
-                    # and building a column table does not throw on duplicates
                     @test keys(Tables.columntable(layer)) ==
                           (Symbol(""), :id, :name)
                 end
@@ -1002,8 +985,8 @@ using Tables
                         layer = AG.getlayer(ds, 0)
                         @test AG.fidcolumnname(layer) == ""
                         row = first(Tables.rows(layer))
-                        # No FID column, and the unnamed geometry column keeps
-                        # its `Symbol("")` name rather than resolving to a FID
+                        # The unnamed geometry column keeps its `Symbol("")`
+                        # name rather than resolving to the FID
                         @test Tables.columnnames(row) == (Symbol(""), :name)
                         @test Tables.getcolumn(row, 1) == "a"
                         @test ismissing(Tables.getcolumn(row, :fid))
@@ -1024,8 +1007,7 @@ using Tables
                         AG.addfielddefn!(layer, "name", AG.OFTString)
                         AG.addfeature(layer) do feature
                             # Being written rather than read, this feature has
-                            # no FID assigned yet (`OGRNullFID`), so it reports
-                            # no FID column instead of a placeholder one.
+                            # no FID yet (`OGRNullFID`)
                             @test AG.getfid(feature) == -1
                             @test :fid ∉ Tables.columnnames(feature)
                             @test ismissing(Tables.getcolumn(feature, :fid))
@@ -1035,8 +1017,7 @@ using Tables
                     end
                 end
 
-                # Read back out of the layer, the FID is there, and cloning
-                # preserves it
+                # Read back out of the layer it is there, and cloning keeps it
                 AG.read(path) do ds
                     layer = AG.getlayer(ds, 0)
                     feature = AG.unsafe_nextfeature(layer)
@@ -1060,8 +1041,6 @@ using Tables
 
             @testset "Iteration state carries the FID column name" begin
                 gpkg_with(dir) do layer
-                    # The name is looked up once per iteration rather than per
-                    # feature, so the state is no longer a bare counter.
                     next = iterate(layer)
                     @test next !== nothing
                     feature, state = next
@@ -1069,7 +1048,7 @@ using Tables
                     @test state == (1, :fid)
                     @test Tables.getcolumn(feature, :fid) == 1
 
-                    # Driving iteration with an integer state still works
+                    # An integer state still drives iteration
                     next2 = iterate(layer, 1)
                     @test next2 !== nothing
                     @test Tables.getcolumn(next2[1], :fid) == 2

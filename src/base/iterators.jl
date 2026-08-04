@@ -1,7 +1,5 @@
-# The FID column name is a property of the layer, not of the individual
-# feature, so it is looked up once when iteration starts and carried along in
-# the iteration state. Re-querying it per feature would roughly double the cost
-# of iterating a layer.
+# The FID column name rides along in the iteration state; looking it up per
+# feature instead roughly doubles the cost of iterating a layer.
 const FeatureIteratorState = Tuple{Int64,Symbol}
 
 function _nextfeature(
@@ -34,8 +32,7 @@ function Base.iterate(
     return _nextfeature(layer, state[1], state[2])
 end
 
-# Retained for callers that drive `iterate` by hand with an integer state, as
-# the iteration state used to be a bare counter.
+# The iteration state used to be a bare counter.
 function Base.iterate(
     layer::AbstractFeatureLayer,
     state::Integer,

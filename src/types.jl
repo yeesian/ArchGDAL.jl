@@ -145,12 +145,8 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     end
 end
 
-# `fidcolumn` records the name of the FID column of the layer the feature was
-# read from, mirroring GDAL's own convention for `OGR_L_GetFIDColumn`: it is
-# `Symbol("")` when the driver exposes no FID column, and for features that do
-# not originate from a layer at all (e.g. `createfeature(featuredefn)`), which
-# have no FID assigned yet. It is fixed for the lifetime of the feature, so it
-# is captured once at construction rather than re-queried from the layer.
+# `fidcolumn` names the FID column of the layer the feature was read from, and
+# is `Symbol("")` for features not read from a layer, which have no FID yet.
 mutable struct Feature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
     fidcolumn::Symbol
