@@ -1,16 +1,45 @@
-function Base.iterate(
+# The FID column name rides along in the iteration state; looking it up per
+# feature instead roughly doubles the cost of iterating a layer.
+const FeatureIteratorState = Tuple{Int64,Symbol}
+
+function _nextfeature(
     layer::AbstractFeatureLayer,
-    state::Integer = 0,
-)::Union{Nothing,Tuple{IFeature,Int64}}
-    layer.ptr == C_NULL && return nothing
-    state == 0 && resetreading!(layer)
+    count::Int64,
+    fidcolumn::Symbol,
+)::Union{Nothing,Tuple{IFeature,FeatureIteratorState}}
     ptr = GDAL.ogr_l_getnextfeature(layer)
     return if ptr == C_NULL
         resetreading!(layer)
         nothing
     else
-        (IFeature(ptr), state + 1)
+        (IFeature(ptr, fidcolumn), (count + 1, fidcolumn))
     end
+end
+
+function Base.iterate(
+    layer::AbstractFeatureLayer,
+)::Union{Nothing,Tuple{IFeature,FeatureIteratorState}}
+    layer.ptr == C_NULL && return nothing
+    resetreading!(layer)
+    return _nextfeature(layer, 0, _fidcolumn(layer))
+end
+
+function Base.iterate(
+    layer::AbstractFeatureLayer,
+    state::FeatureIteratorState,
+)::Union{Nothing,Tuple{IFeature,FeatureIteratorState}}
+    layer.ptr == C_NULL && return nothing
+    return _nextfeature(layer, state[1], state[2])
+end
+
+# The iteration state used to be a bare counter.
+function Base.iterate(
+    layer::AbstractFeatureLayer,
+    state::Integer,
+)::Union{Nothing,Tuple{IFeature,FeatureIteratorState}}
+    layer.ptr == C_NULL && return nothing
+    state == 0 && resetreading!(layer)
+    return _nextfeature(layer, Int64(state), _fidcolumn(layer))
 end
 
 Base.eltype(layer::AbstractFeatureLayer)::DataType = IFeature

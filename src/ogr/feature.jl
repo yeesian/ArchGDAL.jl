@@ -7,7 +7,7 @@ The newly created feature is owned by the caller, and will have its own
 reference to the OGRFeatureDefn.
 """
 unsafe_clone(feature::AbstractFeature)::AbstractFeature =
-    Feature(GDAL.ogr_f_clone(feature))
+    Feature(GDAL.ogr_f_clone(feature), feature.fidcolumn)
 
 """
     destroy(feature::AbstractFeature)

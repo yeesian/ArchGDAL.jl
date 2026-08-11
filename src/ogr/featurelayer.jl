@@ -376,7 +376,7 @@ reading may or may not be valid after that operation and a call to
 `resetreading!()` might be needed.
 """
 function unsafe_nextfeature(layer::AbstractFeatureLayer)::Feature
-    return Feature(GDAL.ogr_l_getnextfeature(layer))
+    return Feature(GDAL.ogr_l_getnextfeature(layer), _fidcolumn(layer))
 end
 
 """
@@ -441,7 +441,7 @@ The returned feature is now owned by the caller, and should be freed with
 `destroy()`.
 """
 unsafe_getfeature(layer::AbstractFeatureLayer, i::Integer)::Feature =
-    Feature(GDAL.ogr_l_getfeature(layer, i))
+    Feature(GDAL.ogr_l_getfeature(layer, i), _fidcolumn(layer))
 
 """
     setfeature!(layer::AbstractFeatureLayer, feature::AbstractFeature)

@@ -1,3 +1,30 @@
+# The FID is a `GIntBig` on the GDAL side.
+const FIDTYPE = Int64
+
+"""
+    _fidcolumn(layer::AbstractFeatureLayer)
+
+The name to expose `layer`'s FID under, or `Symbol("")` for none.
+
+Database-like drivers (GPKG, PostGIS, SQLite, ...) back the FID with a primary
+key that OGR keeps out of the field definitions; others report `""`.
+
+Also `Symbol("")` when a field already claims the name: the GeoJSON driver
+promotes an `id` field to the FID yet still lists `id` as a field, both holding
+the same value. The field wins, so the column is not duplicated.
+"""
+function _fidcolumn(layer::AbstractFeatureLayer)::Symbol
+    fidcolumn = Symbol(fidcolumnname(layer))
+    fidcolumn === Symbol("") && return fidcolumn
+    featuredefn = layerdefn(layer)
+    for i in 0:(nfield(featuredefn)-1)
+        if Symbol(getname(getfielddefn(featuredefn, i))) === fidcolumn
+            return Symbol("")
+        end
+    end
+    return fidcolumn
+end
+
 function Tables.schema(
     layer::AbstractFeatureLayer,
 )::Union{Nothing,Tables.Schema}
@@ -11,6 +38,11 @@ function Tables.schema(
     names = (geom_names..., field_names...)
     types = Type[_datatype(getgeomdefn(ld, i - 1)) for i in 1:ngeom(ld)]
     append!(types, map(_datatype, fielddefns))
+    fidcolumn = _fidcolumn(layer)
+    if fidcolumn !== Symbol("")
+        names = (fidcolumn, names...)
+        pushfirst!(types, FIDTYPE)
+    end
     return Tables.Schema(names, types)
 end
 
@@ -30,6 +62,11 @@ function Tables.rows(layer::T)::T where {T<:AbstractFeatureLayer}
 end
 
 function Tables.getcolumn(row::AbstractFeature, i::Int)
+    # The FID leads the columns, so shift the remaining indices past it.
+    if row.fidcolumn !== Symbol("")
+        i == 1 && return getfid(row)
+        i -= 1
+    end
     if i > nfield(row)
         return getgeom(row, i - nfield(row) - 1)
     elseif i > 0
@@ -40,6 +77,11 @@ function Tables.getcolumn(row::AbstractFeature, i::Int)
 end
 
 function Tables.getcolumn(row::AbstractFeature, name::Symbol)
+    # `Symbol("")` is both "no FID column" and the name of an unnamed geometry
+    # column, so it must never resolve to the FID.
+    if name !== Symbol("") && name === row.fidcolumn
+        return getfid(row)
+    end
     field = getfield(row, name)
     if !ismissing(field)
         return field
@@ -51,11 +93,14 @@ function Tables.getcolumn(row::AbstractFeature, name::Symbol)
     return missing
 end
 
-function Tables.columnnames(
-    row::AbstractFeature,
-)::NTuple{Int64(nfield(row) + ngeom(row)),Symbol}
+function Tables.columnnames(row::AbstractFeature)::Tuple{Vararg{Symbol}}
     geom_names, field_names = schema_names(getfeaturedefn(row))
-    return (geom_names..., field_names...)
+    fidcolumn = row.fidcolumn
+    return if fidcolumn === Symbol("")
+        (geom_names..., field_names...)
+    else
+        (fidcolumn, geom_names..., field_names...)
+    end
 end
 
 function schema_names(featuredefn::IFeatureDefnView)

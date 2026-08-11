@@ -26,3 +26,32 @@ dataset1 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=
 
 DataFrames.DataFrame(ArchGDAL.getlayer(dataset1, 0))
 ```
+
+## Feature IDs
+
+Database-like formats (GeoPackage, PostGIS, SQLite, ...) give each feature a
+persistent primary key, the *FID*, which GDAL keeps out of the field
+definitions. Where a driver reports one through
+[`ArchGDAL.fidcolumnname`](@ref), it leads the table under that name, and its
+values match [`ArchGDAL.getfid`](@ref):
+
+```julia
+julia> layer = ArchGDAL.getlayer(ArchGDAL.read("rivers.gpkg"), 0);
+
+julia> ArchGDAL.fidcolumnname(layer)
+"id"
+
+julia> DataFrames.DataFrame(layer)
+357×5 DataFrame
+ Row │ id     geom                     property_0  property_1      property_2
+     │ Int64  IGeometry                String      String          String
+─────┼────────────────────────────────────────────────────────────────────────
+   1 │     1  Geometry: wkbLineString  6           Sutlej          null
+   2 │     2  Geometry: wkbLineString  4           Svernaya Dvina  null
+  ⋮  │   ⋮               ⋮                 ⋮             ⋮              ⋮
+```
+
+Formats without one, such as ESRI Shapefile and FlatGeobuf, report `""` and
+gain no column. Where a driver reports a FID column that is also an ordinary
+field — GeoJSON does this for `id`, both holding the same value — the field
+wins, so the column is never duplicated.

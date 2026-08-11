@@ -145,15 +145,29 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     end
 end
 
+# `fidcolumn` names the FID column of the layer the feature was read from, and
+# is `Symbol("")` for features not read from a layer, which have no FID yet.
 mutable struct Feature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
+    fidcolumn::Symbol
+
+    function Feature(
+        ptr::GDAL.OGRFeatureH = C_NULL,
+        fidcolumn::Symbol = Symbol(""),
+    )
+        return new(ptr, fidcolumn)
+    end
 end
 
 mutable struct IFeature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
+    fidcolumn::Symbol
 
-    function IFeature(ptr::GDAL.OGRFeatureH = C_NULL)
-        feature = new(ptr)
+    function IFeature(
+        ptr::GDAL.OGRFeatureH = C_NULL,
+        fidcolumn::Symbol = Symbol(""),
+    )
+        feature = new(ptr, fidcolumn)
         finalizer(destroy, feature)
         return feature
     end
