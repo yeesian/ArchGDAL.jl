@@ -330,7 +330,7 @@ Return list of subdatasets (if any).
 function subdatasets(obj)::Vector{String}
     metadata_ = metadata(obj, domain="SUBDATASETS")
     subdatasets_ = Vector{String}()
-    for (key, val) in [split(e, "=") for e in metadata_]
+    for (key, val) in [split(e, "="; limit = 2) for e in metadata_]
         if endswith(lowercase(key), "name")
             push!(subdatasets_, val)
         end
