@@ -21,7 +21,8 @@ us to be able to index into it like we would an array.
 Constructing a RasterDataset will error if the raster bands do not have all the
 same size and a common element data type.
 """
-struct RasterDataset{T,DS<:AbstractDataset,C<:DiskArrays.GridChunks} <: AbstractDiskArray{T,3}
+struct RasterDataset{T,DS<:AbstractDataset,C<:DiskArrays.GridChunks} <:
+       AbstractDiskArray{T,3}
     ds::DS
     size::Tuple{Int,Int,Int}
     chunks::C
@@ -144,8 +145,7 @@ indexing.
 readraster(s::String; kwargs...)::RasterDataset =
     RasterDataset(read(s; kwargs...))
 
-DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks =
-    ds.chunks
+DiskArrays.eachchunk(ds::RasterDataset)::DiskArrays.GridChunks = ds.chunks
 DiskArrays.haschunks(::RasterDataset)::DiskArrays.Chunked = DiskArrays.Chunked()
 DiskArrays.haschunks(::AbstractRasterBand)::DiskArrays.Chunked =
     DiskArrays.Chunked()
