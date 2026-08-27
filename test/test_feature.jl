@@ -295,6 +295,11 @@ end
                 AG.setfield!(feature, 18, MyEnumValue)
                 AG.setfield!(feature, 19, N0f16(1.0))
                 AG.setfield!(feature, 20, CustomInt(1))
+                @test_throws InexactError AG.setfield!(
+                    feature,
+                    0,
+                    typemax(UInt64),
+                )
                 for i in 1:AG.nfield(feature)
                     @test !AG.isfieldnull(feature, i - 1)
                     @test AG.isfieldsetandnotnull(feature, i - 1)

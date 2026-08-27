@@ -82,15 +82,16 @@ using Tables
 
         @testset "Canonical field round-trip" begin
             table = (
-                uint64 = UInt64[1],
+                uint64 = UInt64[typemin(UInt64)],
                 date = [Dates.Date(2026, 8, 27)],
                 time = [Dates.Time(18, 31)],
-                int8list = [Int8[1, 2]],
-                int16list = [Int16[1, 2]],
-                uint16list = [UInt16[1, 2]],
-                uint32list = [UInt32[1, 2]],
-                float16list = [Float16[1, 2]],
-                float32list = [Float32[1, 2]],
+                datetime = [Dates.DateTime(2026, 8, 27, 18, 31)],
+                int8list = [Int8[typemin(Int8), typemax(Int8)]],
+                int16list = [Int16[typemin(Int16), typemax(Int16)]],
+                uint16list = [UInt16[typemin(UInt16), typemax(UInt16)]],
+                uint32list = [UInt32[typemin(UInt32), typemax(UInt32)]],
+                float16list = [Float16[typemin(Float16), typemax(Float16)]],
+                float32list = [Float32[typemin(Float32), typemax(Float32)]],
             )
             schema = Tables.schema(table)
 
@@ -116,15 +117,16 @@ using Tables
                 end
 
                 result = Tables.columntable(layer)
-                @test only(result.uint64) === Int64(1)
+                @test only(result.uint64) === Int64(0)
                 @test only(result.date) === Dates.Date(2026, 8, 27)
                 @test only(result.time) === Dates.Time(18, 31)
-                @test only(result.int8list) == Int32[1, 2]
-                @test only(result.int16list) == Int32[1, 2]
-                @test only(result.uint16list) == Int32[1, 2]
-                @test only(result.uint32list) == Int64[1, 2]
-                @test only(result.float16list) == Float64[1, 2]
-                @test only(result.float32list) == Float64[1, 2]
+                @test only(result.datetime) === Dates.DateTime(2026, 8, 27, 18, 31)
+                @test only(result.int8list) == Int32[-128, 127]
+                @test only(result.int16list) == Int32[-32768, 32767]
+                @test only(result.uint16list) == Int32[0, 65535]
+                @test only(result.uint32list) == Int64[0, 4294967295]
+                @test only(result.float16list) == Float64[-Inf, Inf]
+                @test only(result.float32list) == Float64[-Inf, Inf]
             end
         end
 
