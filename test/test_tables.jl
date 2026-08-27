@@ -80,6 +80,54 @@ using Tables
             @test collect(field_names) == [:id, :zoom, :location]
         end
 
+        @testset "Canonical field round-trip" begin
+            table = (
+                uint64 = UInt64[1],
+                date = [Dates.Date(2026, 8, 27)],
+                time = [Dates.Time(18, 31)],
+                int8list = [Int8[1, 2]],
+                int16list = [Int16[1, 2]],
+                uint16list = [UInt16[1, 2]],
+                uint32list = [UInt32[1, 2]],
+                float16list = [Float16[1, 2]],
+                float32list = [Float32[1, 2]],
+            )
+            schema = Tables.schema(table)
+
+            AG.create(AG.getdriver("MEMORY")) do dataset
+                layer = AG.createlayer(dataset = dataset, geom = AG.wkbNone)
+                for (name, type) in zip(schema.names, schema.types)
+                    AG.addfielddefn!(
+                        layer,
+                        string(name),
+                        convert(AG.OGRFieldType, type),
+                    )
+                end
+                for row in Tables.rows(table)
+                    AG.addfeature(layer) do feature
+                        for (i, name) in enumerate(schema.names)
+                            AG.setfield!(
+                                feature,
+                                i - 1,
+                                Tables.getcolumn(row, name),
+                            )
+                        end
+                    end
+                end
+
+                result = Tables.columntable(layer)
+                @test only(result.uint64) === Int64(1)
+                @test only(result.date) === Dates.Date(2026, 8, 27)
+                @test only(result.time) === Dates.Time(18, 31)
+                @test only(result.int8list) == Int32[1, 2]
+                @test only(result.int16list) == Int32[1, 2]
+                @test only(result.uint16list) == Int32[1, 2]
+                @test only(result.uint32list) == Int64[1, 2]
+                @test only(result.float16list) == Float64[1, 2]
+                @test only(result.float32list) == Float64[1, 2]
+            end
+        end
+
         @testset "Conversion to table for drivers: GeoJSON, ESRI Shapefile" begin
             TEST_DS_DRIVERS_FILE_EXTENSIONS = Dict(
                 "ESRI Shapefile" => "",

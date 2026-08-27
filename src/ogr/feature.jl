@@ -433,9 +433,12 @@ OFTDate, OFTTime and OFTDateTime fields.
 * `iField`: the field to fetch, from 0 to GetFieldCount()-1.
 
 ### Returns
-`true` on success or `false` on failure.
+The field value as a `Date`, `Time`, or `DateTime`.
 """
-function asdatetime(feature::AbstractFeature, i::Integer)::DateTime
+function asdatetime(
+    feature::AbstractFeature,
+    i::Integer,
+)::Union{Date,Time,DateTime}
     pyr = Ref{Cint}()
     pmth = Ref{Cint}()
     pday = Ref{Cint}()
@@ -457,7 +460,14 @@ function asdatetime(feature::AbstractFeature, i::Integer)::DateTime
         ),
     )
     (result == false) && error("Failed to fetch datetime at index $i")
-    return DateTime(pyr[], pmth[], pday[], phr[], pmin[], psec[])
+    fieldtype = gettype(getfielddefn(feature, i))
+    if fieldtype == OFTDate
+        return Date(pyr[], pmth[], pday[])
+    elseif fieldtype == OFTTime
+        return Time(phr[], pmin[], psec[])
+    else
+        return DateTime(pyr[], pmth[], pday[], phr[], pmin[], psec[])
+    end
 end
 
 # """
@@ -564,14 +574,14 @@ end
 
 """
     setfield!(feature::AbstractFeature, i::Integer, value)
-    setfield!(feature::AbstractFeature, i::Integer, value::DateTime, tzflag::Int = 0)
+    setfield!(feature::AbstractFeature, i::Integer, value::Union{Date,Time,DateTime}, tzflag::Integer = 0)
 
 Set a feature's `i`-th field to `value`.
 
-The following types for `value` are accepted: `Int32`, `Int64`, `Float64`,
-`AbstractString`, or a `Vector` with those in it, as well as `Vector{UInt8}`.
-For `DateTime` values, an additional keyword argument `tzflag` is accepted
-(0=unknown, 1=localtime, 100=GMT, see data model for details).
+The following types for `value` are accepted: `Integer`, `Real`,
+`AbstractString`, `Date`, `Time`, `DateTime`, or supported `Vector` types.
+For date and time values, an additional `tzflag` argument is accepted
+(0=unknown, 1=localtime, 100=GMT; see the data model for details).
 
 OFTInteger, OFTInteger64 and OFTReal fields will be set directly. OFTString
 fields will be assigned a string representation of the value, but not
@@ -679,6 +689,14 @@ end
 function setfield!(
     feature::AbstractFeature,
     i::Integer,
+    value::Vector{T},
+)::AbstractFeature where {T<:Union{Int8,Int16,UInt16}}
+    return setfield!(feature, i, Int32.(value))
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
     value::Vector{Int64},
 )::AbstractFeature
     GDAL.ogr_f_setfieldinteger64list(feature, i, length(value), value)
@@ -688,10 +706,26 @@ end
 function setfield!(
     feature::AbstractFeature,
     i::Integer,
+    value::Vector{UInt32},
+)::AbstractFeature
+    return setfield!(feature, i, Int64.(value))
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
     value::Vector{Float64},
 )::AbstractFeature
     GDAL.ogr_f_setfielddoublelist(feature, i, length(value), value)
     return feature
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    value::Vector{T},
+)::AbstractFeature where {T<:Union{Float16,Float32}}
+    return setfield!(feature, i, Float64.(value))
 end
 
 function setfield!(
@@ -727,24 +761,86 @@ function setfield!(
     return feature
 end
 
-function setfield!(
+function _setfielddatetime!(
     feature::AbstractFeature,
     i::Integer,
-    dt::DateTime,
-    tzflag::Int = 0,
+    year::Integer,
+    month::Integer,
+    day::Integer,
+    hour::Integer,
+    minute::Integer,
+    second::Integer,
+    tzflag::Integer,
 )::AbstractFeature
     GDAL.ogr_f_setfielddatetime(
         feature,
         i,
-        Dates.year(dt),
-        Dates.month(dt),
-        Dates.day(dt),
-        Dates.hour(dt),
-        Dates.minute(dt),
-        Dates.second(dt),
+        year,
+        month,
+        day,
+        hour,
+        minute,
+        second,
         tzflag,
     )
     return feature
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    date::Date,
+    tzflag::Integer = 0,
+)::AbstractFeature
+    return _setfielddatetime!(
+        feature,
+        i,
+        year(date),
+        month(date),
+        day(date),
+        0,
+        0,
+        0,
+        tzflag,
+    )
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    time::Time,
+    tzflag::Integer = 0,
+)::AbstractFeature
+    return _setfielddatetime!(
+        feature,
+        i,
+        0,
+        0,
+        0,
+        hour(time),
+        minute(time),
+        second(time),
+        tzflag,
+    )
+end
+
+function setfield!(
+    feature::AbstractFeature,
+    i::Integer,
+    datetime::DateTime,
+    tzflag::Integer = 0,
+)::AbstractFeature
+    return _setfielddatetime!(
+        feature,
+        i,
+        year(datetime),
+        month(datetime),
+        day(datetime),
+        hour(datetime),
+        minute(datetime),
+        second(datetime),
+        tzflag,
+    )
 end
 
 """
