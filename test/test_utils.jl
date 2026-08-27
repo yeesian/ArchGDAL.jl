@@ -16,6 +16,34 @@ end
         @test AG.metadataitem(driver, "DMD_EXTENSIONS") == "tif tiff"
     end
 
+    @testset "subdatasets" begin
+        AG.create(AG.getdriver("MEM"), width = 1, height = 1) do dataset
+            @test isempty(AG.subdatasets(dataset))
+
+            GDAL.gdalsetmetadataitem(
+                dataset,
+                "SUBDATASET_1_NAME",
+                "subdataset-1?token=a=b",
+                "SUBDATASETS",
+            )
+            GDAL.gdalsetmetadataitem(
+                dataset,
+                "SUBDATASET_1_DESC",
+                "first subdataset",
+                "SUBDATASETS",
+            )
+            GDAL.gdalsetmetadataitem(
+                dataset,
+                "SUBDATASET_2_NAME",
+                "subdataset-2",
+                "SUBDATASETS",
+            )
+
+            @test AG.subdatasets(dataset) ==
+                  ["subdataset-1?token=a=b", "subdataset-2"]
+        end
+    end
+
     @testset "OGR Errors" begin
         @test isnothing(AG.@ogrerr GDAL.OGRERR_NONE "not an error")
         eval_ogrerr(GDAL.OGRERR_NOT_ENOUGH_DATA, "Not enough data.", "foo")

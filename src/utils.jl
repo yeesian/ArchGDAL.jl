@@ -323,6 +323,22 @@ function metadataitem(
 end
 
 """
+    subdatasets(obj)
+
+Return list of subdatasets filenames (if any).
+"""
+function subdatasets(obj)::Vector{String}
+    metadata_ = metadata(obj, domain="SUBDATASETS")
+    subdatasets_ = Vector{String}()
+    for (key, val) in [split(e, "="; limit = 2) for e in metadata_]
+        if endswith(lowercase(key), "_name")
+            push!(subdatasets_, val)
+        end
+    end
+    return subdatasets_
+end
+
+"""
     setconfigoption(option::AbstractString, value)
 
 Set a configuration option for GDAL/OGR use.
