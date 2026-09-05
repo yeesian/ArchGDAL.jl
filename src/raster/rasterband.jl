@@ -296,6 +296,62 @@ function copywholeraster!(
 end
 
 """
+    sievefilter!(source::AbstractRasterBand, destination::AbstractRasterBand,
+        size_threshold::Integer; mask, connectedness, progressfunc)
+    sievefilter!(band::AbstractRasterBand, size_threshold::Integer; kwargs...)
+
+Remove raster polygons smaller than `size_threshold` pixels by replacing them
+with the value of their largest neighbouring polygon.
+
+The source and destination bands must have the same dimensions. Passing a
+`mask` excludes zero-valued pixels from polygons; those pixels retain their
+source values. The two-argument form updates `band` in place.
+
+### Parameters
+* `source`: source raster band.
+* `destination`: destination raster band.
+* `size_threshold`: polygons smaller than this number of pixels are removed.
+
+### Keyword Arguments
+* `mask`: optional mask band, or `nothing` to process every pixel.
+* `connectedness`: `4` (the default) or `8` for polygon adjacency.
+* `progressfunc`: a function `(::Float64, ::String)::Bool` used to report
+  progress.
+"""
+function sievefilter!(
+    source::AbstractRasterBand,
+    destination::T,
+    size_threshold::Integer;
+    mask::Union{AbstractRasterBand,Nothing} = nothing,
+    connectedness::Integer = 4,
+    progressfunc::Function = _dummyprogress,
+)::T where {T<:AbstractRasterBand}
+    connectedness in (4, 8) ||
+        throw(ArgumentError("connectedness must be either 4 or 8"))
+
+    result = GDAL.gdalsievefilter(
+        source,
+        isnothing(mask) ? C_NULL : mask,
+        destination,
+        size_threshold,
+        connectedness,
+        C_NULL,
+        @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
+        progressfunc,
+    )
+    @cplerr result "Failed to sieve raster band"
+    return destination
+end
+
+function sievefilter!(
+    band::T,
+    size_threshold::Integer;
+    kwargs...,
+)::T where {T<:AbstractRasterBand}
+    return sievefilter!(band, band, size_threshold; kwargs...)
+end
+
+"""
     noverview(band::AbstractRasterBand)
 
 Return the number of overview layers available, zero if none.
