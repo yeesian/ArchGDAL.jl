@@ -1284,16 +1284,30 @@ end
 """
     addpoint!(geom::AbstractGeometry, x, y)
     addpoint!(geom::AbstractGeometry, x, y, z)
+    addpoint!(geom::AbstractGeometry, x, y, z, m)
 
-Add a point to a geometry (line string or point).
+Add a point to a geometry (line string or point). Use [`addpointm!`](@ref) for
+a point with an m coordinate but no z coordinate.
 
 ### Parameters
 * `geom`: the geometry to add a point to.
 * `x`: x coordinate of point to add.
 * `y`: y coordinate of point to add.
 * `z`: z coordinate of point to add.
+* `m`: m coordinate of point to add.
 """
 function addpoint! end
+
+function addpoint!(
+    geom::G,
+    x::Real,
+    y::Real,
+    z::Real,
+    m::Real,
+)::G where {G<:AbstractGeometry}
+    GDAL.ogr_g_addpointzm(geom, x, y, z, m)
+    return geom
+end
 
 function addpoint!(
     geom::G,
@@ -1307,6 +1321,28 @@ end
 
 function addpoint!(geom::G, x::Real, y::Real)::G where {G<:AbstractGeometry}
     GDAL.ogr_g_addpoint_2d(geom, x, y)
+    return geom
+end
+
+"""
+    addpointm!(geom::AbstractGeometry, x, y, m)
+
+Add a point with an m coordinate, but no z coordinate, to a geometry (line
+string or point). Use [`addpoint!`](@ref) for the other coordinate layouts.
+
+### Parameters
+* `geom`: the geometry to add a point to.
+* `x`: x coordinate of point to add.
+* `y`: y coordinate of point to add.
+* `m`: m coordinate of point to add.
+"""
+function addpointm!(
+    geom::G,
+    x::Real,
+    y::Real,
+    m::Real,
+)::G where {G<:AbstractGeometry}
+    GDAL.ogr_g_addpointm(geom, x, y, m)
     return geom
 end
 
@@ -1697,25 +1733,64 @@ Get flag to enable/disable returning non-linear geometries in the C API.
 """
 getnonlineargeomflag()::Bool = Bool(GDAL.ogrgetnonlineargeometriesenabledflag())
 
-# TODO This code doesn't create the wkbgeom variants (25D, M, ZM)
-for (geom, wkbgeom) in (
-    (:geomcollection, wkbGeometryCollection),
-    (:linestring, wkbLineString),
-    (:linearring, wkbLinearRing),
-    (:multilinestring, wkbMultiLineString),
-    (:multipoint, wkbMultiPoint),
-    (:multipolygon, wkbMultiPolygon),
-    (:multipolygon_noholes, wkbMultiPolygon),
-    (:point, wkbPoint),
-    (:polygon, wkbPolygon),
+# Constructor stem and the OGR type it builds. Each stem also gains a
+# constructor per dimensional variant, e.g. `createpolygon25D`; `linearring`
+# is defined separately below because OGR gives it no 25D/M/ZM forms.
+const GEOMETRY_CONSTRUCTORS = (
+    (:geomcollection, :wkbGeometryCollection),
+    (:linestring, :wkbLineString),
+    (:multilinestring, :wkbMultiLineString),
+    (:multipoint, :wkbMultiPoint),
+    (:multipolygon, :wkbMultiPolygon),
+    (:multipolygon_noholes, :wkbMultiPolygon),
+    (:point, :wkbPoint),
+    (:polygon, :wkbPolygon),
 )
+
+# The generated dimensional constructors. context.jl gives each of them the
+# scoped `do`-block form.
+const DIMENSIONED_CONSTRUCTORS = Symbol[]
+
+for (geom, wkbgeom) in GEOMETRY_CONSTRUCTORS
     @eval begin
-        $(Symbol("create$geom"))() = creategeom(Val{$wkbgeom}())
-        $(Symbol("unsafe_create$geom"))() = unsafe_creategeom(Val{$wkbgeom}())
-        $(Symbol("create$geom"))(val::Val) = creategeom(val)
-        $(Symbol("unsafe_create$geom"))(val::Val) = unsafe_creategeom(val)
+        $(Symbol(:create, geom))() = creategeom(Val{$wkbgeom}())
+        $(Symbol(:unsafe_create, geom))() = unsafe_creategeom(Val{$wkbgeom}())
+        $(Symbol(:create, geom))(val::Val) = creategeom(val)
+        $(Symbol(:unsafe_create, geom))(val::Val) = unsafe_creategeom(val)
+    end
+    for suffix in ("25D", "M", "ZM")
+        createfunc = Symbol(:create, geom, suffix)
+        wkbvariant = Symbol(wkbgeom, suffix)
+        @eval begin
+            $createfunc() = creategeom(Val{$wkbvariant}())
+            $(Symbol(:unsafe_, createfunc))() =
+                unsafe_creategeom(Val{$wkbvariant}())
+        end
+        push!(DIMENSIONED_CONSTRUCTORS, createfunc)
+    end
+    # `_createpolygon(is3d, ismeasured)` and friends pick the variant from
+    # flags only known at runtime, as the `GeoInterface.convert` fast paths do.
+    for f in (:create, :unsafe_create)
+        stem = Symbol(f, geom)
+        @eval function $(Symbol(:_, stem))(is3d::Bool, ismeasured::Bool)
+            return if is3d && ismeasured
+                $(Symbol(stem, :ZM))()
+            elseif is3d
+                $(Symbol(stem, "25D"))()
+            elseif ismeasured
+                $(Symbol(stem, :M))()
+            else
+                $stem()
+            end
+        end
     end
 end
+
+# `wkbLinearRing` has no dimensional variants, so this stem stands alone.
+createlinearring() = creategeom(Val{wkbLinearRing}())
+unsafe_createlinearring() = unsafe_creategeom(Val{wkbLinearRing}())
+createlinearring(val::Val) = creategeom(val)
+unsafe_createlinearring(val::Val) = unsafe_creategeom(val)
 
 let V = Vector{<:Real}
     for (args, typedargs, typesuffix) in (

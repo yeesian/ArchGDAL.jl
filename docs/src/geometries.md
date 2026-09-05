@@ -83,6 +83,8 @@ The following methods are commonly used for modifying or adding to a geometry.
 * [`ArchGDAL.setpoint!(geom, i, x, y, z)`](@ref)
 * [`ArchGDAL.addpoint!(geom, x, y)`](@ref)
 * [`ArchGDAL.addpoint!(geom, x, y, z)`](@ref)
+* [`ArchGDAL.addpoint!(geom, x, y, z, m)`](@ref)
+* [`ArchGDAL.addpointm!(geom, x, y, m)`](@ref)
 * [`ArchGDAL.addgeom!(geom1, geom2)`](@ref)
 * [`ArchGDAL.removegeom!(geom, i)`](@ref)
 * [`ArchGDAL.removeallgeoms!(geom)`](@ref)

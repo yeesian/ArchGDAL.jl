@@ -260,6 +260,7 @@ for gdalfunc in (
     :union,
     :update,
     :readraster,
+    DIMENSIONED_CONSTRUCTORS...,
 )
     eval(quote
         function $(gdalfunc)(f::Function, args...; kwargs...)
