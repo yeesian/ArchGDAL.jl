@@ -1284,16 +1284,30 @@ end
 """
     addpoint!(geom::AbstractGeometry, x, y)
     addpoint!(geom::AbstractGeometry, x, y, z)
+    addpoint!(geom::AbstractGeometry, x, y, z, m)
 
-Add a point to a geometry (line string or point).
+Add a point to a geometry (line string or point). Use [`addpointm!`](@ref) for
+a point with an m coordinate but no z coordinate.
 
 ### Parameters
 * `geom`: the geometry to add a point to.
 * `x`: x coordinate of point to add.
 * `y`: y coordinate of point to add.
 * `z`: z coordinate of point to add.
+* `m`: m coordinate of point to add.
 """
 function addpoint! end
+
+function addpoint!(
+    geom::G,
+    x::Real,
+    y::Real,
+    z::Real,
+    m::Real,
+)::G where {G<:AbstractGeometry}
+    GDAL.ogr_g_addpointzm(geom, x, y, z, m)
+    return geom
+end
 
 function addpoint!(
     geom::G,
@@ -1307,6 +1321,28 @@ end
 
 function addpoint!(geom::G, x::Real, y::Real)::G where {G<:AbstractGeometry}
     GDAL.ogr_g_addpoint_2d(geom, x, y)
+    return geom
+end
+
+"""
+    addpointm!(geom::AbstractGeometry, x, y, m)
+
+Add a point with an m coordinate, but no z coordinate, to a geometry (line
+string or point). Use [`addpoint!`](@ref) for the other coordinate layouts.
+
+### Parameters
+* `geom`: the geometry to add a point to.
+* `x`: x coordinate of point to add.
+* `y`: y coordinate of point to add.
+* `m`: m coordinate of point to add.
+"""
+function addpointm!(
+    geom::G,
+    x::Real,
+    y::Real,
+    m::Real,
+)::G where {G<:AbstractGeometry}
+    GDAL.ogr_g_addpointm(geom, x, y, m)
     return geom
 end
 
@@ -1731,6 +1767,22 @@ for (geom, wkbgeom) in GEOMETRY_CONSTRUCTORS
                 unsafe_creategeom(Val{$wkbvariant}())
         end
         push!(DIMENSIONED_CONSTRUCTORS, createfunc)
+    end
+    # `_createpolygon(is3d, ismeasured)` and friends pick the variant from
+    # flags only known at runtime, as the `GeoInterface.convert` fast paths do.
+    for f in (:create, :unsafe_create)
+        stem = Symbol(f, geom)
+        @eval function $(Symbol(:_, stem))(is3d::Bool, ismeasured::Bool)
+            return if is3d && ismeasured
+                $(Symbol(stem, :ZM))()
+            elseif is3d
+                $(Symbol(stem, "25D"))()
+            elseif ismeasured
+                $(Symbol(stem, :M))()
+            else
+                $stem()
+            end
+        end
     end
 end
 
