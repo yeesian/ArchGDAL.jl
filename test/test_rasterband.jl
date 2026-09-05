@@ -151,3 +151,81 @@ import GeoFormatTypes as GFT
         end
     end
 end
+
+@testset "Sieve filter" begin
+    AG.create(
+        AG.getdriver("MEM"),
+        width = 4,
+        height = 4,
+        nbands = 3,
+        dtype = Int32,
+    ) do dataset
+        source = AG.getband(dataset, 1)
+        destination = AG.getband(dataset, 2)
+        mask = AG.getband(dataset, 3)
+
+        input = Int32[
+            1 1 1 1
+            1 2 1 1
+            1 1 3 3
+            1 1 1 1
+        ]
+        AG.write!(source, input)
+        progress_called = Ref(false)
+        progressfunc = function (progress, message = "")
+            progress_called[] = true
+            return true
+        end
+
+        @test AG.sievefilter!(
+            source,
+            destination,
+            2;
+            progressfunc,
+        ) === destination
+        @test AG.read(destination) == Int32[
+            1 1 1 1
+            1 1 1 1
+            1 1 3 3
+            1 1 1 1
+        ]
+        @test progress_called[]
+
+        diagonal = Int32[
+            1 1 1 1
+            1 2 1 1
+            1 1 2 1
+            1 1 1 1
+        ]
+        AG.write!(source, diagonal)
+        AG.sievefilter!(source, destination, 2)
+        @test AG.read(destination) == ones(Int32, 4, 4)
+
+        AG.sievefilter!(source, destination, 2; connectedness = 8)
+        @test AG.read(destination) == diagonal
+
+        AG.write!(mask, ones(Int32, 4, 4))
+        masked = copy(input)
+        masked[2, 2] = 0
+        AG.write!(mask, Int32.(masked .!= 0))
+        AG.fillraster!(destination, 9)
+        AG.sievefilter!(source, destination, 2; mask)
+        @test AG.read(destination) == Int32[
+            1 1 1 1
+            1 2 1 1
+            1 1 1 1
+            1 1 1 1
+        ]
+
+        AG.write!(source, input)
+        @test AG.sievefilter!(source, 2) === source
+        @test AG.read(source)[2, 2] == 1
+
+        @test_throws ArgumentError AG.sievefilter!(
+            source,
+            destination,
+            2;
+            connectedness = 6,
+        )
+    end
+end
