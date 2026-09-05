@@ -1,19 +1,26 @@
 
 """
-    fromWKB(data)
+    fromWKB(data; [spatialref])
 
 Create a geometry object of the appropriate type from it's well known
 binary (WKB) representation.
 
 ### Parameters
 * `data`: pointer to the input BLOB data.
+
+### Keyword Arguments
+* `spatialref`: the coordinate reference system to assign to the geometry. WKB
+    carries no crs of its own, so a geometry built without this has none.
 """
-function fromWKB(data)::IGeometry
+function fromWKB(
+    data;
+    spatialref::AbstractSpatialRef = ISpatialRef(),
+)::IGeometry
     geom = Ref{GDAL.OGRGeometryH}()
     result = @gdal(
         OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
-        C_NULL::GDAL.OGRSpatialReferenceH,
+        spatialref.ptr::GDAL.OGRSpatialReferenceH,
         geom::Ptr{GDAL.OGRGeometryH},
         sizeof(data)::Cint
     )
@@ -21,12 +28,15 @@ function fromWKB(data)::IGeometry
     return IGeometry(geom[])
 end
 
-function unsafe_fromWKB(data)::Geometry
+function unsafe_fromWKB(
+    data;
+    spatialref::AbstractSpatialRef = ISpatialRef(),
+)::Geometry
     geom = Ref{GDAL.OGRGeometryH}()
     result = @gdal(
         OGR_G_CreateFromWkb::GDAL.OGRErr,
         data::Ptr{Cuchar},
-        C_NULL::GDAL.OGRSpatialReferenceH,
+        spatialref.ptr::GDAL.OGRSpatialReferenceH,
         geom::Ptr{GDAL.OGRGeometryH},
         sizeof(data)::Cint
     )
@@ -117,6 +127,25 @@ function unsafe_clone(geom::AbstractGeometry{T}) where {T}
     else
         return Geometry{T}(GDAL.ogr_g_clone(geom))
     end
+end
+
+# `deepcopy` otherwise copies the `ptr` field verbatim and bypasses the inner
+# constructor, so the copy would alias GDAL's object without owning it, and
+# read freed memory once the original is destroyed or finalized. Clone the
+# underlying geometry instead. Prepared geometries are left alone: their handle
+# is not an OGRGeometryH, so `ogr_g_clone` does not apply to them.
+function Base.deepcopy_internal(geom::IGeometry, stackdict::IdDict)
+    haskey(stackdict, geom) && return stackdict[geom]
+    copied = clone(geom)
+    stackdict[geom] = copied
+    return copied
+end
+
+function Base.deepcopy_internal(geom::Geometry, stackdict::IdDict)
+    haskey(stackdict, geom) && return stackdict[geom]
+    copied = unsafe_clone(geom)
+    stackdict[geom] = copied
+    return copied
 end
 
 """

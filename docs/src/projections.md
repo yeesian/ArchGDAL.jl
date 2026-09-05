@@ -75,9 +75,10 @@ reference system, via GDAL's `OSRIsSame`, rather than when their text matches:
 ArchGDAL.importEPSG(4326) == ArchGDAL.importPROJ4("+proj=longlat +datum=WGS84 +no_defs")
 ```
 
-A spatial reference holds a pointer into GDAL, so it is not a good thing to
-store on disk or hand to another process. Convert it to a portable format
-first — `convert(GFT.WellKnownText, spatialref)` or
+A spatial reference holds a pointer into GDAL, so it is not a value you can
+write out as-is. `deepcopy` and JLD2 both know this and copy or serialize the
+underlying definition; anything else should be handed a portable format
+instead — `convert(GFT.WellKnownText, spatialref)` or
 `convert(GFT.ProjJSON, spatialref)`.
 
 ## Reprojecting a Geometry

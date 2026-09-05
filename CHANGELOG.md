@@ -25,9 +25,12 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 - `isempty(spref)` reports whether a spatial reference holds no CRS definition. This is true both
   for a NULL handle and for the live but unpopulated one `newspatialref()` returns, which cannot be
   exported to any format.
-- `getaxismapping` and `setaxismapping!` read and write the data axis to CRS axis mapping.
+- `getaxismapping` and `setaxismapping!` read and write the data axis to CRS axis mapping, and
+  `getcoordinateepoch` and `setcoordinateepoch!` read and write the coordinate epoch of a dynamic
+  CRS. Neither is carried by WKT, and both affect `==`.
 - `ISpatialRef(::AbstractString)` constructs a spatial reference from anything GDAL can parse —
   WKT1, WKT2, a PROJ.4 string, `"EPSG:4326"`, a URN, PROJJSON — equivalent to `importUserInput`.
+- `fromWKB` and `unsafe_fromWKB` take a `spatialref` keyword, since WKB itself carries no CRS.
 
 ### Fixed
 
@@ -36,6 +39,14 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   temporary.
 - `show` no longer throws for an empty (non-NULL) spatial reference, such as the one
   `newspatialref()` returns; it prints `"Empty Spatial Reference System"`.
+- `deepcopy` of a spatial reference or a geometry now clones the underlying GDAL object instead of
+  copying the pointer field verbatim. The copy previously aliased an object it did not own, and
+  read freed memory once the original was destroyed or finalized.
+- Saving a spatial reference with JLD2 no longer silently loses it. Serialization goes through the
+  WKT2 definition plus the axis mapping and coordinate epoch that WKT cannot carry, rather than
+  writing out a pointer field that reloads as NULL.
+- A geometry saved with JLD2 now keeps its spatial reference, which was previously dropped because
+  the WKB it is serialized as cannot hold one. Geometries written by earlier versions still load.
 
 ### Changed
 

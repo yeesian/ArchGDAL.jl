@@ -1043,5 +1043,49 @@ import JLD2
         JLD2.save_object(filepath, geom)
         geom2 = JLD2.load_object(filepath)
         @test AG.toWKT(geom2) == AG.toWKT(geom)
+        # A geometry without a spatial reference stays without one.
+        @test AG.isempty(AG.getspatialref(geom2))
+
+        # WKB carries no crs, so the extension saves it alongside.
+        crspath = joinpath(tempdir(), "test_geometry_crs.jld2")
+        withcrs = AG.fromWKB(
+            AG.toWKB(AG.fromWKT("POINT (1 2)"));
+            spatialref = AG.importEPSG(4326),
+        )
+        JLD2.save_object(crspath, withcrs)
+        geom3 = JLD2.load_object(crspath)
+        @test AG.toWKT(geom3) == AG.toWKT(withcrs)
+        @test AG.getspatialref(geom3) == AG.importEPSG(4326)
+
+        # Files written before the crs field existed still load: the old
+        # on-disk struct keeps its read path.
+        ext = Base.get_extension(AG, :ArchGDALJLD2Ext)
+        legacy = ext.ArchGDALSerializedGeometry(AG.toWKB(geom))
+        @test AG.toWKT(JLD2.rconvert(AG.IGeometry, legacy)) == AG.toWKT(geom)
+    end
+
+    @testset "deepcopy" begin
+        # `deepcopy` copies the `ptr` field verbatim unless told otherwise,
+        # which would leave the copy pointing into memory the original owns.
+        geom = AG.fromWKT("POINT (1 2)")
+        copied = deepcopy(geom)
+        @test copied isa AG.IGeometry
+        @test copied.ptr != geom.ptr
+        AG.destroy(geom)
+        @test AG.toWKT(copied) == "POINT (1 2)"
+
+        # Aliasing within one structure is preserved, as `deepcopy` requires.
+        pair = deepcopy((copied, copied))
+        @test pair[1] === pair[2]
+        @test pair[1].ptr != copied.ptr
+
+        # The unfinalized variant clones too, and stays unfinalized.
+        unowned = AG.unsafe_fromWKT("POINT (3 4)")
+        ucopy = deepcopy(unowned)
+        @test ucopy isa AG.Geometry
+        @test ucopy.ptr != unowned.ptr
+        AG.destroy(unowned)
+        @test AG.toWKT(ucopy) == "POINT (3 4)"
+        AG.destroy(ucopy)
     end
 end

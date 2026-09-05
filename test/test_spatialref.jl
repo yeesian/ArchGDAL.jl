@@ -3,6 +3,7 @@ import ArchGDAL as AG
 import GDAL
 import GeoFormatTypes as GFT
 import GeoInterface
+import JLD2
 
 @testset "test_spatialref.jl" begin
     @testset "Test Formats for Spatial Reference Systems" begin
@@ -521,5 +522,98 @@ import GeoInterface
 
         @test occursin("\"type\"", AG.toPROJJSON(spref))
         @test occursin("\n", AG.toPROJJSON(spref; multiline = true))
+    end
+
+    @testset "Coordinate epoch" begin
+        spref = AG.importEPSG(4326)
+        @test AG.getcoordinateepoch(spref) == 0
+        @test AG.setcoordinateepoch!(spref, 2021.3) === spref
+        @test AG.getcoordinateepoch(spref) ≈ 2021.3
+        # `OSRIsSame` compares the epoch, so this is not a cosmetic field.
+        @test spref != AG.importEPSG(4326)
+    end
+
+    @testset "Attaching a spatial reference to a geometry" begin
+        wkb = AG.toWKB(AG.fromWKT("POINT (1 2)"))
+        @test AG.isempty(AG.getspatialref(AG.fromWKB(wkb)))
+
+        geom = AG.fromWKB(wkb; spatialref = AG.importEPSG(4326))
+        @test AG.getspatialref(geom) == AG.importEPSG(4326)
+        # GDAL takes its own reference, so the geometry outlives the spatial
+        # reference we handed it.
+        GC.gc()
+        GC.gc()
+        @test AG.getspatialref(geom) == AG.importEPSG(4326)
+        @test AG.toWKT(geom) == "POINT (1 2)"
+
+        unowned = AG.unsafe_fromWKB(wkb; spatialref = AG.importEPSG(4326))
+        @test AG.getspatialref(unowned) == AG.importEPSG(4326)
+        AG.destroy(unowned)
+    end
+
+    @testset "deepcopy" begin
+        # `deepcopy` copies the `ptr` field verbatim unless told otherwise,
+        # which would leave the copy pointing into memory the original owns.
+        spref = AG.importEPSG(4326)
+        copied = deepcopy(spref)
+        @test copied isa AG.ISpatialRef
+        @test copied.ptr != spref.ptr
+        @test copied == spref
+        AG.destroy(spref)
+        @test AG.toWKT(copied) == AG.toWKT(AG.importEPSG(4326))
+
+        # Aliasing within one structure is preserved, as `deepcopy` requires.
+        pair = deepcopy((copied, copied))
+        @test pair[1] === pair[2]
+        @test pair[1].ptr != copied.ptr
+
+        # The unfinalized variant clones too, and stays unfinalized.
+        unowned = AG.unsafe_clone(AG.importEPSG(4326))
+        ucopy = deepcopy(unowned)
+        @test ucopy isa AG.SpatialRef
+        @test ucopy.ptr != unowned.ptr
+        AG.destroy(unowned)
+        @test ucopy == AG.importEPSG(4326)
+        AG.destroy(ucopy)
+
+        # A NULL handle has nothing to clone.
+        @test deepcopy(AG.ISpatialRef()).ptr == C_NULL
+    end
+
+    @testset "JLD2 serialization" begin
+        dir = mktempdir()
+        spref = AG.importEPSG(4326)
+        path = joinpath(dir, "srs.jld2")
+        JLD2.save_object(path, spref)
+        back = JLD2.load_object(path)
+        @test back isa AG.ISpatialRef
+        @test !AG.isempty(back)
+        @test back == spref
+        @test GDAL.osrgetaxismappingstrategy(back) ==
+              GDAL.OAMS_AUTHORITY_COMPLIANT
+
+        # Axis order survives, which is what decides whether coordinates read
+        # as lon/lat or lat/lon downstream.
+        tradpath = joinpath(dir, "srs_trad.jld2")
+        trad = AG.importEPSG(4326; order = :trad)
+        JLD2.save_object(tradpath, trad)
+        tradback = JLD2.load_object(tradpath)
+        @test AG.getaxismapping(tradback) == AG.getaxismapping(trad)
+        @test tradback == trad
+        @test tradback != AG.importEPSG(4326)
+
+        # So does the coordinate epoch.
+        epochpath = joinpath(dir, "srs_epoch.jld2")
+        dynamic = AG.setcoordinateepoch!(AG.importEPSG(4326), 2021.3)
+        JLD2.save_object(epochpath, dynamic)
+        epochback = JLD2.load_object(epochpath)
+        @test AG.getcoordinateepoch(epochback) ≈ 2021.3
+        @test epochback == dynamic
+
+        # An empty spatial reference has nothing to save and comes back empty
+        # rather than throwing.
+        emptypath = joinpath(dir, "srs_empty.jld2")
+        JLD2.save_object(emptypath, AG.ISpatialRef())
+        @test AG.isempty(JLD2.load_object(emptypath))
     end
 end

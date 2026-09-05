@@ -101,7 +101,7 @@ function importCRS!(
     if strategy == GDAL.OAMS_CUSTOM
         setaxismapping!(spref, getaxismapping(x))
     end
-    GDAL.osrsetcoordinateepoch(spref, GDAL.osrgetcoordinateepoch(x))
+    setcoordinateepoch!(spref, getcoordinateepoch(x))
     return spref
 end
 
@@ -336,6 +336,27 @@ function setaxismapping!(
 end
 
 """
+    getcoordinateepoch(spref::AbstractSpatialRef)
+
+Return the coordinate epoch as a decimal year, or `0.0` if none is set.
+"""
+getcoordinateepoch(spref::AbstractSpatialRef)::Float64 =
+    GDAL.osrgetcoordinateepoch(spref)
+
+"""
+    setcoordinateepoch!(spref::AbstractSpatialRef, epoch::Real)
+
+Set the coordinate epoch, as a decimal year. `0` unsets it.
+"""
+function setcoordinateepoch!(
+    spref::T,
+    epoch::Real,
+)::T where {T<:AbstractSpatialRef}
+    GDAL.osrsetcoordinateepoch(spref, epoch)
+    return spref
+end
+
+"""
     isempty(spref::AbstractSpatialRef)
 
 Whether the spatial reference holds no coordinate reference system definition.
@@ -376,6 +397,25 @@ function unsafe_clone(spref::AbstractSpatialRef)::SpatialRef
     else
         SpatialRef(GDAL.osrclone(spref))
     end
+end
+
+# `deepcopy` otherwise copies the `ptr` field verbatim and bypasses the inner
+# constructor, so the copy would alias GDAL's object without owning it, and
+# read freed memory once the original is destroyed or finalized. Clone the
+# underlying SRS instead. Like every `SpatialRef`, the copy `deepcopy` hands
+# back for one is not finalized and has to be `destroy`ed by the caller.
+function Base.deepcopy_internal(spref::ISpatialRef, stackdict::IdDict)
+    haskey(stackdict, spref) && return stackdict[spref]
+    copied = clone(spref)
+    stackdict[spref] = copied
+    return copied
+end
+
+function Base.deepcopy_internal(spref::SpatialRef, stackdict::IdDict)
+    haskey(stackdict, spref) && return stackdict[spref]
+    copied = unsafe_clone(spref)
+    stackdict[spref] = copied
+    return copied
 end
 
 """
