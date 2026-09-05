@@ -1697,25 +1697,48 @@ Get flag to enable/disable returning non-linear geometries in the C API.
 """
 getnonlineargeomflag()::Bool = Bool(GDAL.ogrgetnonlineargeometriesenabledflag())
 
-# TODO This code doesn't create the wkbgeom variants (25D, M, ZM)
-for (geom, wkbgeom) in (
-    (:geomcollection, wkbGeometryCollection),
-    (:linestring, wkbLineString),
-    (:linearring, wkbLinearRing),
-    (:multilinestring, wkbMultiLineString),
-    (:multipoint, wkbMultiPoint),
-    (:multipolygon, wkbMultiPolygon),
-    (:multipolygon_noholes, wkbMultiPolygon),
-    (:point, wkbPoint),
-    (:polygon, wkbPolygon),
+# Constructor stem and the OGR type it builds. Each stem also gains a
+# constructor per dimensional variant, e.g. `createpolygon25D`; `linearring`
+# is defined separately below because OGR gives it no 25D/M/ZM forms.
+const GEOMETRY_CONSTRUCTORS = (
+    (:geomcollection, :wkbGeometryCollection),
+    (:linestring, :wkbLineString),
+    (:multilinestring, :wkbMultiLineString),
+    (:multipoint, :wkbMultiPoint),
+    (:multipolygon, :wkbMultiPolygon),
+    (:multipolygon_noholes, :wkbMultiPolygon),
+    (:point, :wkbPoint),
+    (:polygon, :wkbPolygon),
 )
+
+# The generated dimensional constructors. context.jl gives each of them the
+# scoped `do`-block form.
+const DIMENSIONED_CONSTRUCTORS = Symbol[]
+
+for (geom, wkbgeom) in GEOMETRY_CONSTRUCTORS
     @eval begin
-        $(Symbol("create$geom"))() = creategeom(Val{$wkbgeom}())
-        $(Symbol("unsafe_create$geom"))() = unsafe_creategeom(Val{$wkbgeom}())
-        $(Symbol("create$geom"))(val::Val) = creategeom(val)
-        $(Symbol("unsafe_create$geom"))(val::Val) = unsafe_creategeom(val)
+        $(Symbol(:create, geom))() = creategeom(Val{$wkbgeom}())
+        $(Symbol(:unsafe_create, geom))() = unsafe_creategeom(Val{$wkbgeom}())
+        $(Symbol(:create, geom))(val::Val) = creategeom(val)
+        $(Symbol(:unsafe_create, geom))(val::Val) = unsafe_creategeom(val)
+    end
+    for suffix in ("25D", "M", "ZM")
+        createfunc = Symbol(:create, geom, suffix)
+        wkbvariant = Symbol(wkbgeom, suffix)
+        @eval begin
+            $createfunc() = creategeom(Val{$wkbvariant}())
+            $(Symbol(:unsafe_, createfunc))() =
+                unsafe_creategeom(Val{$wkbvariant}())
+        end
+        push!(DIMENSIONED_CONSTRUCTORS, createfunc)
     end
 end
+
+# `wkbLinearRing` has no dimensional variants, so this stem stands alone.
+createlinearring() = creategeom(Val{wkbLinearRing}())
+unsafe_createlinearring() = unsafe_creategeom(Val{wkbLinearRing}())
+createlinearring(val::Val) = creategeom(val)
+unsafe_createlinearring(val::Val) = unsafe_creategeom(val)
 
 let V = Vector{<:Real}
     for (args, typedargs, typesuffix) in (

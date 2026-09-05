@@ -440,3 +440,33 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         end
     end
 end
+
+# Streams points straight into the polygon's rings, which skips the nested
+# coordinate vectors the generic `GeoInterface.coordinates` path materializes.
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.PolygonTrait,
+    geom,
+) where {T<:IGeometry}
+    is3d = GeoInterface.is3d(geom)
+    poly =
+        is3d ? creategeom(Val{wkbPolygon25D}()) : creategeom(Val{wkbPolygon}())
+    for ring in GeoInterface.getring(geom)
+        lr = unsafe_createlinearring()
+        for p in GeoInterface.getpoint(ring)
+            if is3d
+                addpoint!(
+                    lr,
+                    GeoInterface.x(p),
+                    GeoInterface.y(p),
+                    GeoInterface.z(p),
+                )
+            else
+                addpoint!(lr, GeoInterface.x(p), GeoInterface.y(p))
+            end
+        end
+        result = GDAL.ogr_g_addgeometrydirectly(poly, lr)
+        @ogrerr result "Failed to add linearring."
+    end
+    return poly
+end

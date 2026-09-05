@@ -1030,6 +1030,59 @@ import JLD2
               [[1, 2], [1, 2]]
     end
 
+    @testset "Dimensional geometry constructors" begin
+        for (geom, wkbgeom) in AG.GEOMETRY_CONSTRUCTORS,
+            suffix in ("25D", "M", "ZM")
+
+            create = getfield(AG, Symbol(:create, geom, suffix))
+            wkbtype = getfield(AG, Symbol(wkbgeom, suffix))
+            @test AG.getgeomtype(create()) == wkbtype
+            create() do g
+                @test AG.getgeomtype(g) == wkbtype
+            end
+        end
+        # OGR defines no dimensional variants of wkbLinearRing
+        @test !isdefined(AG, :createlinearring25D)
+        @test AG.getgeomtype(AG.createlinearring()) == AG.wkbLineString
+    end
+
+    @testset "GeoInterface polygon conversion" begin
+        poly = GI.Polygon([
+            GI.LinearRing([
+                (0.0, 0.0),
+                (3.0, 0.0),
+                (3.0, 3.0),
+                (0.0, 3.0),
+                (0.0, 0.0),
+            ]),
+            GI.LinearRing([
+                (1.0, 1.0),
+                (2.0, 1.0),
+                (2.0, 2.0),
+                (1.0, 2.0),
+                (1.0, 1.0),
+            ]),
+        ])
+        ag_poly = GI.convert(AG.IGeometry, poly)
+        @test ag_poly isa AG.IGeometry{AG.wkbPolygon}
+        @test AG.toWKT(ag_poly) ==
+              "POLYGON ((0 0,3 0,3 3,0 3,0 0),(1 1,2 1,2 2,1 2,1 1))"
+        @test AG.toWKB(ag_poly) ==
+              AG.toWKB(AG.createpolygon(GI.coordinates(poly)))
+
+        poly3d = GI.Polygon([
+            GI.LinearRing([
+                (0.0, 0.0, 1.0),
+                (3.0, 0.0, 1.0),
+                (3.0, 3.0, 1.0),
+                (0.0, 0.0, 1.0),
+            ]),
+        ])
+        ag_poly3d = GI.convert(AG.IGeometry, poly3d)
+        @test ag_poly3d isa AG.IGeometry{AG.wkbPolygon25D}
+        @test AG.toWKT(ag_poly3d) == "POLYGON ((0 0 1,3 0 1,3 3 1,0 0 1))"
+    end
+
     @testset "JLD2 serialization" begin
         filepath = joinpath(tempdir(), "test_geometry.jld2")
         geom = AG.fromWKT(
