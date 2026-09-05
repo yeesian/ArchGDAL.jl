@@ -1046,41 +1046,94 @@ import JLD2
         @test AG.getgeomtype(AG.createlinearring()) == AG.wkbLineString
     end
 
-    @testset "GeoInterface polygon conversion" begin
-        poly = GI.Polygon([
-            GI.LinearRing([
-                (0.0, 0.0),
-                (3.0, 0.0),
-                (3.0, 3.0),
-                (0.0, 3.0),
-                (0.0, 0.0),
-            ]),
-            GI.LinearRing([
-                (1.0, 1.0),
-                (2.0, 1.0),
-                (2.0, 2.0),
-                (1.0, 2.0),
-                (1.0, 1.0),
-            ]),
+    @testset "GeoInterface conversion fast paths" begin
+        square(o) = GI.LinearRing([
+            (o + 0.0, o + 0.0),
+            (o + 3.0, o + 0.0),
+            (o + 3.0, o + 3.0),
+            (o + 0.0, o + 0.0),
         ])
-        ag_poly = GI.convert(AG.IGeometry, poly)
-        @test ag_poly isa AG.IGeometry{AG.wkbPolygon}
-        @test AG.toWKT(ag_poly) ==
-              "POLYGON ((0 0,3 0,3 3,0 3,0 0),(1 1,2 1,2 2,1 2,1 1))"
-        @test AG.toWKB(ag_poly) ==
-              AG.toWKB(AG.createpolygon(GI.coordinates(poly)))
-
-        poly3d = GI.Polygon([
-            GI.LinearRing([
-                (0.0, 0.0, 1.0),
-                (3.0, 0.0, 1.0),
-                (3.0, 3.0, 1.0),
-                (0.0, 0.0, 1.0),
-            ]),
+        square3d = GI.LinearRing([
+            (0.0, 0.0, 1.0),
+            (3.0, 0.0, 1.0),
+            (3.0, 3.0, 1.0),
+            (0.0, 0.0, 1.0),
         ])
-        ag_poly3d = GI.convert(AG.IGeometry, poly3d)
-        @test ag_poly3d isa AG.IGeometry{AG.wkbPolygon25D}
-        @test AG.toWKT(ag_poly3d) == "POLYGON ((0 0 1,3 0 1,3 3 1,0 0 1))"
+        hole = GI.LinearRing([(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 1.0)])
+        for (source, wkt, wkbtype) in (
+            (GI.Point((1.0, 2.0)), "POINT (1 2)", AG.wkbPoint),
+            (GI.Point((1.0, 2.0, 3.0)), "POINT (1 2 3)", AG.wkbPoint25D),
+            (
+                GI.LineString([(0.0, 0.0), (1.0, 1.0), (2.0, 0.0)]),
+                "LINESTRING (0 0,1 1,2 0)",
+                AG.wkbLineString,
+            ),
+            (
+                GI.LineString([(0.0, 0.0, 1.0), (1.0, 1.0, 2.0)]),
+                "LINESTRING (0 0 1,1 1 2)",
+                AG.wkbLineString25D,
+            ),
+            (square(0), "LINEARRING (0 0,3 0,3 3,0 0)", AG.wkbLineString),
+            (
+                square3d,
+                "LINEARRING (0 0 1,3 0 1,3 3 1,0 0 1)",
+                AG.wkbLineString,
+            ),
+            (
+                GI.MultiPoint([(0.0, 0.0), (1.0, 1.0)]),
+                "MULTIPOINT (0 0,1 1)",
+                AG.wkbMultiPoint,
+            ),
+            (
+                GI.MultiPoint([(0.0, 0.0, 5.0), (1.0, 1.0, 6.0)]),
+                "MULTIPOINT (0 0 5,1 1 6)",
+                AG.wkbMultiPoint25D,
+            ),
+            (
+                GI.MultiLineString([
+                    [(0.0, 0.0), (1.0, 1.0)],
+                    [(2.0, 2.0), (3.0, 3.0)],
+                ]),
+                "MULTILINESTRING ((0 0,1 1),(2 2,3 3))",
+                AG.wkbMultiLineString,
+            ),
+            (
+                GI.MultiLineString([[(0.0, 0.0, 1.0), (1.0, 1.0, 2.0)]]),
+                "MULTILINESTRING ((0 0 1,1 1 2))",
+                AG.wkbMultiLineString25D,
+            ),
+            (
+                GI.Polygon([square(0), hole]),
+                "POLYGON ((0 0,3 0,3 3,0 0),(1 1,2 1,2 2,1 1))",
+                AG.wkbPolygon,
+            ),
+            (
+                GI.Polygon([square3d]),
+                "POLYGON ((0 0 1,3 0 1,3 3 1,0 0 1))",
+                AG.wkbPolygon25D,
+            ),
+            (
+                GI.MultiPolygon([
+                    GI.Polygon([square(0)]),
+                    GI.Polygon([square(10)]),
+                ]),
+                "MULTIPOLYGON (((0 0,3 0,3 3,0 0))," *
+                "((10 10,13 10,13 13,10 10)))",
+                AG.wkbMultiPolygon,
+            ),
+            (
+                GI.MultiPolygon([GI.Polygon([square3d])]),
+                "MULTIPOLYGON (((0 0 1,3 0 1,3 3 1,0 0 1)))",
+                AG.wkbMultiPolygon25D,
+            ),
+        )
+            geom = GI.convert(AG.IGeometry, source)
+            @test geom isa AG.IGeometry{wkbtype}
+            @test AG.toWKT(geom) == wkt
+            # The generic path routes coordinates through `lookup_method`
+            generic = AG.lookup_method[typeof(GI.geomtrait(source))]
+            @test AG.toWKT(generic(GI.coordinates(source))) == wkt
+        end
     end
 
     @testset "JLD2 serialization" begin

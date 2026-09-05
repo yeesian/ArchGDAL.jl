@@ -441,32 +441,147 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 end
 
-# Streams points straight into the polygon's rings, which skips the nested
-# coordinate vectors the generic `GeoInterface.coordinates` path materializes.
+# Fast paths for `GeoInterface.convert`. These stream points straight into the
+# OGR geometry, which skips the nested coordinate vectors that the generic
+# `GeoInterface.coordinates` fallback materializes for every ring and
+# sub-geometry.
+
+# The Z coordinate lives on the points, so the first one settles whether the
+# geometry is 3D. GeoInterface leaves `ncoord` optional on container geometries.
+function _is3d(geom)
+    for p in GeoInterface.getpoint(geom)
+        return GeoInterface.is3d(p)
+    end
+    return false
+end
+
+# Appends every point of `geom` to `curve`, an OGR line string or linear ring.
+function _addpoints!(curve, geom, is3d::Bool)
+    for p in GeoInterface.getpoint(geom)
+        if is3d
+            addpoint!(
+                curve,
+                GeoInterface.x(p),
+                GeoInterface.y(p),
+                GeoInterface.z(p),
+            )
+        else
+            addpoint!(curve, GeoInterface.x(p), GeoInterface.y(p))
+        end
+    end
+    return curve
+end
+
+# Hands `subgeom` to `parent`. GDAL owns it from here, so `subgeom` must come
+# from an `unsafe_create*` constructor.
+function _addsubgeom!(parent, subgeom, what::AbstractString)
+    result = GDAL.ogr_g_addgeometrydirectly(parent, subgeom)
+    @ogrerr result "Failed to add $what."
+    return parent
+end
+
+# Appends every ring of `geom` to `polygon`.
+function _addrings!(polygon, geom, is3d::Bool)
+    for ring in GeoInterface.getring(geom)
+        lr = unsafe_createlinearring()
+        _addpoints!(lr, ring, is3d)
+        _addsubgeom!(polygon, lr, "linearring")
+    end
+    return polygon
+end
+
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.PointTrait,
+    geom,
+) where {T<:IGeometry}
+    return if GeoInterface.is3d(geom)
+        createpoint(
+            GeoInterface.x(geom),
+            GeoInterface.y(geom),
+            GeoInterface.z(geom),
+        )
+    else
+        createpoint(GeoInterface.x(geom), GeoInterface.y(geom))
+    end
+end
+
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.LineStringTrait,
+    geom,
+) where {T<:IGeometry}
+    is3d = _is3d(geom)
+    line = is3d ? createlinestring25D() : createlinestring()
+    return _addpoints!(line, geom, is3d)
+end
+
+# `wkbLinearRing` carries no dimensional variants, so the ring starts flat and
+# `addpoint!` lifts it to 3D on the first point.
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.LinearRingTrait,
+    geom,
+) where {T<:IGeometry}
+    return _addpoints!(createlinearring(), geom, _is3d(geom))
+end
+
 function GeoInterface.convert(
     ::Type{T},
     ::GeoInterface.PolygonTrait,
     geom,
 ) where {T<:IGeometry}
-    is3d = GeoInterface.is3d(geom)
-    poly =
-        is3d ? creategeom(Val{wkbPolygon25D}()) : creategeom(Val{wkbPolygon}())
-    for ring in GeoInterface.getring(geom)
-        lr = unsafe_createlinearring()
-        for p in GeoInterface.getpoint(ring)
-            if is3d
-                addpoint!(
-                    lr,
-                    GeoInterface.x(p),
-                    GeoInterface.y(p),
-                    GeoInterface.z(p),
-                )
-            else
-                addpoint!(lr, GeoInterface.x(p), GeoInterface.y(p))
-            end
-        end
-        result = GDAL.ogr_g_addgeometrydirectly(poly, lr)
-        @ogrerr result "Failed to add linearring."
+    is3d = _is3d(geom)
+    poly = is3d ? createpolygon25D() : createpolygon()
+    return _addrings!(poly, geom, is3d)
+end
+
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.MultiPointTrait,
+    geom,
+) where {T<:IGeometry}
+    is3d = _is3d(geom)
+    multipoint = is3d ? createmultipoint25D() : createmultipoint()
+    for p in GeoInterface.getgeom(geom)
+        pt =
+            is3d ?
+            unsafe_createpoint(
+                GeoInterface.x(p),
+                GeoInterface.y(p),
+                GeoInterface.z(p),
+            ) : unsafe_createpoint(GeoInterface.x(p), GeoInterface.y(p))
+        _addsubgeom!(multipoint, pt, "point")
     end
-    return poly
+    return multipoint
+end
+
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.MultiLineStringTrait,
+    geom,
+) where {T<:IGeometry}
+    is3d = _is3d(geom)
+    multiline = is3d ? createmultilinestring25D() : createmultilinestring()
+    for line in GeoInterface.getgeom(geom)
+        ls = is3d ? unsafe_createlinestring25D() : unsafe_createlinestring()
+        _addpoints!(ls, line, is3d)
+        _addsubgeom!(multiline, ls, "linestring")
+    end
+    return multiline
+end
+
+function GeoInterface.convert(
+    ::Type{T},
+    ::GeoInterface.MultiPolygonTrait,
+    geom,
+) where {T<:IGeometry}
+    is3d = _is3d(geom)
+    multipoly = is3d ? createmultipolygon25D() : createmultipolygon()
+    for poly in GeoInterface.getgeom(geom)
+        p = is3d ? unsafe_createpolygon25D() : unsafe_createpolygon()
+        _addrings!(p, poly, is3d)
+        _addsubgeom!(multipoly, p, "polygon")
+    end
+    return multipoly
 end
