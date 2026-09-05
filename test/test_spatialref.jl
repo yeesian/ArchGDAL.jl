@@ -1,5 +1,6 @@
 using Test
 import ArchGDAL as AG
+import GDAL
 import GeoFormatTypes as GFT
 import GeoInterface
 
@@ -360,5 +361,165 @@ import GeoInterface
             @test AG.getattrvalue(spatialref, "AUTHORITY", 0) == "EPSG"
             @test AG.getattrvalue(spatialref, "AUTHORITY", 1) == "4326"
         end
+    end
+
+    @testset "Spatial references are GeoFormats" begin
+        spref = AG.importEPSG(4326)
+
+        @testset "GeoFormat interface" begin
+            @test spref isa GFT.GeoFormat
+            @test spref isa GFT.CoordinateReferenceSystemFormat
+            @test GFT.mode(AG.ISpatialRef) === GFT.CRS()
+            @test GFT.val(spref) == AG.toWKT2(spref)
+            @test convert(String, spref) == AG.toWKT2(spref)
+        end
+
+        @testset "Empty and NULL" begin
+            @test AG.isempty(AG.ISpatialRef())
+            # A live handle that has had no CRS imported into it yet.
+            @test AG.isempty(AG.newspatialref())
+            @test !AG.isempty(spref)
+            @test GFT.val(AG.ISpatialRef()) == ""
+            @test GFT.val(AG.newspatialref()) == ""
+            @test sprint(print, AG.newspatialref()) ==
+                  "Empty Spatial Reference System"
+            @test AG.ISpatialRef() == AG.ISpatialRef()
+            @test AG.ISpatialRef() != spref
+            @test spref != AG.ISpatialRef()
+        end
+
+        @testset "Equality is OSRIsSame" begin
+            @test spref == AG.clone(spref)
+            @test hash(spref) == hash(AG.clone(spref))
+            @test Dict(spref => :wgs84)[AG.clone(spref)] === :wgs84
+            @test spref != AG.importEPSG(26912)
+            # CRS equivalence, not textual equality: roundtrips rename the CRS
+            # but still compare equal.
+            @test spref == AG.importPROJ4(AG.toPROJ4(spref))
+            @test spref == AG.importWKT(AG.toWKT(spref))
+            @test spref == AG.ISpatialRef(AG.toWKT2(spref))
+            # The data axis to CRS axis mapping *is* compared, and these two
+            # transform differently.
+            @test spref != AG.importEPSG(4326; order = :trad)
+        end
+
+        @testset "Display is unchanged" begin
+            @test sprint(print, spref) ==
+                  "Spatial Reference System: +proj=longlat +datum=WGS84 +no_defs"
+            @test sprint(show, MIME"text/plain"(), spref) ==
+                  sprint(print, spref)
+        end
+
+        @testset "reproject accepts spatial refs" begin
+            # https://github.com/yeesian/ArchGDAL.jl/issues/403
+            point() = AG.createpoint(10.0, 20.0)
+            expected = AG.reproject(point(), GFT.EPSG(4326), GFT.EPSG(3857))
+            @test AG.reproject(point(), spref, GFT.EPSG(3857)) == expected
+            @test AG.reproject(point(), GFT.EPSG(4326), AG.importEPSG(3857)) ==
+                  expected
+            @test AG.reproject(point(), spref, AG.importEPSG(3857)) == expected
+
+            # The crs a geometry carries feeds straight back into reproject,
+            # which is what #403 asked for.
+            AG.read("data/point.geojson") do dataset
+                AG.getfeature(AG.getlayer(dataset, 0), 0) do feature
+                    geom = AG.getgeom(feature, 0)
+                    geomcrs = AG.getspatialref(geom)
+                    @test !AG.isempty(geomcrs)
+                    @test AG.reproject(geom, geomcrs, GFT.EPSG(3857)) isa
+                          AG.AbstractGeometry
+                end
+            end
+
+            # https://github.com/yeesian/ArchGDAL.jl/issues/434
+            @test AG.reproject(
+                AG.createpoint(1.0, 1.0),
+                AG.importEPSG(4326; order = :trad),
+                AG.importEPSG(3857),
+            ) isa AG.AbstractGeometry
+
+            # The caller's spatial ref is cloned, not consumed, by reproject.
+            GC.gc()
+            @test AG.toWKT(spref) == AG.toWKT(AG.importEPSG(4326))
+            @test AG.reproject(point(), spref, GFT.EPSG(3857)) == expected
+
+            # A crs is not a geometry, even though both are now GeoFormats.
+            @test_throws MethodError AG.reproject(
+                spref,
+                GFT.EPSG(4326),
+                GFT.EPSG(3857),
+            )
+        end
+
+        @testset "Axis mapping strategy" begin
+            trad = AG.importEPSG(4326; order = :trad)
+            compliant = AG.importEPSG(4326; order = :compliant)
+            @test GDAL.osrgetaxismappingstrategy(trad) ==
+                  GDAL.OAMS_TRADITIONAL_GIS_ORDER
+            @test GDAL.osrgetaxismappingstrategy(compliant) ==
+                  GDAL.OAMS_AUTHORITY_COMPLIANT
+            # Importing a spatial ref keeps its strategy, since resetting it
+            # would silently swap the axes of a reprojection.
+            @test GDAL.osrgetaxismappingstrategy(AG.importCRS(trad)) ==
+                  GDAL.OAMS_TRADITIONAL_GIS_ORDER
+            @test GDAL.osrgetaxismappingstrategy(
+                AG.importCRS(trad; order = :compliant),
+            ) == GDAL.OAMS_AUTHORITY_COMPLIANT
+            @test GDAL.osrgetaxismappingstrategy(
+                AG.importCRS(compliant; order = :trad),
+            ) == GDAL.OAMS_TRADITIONAL_GIS_ORDER
+            @test AG.reproject(
+                AG.createpoint(10.0, 20.0),
+                trad,
+                GFT.EPSG(3857),
+            ) != AG.reproject(
+                AG.createpoint(10.0, 20.0),
+                compliant,
+                GFT.EPSG(3857),
+            )
+        end
+
+        @testset "Custom axis mapping" begin
+            custom = AG.importEPSG(4326)
+            @test AG.getaxismapping(custom) == [1, 2]
+            AG.setaxismapping!(custom, [2, 1])
+            @test AG.getaxismapping(custom) == [2, 1]
+            @test GDAL.osrgetaxismappingstrategy(custom) == GDAL.OAMS_CUSTOM
+            @test AG.getaxismapping(AG.clone(custom)) == [2, 1]
+        end
+
+        @testset "importCRS! keeps what WKT cannot carry" begin
+            source = AG.importEPSG(4326; order = :trad)
+            GDAL.osrsetcoordinateepoch(source, 2021.3)
+            target = AG.importCRS!(AG.newspatialref(), source)
+            @test GDAL.osrgetcoordinateepoch(target) ≈ 2021.3
+            @test GDAL.osrgetaxismappingstrategy(target) ==
+                  GDAL.OAMS_TRADITIONAL_GIS_ORDER
+            @test target == source
+
+            # A custom mapping is not in the WKT either, so it is copied too.
+            custom = AG.importEPSG(4326)
+            AG.setaxismapping!(custom, [2, 1])
+            copied = AG.importCRS!(AG.newspatialref(), custom)
+            @test GDAL.osrgetaxismappingstrategy(copied) == GDAL.OAMS_CUSTOM
+            @test AG.getaxismapping(copied) == [2, 1]
+        end
+    end
+
+    @testset "WKT2 and PROJJSON export" begin
+        spref = AG.importEPSG(4326)
+        @test occursin("GEOGCRS", AG.toWKT2(spref))
+        @test occursin("GEODCRS", AG.toWKT2(spref; format = "WKT2_2015"))
+        @test !occursin("\n", AG.toWKT2(spref))
+        @test occursin("\n", AG.toWKT2(spref; multiline = true))
+        @test AG.ISpatialRef(AG.toWKT2(spref)) == spref
+
+        # WKT1 cannot represent a compound CRS losslessly; WKT2 can.
+        compound = AG.importUserInput("EPSG:4326+3855")
+        @test occursin("COMPOUNDCRS", AG.toWKT2(compound))
+        @test AG.ISpatialRef(AG.toWKT2(compound)) == compound
+
+        @test occursin("\"type\"", AG.toPROJJSON(spref))
+        @test occursin("\n", AG.toPROJJSON(spref; multiline = true))
     end
 end

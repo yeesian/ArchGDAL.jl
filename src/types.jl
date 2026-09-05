@@ -7,7 +7,7 @@ abstract type AbstractGeometry{T} end
 abstract type AbstractPreparedGeometry{T} <: AbstractGeometry{T} end
 # needs to have a `ptr::GDAL.OGRPreparedGeometryH` attribute
 
-abstract type AbstractSpatialRef end
+abstract type AbstractSpatialRef <: GFT.CoordinateReferenceSystemFormat end
 # needs to have a `ptr::GDAL.OGRSpatialReferenceH` attribute
 
 abstract type AbstractDataset end

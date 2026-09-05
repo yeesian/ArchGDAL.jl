@@ -1,19 +1,34 @@
 """
-    importCRS(x::GeoFormatTypes.GeoFormat; [order=:compliant])
+    importCRS(x::GeoFormatTypes.GeoFormat; [order=nothing])
 
 Import a coordinate reference system from a `GeoFormat` into GDAL,
 returning an `ArchGDAL.AbstractSpatialRef`.
 
+`x` may itself be an `AbstractSpatialRef`, in which case it is cloned. The clone
+keeps the axis mapping strategy of the original unless `order` is given.
+
 ## Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant` (the default)
-    will use axis ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importCRS(x::GFT.GeoFormat; kwargs...)::ISpatialRef =
     importCRS!(newspatialref(; kwargs...), x)
 
 unsafe_importCRS(x::GFT.GeoFormat; kwargs...)::SpatialRef =
     importCRS!(unsafe_newspatialref(; kwargs...), x)
+
+# A spatial ref is already a GDAL SRS, so clone it instead of round-tripping
+# through a string. Cloning is not optional: `crs2transform` reaches these
+# through the `unsafe_` form and destroys the result, which would otherwise
+# free the caller's own spatial ref.
+importCRS(x::AbstractSpatialRef; order = nothing)::ISpatialRef =
+    maybesetaxisorder!(clone(x), order)
+
+unsafe_importCRS(x::AbstractSpatialRef; order = nothing)::SpatialRef =
+    maybesetaxisorder!(unsafe_clone(x), order)
 
 """
     importCRS!(spref::AbstractSpatialRef, x::GeoFormatTypes.GeoFormat)
@@ -73,9 +88,26 @@ function importCRS!(spref::T, x::GFT.ProjJSON) where {T<:AbstractSpatialRef}
     return spref
 end
 
+function importCRS!(
+    spref::T,
+    x::AbstractSpatialRef,
+)::T where {T<:AbstractSpatialRef}
+    importWKT!(spref, toWKT2(x))
+    # WKT carries neither of these, but `==` (OSRIsSame) compares the epoch
+    # and transforms depend on the mapping, so copy them across rather than
+    # silently dropping them.
+    strategy = GDAL.osrgetaxismappingstrategy(x)
+    GDAL.osrsetaxismappingstrategy(spref, strategy)
+    if strategy == GDAL.OAMS_CUSTOM
+        setaxismapping!(spref, getaxismapping(x))
+    end
+    GDAL.osrsetcoordinateepoch(spref, GDAL.osrgetcoordinateepoch(x))
+    return spref
+end
+
 """
     reproject(points, sourceproj::GeoFormat, destproj::GeoFormat;
-        [order=:compliant])
+        [order=nothing])
 
 Reproject points to a different coordinate reference system and/or format.
 
@@ -86,9 +118,11 @@ Reproject points to a different coordinate reference system and/or format.
     capable `GeoFormat`
 
 ## Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant` (the default)
-    will use axis  ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 
 ## Example
 ```julia-repl
@@ -145,9 +179,11 @@ function reproject(
     )
 end
 
-# GeoFormat
+# GeoFormat. Restricted to the formats that can actually hold a geometry, so
+# that passing a crs here by mistake is a MethodError rather than a failure
+# inside `convert`.
 function reproject(
-    geom::GFT.GeoFormat,
+    geom::Union{GFT.GeometryFormat,GFT.MixedFormat},
     sourcecrs::GFT.GeoFormat,
     targetcrs::GFT.GeoFormat;
     kwargs...,
@@ -187,7 +223,7 @@ end
 
 Run the function `f` on a coord transform generated from the source and target
 crs definitions. These can be any `GeoFormat` (from GeoFormatTypes) that holds
-a coordinate reference system.
+a coordinate reference system, including an `ArchGDAL.AbstractSpatialRef`.
 
 `kwargs` are passed through to `importCRS`.
 """
@@ -207,16 +243,21 @@ function crs2transform(
 end
 
 """
-    newspatialref(wkt::AbstractString = ""; order=:compliant)
+    newspatialref(wkt::AbstractString = ""; order=nothing)
 
 Construct a Spatial Reference System from its WKT.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
-function newspatialref(wkt::AbstractString = ""; order::Symbol = :compliant)
+function newspatialref(
+    wkt::AbstractString = "";
+    order::Union{Symbol,Nothing} = nothing,
+)
     return maybesetaxisorder!(
         ISpatialRef(GDAL.osrnewspatialreference(wkt)),
         order,
@@ -225,7 +266,7 @@ end
 
 function unsafe_newspatialref(
     wkt::AbstractString = "";
-    order::Symbol = :compliant,
+    order::Union{Symbol,Nothing} = nothing,
 )
     return maybesetaxisorder!(
         SpatialRef(GDAL.osrnewspatialreference(wkt)),
@@ -233,13 +274,26 @@ function unsafe_newspatialref(
     )
 end
 
+# `nothing` leaves whatever strategy GDAL applied, which is not the same as
+# `:compliant`: GDAL honours the OSR_DEFAULT_AXIS_MAPPING_STRATEGY config
+# option when constructing an SRS, so forcing authority-compliant order here
+# would silently override anyone who set it to TRADITIONAL_GIS_ORDER.
+function maybesetaxisorder!(
+    spref::T,
+    ::Nothing,
+)::T where {T<:AbstractSpatialRef}
+    return spref
+end
+
 function maybesetaxisorder!(
     spref::T,
     order::Symbol,
 )::T where {T<:AbstractSpatialRef}
-    if order == :trad
+    if order === :trad
         GDAL.osrsetaxismappingstrategy(spref, GDAL.OAMS_TRADITIONAL_GIS_ORDER)
-    elseif order != :compliant
+    elseif order === :compliant
+        GDAL.osrsetaxismappingstrategy(spref, GDAL.OAMS_AUTHORITY_COMPLIANT)
+    else
         throw(
             ArgumentError(
                 "order $order is not supported. Use :trad or :compliant",
@@ -247,6 +301,54 @@ function maybesetaxisorder!(
         )
     end
     return spref
+end
+
+"""
+    getaxismapping(spref::AbstractSpatialRef)
+
+Return the data axis to CRS axis mapping, as 1-based axis indices.
+"""
+function getaxismapping(spref::AbstractSpatialRef)::Vector{Cint}
+    count = Ref{Cint}(0)
+    ptr = GDAL.osrgetdataaxistosrsaxismapping(spref, count)
+    ptr == C_NULL && return Cint[]
+    # The array belongs to GDAL, so read it out rather than wrapping it.
+    return [unsafe_load(ptr, i) for i in 1:count[]]
+end
+
+"""
+    setaxismapping!(spref::AbstractSpatialRef, mapping)
+
+Set a custom data axis to CRS axis mapping, which also sets the axis mapping
+strategy to `OAMS_CUSTOM`.
+"""
+function setaxismapping!(
+    spref::T,
+    mapping::AbstractVector{<:Integer},
+)::T where {T<:AbstractSpatialRef}
+    result = GDAL.osrsetdataaxistosrsaxismapping(
+        spref,
+        length(mapping),
+        convert(Vector{Cint}, mapping),
+    )
+    @ogrerr result "Failed to set the data axis to CRS axis mapping"
+    return spref
+end
+
+"""
+    isempty(spref::AbstractSpatialRef)
+
+Whether the spatial reference holds no coordinate reference system definition.
+
+This is `true` both for a NULL handle and for a live but unpopulated SRS, such
+as the one `newspatialref()` returns before a CRS has been imported into it.
+Exporting an empty SRS to any format is an error, so check this first when the
+spatial ref may not have been filled in.
+"""
+function isempty(spref::AbstractSpatialRef)::Bool
+    spref.ptr == C_NULL && return true
+    # GDAL has no OSRIsEmpty, but an SRS with nothing in it has no name.
+    return GDAL.osrgetname(spref) === nothing
 end
 
 function destroy(spref::AbstractSpatialRef)::Nothing
@@ -308,14 +410,16 @@ function importEPSG!(spref::T, code::Integer)::T where {T<:AbstractSpatialRef}
 end
 
 """
-    importEPSG(code::Integer; [order=:compliant])
+    importEPSG(code::Integer; [order=nothing])
 
 Construct a Spatial Reference System from its EPSG GCS or PCS code.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importEPSG(code::Integer; kwargs...)::ISpatialRef =
     importEPSG!(newspatialref(; kwargs...), code)
@@ -324,22 +428,37 @@ unsafe_importEPSG(code::Integer; kwargs...)::SpatialRef =
     importEPSG!(unsafe_newspatialref(; kwargs...), code)
 
 """
-    importUserInput(code::AbstractString; [order=:compliant])
+    importUserInput(code::AbstractString; [order=nothing])
 
 Construct a Spatial Reference System from a user provided code that is parsed by GDAL.
 This is useful when the input code is in an unknown format or a shortcut not covered by more constrained methods.
 An example is the code "EPSG:4326+3855", the shortest way to describe a combination of a horizontal and vertical crs.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importUserInput(code::AbstractString; kwargs...)::ISpatialRef =
     importUserInput!(newspatialref(; kwargs...), code)
 
 unsafe_importUserInput(code::AbstractString; kwargs...)::SpatialRef =
     importUserInput!(unsafe_newspatialref(; kwargs...), code)
+
+"""
+    ISpatialRef(input::AbstractString; [order=nothing])
+
+Construct a Spatial Reference System from any string GDAL can parse: WKT1, WKT2,
+a PROJ.4 string, `"EPSG:4326"`, a URN, or PROJJSON. Equivalent to
+[`importUserInput`](@ref).
+
+This is also what `convert(ISpatialRef, ::AbstractString)` uses, so a spatial
+ref round-trips through `GeoFormatTypes.val`.
+"""
+ISpatialRef(input::AbstractString; kwargs...)::ISpatialRef =
+    importUserInput(input; kwargs...)
 
 function importUserInput!(
     spref::T,
@@ -369,7 +488,7 @@ function importEPSGA!(spref::T, code::Integer)::T where {T<:AbstractSpatialRef}
 end
 
 """
-    importEPSGA(code::Integer; [order=:compliant])
+    importEPSGA(code::Integer; [order=nothing])
 
 Construct a Spatial Reference System from its EPSG CRS code.
 
@@ -381,9 +500,11 @@ contrary to typical GIS use). See `importFromEPSG()` for more
 details on operation of this method.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis  ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importEPSGA(code::Integer; kwargs...)::ISpatialRef =
     importEPSGA!(newspatialref(; kwargs...), code)
@@ -411,14 +532,16 @@ function importWKT!(
 end
 
 """
-    importWKT(wktstr::AbstractString; [order=:compliant])
+    importWKT(wktstr::AbstractString; [order=nothing])
 
 Create SRS from its WKT string.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis  ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importWKT(wktstr::AbstractString; kwargs...)::ISpatialRef =
     newspatialref(wktstr; kwargs...)
@@ -458,14 +581,16 @@ function importPROJ4!(
 end
 
 """
-    importPROJ4(projstr::AbstractString; [order=:compliant])
+    importPROJ4(projstr::AbstractString; [order=nothing])
 
 Create SRS from its PROJ.4 string.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importPROJ4(projstr::AbstractString; kwargs...)::ISpatialRef =
     importPROJ4!(newspatialref(; kwargs...), projstr)
@@ -533,7 +658,7 @@ function importXML!(
 end
 
 """
-    importXML(xmlstr::AbstractString; [order=:compliant])
+    importXML(xmlstr::AbstractString; [order=nothing])
 
 Construct SRS from XML format (GML only currently).
 
@@ -541,9 +666,11 @@ Passing the keyword argument `order=:compliant` or `order=:trad` will set the
 mapping strategy to return compliant axis order or traditional lon/lat order.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importXML(xmlstr::AbstractString; kwargs...)::ISpatialRef =
     importXML!(newspatialref(; kwargs...), xmlstr)
@@ -569,7 +696,7 @@ function importURL!(
 end
 
 """
-    importURL(url::AbstractString; [order=:compliant])
+    importURL(url::AbstractString; [order=nothing])
 
 Construct SRS from a URL.
 
@@ -577,9 +704,11 @@ This method will download the spatial reference at a given URL and feed it into
 SetFromUserInput for you.
 
 # Keyword Arguments
-- `order`: Sets the axis mapping strategy. `:trad` will use traditional lon/lat
-    axis ordering in any actions done with the crs. `:compliant`, will use axis
-    ordering compliant with the relevant CRS authority.
+- `order`: Sets the axis mapping strategy. `:trad` uses traditional lon/lat
+    axis ordering in any actions done with the crs, and `:compliant` uses the
+    axis ordering of the relevant CRS authority. The default, `nothing`, leaves
+    GDAL's own default in place: authority-compliant, unless the
+    `OSR_DEFAULT_AXIS_MAPPING_STRATEGY` config option says otherwise.
 """
 importURL(url::AbstractString; kwargs...)::ISpatialRef =
     importURL!(newspatialref(; kwargs...), url)
@@ -615,6 +744,51 @@ function toWKT(spref::AbstractSpatialRef, simplify::Bool)::String
 
     @ogrerr result "Failed to convert this SRS into pretty WKT"
     return unsafe_string(wktptr[])
+end
+
+"Export this SRS through `OSRExportToWktEx`, which takes an explicit `FORMAT`."
+function _exporttowkt(
+    spref::AbstractSpatialRef,
+    format::AbstractString,
+    multiline::Bool,
+)::String
+    wktptr = Ref{Cstring}()
+    options = ["FORMAT=$format", "MULTILINE=$(multiline ? "YES" : "NO")"]
+    result = GDAL.osrexporttowktex(spref, wktptr, options)
+    @ogrerr result "Failed to convert this SRS into $format format"
+    return unsafe_string(wktptr[])
+end
+
+"""
+    toWKT2(spref::AbstractSpatialRef; [format="WKT2_2019"], [multiline=false])
+
+Convert this SRS into WKT2 format.
+
+`format` selects the WKT2 revision, either `"WKT2_2019"` or `"WKT2_2015"`.
+
+Unlike [`toWKT`](@ref), which emits WKT1, this is lossless for datum ensembles,
+dynamic CRSs, coordinate epochs and compound CRSs.
+"""
+function toWKT2(
+    spref::AbstractSpatialRef;
+    format::AbstractString = "WKT2_2019",
+    multiline::Bool = false,
+)::String
+    return _exporttowkt(spref, format, multiline)
+end
+
+"""
+    toPROJJSON(spref::AbstractSpatialRef; [multiline=false])
+
+Export coordinate system as a [PROJJSON](https://proj.org/specifications/projjson.html)
+`String`.
+"""
+function toPROJJSON(spref::AbstractSpatialRef; multiline::Bool = false)::String
+    jsonptr = Ref{Cstring}()
+    options = ["MULTILINE=$(multiline ? "YES" : "NO")"]
+    result = GDAL.osrexporttoprojjson(spref, jsonptr, options)
+    @ogrerr result "Failed to convert this SRS into PROJJSON"
+    return unsafe_string(jsonptr[])
 end
 
 """
@@ -682,6 +856,44 @@ function toMICoordSys(spref::AbstractSpatialRef)::String
     @ogrerr result "Failed to convert this SRS into XML"
     return unsafe_string(ptr[])
 end
+
+"""
+    GeoFormatTypes.val(spref::AbstractSpatialRef)
+
+The WKT2 definition of `spref`, or `""` if it is empty.
+
+`AbstractSpatialRef` is a `GeoFormatTypes.CoordinateReferenceSystemFormat`, and
+this is the value behind that: it is what `convert(String, spref)` returns, and
+what any consumer reaching a crs through `GeoFormatTypes.val` will see.
+
+WKT carries no axis *mapping* strategy, so a consumer reached this way sees
+authority axis order even for a spatial ref created with `order = :trad`.
+"""
+GFT.val(spref::AbstractSpatialRef)::String = isempty(spref) ? "" : toWKT2(spref)
+
+"""
+    ==(a::AbstractSpatialRef, b::AbstractSpatialRef)
+
+Whether the two spatial references describe the same coordinate reference
+system, via GDAL's `OSRIsSame`.
+
+This is CRS equivalence rather than textual equality: a spatial ref compares
+equal to its own PROJ.4 or WKT round-trip even though the names differ. The
+data axis to CRS axis mapping *is* compared, so `importEPSG(4326)` and
+`importEPSG(4326; order = :trad)` are not equal — they transform differently.
+"""
+function Base.:(==)(a::AbstractSpatialRef, b::AbstractSpatialRef)::Bool
+    a.ptr == C_NULL && return b.ptr == C_NULL
+    b.ptr == C_NULL && return false
+    return GDAL.osrissame(a, b) != 0
+end
+
+# `OSRIsSame` ignores names, identifiers and WKT text, so no digest of the
+# definition is a legal hash for it: two spatial refs that compare equal can
+# have entirely different WKT. Hashing to a constant keeps `hash` consistent
+# with `==`, at the cost of linear lookup in a `Dict` keyed on spatial refs;
+# getting this wrong instead means silently missed keys.
+Base.hash(::AbstractSpatialRef, h::UInt) = hash(:ArchGDAL_AbstractSpatialRef, h)
 
 """
     morphtoESRI!(spref::AbstractSpatialRef)

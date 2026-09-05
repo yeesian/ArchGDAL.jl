@@ -239,6 +239,11 @@ function Base.show(io::IO, spref::AbstractSpatialRef)::Nothing
     if spref.ptr == C_NULL
         print(io, "NULL Spatial Reference System")
         return nothing
+    elseif isempty(spref)
+        # A live handle with no CRS in it, as `newspatialref()` returns.
+        # Exporting one to any format is an error.
+        print(io, "Empty Spatial Reference System")
+        return nothing
     end
     projstr = toPROJ4(spref)
     if length(projstr) > 45
@@ -250,6 +255,12 @@ function Base.show(io::IO, spref::AbstractSpatialRef)::Nothing
     end
     return nothing
 end
+
+# GeoFormatTypes ships a 3-arg `show` for every `GeoFormat`, which would
+# otherwise take over the REPL and Documenter rendering of spatial refs and
+# print raw WKT2.
+Base.show(io::IO, ::MIME"text/plain", spref::AbstractSpatialRef)::Nothing =
+    show(io, spref)
 
 function Base.show(io::IO, geom::AbstractGeometry)::Nothing
     if geom.ptr == C_NULL

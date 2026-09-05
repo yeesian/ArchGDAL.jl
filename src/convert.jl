@@ -107,6 +107,11 @@ function Base.convert(
 end
 
 function Base.convert(target::Type{<:GFT.GeoFormat}, source::AbstractSpatialRef)
+    # A spatial ref is itself a GeoFormat, so this method also catches every
+    # supertype target (`GeoFormat`, `CoordinateReferenceSystemFormat`, a
+    # Union, ...), for which converting is the identity. Without this they
+    # would fall through to `unsafe_convertcrs` and MethodError.
+    source isa target && return source
     return unsafe_convertcrs(target, source)
 end
 
@@ -122,7 +127,31 @@ end
 function unsafe_convertcrs(::Type{<:GFT.WellKnownText}, crsref)
     return GFT.WellKnownText(GFT.CRS(), toWKT(crsref))
 end
+function unsafe_convertcrs(::Type{<:GFT.WellKnownText2}, crsref)
+    return GFT.WellKnownText2(GFT.CRS(), toWKT2(crsref))
+end
 function unsafe_convertcrs(::Type{<:GFT.ESRIWellKnownText}, crsref)
-    return GFT.ESRIWellKnownText(GFT.CRS(), toWKT(morphtoESRI!(crsref)))
+    # Exported rather than morphed: `morphtoESRI!` rewrites `crsref` in
+    # place, and `crsref` is the caller's own spatial ref whenever this is
+    # reached through `convert(_, ::AbstractSpatialRef)`.
+    return GFT.ESRIWellKnownText(
+        GFT.CRS(),
+        _exporttowkt(crsref, "WKT1_ESRI", false),
+    )
 end
 unsafe_convertcrs(::Type{<:GFT.GML}, crsref) = GFT.GML(toXML(crsref))
+function unsafe_convertcrs(::Type{<:GFT.ProjJSON}, crsref)
+    return GFT.ProjJSON(toPROJJSON(crsref))
+end
+
+# Converting *to* a spatial ref hands back an owned, finalized clone.
+# `SpatialRef` is deliberately not a target: `convert` results are implicit,
+# and one that nobody destroys leaks.
+unsafe_convertcrs(::Type{ISpatialRef}, crsref) = clone(crsref)
+unsafe_convertcrs(::Type{AbstractSpatialRef}, crsref) = clone(crsref)
+function unsafe_convertcrs(::Type{SpatialRef}, crsref)
+    return error(
+        "`convert` to SpatialRef would leak: nothing destroys the result. " *
+        "Use `unsafe_clone` and `destroy` it, or convert to ISpatialRef.",
+    )
+end

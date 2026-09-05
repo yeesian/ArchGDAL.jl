@@ -42,7 +42,43 @@ We currently support a few export formats too:
 * [`ArchGDAL.toMICoordSys(spref)`](@ref): Mapinfo style CoordSys format.
 * [`ArchGDAL.toPROJ4(spref)`](@ref): coordinate system in PROJ.4 format.
 * [`ArchGDAL.toWKT(spref)`](@ref): nicely formatted WKT string for display to a person.
+* [`ArchGDAL.toWKT2(spref)`](@ref): WKT2 string, which unlike WKT1 is lossless for datum ensembles, dynamic CRSs, coordinate epochs and compound CRSs.
+* [`ArchGDAL.toPROJJSON(spref)`](@ref): coordinate system in [PROJJSON](https://proj.org/specifications/projjson.html) format.
 * [`ArchGDAL.toXML(spref)`](@ref): converts into XML format to the extent possible.
+
+## Spatial References are GeoFormats
+
+`ArchGDAL.ISpatialRef` is a `GeoFormatTypes.CoordinateReferenceSystemFormat`, so
+anywhere ArchGDAL accepts a `GeoFormat` crs it also accepts a spatial reference
+you got back from ArchGDAL itself:
+
+```@example projections
+import GeoFormatTypes as GFT
+
+spatialref isa GFT.GeoFormat
+```
+
+That means `convert` moves freely in both directions:
+
+```@example projections
+convert(GFT.EPSG, spatialref)
+```
+
+```@example projections
+convert(ArchGDAL.ISpatialRef, GFT.EPSG(4326))
+```
+
+Two spatial references compare equal when they describe the same coordinate
+reference system, via GDAL's `OSRIsSame`, rather than when their text matches:
+
+```@example projections
+ArchGDAL.importEPSG(4326) == ArchGDAL.importPROJ4("+proj=longlat +datum=WGS84 +no_defs")
+```
+
+A spatial reference holds a pointer into GDAL, so it is not a good thing to
+store on disk or hand to another process. Convert it to a portable format
+first — `convert(GFT.WellKnownText, spatialref)` or
+`convert(GFT.ProjJSON, spatialref)`.
 
 ## Reprojecting a Geometry
 ```@example projections
@@ -70,6 +106,21 @@ coords = zip(rand(10), rand(10))
 df = DataFrame(geom=ArchGDAL.createpoint.(coords), name="test");
 df.geom = ArchGDAL.reproject(df.geom, GFT.EPSG(4326), GFT.EPSG(28992))
 ```
+
+Either crs can equally be an `ArchGDAL.ISpatialRef`, which is what
+`ArchGDAL.getspatialref` returns:
+
+```@example projections
+ArchGDAL.reproject(
+    ArchGDAL.createpoint(0.5, 0.5),
+    ArchGDAL.importEPSG(4326),
+    ArchGDAL.importEPSG(28992),
+)
+```
+
+A spatial reference passed to `reproject` is cloned, so its axis mapping
+strategy is carried through the transform and the object you passed in is left
+untouched and still usable afterwards.
 
 ## Reprojecting from a layer
 ```@setup projections

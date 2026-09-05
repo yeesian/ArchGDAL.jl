@@ -56,6 +56,49 @@ Base.convert(::Type{Int64}, x::CustomInt) = x.value
         @test convert(GFT.EPSG, wkt) == epsg
     end
 
+    @testset "convert spatial refs" begin
+        spref = AG.importEPSG(4326)
+
+        @testset "to another GeoFormat" begin
+            @test convert(GFT.WellKnownText, spref) isa
+                  GFT.WellKnownText{GFT.CRS}
+            @test convert(GFT.WellKnownText2, spref) isa
+                  GFT.WellKnownText2{GFT.CRS}
+            @test GFT.val(convert(GFT.WellKnownText2, spref)) ==
+                  AG.toWKT2(spref)
+            @test convert(GFT.EPSG, spref) == GFT.EPSG(4326)
+            @test convert(GFT.ProjString, spref) isa GFT.ProjString
+            @test convert(GFT.ProjJSON, spref) isa GFT.ProjJSON
+            @test convert(GFT.CoordSys, spref) isa GFT.CoordSys
+        end
+
+        @testset "to a supertype is the identity" begin
+            @test convert(GFT.GeoFormat, spref) === spref
+            @test convert(GFT.CoordinateReferenceSystemFormat, spref) === spref
+            @test convert(AG.AbstractSpatialRef, spref) === spref
+            @test convert(AG.ISpatialRef, spref) === spref
+            @test only(push!(GFT.GeoFormat[], spref)) === spref
+        end
+
+        @testset "from another GeoFormat" begin
+            @test convert(AG.ISpatialRef, GFT.EPSG(4326)) == spref
+            @test convert(AG.ISpatialRef, GFT.EPSG(4326)) isa AG.ISpatialRef
+            @test convert(AG.AbstractSpatialRef, GFT.EPSG(4326)) == spref
+            @test convert(AG.ISpatialRef, "EPSG:4326") == spref
+            @test convert(AG.ISpatialRef, GFT.val(spref)) == spref
+            # Converting to the unfinalized SpatialRef would leak.
+            @test_throws ErrorException convert(AG.SpatialRef, GFT.EPSG(4326))
+        end
+
+        @testset "ESRI export does not mutate its source" begin
+            before = AG.toWKT(spref)
+            esri = convert(GFT.ESRIWellKnownText, spref)
+            @test esri isa GFT.ESRIWellKnownText{GFT.CRS}
+            @test occursin("D_WGS_1984", GFT.val(esri))
+            @test AG.toWKT(spref) == before
+        end
+    end
+
     @testset "geometry conversions" begin
         geom1 = AG.createpoint(1, 2)
         @test typeof(geom1) == AG.IGeometry{AG.wkbPoint}
