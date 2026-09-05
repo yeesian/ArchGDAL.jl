@@ -10,6 +10,7 @@ const lookup_method = Dict{DataType,Function}(
     GeoInterface.MultiLineStringTrait => createmultilinestring,
     GeoInterface.PolygonTrait => createpolygon,
     GeoInterface.MultiPolygonTrait => createmultipolygon,
+    GeoInterface.GeometryCollectionTrait => creategeomcollection,
 )
 
 let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
@@ -340,17 +341,24 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         return toWKT(geom)
     end
 
-    function GeoInterface.convert(
-        ::Type{T},
-        type::GeometryTraits,
-        geom,
-    ) where {T<:IGeometry}
-        f = get(lookup_method, typeof(type), nothing)
-        isnothing(f) && error(
-            "Cannot convert an object of $(typeof(geom)) with the $(typeof(type)) trait (yet). Please report an issue.",
-        )
-        return f(GeoInterface.coordinates(geom))
+    function GeoInterface.convert(::Type{T}, trait::GeometryTraits, geom) where {T<:IGeometry}
+        f = get(lookup_method, typeof(trait), nothing)
+        isnothing(f) && _convert_error(geom, trait)
+        coords = GeoInterface.coordinates(geom)
+        return f(coords)
     end
+
+    function GeoInterface.convert(::Type{T}, trait::GeoInterface.GeometryCollectionTrait, collection) where {T<:IGeometry}
+        gdal_collection = creategeomcollection()
+        for geom in GeoInterface.getgeom(collection)
+            addgeom!(gdal_collection, to_gdal(geom))
+        end
+        return gdal_collection
+    end
+
+    @noinline _convert_error(geom, trait) = error(
+        "Cannot convert an object of $(typeof(geom)) with the $(typeof(trait)) trait (yet). Please report an issue at https://github.com/yeesian/ArchGDAL.jl if you need this",
+    )
 
     function GeoInterface.geomtrait(
         geom::Union{map(T -> AbstractGeometry{T}, pointtypes)...},
