@@ -843,6 +843,23 @@ import JLD2
             @test sprint(print, geom4) == "Geometry: POINT EMPTY"
         end
 
+        geomcopy = copy(geom3)
+        geomdeepcopy = deepcopy(geom3)
+        @test geomcopy isa AG.IGeometry{AG.wkbGeometryCollection25D}
+        @test geomdeepcopy isa AG.IGeometry{AG.wkbGeometryCollection25D}
+        @test geomcopy.ptr != geom3.ptr
+        @test geomdeepcopy.ptr != geom3.ptr
+        @test AG.equals(geomcopy, geom3)
+        @test AG.equals(geomdeepcopy, geom3)
+
+        repeated = deepcopy([geom3, geom3])
+        @test repeated[1] === repeated[2]
+        @test repeated[1].ptr != geom3.ptr
+
+        AG.removeallgeoms!(geomcopy)
+        @test AG.ngeom(geomcopy) == 0
+        @test AG.ngeom(geom3) == 4
+
         @test AG.toISOWKT(geom3) ==
               "GEOMETRYCOLLECTION Z (" *
               "POINT Z (2 5 8)," *
@@ -976,6 +993,8 @@ import JLD2
         geom = AG.IGeometry()
         @test AG.geomname(geom) === missing
         @test sprint(print, AG.clone(geom)) == "NULL Geometry"
+        @test sprint(print, copy(geom)) == "NULL Geometry"
+        @test sprint(print, deepcopy(geom)) == "NULL Geometry"
         AG.clone(geom) do g
             @test sprint(print, g) == "NULL Geometry"
         end

@@ -111,6 +111,15 @@ function clone(geom::AbstractGeometry{T}) where {T}
     end
 end
 
+Base.copy(geom::AbstractGeometry) = clone(geom)
+
+function Base.deepcopy_internal(geom::AbstractGeometry, stackdict::IdDict)
+    haskey(stackdict, geom) && return stackdict[geom]
+    geomcopy = clone(geom)
+    stackdict[geom] = geomcopy
+    return geomcopy
+end
+
 function unsafe_clone(geom::AbstractGeometry{T}) where {T}
     if geom.ptr == C_NULL
         return Geometry{wkbUnknown}()
