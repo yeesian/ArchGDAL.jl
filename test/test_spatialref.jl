@@ -615,5 +615,30 @@ import JLD2
         emptypath = joinpath(dir, "srs_empty.jld2")
         JLD2.save_object(emptypath, AG.ISpatialRef())
         @test AG.isempty(JLD2.load_object(emptypath))
+
+        # Equal spatial references share one crs record in the file: the
+        # definition is written once, however many of them there are.
+        manypath = joinpath(dir, "srs_many.jld2")
+        emptiespath = joinpath(dir, "srs_empties.jld2")
+        JLD2.save_object(manypath, [AG.importEPSG(4326) for _ in 1:200])
+        JLD2.save_object(emptiespath, [AG.ISpatialRef() for _ in 1:200])
+        @test filesize(manypath) - filesize(emptiespath) <
+              3 * sizeof(AG.toWKT2(spref))
+        # But not one GDAL object: each loaded reference is the caller's to
+        # mutate.
+        many = JLD2.load_object(manypath)
+        @test all(==(spref), many)
+        @test many[1].ptr != many[2].ptr
+        AG.importEPSG!(many[1], 26912)
+        @test many[1] != spref
+        @test many[2] == spref
+
+        # Whereas one object saved twice is one object when loaded, as with
+        # any mutable struct.
+        pairpath = joinpath(dir, "srs_pair.jld2")
+        JLD2.save_object(pairpath, [spref, spref])
+        pair = JLD2.load_object(pairpath)
+        @test pair[1] === pair[2]
+        @test pair[1] == spref
     end
 end

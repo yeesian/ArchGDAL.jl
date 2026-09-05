@@ -47,6 +47,8 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
   writing out a pointer field that reloads as NULL.
 - A geometry saved with JLD2 now keeps its spatial reference, which was previously dropped because
   the WKB it is serialized as cannot hold one. Geometries written by earlier versions still load.
+  Objects saved together in one CRS share a single copy of its definition in the file, and a single
+  GDAL object once loaded, so an array of points costs the same with a CRS as without.
 
 ### Changed
 

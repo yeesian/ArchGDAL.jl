@@ -1057,6 +1057,22 @@ import JLD2
         @test AG.toWKT(geom3) == AG.toWKT(withcrs)
         @test AG.getspatialref(geom3) == AG.importEPSG(4326)
 
+        # Geometries in one crs share one copy of it in the file, and one GDAL
+        # object once loaded. Without the sharing each point would carry its
+        # own WKT2 definition, at forty times the size of its WKB.
+        crs = AG.importEPSG(4326)
+        bare = [AG.createpoint(Float64(i), 0.0) for i in 1:200]
+        incrs = [AG.fromWKB(AG.toWKB(p); spatialref = crs) for p in bare]
+        barepath = joinpath(tempdir(), "test_geometry_bare.jld2")
+        manypath = joinpath(tempdir(), "test_geometry_many.jld2")
+        JLD2.save_object(barepath, bare)
+        JLD2.save_object(manypath, incrs)
+        @test filesize(manypath) - filesize(barepath) <
+              3 * sizeof(AG.toWKT2(crs))
+        many = JLD2.load_object(manypath)
+        @test all(g -> AG.getspatialref(g) == crs, many)
+        @test length(unique(AG.GDAL.ogr_g_getspatialreference.(many))) == 1
+
         # Files written before the crs field existed still load: the old
         # on-disk struct keeps its read path.
         ext = Base.get_extension(AG, :ArchGDALJLD2Ext)

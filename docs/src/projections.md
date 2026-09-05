@@ -79,7 +79,9 @@ A spatial reference holds a pointer into GDAL, so it is not a value you can
 write out as-is. `deepcopy` and JLD2 both know this and copy or serialize the
 underlying definition; anything else should be handed a portable format
 instead — `convert(GFT.WellKnownText, spatialref)` or
-`convert(GFT.ProjJSON, spatialref)`.
+`convert(GFT.ProjJSON, spatialref)`. Geometries saved together with JLD2
+share one copy of their spatial reference in the file, so attaching a CRS to
+each of a million points costs nothing extra on disk.
 
 ## Reprojecting a Geometry
 ```@example projections
