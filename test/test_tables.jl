@@ -120,7 +120,8 @@ using Tables
                 @test only(result.uint64) === Int64(0)
                 @test only(result.date) === Dates.Date(2026, 8, 27)
                 @test only(result.time) === Dates.Time(18, 31)
-                @test only(result.datetime) === Dates.DateTime(2026, 8, 27, 18, 31)
+                @test only(result.datetime) ===
+                      Dates.DateTime(2026, 8, 27, 18, 31)
                 @test only(result.int8list) == Int32[-128, 127]
                 @test only(result.int16list) == Int32[-32768, 32767]
                 @test only(result.uint16list) == Int32[0, 65535]
