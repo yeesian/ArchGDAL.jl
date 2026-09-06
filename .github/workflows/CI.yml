@@ -31,7 +31,25 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
+      - name: Configure GDAL libraries and certificates on macOS
+        id: macos-gdal
+        if: runner.os == 'macOS'
+        shell: julia --color=yes --project {0}
+        run: |
+          using GDAL, NetworkOptions
+          # SQLite_jll's newer install name differs from the one GDAL links to.
+          # Resolve that dependency to the JLL library instead of Apple's SQLite.
+          open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "sqlite_libdir=", dirname(GDAL.GDAL_jll.SQLite_jll.libsqlite_path))
+          end
+          # GDAL's libcurl needs a file even when Julia uses the system trust store.
+          open(ENV["GITHUB_ENV"], "a") do io
+              println(io, "CURL_CA_BUNDLE=", NetworkOptions.ca_roots_path())
+          end
       - uses: julia-actions/julia-runtest@v1
+        with:
+          # Set DYLD_LIBRARY_PATH after bash starts: macOS can strip inherited DYLD variables.
+          prefix: ${{ runner.os == 'macOS' && format('env DYLD_LIBRARY_PATH={0}', steps.macos-gdal.outputs.sqlite_libdir) || '' }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v7
         with:

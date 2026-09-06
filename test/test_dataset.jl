@@ -17,8 +17,12 @@ const supported_vector_drivers = [
 function assertsimilar(ds1, ds2)
     AG.nlayer(ds1) == AG.nlayer(ds2) || error("unequal layer count")
     for i in 0:(AG.nlayer(ds1)-1)
-        AG.ngeom(AG.getlayer(ds1, i)) == AG.ngeom(AG.getlayer(ds2, i)) ||
-            error("unequal number of geometries in layer $i")
+        AG.getlayer(ds1, i) do layer1
+            AG.getlayer(ds2, i) do layer2
+                AG.ngeom(layer1) == AG.ngeom(layer2) ||
+                    error("unequal number of geometries in layer $i")
+            end
+        end
     end
     AG.nraster(ds1) == AG.nraster(ds2) || error("unequal raster count")
     AG.height(ds1) == AG.height(ds2) || error("unequal height")
@@ -122,10 +126,9 @@ end
                                     driver = AG.getdriver(driver),
                                     use_gdal_copy = true,
                                 )
-                                @test assertsimilar(input_ds, AG.read(fname))
-                                # sleep and GC are for windows: let the gc run to close the file, otherwise it can't be deleted
-                                sleep(0.05)
-                                GC.gc()
+                                AG.read(fname) do output_ds
+                                    @test assertsimilar(input_ds, output_ds)
+                                end
                                 rm(fname, force = true, recursive = true)
 
                                 AG.write(
@@ -134,14 +137,12 @@ end
                                     driver = AG.getdriver(driver),
                                     use_gdal_copy = false,
                                 )
-                                @test assertsimilar(input_ds, AG.read(fname))
-                                sleep(0.05)
-                                GC.gc()
+                                AG.read(fname) do output_ds
+                                    @test assertsimilar(input_ds, output_ds)
+                                end
                                 rm(fname, force = true, recursive = true)
                             end
                         finally
-                            sleep(0.05)
-                            GC.gc()
                             rm(fname, force = true, recursive = true)
                         end
                     end

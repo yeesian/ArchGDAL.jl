@@ -4,7 +4,8 @@ on: [pull_request]
 
 jobs:
   Benchmark:
-    runs-on: macos-latest
+    # BenchmarkCI's CpuId metadata collection requires an x86_64 runner.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
       - uses: julia-actions/setup-julia@latest
