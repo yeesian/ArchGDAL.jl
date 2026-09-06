@@ -37,12 +37,14 @@ jobs:
         shell: julia --color=yes --project {0}
         run: |
           using GDAL, NetworkOptions
-          # SQLite_jll's newer install name differs from the one GDAL links to.
-          # Resolve that dependency to the JLL library instead of Apple's SQLite.
+          # SQLite_jll 3.49+ dropped the versioned install name GDAL links to, so dyld
+          # falls back to Apple's SQLite and GDAL's SQLite driver fails. Point dyld at
+          # the JLL libdir until https://github.com/JuliaPackaging/Yggdrasil/pull/14414 lands.
           open(ENV["GITHUB_OUTPUT"], "a") do io
               println(io, "sqlite_libdir=", dirname(GDAL.GDAL_jll.SQLite_jll.libsqlite_path))
           end
-          # GDAL's libcurl needs a file even when Julia uses the system trust store.
+          # GDAL's libcurl needs a CA file on disk even when Julia uses the macOS trust
+          # store: https://github.com/JuliaGeo/GDAL.jl/issues/203
           open(ENV["GITHUB_ENV"], "a") do io
               println(io, "CURL_CA_BUNDLE=", NetworkOptions.ca_roots_path())
           end
