@@ -111,11 +111,52 @@ function clone(geom::AbstractGeometry{T}) where {T}
     end
 end
 
-Base.copy(geom::AbstractGeometry) = clone(geom)
+# Clone `geom` into a `W{T}` wrapper, preserving the geometry type parameter.
+# `clone` and `unsafe_clone` collapse NULL geometries to `wkbUnknown`, which
+# `Base.deepcopy` rejects: it asserts that `deepcopy_internal` returns a value
+# of the same type as its argument.
+function _clonegeom(::Type{W}, geom::AbstractGeometry{T}) where {W,T}
+    return W{T}(
+        geom.ptr == C_NULL ? GDAL.OGRGeometryH(C_NULL) : GDAL.ogr_g_clone(geom),
+    )
+end
 
+"""
+    copy(geom::AbstractGeometry)
+
+Returns a copy of the geometry with the original spatial reference system.
+
+The copy owns a separate GDAL handle, so mutating it leaves `geom` untouched.
+The result has the same Julia type as `geom`: copying a `Geometry` yields a
+`Geometry`, which the caller is responsible for destroying.
+
+Copying an `AbstractPreparedGeometry` re-prepares a copy of the geometry it was
+built from, since GDAL exposes no way to clone a prepared geometry directly.
+"""
+Base.copy(geom::IGeometry) = _clonegeom(IGeometry, geom)
+
+Base.copy(geom::Geometry) = _clonegeom(Geometry, geom)
+
+function Base.copy(geom::IPreparedGeometry)
+    return preparegeom(_clonegeom(IGeometry, geom.basegeom))
+end
+
+# The copy owns its base geometry either way: it is an internal detail the
+# caller never sees, so `destroy`ing the returned `PreparedGeometry` must not
+# leak it.
+function Base.copy(geom::PreparedGeometry)
+    return unsafe_preparegeom(_clonegeom(IGeometry, geom.basegeom))
+end
+
+# Without this, `deepcopy` falls back to `jl_new_struct_uninit`, which copies
+# the `ptr` field verbatim (it is a bitstype) and bypasses the inner
+# constructor. The result would alias the original's GDAL handle *and* carry no
+# finalizer, leaving a dangling pointer once the original is collected.
 function Base.deepcopy_internal(geom::AbstractGeometry, stackdict::IdDict)
     haskey(stackdict, geom) && return stackdict[geom]
-    geomcopy = clone(geom)
+    # `Base.copy` qualified: ArchGDAL defines its own `copy` for datasets and
+    # feature layers, which shadows `Base.copy` inside the module.
+    geomcopy = Base.copy(geom)
     stackdict[geom] = geomcopy
     return geomcopy
 end
@@ -176,13 +217,17 @@ has_preparedgeom_support() = Bool(GDAL.ogrhaspreparedgeometrysupport())
 
 Create an prepared geometry of a geometry. This can speed up operations which interact
 with the geometry multiple times, by storing caches of calculated geometry information.
+
+The prepared geometry holds a reference to `geom`. GDAL builds its own GEOS copy,
+so this is only to keep the source available for `copy` and `deepcopy`, which
+re-prepare from it.
 """
 function preparegeom(geom::AbstractGeometry{T}) where {T}
-    return IPreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom))
+    return IPreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom), geom)
 end
 
 function unsafe_preparegeom(geom::AbstractGeometry{T}) where {T}
-    return PreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom))
+    return PreparedGeometry{T}(GDAL.ogrcreatepreparedgeometry(geom), geom)
 end
 
 """

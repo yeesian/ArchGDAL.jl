@@ -5,7 +5,9 @@ abstract type AbstractGeometry{T} end
 # needs to have a `ptr::GDAL.OGRGeometryH` attribute
 
 abstract type AbstractPreparedGeometry{T} <: AbstractGeometry{T} end
-# needs to have a `ptr::GDAL.OGRPreparedGeometryH` attribute
+# needs to have a `ptr::GDAL.OGRPreparedGeometryH` attribute, and a
+# `basegeom::AbstractGeometry{T}` attribute holding the geometry it was
+# prepared from (GDAL exposes no way to recover it from the handle).
 
 abstract type AbstractSpatialRef end
 # needs to have a `ptr::GDAL.OGRSpatialReferenceH` attribute
@@ -274,13 +276,18 @@ _geomtype(::IGeometry{T}) where {T} = T
 
 mutable struct PreparedGeometry{T} <: AbstractPreparedGeometry{T}
     ptr::GDAL.OGRPreparedGeometryH
+    basegeom::AbstractGeometry{T}
 end
 
 mutable struct IPreparedGeometry{T} <: AbstractPreparedGeometry{T}
     ptr::GDAL.OGRPreparedGeometryH
+    basegeom::AbstractGeometry{T}
 
-    function IPreparedGeometry{T}(ptr::GDAL.OGRPreparedGeometryH) where {T}
-        geom = new{T}(ptr)
+    function IPreparedGeometry{T}(
+        ptr::GDAL.OGRPreparedGeometryH,
+        basegeom::AbstractGeometry{T},
+    ) where {T}
+        geom = new{T}(ptr, basegeom)
         finalizer(destroy, geom)
         return geom
     end
