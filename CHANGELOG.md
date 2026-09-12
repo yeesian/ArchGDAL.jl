@@ -18,6 +18,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Changed
 
+- `Tables.schema` describes every feature layer, not only featureless ones, and layers report a length, so reading a layer into a table sizes its columns up front. Nullable fields gain `Missing` in their column type, geometry columns take the abstract `IGeometry`, and an unset field reaches a column as `missing` rather than `nothing`.
 - Geometry wrappers resolve `IGeometry{T}`/`Geometry{T}` through a static type branch, roughly halving the per-geometry cost of reading a layer.
 - JuliaFormatter formatted the Julia source and tests. [#495](https://github.com/yeesian/ArchGDAL.jl/pull/495), [#502](https://github.com/yeesian/ArchGDAL.jl/pull/502)
 

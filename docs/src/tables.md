@@ -27,6 +27,29 @@ dataset1 = ArchGDAL.read("data/multi_geom.csv", options = ["GEOM_POSSIBLE_NAMES=
 DataFrames.DataFrame(ArchGDAL.getlayer(dataset1, 0))
 ```
 
+## Column types
+
+`Tables.schema` reads the column types from the layer definition, so a sink can
+size its columns before reading a single feature:
+
+| Column | Type |
+|:---|:---|
+| FID | `Int64` |
+| geometry field | `IGeometry`, or `Union{Missing,IGeometry}` when nullable |
+| ordinary field | the field's Julia type, or `Union{Missing,T}` when nullable |
+
+OGR makes fields nullable by default, so most columns admit `missing` whether or
+not the layer holds an absent value. A layer's declared geometry type binds the
+layer rather than each of its features — a shapefile `wkbPolygon` layer yields
+`wkbMultiPolygon` features — so geometry columns take the abstract `IGeometry`.
+Each geometry still carries its own type: `ArchGDAL.getgeom` gives back an
+`IGeometry{wkbPolygon}` or an `IGeometry{wkbMultiPolygon}` as the feature
+demands.
+
+A column has the one `missing` to say a value is absent. `ArchGDAL.getfield`
+distinguishes an unset field (`nothing`) from a null one (`missing`); both reach
+a column as `missing`.
+
 ## Feature IDs
 
 Database-like formats (GeoPackage, PostGIS, SQLite, ...) give each feature a
@@ -44,7 +67,7 @@ julia> ArchGDAL.fidcolumnname(layer)
 julia> DataFrames.DataFrame(layer)
 357×5 DataFrame
  Row │ id     geom                     property_0  property_1      property_2
-     │ Int64  IGeometry                String      String          String
+     │ Int64  IGeometry?               String?     String?         String?
 ─────┼────────────────────────────────────────────────────────────────────────
    1 │     1  Geometry: wkbLineString  6           Sutlej          null
    2 │     2  Geometry: wkbLineString  4           Svernaya Dvina  null

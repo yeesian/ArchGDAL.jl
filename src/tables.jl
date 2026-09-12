@@ -25,14 +25,27 @@ function _fidcolumn(layer::AbstractFeatureLayer)::Symbol
     return fidcolumn
 end
 
-function Tables.schema(
-    layer::AbstractFeatureLayer,
-)::Union{Nothing,Tables.Schema}
-    # If the layer has no features, calculate the schema from the layer
-    # otherwise let the features build the schema on the fly
-    # If we always build the schema, all isnullable (by default true) fields
-    # will result in columns with Union{Missing}.
-    nfeature(layer) == 0 || return nothing
+"""
+    Tables.schema(layer::AbstractFeatureLayer)
+
+The layer's columns, read from its definition: the FID column, then one column
+per geometry field, then one per ordinary field, in the order
+`Tables.columnnames` gives for the layer's rows.
+
+The layer definition decides each column's type:
+
+| Column | Type |
+|:---|:---|
+| FID | `Int64` |
+| geometry field | `IGeometry`, or `Union{Missing,IGeometry}` when nullable |
+| ordinary field | the field's Julia type, or `Union{Missing,T}` when nullable |
+
+OGR makes fields nullable by default, so most columns carry `Missing` whether or
+not the layer holds an absent value. A layer's declared geometry type binds the
+layer rather than each of its features -- a shapefile `wkbPolygon` layer yields
+`wkbMultiPolygon` features -- so geometry columns take the abstract `IGeometry`.
+"""
+function Tables.schema(layer::AbstractFeatureLayer)::Tables.Schema
     ld = layerdefn(layer)
     geom_names, field_names, _, fielddefns = schema_names(ld)
     names = (geom_names..., field_names...)
@@ -46,12 +59,21 @@ function Tables.schema(
     return Tables.Schema(names, types)
 end
 
-function _datatype(fielddefn::IFieldDefnView)
-    return T = convert(DataType, getfieldtype(fielddefn))
+# The subtypes that name a Julia type of their own. GDAL's `OFSTJSON` and
+# `OFSTUUID` leave that to the base type, which `getfield` also reads them as.
+const _TYPEDSUBTYPES = (OFSTBoolean, OFSTInt16, OFSTFloat32)
+
+function _datatype(fielddefn::IFieldDefnView)::Type
+    subtype = getsubtype(fielddefn)
+    T = convert(
+        DataType,
+        subtype in _TYPEDSUBTYPES ? subtype : gettype(fielddefn),
+    )
+    return isnullable(fielddefn) ? Union{Missing,T} : T
 end
 
-function _datatype(fielddefn::IGeomFieldDefnView)
-    return IGeometry{gettype(fielddefn)}
+function _datatype(geomdefn::IGeomFieldDefnView)::Type
+    return isnullable(geomdefn) ? Union{Missing,IGeometry} : IGeometry
 end
 
 Tables.istable(::Type{<:AbstractFeatureLayer})::Bool = true
@@ -67,10 +89,11 @@ function Tables.getcolumn(row::AbstractFeature, i::Int)
         i == 1 && return getfid(row)
         i -= 1
     end
-    if i > nfield(row)
-        return getgeom(row, i - nfield(row) - 1)
+    nfields = nfield(row)
+    if i > nfields
+        return _cell(getgeom(row, i - nfields - 1))
     elseif i > 0
-        return getfield(row, i - 1)
+        return _cell(getfield(row, i - 1))
     else
         return missing
     end
@@ -82,16 +105,17 @@ function Tables.getcolumn(row::AbstractFeature, name::Symbol)
     if name !== Symbol("") && name === row.fidcolumn
         return getfid(row)
     end
-    field = getfield(row, name)
-    if !ismissing(field)
-        return field
-    end
-    geom = getgeom(row, name)
-    if geom.ptr != C_NULL
-        return geom
-    end
-    return missing
+    i = findfieldindex(row, name)
+    i === nothing || return _cell(getfield(row, i))
+    j = findgeomindex(row, name)
+    return j == -1 ? missing : _cell(getgeom(row, j))
 end
+
+# A column has the one `missing` to say a value is absent, so an unset field and
+# a null one both arrive as `missing`; `getfield` and `getgeom` keep them apart.
+_cell(value) = value
+_cell(::Nothing)::Missing = missing
+_cell(geom::AbstractGeometry) = geom.ptr == C_NULL ? missing : geom
 
 function Tables.columnnames(row::AbstractFeature)::Tuple{Vararg{Symbol}}
     geom_names, field_names = schema_names(getfeaturedefn(row))

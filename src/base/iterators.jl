@@ -44,9 +44,11 @@ end
 
 Base.eltype(layer::AbstractFeatureLayer)::DataType = IFeature
 
-Base.IteratorSize(::Type{<:AbstractFeatureLayer}) = Base.SizeUnknown()
+# `Tables` sizes a column from the row count before it fills it, so reading a
+# layer into a table hangs on the layer reporting a length.
+Base.IteratorSize(::Type{<:AbstractFeatureLayer}) = Base.HasLength()
 
-Base.length(layer::AbstractFeatureLayer)::Integer = nfeature(layer, true)
+Base.length(layer::AbstractFeatureLayer)::Int = Int(nfeature(layer, true))
 
 struct BlockIterator{T<:Integer}
     rows::T

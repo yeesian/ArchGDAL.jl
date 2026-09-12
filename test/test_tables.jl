@@ -27,7 +27,16 @@ using Tables
         layer2 = AG.getlayer(dataset2, 0)
 
         @testset "Tables methods" begin
-            @test isnothing(Tables.schema(layer1))
+            @test Tables.schema(layer1) == Tables.Schema(
+                (:point, :linestring, :id, :zoom, :location),
+                (
+                    Union{Missing,AG.IGeometry},
+                    Union{Missing,AG.IGeometry},
+                    Union{Missing,String},
+                    Union{Missing,String},
+                    Union{Missing,String},
+                ),
+            )
             @test Tables.istable(typeof(layer)) == true
             @test Tables.rowaccess(typeof(layer)) == true
 
@@ -120,7 +129,8 @@ using Tables
                 @test only(result.uint64) === Int64(0)
                 @test only(result.date) === Dates.Date(2026, 8, 27)
                 @test only(result.time) === Dates.Time(18, 31)
-                @test only(result.datetime) === Dates.DateTime(2026, 8, 27, 18, 31)
+                @test only(result.datetime) ===
+                      Dates.DateTime(2026, 8, 27, 18, 31)
                 @test only(result.int8list) == Int32[-128, 127]
                 @test only(result.int16list) == Int32[-32768, 32767]
                 @test only(result.uint16list) == Int32[0, 65535]
@@ -583,7 +593,7 @@ using Tables
                     types = (
                         Union{Missing,AG.IGeometry},
                         Union{Missing,Int64},
-                        String,
+                        Union{Missing,String},
                     ),
                     values = (
                         Union{Missing,String}[
@@ -608,9 +618,9 @@ using Tables
                 ESRI_Shapefile_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
-                        Union{Missing,AG.IGeometry{AG.wkbLineString}},
+                        Union{Missing,AG.IGeometry},
                         Union{Missing,Int64},
-                        String,
+                        Union{Missing,String},
                     ),
                     values = (
                         Union{Missing,String}[
@@ -639,7 +649,7 @@ using Tables
                     types = (
                         Union{Missing,AG.IGeometry},
                         Union{Missing,Int32},
-                        String,
+                        Union{Missing,String},
                     ),
                     values = (
                         Union{Missing,String}[
@@ -664,9 +674,9 @@ using Tables
                 GeoJSON_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
                     types = (
-                        Union{Missing,AG.IGeometry{AG.wkbLineString}},
+                        Union{Missing,AG.IGeometry},
                         Union{Missing,Int32},
-                        String,
+                        Union{Missing,String},
                     ),
                     values = (
                         Union{Missing,String}[
@@ -696,7 +706,7 @@ using Tables
                         Union{Missing,AG.IGeometry},
                         String,
                         Union{Missing,Int64},
-                        String,
+                        Union{Missing,String},
                     ),
                     values = (
                         Union{Missing,String}[
@@ -734,7 +744,7 @@ using Tables
                         Int64,
                         Union{Missing,AG.IGeometry},
                         Union{Missing,Int64},
-                        String,
+                        Union{Missing,String},
                     ),
                     values = (
                         Int64[1, 2, 3, 4],
@@ -761,7 +771,11 @@ using Tables
             @testset "Conversion to table for KML driver" begin
                 KML_test_reference_geotable = (
                     names = (Symbol(""), :Name, :Description),
-                    types = (AG.IGeometry, String, String),
+                    types = (
+                        Union{Missing,AG.IGeometry},
+                        Union{Missing,String},
+                        Union{Missing,String},
+                    ),
                     values = (
                         [
                             "LINESTRING (1 2,2 3,3 4)",
@@ -785,14 +799,20 @@ using Tables
             @testset "Conversion to table for FlatGeobuf driver" begin
                 FlatGeobuf_test_reference_geotable = (
                     names = (Symbol(""), :id, :name),
-                    types = (AG.IGeometry, Union{Nothing,Int64}, String),
+                    types = (
+                        Union{Missing,AG.IGeometry},
+                        Union{Missing,Int64},
+                        Union{Missing,String},
+                    ),
                     values = (
                         [
                             "LINESTRING (5 6,6 7,7 8)",
                             "MULTILINESTRING ((1 2,2 3,3 4,4 5),(6 7,7 8,8 9,9 10))",
                             "LINESTRING (1 2,2 3,3 4)",
                         ],
-                        Union{Nothing,Int64}[nothing, 2, 1],
+                        # The FlatGeobuf driver leaves the field unset rather
+                        # than null; a column carries either as `missing`.
+                        Union{Missing,Int64}[missing, 2, 1],
                         ["emptyid", "multiline1", "line1"],
                     ),
                 )
@@ -818,11 +838,11 @@ using Tables
                     CSV_multigeom_test_reference_geotable = (
                         names = (:point, :linestring, :id, :zoom, :location),
                         types = (
-                            AG.IGeometry{AG.wkbPoint},
-                            AG.IGeometry{AG.wkbLineString},
-                            String,
-                            String,
-                            String,
+                            Union{Missing,AG.IGeometry},
+                            Union{Missing,AG.IGeometry},
+                            Union{Missing,String},
+                            Union{Missing,String},
+                            Union{Missing,String},
                         ),
                         values = (
                             ["POINT (30 10)", "POINT (35 15)"],
@@ -851,9 +871,17 @@ using Tables
                 ) do ds
                     layer = AG.copy(AG.getlayer(ds, 0))
 
-                    # With features, no schema is defined
-                    @test isnothing(Tables.schema(layer))
-                    # And tables are built up from features
+                    schema = Tables.Schema(
+                        (:point, :linestring, :id, :zoom, :location),
+                        (
+                            Union{Missing,AG.IGeometry},
+                            Union{Missing,AG.IGeometry},
+                            Union{Missing,String},
+                            Union{Missing,String},
+                            Union{Missing,String},
+                        ),
+                    )
+                    @test Tables.schema(layer) == schema
                     table = Tables.columntable(layer)
                     @test Tables.columnnames(table) ==
                           (:point, :linestring, :id, :zoom, :location)
@@ -863,17 +891,8 @@ using Tables
                         AG.deletefeature!(layer, i)
                     end
 
-                    # Without features, schema is still defined and table is empty
-                    @test Tables.schema(layer) == Tables.Schema(
-                        (:point, :linestring, :id, :zoom, :location),
-                        (
-                            AG.IGeometry{AG.wkbUnknown},
-                            AG.IGeometry{AG.wkbUnknown},
-                            String,
-                            String,
-                            String,
-                        ),
-                    )
+                    # Deleting the features leaves the schema untouched
+                    @test Tables.schema(layer) == schema
                     table = Tables.columntable(layer)
                     @test Tables.rowcount(table) == 0
                     @test Tables.columnnames(table) ==
@@ -954,8 +973,6 @@ using Tables
             end
 
             @testset "Empty layers carry the FID in their schema" begin
-                # Only a featureless layer reports a schema; otherwise it is
-                # built from the rows.
                 empty_gpkg = joinpath(dir, "empty.gpkg")
                 AG.create(empty_gpkg, driver = AG.getdriver("GPKG")) do ds
                     AG.createlayer(
@@ -971,7 +988,11 @@ using Tables
                     @test AG.nfeature(layer) == 0
                     @test Tables.schema(layer) == Tables.Schema(
                         (:fid, :geom, :name),
-                        (Int64, AG.IGeometry{AG.wkbPoint}, String),
+                        (
+                            Int64,
+                            Union{Missing,AG.IGeometry},
+                            Union{Missing,String},
+                        ),
                     )
                 end
             end
