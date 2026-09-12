@@ -76,6 +76,39 @@ function _datatype(geomdefn::IGeomFieldDefnView)::Type
     return isnullable(geomdefn) ? Union{Missing,IGeometry} : IGeometry
 end
 
+"""
+    _featurecolumns(layer::AbstractFeatureLayer)
+
+`layer`'s `FeatureColumns`, naming the columns in the order `Tables.schema`
+gives them.
+"""
+function _featurecolumns(layer::AbstractFeatureLayer)::FeatureColumns
+    ld = layerdefn(layer)
+    fidcolumn = _fidcolumn(layer)
+    ngeoms = ngeom(ld)
+    nfields = nfield(ld)
+    offset = fidcolumn === Symbol("") ? 0 : 1
+    names = Vector{Symbol}(undef, offset + ngeoms + nfields)
+    offset == 0 || (names[1] = fidcolumn)
+    for i in 1:ngeoms
+        names[offset+i] = Symbol(getname(getgeomdefn(ld, i - 1)))
+    end
+    for i in 1:nfields
+        names[offset+ngeoms+i] = Symbol(getname(getfielddefn(ld, i - 1)))
+    end
+    # Filled in ascending precedence, so that where columns share a name a
+    # field's wins over a geometry field's and the FID's wins over both.
+    indices = Dict{Symbol,Int}()
+    for i in (offset+1):(offset+ngeoms)
+        indices[names[i]] = i
+    end
+    for i in (offset+ngeoms+1):(offset+ngeoms+nfields)
+        indices[names[i]] = i
+    end
+    offset == 0 || (indices[fidcolumn] = 1)
+    return FeatureColumns(fidcolumn, names, indices, ngeoms, nfields)
+end
+
 Tables.istable(::Type{<:AbstractFeatureLayer})::Bool = true
 Tables.rowaccess(::Type{<:AbstractFeatureLayer})::Bool = true
 
@@ -89,17 +122,39 @@ function Tables.getcolumn(row::AbstractFeature, i::Int)
         i == 1 && return getfid(row)
         i -= 1
     end
-    nfields = nfield(row)
-    if i > nfields
-        return _cell(getgeom(row, i - nfields - 1))
-    elseif i > 0
-        return _cell(getfield(row, i - 1))
-    else
-        return missing
-    end
+    i < 1 && return missing
+    # A feature read one at a time carries no column layout, so OGR counts its
+    # columns as it goes.
+    columns = row.columns
+    ngeoms = columns === nothing ? Int(ngeom(row)) : columns.ngeom
+    i <= ngeoms && return _cell(getgeom(row, i - 1))
+    i -= ngeoms
+    nfields = columns === nothing ? Int(nfield(row)) : columns.nfield
+    return i <= nfields ? _cell(getfield(row, i - 1)) : missing
 end
 
 function Tables.getcolumn(row::AbstractFeature, name::Symbol)
+    columns = row.columns
+    columns === nothing && return _getcolumn(row, name)
+    i = get(columns.indices, name, 0)
+    return i == 0 ? missing : Tables.getcolumn(row, i)
+end
+
+# `Tables` passes the column index from the schema, which orders the columns
+# exactly as `Tables.columnnames` and the index path do, so the name needs no
+# resolving.
+function Tables.getcolumn(
+    row::AbstractFeature,
+    ::Type{T},
+    i::Int,
+    name::Symbol,
+) where {T}
+    return Tables.getcolumn(row, i)
+end
+
+# A feature read one at a time carries no column layout, so OGR resolves the
+# name.
+function _getcolumn(row::AbstractFeature, name::Symbol)
     # `Symbol("")` is both "no FID column" and the name of an unnamed geometry
     # column, so it must never resolve to the FID.
     if name !== Symbol("") && name === row.fidcolumn
@@ -112,12 +167,18 @@ function Tables.getcolumn(row::AbstractFeature, name::Symbol)
 end
 
 # A column has the one `missing` to say a value is absent, so an unset field and
-# a null one both arrive as `missing`; `getfield` and `getgeom` keep them apart.
-_cell(value) = value
-_cell(::Nothing)::Missing = missing
-_cell(geom::AbstractGeometry) = geom.ptr == C_NULL ? missing : geom
+# a null geometry both arrive as `missing`; `getfield` and `getgeom` keep them
+# apart. A single method covers every cell type, so the call stays static where
+# a field read infers to `Any`.
+@inline function _cell(value)
+    value === nothing && return missing
+    value isa AbstractGeometry && value.ptr == C_NULL && return missing
+    return value
+end
 
 function Tables.columnnames(row::AbstractFeature)::Tuple{Vararg{Symbol}}
+    columns = row.columns
+    columns === nothing || return Tuple(columns.names)
     geom_names, field_names = schema_names(getfeaturedefn(row))
     fidcolumn = row.fidcolumn
     return if fidcolumn === Symbol("")

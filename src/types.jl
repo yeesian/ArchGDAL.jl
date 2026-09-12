@@ -145,29 +145,61 @@ mutable struct IFeatureLayer <: AbstractFeatureLayer
     end
 end
 
+"""
+    FeatureColumns
+
+The `Tables` column layout of a feature layer: its FID column name, the column
+names in order, the index each name takes, and the layer's geometry and ordinary
+field counts.
+
+Every feature an iteration over the layer yields shares one, read off the layer
+definition once. Resolving a cell against that definition instead costs
+`Tables.getcolumn` an `OGR_F_GetFieldIndex` string compare and an
+`OGR_F_GetFieldCount`, and a geometry column a wasted field-index miss on top.
+
+Mutable so that the iteration state holds a pointer to it: inlined into the
+state tuple it triples the tuple boxed on every `iterate`.
+"""
+mutable struct FeatureColumns
+    fidcolumn::Symbol
+    names::Vector{Symbol}
+    indices::Dict{Symbol,Int}
+    ngeom::Int
+    nfield::Int
+end
+
 # `fidcolumn` names the FID column of the layer the feature was read from, and
-# is `Symbol("")` for features not read from a layer, which have no FID yet.
+# is `Symbol("")` for features not read from a layer, which have no FID yet. It
+# stays a field of its own because the `Tables` index path reads it for every
+# cell, whether or not the feature carries a column layout.
+#
+# `columns` is `nothing` for a feature read one at a time, which asks OGR for
+# its column layout as it goes.
 mutable struct Feature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
     fidcolumn::Symbol
+    columns::Union{Nothing,FeatureColumns}
 
     function Feature(
         ptr::GDAL.OGRFeatureH = C_NULL,
         fidcolumn::Symbol = Symbol(""),
+        columns::Union{Nothing,FeatureColumns} = nothing,
     )
-        return new(ptr, fidcolumn)
+        return new(ptr, fidcolumn, columns)
     end
 end
 
 mutable struct IFeature <: AbstractFeature
     ptr::GDAL.OGRFeatureH
     fidcolumn::Symbol
+    columns::Union{Nothing,FeatureColumns}
 
     function IFeature(
         ptr::GDAL.OGRFeatureH = C_NULL,
         fidcolumn::Symbol = Symbol(""),
+        columns::Union{Nothing,FeatureColumns} = nothing,
     )
-        feature = new(ptr, fidcolumn)
+        feature = new(ptr, fidcolumn, columns)
         finalizer(destroy, feature)
         return feature
     end

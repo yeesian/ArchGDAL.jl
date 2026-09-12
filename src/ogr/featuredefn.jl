@@ -111,7 +111,7 @@ This uses the OGRFeatureDefn::GetFieldIndex() method.
 function findfieldindex(
     featuredefn::AbstractFeatureDefn,
     name::Union{AbstractString,Symbol},
-)::Integer
+)::Int
     return GDAL.ogr_fd_getfieldindex(featuredefn, name)
 end
 
@@ -291,7 +291,7 @@ the geometry field index, or -1 if no match found.
 function findgeomindex(
     featuredefn::AbstractFeatureDefn,
     name::AbstractString = "",
-)::Integer
+)::Int
     return GDAL.ogr_fd_getgeomfieldindex(featuredefn, name)
 end
 

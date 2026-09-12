@@ -7,7 +7,7 @@ The newly created feature is owned by the caller, and will have its own
 reference to the OGRFeatureDefn.
 """
 unsafe_clone(feature::AbstractFeature)::AbstractFeature =
-    Feature(GDAL.ogr_f_clone(feature), feature.fidcolumn)
+    Feature(GDAL.ogr_f_clone(feature), feature.fidcolumn, feature.columns)
 
 """
     destroy(feature::AbstractFeature)
@@ -140,12 +140,12 @@ This is a cover for the `OGRFeatureDefn::GetFieldIndex()` method.
 function findfieldindex(
     feature::AbstractFeature,
     name::Union{AbstractString,Symbol},
-)::Union{Integer,Nothing}
+)::Union{Nothing,Int}
     i = GDAL.ogr_f_getfieldindex(feature, name)
     return if i == -1
         nothing
     else
-        i
+        Int(i)
     end
 end
 
@@ -891,7 +891,7 @@ This is a cover for the `OGRFeatureDefn::GetGeomFieldIndex()` method.
 function findgeomindex(
     feature::AbstractFeature,
     name::Union{AbstractString,Symbol} = "",
-)::Integer
+)::Int
     return GDAL.ogr_f_getgeomfieldindex(feature, name)
 end
 

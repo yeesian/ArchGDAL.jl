@@ -47,12 +47,14 @@ using Tables
                   (:point, :linestring, :id, :zoom, :location)
             @test ismissing(Tables.getcolumn(features[2], -5))
             @test ismissing(Tables.getcolumn(features[2], 0))
-            @test Tables.getcolumn(features[1], 1) == "5.1"
-            @test Tables.getcolumn(features[1], 2) == "1.0"
-            @test Tables.getcolumn(features[1], 3) == "Mumbai"
-            @test AG.toWKT(Tables.getcolumn(features[1], 4)) == "POINT (30 10)"
-            @test AG.toWKT(Tables.getcolumn(features[1], 5)) ==
+            # The indices run in `Tables.columnnames` order: geometry columns,
+            # then ordinary fields
+            @test AG.toWKT(Tables.getcolumn(features[1], 1)) == "POINT (30 10)"
+            @test AG.toWKT(Tables.getcolumn(features[1], 2)) ==
                   "LINESTRING (30 10,10 30,40 40)"
+            @test Tables.getcolumn(features[1], 3) == "5.1"
+            @test Tables.getcolumn(features[1], 4) == "1.0"
+            @test Tables.getcolumn(features[1], 5) == "Mumbai"
             @test Tables.getcolumn(features[1], :id) == "5.1"
             @test Tables.getcolumn(features[1], :zoom) == "1.0"
             @test Tables.getcolumn(features[1], :location) == "Mumbai"
@@ -66,12 +68,12 @@ using Tables
                   (:point, :linestring, :id, :zoom, :location)
             @test ismissing(Tables.getcolumn(features[2], -5))
             @test ismissing(Tables.getcolumn(features[2], 0))
-            @test Tables.getcolumn(features[2], 1) == "5.2"
-            @test Tables.getcolumn(features[2], 2) == "2.0"
-            @test Tables.getcolumn(features[2], 3) == "New Delhi"
-            @test AG.toWKT(Tables.getcolumn(features[2], 4)) == "POINT (35 15)"
-            @test AG.toWKT(Tables.getcolumn(features[2], 5)) ==
+            @test AG.toWKT(Tables.getcolumn(features[2], 1)) == "POINT (35 15)"
+            @test AG.toWKT(Tables.getcolumn(features[2], 2)) ==
                   "LINESTRING (35 15,15 35,45 45)"
+            @test Tables.getcolumn(features[2], 3) == "5.2"
+            @test Tables.getcolumn(features[2], 4) == "2.0"
+            @test Tables.getcolumn(features[2], 5) == "New Delhi"
             @test Tables.getcolumn(features[2], :id) == "5.2"
             @test Tables.getcolumn(features[2], :zoom) == "2.0"
             @test Tables.getcolumn(features[2], :location) == "New Delhi"
@@ -951,9 +953,9 @@ using Tables
 
                     # The FID takes index 1, shifting the other columns past it
                     @test Tables.getcolumn(rows[1], 1) == 1
-                    @test Tables.getcolumn(rows[1], 2) == "a"
-                    @test AG.toWKT(Tables.getcolumn(rows[1], 3)) ==
+                    @test AG.toWKT(Tables.getcolumn(rows[1], 2)) ==
                           "POINT (1 1)"
+                    @test Tables.getcolumn(rows[1], 3) == "a"
 
                     table = Tables.columntable(layer)
                     @test Tables.columnnames(table) == (:fid, :geom, :name)
@@ -1059,7 +1061,9 @@ using Tables
                         # The unnamed geometry column keeps its `Symbol("")`
                         # name rather than resolving to the FID
                         @test Tables.columnnames(row) == (Symbol(""), :name)
-                        @test Tables.getcolumn(row, 1) == "a"
+                        @test AG.toWKT(Tables.getcolumn(row, 1)) ==
+                              "POINT (1 2)"
+                        @test Tables.getcolumn(row, 2) == "a"
                         @test ismissing(Tables.getcolumn(row, :fid))
                         @test !ismissing(Tables.getcolumn(row, Symbol("")))
                     end
@@ -1110,13 +1114,19 @@ using Tables
                 end
             end
 
-            @testset "Iteration state carries the FID column name" begin
+            @testset "Iteration state carries the column layout" begin
                 gpkg_with(dir) do layer
                     next = iterate(layer)
                     @test next !== nothing
                     feature, state = next
-                    @test state isa Tuple{Int64,Symbol}
-                    @test state == (1, :fid)
+                    @test state isa Tuple{Int64,AG.FeatureColumns}
+                    @test state[1] == 1
+                    columns = state[2]
+                    @test columns.fidcolumn == :fid
+                    @test columns.names == [:fid, :geom, :name]
+                    @test columns.indices ==
+                          Dict(:fid => 1, :geom => 2, :name => 3)
+                    @test columns.nfield == 1
                     @test Tables.getcolumn(feature, :fid) == 1
 
                     # An integer state still drives iteration
