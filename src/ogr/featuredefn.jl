@@ -363,6 +363,12 @@ function unsafe_createfeature(featuredefn::AbstractFeatureDefn)::Feature
     return Feature(GDAL.ogr_f_create(featuredefn))
 end
 
+# Bare-handle overload, for callers that already hold a borrowed defn pointer:
+# wrapping it in an `IFeatureDefnView` just to create a feature costs a
+# finalizer-bearing allocation, which a per-feature write loop pays every row.
+unsafe_createfeature(featuredefn::GDAL.OGRFeatureDefnH)::Feature =
+    Feature(GDAL.ogr_f_create(featuredefn))
+
 """
     getfeaturedefn(feature::AbstractFeature)
 

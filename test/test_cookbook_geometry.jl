@@ -35,6 +35,24 @@ import ArchGDAL as AG
 
         # Method 5
         @test AG.toWKT(AG.createpoint(x, y)) == wktpoint
+
+        # Coordinates passed directly, rather than through a tuple or a vector
+        @test AG.createpoint(x, y) isa AG.IGeometry{AG.wkbPoint}
+        @test AG.createpoint(x, y, 2.0) isa AG.IGeometry{AG.wkbPoint25D}
+        @test AG.toWKT(@inferred AG.createpoint(x, y)) == wktpoint
+        @test AG.toWKT(AG.createpoint(x, y)) ==
+              AG.toWKT(AG.createpoint((x, y))) ==
+              AG.toWKT(AG.createpoint([x, y]))
+        @test AG.toWKT(@inferred AG.createpoint(x, y, 2.0)) ==
+              AG.toWKT(AG.createpoint((x, y, 2.0)))
+        point2d = AG.unsafe_createpoint(x, y)
+        point3d = AG.unsafe_createpoint(x, y, 2.0)
+        @test point2d isa AG.Geometry{AG.wkbPoint}
+        @test point3d isa AG.Geometry{AG.wkbPoint25D}
+        @test AG.toWKT(point2d) == wktpoint
+        @test AG.toWKT(point3d) == AG.toWKT(AG.createpoint((x, y, 2.0)))
+        AG.destroy(point2d)
+        AG.destroy(point3d)
     end
 
     @testset "Create a LineString" begin

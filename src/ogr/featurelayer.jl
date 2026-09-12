@@ -503,7 +503,7 @@ The newly feature is owned by the layer (it will increase the number of features
 the layer by one), but the feature has not been written to the layer yet.
 """
 unsafe_createfeature(layer::AbstractFeatureLayer)::Feature =
-    unsafe_createfeature(layerdefn(layer))
+    unsafe_createfeature(GDAL.ogr_l_getlayerdefn(layer))
 
 function createfeature(f::Function, layer::L)::L where {L<:AbstractFeatureLayer}
     feature = unsafe_createfeature(layer)

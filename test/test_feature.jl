@@ -385,4 +385,15 @@ end
             @test AG.nfeature(layer) == 3
         end
     end
+
+    @testset "destroying a feature twice is a no-op" begin
+        # `IFeature`'s finalizer runs `destroy` again after an explicit one
+        AG.read("data/point.geojson") do dataset
+            layer = AG.getlayer(dataset, 0)
+            feature = AG.unsafe_createfeature(layer)
+            AG.destroy(feature)
+            @test feature.ptr == C_NULL
+            @test AG.destroy(feature) === nothing
+        end
+    end
 end

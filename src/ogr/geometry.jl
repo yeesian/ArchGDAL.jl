@@ -1777,6 +1777,29 @@ end
 
 for f in (:create, :unsafe_create)
     f1 = Symbol("$(f)point")
+    # the wrapper type `creategeom`/`unsafe_creategeom` would have returned
+    W = f === :create ? :IGeometry : :Geometry
+    # Build a point straight from its coordinates. The generic methods below
+    # route through a tuple and a `Val` dispatch, which a per-feature write
+    # loop pays on every point; these stay inferred and allocate only the
+    # geometry wrapper.
+    @eval function $f1(x::Real, y::Real)
+        return setpoint!(
+            $W{wkbPoint}(GDAL.ogr_g_creategeometry(wkbPoint)),
+            0,
+            x,
+            y,
+        )
+    end
+    @eval function $f1(x::Real, y::Real, z::Real)
+        return setpoint!(
+            $W{wkbPoint25D}(GDAL.ogr_g_creategeometry(wkbPoint25D)),
+            0,
+            x,
+            y,
+            z,
+        )
+    end
     @eval $f1(cs::Real...) = $f1(cs)
     @eval $f1(coords::Vector) = $f1(Tuple(coords))
     @eval function $f1(coords::Tuple{<:Real,<:Real})

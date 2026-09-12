@@ -21,8 +21,12 @@ application the memory will be freed onto the application heap which is
 inappropriate.
 """
 function destroy(feature::AbstractFeature)::Nothing
-    GDAL.ogr_f_destroy(feature)
-    feature.ptr = C_NULL
+    # `destroy` is both the explicit teardown and `IFeature`'s finalizer, so a
+    # feature destroyed by hand reaches here a second time with a NULL handle
+    if feature.ptr != C_NULL
+        GDAL.ogr_f_destroy(feature)
+        feature.ptr = C_NULL
+    end
     return nothing
 end
 
