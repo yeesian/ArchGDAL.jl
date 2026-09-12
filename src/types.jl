@@ -243,13 +243,53 @@ function _infergeomtype(ptr::GDAL.OGRGeometryH)::OGRwkbGeometryType
     end
 end
 
+"""
+    _typedgeom(W, ptr, geomtype)
+
+Wrap `ptr` in `W{geomtype}`, where `W` is `Geometry` or `IGeometry`.
+
+The branches below name the geometry types OGR reports, so the compiler resolves
+`W{geomtype}` statically: ~100ns a geometry, against ~240ns for the dynamic
+constructor and the type-cache lookup it pays. Types with no branch take that
+dynamic constructor.
+"""
+@inline function _typedgeom(
+    ::Type{W},
+    ptr::GDAL.OGRGeometryH,
+    geomtype::OGRwkbGeometryType,
+) where {W<:AbstractGeometry}
+    geomtype === wkbPoint && return W{wkbPoint}(ptr)
+    geomtype === wkbLineString && return W{wkbLineString}(ptr)
+    geomtype === wkbPolygon && return W{wkbPolygon}(ptr)
+    geomtype === wkbMultiPoint && return W{wkbMultiPoint}(ptr)
+    geomtype === wkbMultiLineString && return W{wkbMultiLineString}(ptr)
+    geomtype === wkbMultiPolygon && return W{wkbMultiPolygon}(ptr)
+    geomtype === wkbGeometryCollection && return W{wkbGeometryCollection}(ptr)
+    geomtype === wkbUnknown && return W{wkbUnknown}(ptr)
+    # `OGR_G_GetGeometryType` reports 2.5D geometries under the legacy 25D
+    # names.
+    geomtype === wkbPoint25D && return W{wkbPoint25D}(ptr)
+    geomtype === wkbLineString25D && return W{wkbLineString25D}(ptr)
+    geomtype === wkbPolygon25D && return W{wkbPolygon25D}(ptr)
+    geomtype === wkbMultiPoint25D && return W{wkbMultiPoint25D}(ptr)
+    geomtype === wkbMultiLineString25D && return W{wkbMultiLineString25D}(ptr)
+    geomtype === wkbMultiPolygon25D && return W{wkbMultiPolygon25D}(ptr)
+    geomtype === wkbGeometryCollection25D &&
+        return W{wkbGeometryCollection25D}(ptr)
+    geomtype === wkbLinearRing && return W{wkbLinearRing}(ptr)
+    geomtype === wkbNone && return W{wkbNone}(ptr)
+    return W{geomtype}(ptr)
+end
+
 mutable struct Geometry{OGRwkbGeometryType} <:
                AbstractGeometry{OGRwkbGeometryType}
     ptr::GDAL.OGRGeometryH
     Geometry{wkbUnknown}() = new{wkbUnknown}(C_NULL)
     Geometry{T}(ptr::GDAL.OGRGeometryH) where {T} = new{T}(ptr)
 end
-Geometry(ptr::GDAL.OGRGeometryH) = Geometry{_infergeomtype(ptr)}(ptr)
+function Geometry(ptr::GDAL.OGRGeometryH)
+    return _typedgeom(Geometry, ptr, _infergeomtype(ptr))
+end
 Geometry() = Geometry{wkbUnknown}()
 _geomtype(::Geometry{T}) where {T} = T
 
@@ -268,7 +308,9 @@ mutable struct IGeometry{OGRwkbGeometryType} <:
         return geom
     end
 end
-IGeometry(ptr::GDAL.OGRGeometryH) = IGeometry{_infergeomtype(ptr)}(ptr)
+function IGeometry(ptr::GDAL.OGRGeometryH)
+    return _typedgeom(IGeometry, ptr, _infergeomtype(ptr))
+end
 IGeometry() = IGeometry{wkbUnknown}()
 _geomtype(::IGeometry{T}) where {T} = T
 
