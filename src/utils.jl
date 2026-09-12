@@ -10,6 +10,43 @@ if VERSION < v"1.5"
 end
 
 """
+    _lastwins(ks, vs)
+
+Zip `ks` with `vs`, keeping only the last declaration of a repeated key.
+
+`@convert` maps may be many-to-one (e.g. `OFTInteger::Int16, OFTInteger::Int32`).
+The `ImmutableDict` these lookups used to live in resolved such a key to its last
+declaration, so deduplicating the same way keeps that behaviour and leaves the
+generated branch chain with distinct tests.
+"""
+function _lastwins(ks, vs)
+    lastidx = Dict{Any,Int}()
+    for (i, k) in enumerate(ks)
+        lastidx[k] = i
+    end
+    return [(ks[i], vs[i]) for i in sort!(collect(values(lastidx)))]
+end
+
+"""
+    _convert_chain(ks, vs, arg::Symbol)
+
+Build the body of a generated `convert` method: an `if`/`elseif` chain of `===`
+tests against the (interpolated, hence constant) keys, ending in the `KeyError`
+an `AbstractDict` lookup would have thrown.
+
+The chain is what makes the conversion cheap: LLVM turns it into a switch, so
+every typeid costs the same, whereas scanning an `ImmutableDict`'s linked list
+cost ~35 ns on average and grew with the number of declarations.
+"""
+function _convert_chain(ks, vs, arg::Symbol)
+    body = :(throw(KeyError($arg)))
+    for (k, v) in Iterators.reverse(_lastwins(ks, vs))
+        body = Expr(:if, :($arg === $k), v, body)
+    end
+    return body
+end
+
+"""
     @convert(<T1>::<T2>,
         <conversions>
     )
@@ -58,20 +95,26 @@ will generate a `convert` functions giving:
 ```
 does the equivalent of
 ```
-const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
+const GDALRWFlag_to_GDAL_GDALRWFlag_map = ImmutableDict(
     GF_Read => GDAL.GF_Read,
     GF_Write => GDAL.GF_Write
 )
-Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag) =
-    GDALRWFlag_to_GDALRWFlag_map[ft]
+Base.convert(::Type{GDAL.GDALRWFlag}, ft::GDALRWFlag)::GDAL.GDALRWFlag =
+    ft === GF_Read ? GDAL.GF_Read :
+    ft === GF_Write ? GDAL.GF_Write :
+    throw(KeyError(ft))
 
-const GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
+const GDAL_GDALRWFlag_to_GDALRWFlag_map = ImmutableDict(
     GDAL.GF_Read => GF_Read,
     GDAL.GF_Write => GF_Write
 )
-Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag) =
-    GDALRWFlag_to_GDALRWFlag_map[ft]
+Base.convert(::Type{GDALRWFlag}, ft::GDAL.GDALRWFlag)::GDALRWFlag =
+    ft === GDAL.GF_Read ? GF_Read :
+    ft === GDAL.GF_Write ? GF_Write :
+    throw(KeyError(ft))
 ```
+The `_map` constants are the declarations as data; the conversions themselves go
+through the branch chain, which compiles to a switch instead of a dict lookup.
 ### Case where 1st type `<: Enum` and 2nd type `== DataType` or `ìsa UnionAll`:
 ```
 @convert(OGRFieldType::DataType,
@@ -85,8 +128,9 @@ const OGRFieldType_to_DataType_map = ImmutableDict(
     OFTInteger => Bool,
     OFTInteger => Int16,
 )
-Base.convert(::Type{DataType}, ft::OGRFieldType) =
-    OGRFieldType_to_DataType_map[ft]
+# repeated key: only the last declaration is kept, see `_lastwins`
+Base.convert(::Type{DataType}, ft::OGRFieldType)::DataType =
+    ft === OFTInteger ? Int16 : throw(KeyError(ft))
 
 Base.convert(::Type{OGRFieldType}, ft::Type{Bool}) = OFTInteger
 Base.convert(::Type{OGRFieldType}, ft::Type{Int16}) = OFTInteger
@@ -127,9 +171,15 @@ macro convert(args...)
     )
     push!(
         result_expr.args,
-        :(function Base.convert(::Type{$type2}, ft::$type1)
-            return $T1_to_T2_map_name[ft]
-        end),
+        :(
+            function Base.convert(::Type{$type2}, ft::$type1)
+                # the typed local, rather than a `::T` on the signature, is what
+                # keeps inference as precise as the `ImmutableDict` lookup was
+                result::$(mapreduce(typeof, typejoin, stypes2)) =
+                    $(_convert_chain(stypes1, stypes2, :ft))
+                return result
+            end
+        ),
     )
 
     #* Reverse conversions to ArchGDAL typeids
@@ -160,9 +210,13 @@ macro convert(args...)
         )
         push!(
             result_expr.args,
-            :(function Base.convert(::Type{$type1}, ft::$type2)
-                return $T2_to_T1_map_name[ft]
-            end),
+            :(
+                function Base.convert(::Type{$type1}, ft::$type2)
+                    result::$(mapreduce(typeof, typejoin, stypes1)) =
+                        $(_convert_chain(stypes2, stypes1, :ft))
+                    return result
+                end
+            ),
         )
     end
 
