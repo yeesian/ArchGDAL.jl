@@ -31,7 +31,27 @@ jobs:
           version: ${{ matrix.version }}
       - uses: julia-actions/cache@v3
       - uses: julia-actions/julia-buildpkg@v1
+      - name: Configure GDAL libraries and certificates on macOS
+        id: macos-gdal
+        if: runner.os == 'macOS'
+        shell: julia --color=yes --project {0}
+        run: |
+          using GDAL, NetworkOptions
+          # SQLite_jll 3.49+ dropped the versioned install name GDAL links to, so dyld
+          # falls back to Apple's SQLite and GDAL's SQLite driver fails. Point dyld at
+          # the JLL libdir until https://github.com/JuliaPackaging/Yggdrasil/pull/14414 lands.
+          open(ENV["GITHUB_OUTPUT"], "a") do io
+              println(io, "sqlite_libdir=", dirname(GDAL.GDAL_jll.SQLite_jll.libsqlite_path))
+          end
+          # GDAL's libcurl needs a CA file on disk even when Julia uses the macOS trust
+          # store: https://github.com/JuliaGeo/GDAL.jl/issues/203
+          open(ENV["GITHUB_ENV"], "a") do io
+              println(io, "CURL_CA_BUNDLE=", NetworkOptions.ca_roots_path())
+          end
       - uses: julia-actions/julia-runtest@v1
+        with:
+          # Set DYLD_LIBRARY_PATH after bash starts: macOS can strip inherited DYLD variables.
+          prefix: ${{ runner.os == 'macOS' && format('env DYLD_LIBRARY_PATH={0}', steps.macos-gdal.outputs.sqlite_libdir) || '' }}
       - uses: julia-actions/julia-processcoverage@v1
       - uses: codecov/codecov-action@v7
         with:

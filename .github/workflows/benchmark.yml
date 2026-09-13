@@ -2,20 +2,30 @@ name: Run benchmarks
 
 on: [pull_request]
 
+permissions:
+  contents: read
+
 jobs:
   Benchmark:
-    runs-on: macos-latest
+    runs-on: macos-26
     steps:
-      - uses: actions/checkout@v7
-      - uses: julia-actions/setup-julia@latest
+      - name: Install Bash for AirspeedVelocity
+        shell: bash
+        run: |
+          # The action's summary generation needs Bash 4+, beyond macOS's system Bash.
+          brew install bash
+          echo "$(brew --prefix bash)/bin" >> "$GITHUB_PATH"
+      - uses: MilesCranmer/AirspeedVelocity.jl@f39cf180e62b34e52ed4d12ccf982d70b118a143 # action-v1
         with:
-          version: lts
-      - uses: julia-actions/julia-buildpkg@latest
-      - name: Install dependencies
-        run: julia -e 'using Pkg; pkg"add PkgBenchmark BenchmarkCI@0.1"'
-      - name: Run benchmarks
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.judge()'
-      - name: Print judgement
-        run: julia -e 'using BenchmarkCI; BenchmarkCI.displayjudgement()'
-        env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          asv-version: '0.6.5'
+          julia-version: lts
+          job-summary: 'true'
+          rev: ${{ github.event.pull_request.base.sha }},${{ github.event.pull_request.head.sha }}
+          # Use the same benchmark suite and dependencies for both revisions.
+          bench-on: ${{ github.event.pull_request.head.sha }}
+      - uses: actions/upload-artifact@v6
+        with:
+          name: benchmark-results
+          path: |
+            results/*.json
+            body.md
