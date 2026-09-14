@@ -19,8 +19,8 @@ function assertsimilar(ds1, ds2)
     for i in 0:(AG.nlayer(ds1)-1)
         AG.getlayer(ds1, i) do layer1
             AG.getlayer(ds2, i) do layer2
-                AG.ngeom(layer1) == AG.ngeom(layer2) ||
-                    error("unequal number of geometries in layer $i")
+                return AG.ngeom(layer1) == AG.ngeom(layer2) ||
+                       error("unequal number of geometries in layer $i")
             end
         end
     end
