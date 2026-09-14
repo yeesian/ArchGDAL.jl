@@ -40,6 +40,7 @@ import JLD2
     @testset "Create a Point" begin
         # Method 1
         AG.createpoint(100, 70) do point
+            wrapped_point = GeoInterface.convert(GeoInterface, point)
             @test point isa AG.Geometry{AG.wkbPoint}
             @test isapprox(GI.coordinates(point), [100, 70], atol = 1e-6)
             @test AG.geomdim(point) == 0
@@ -118,14 +119,18 @@ import JLD2
                 0x00,
             ]
             @test AG.toKML(point, "relativeToGround") ==
+                  AG.toKML(wrapped_point, "relativeToGround") ==
                   "<Point><altitudeMode>relativeToGround</altitudeMode>" *
                   "<coordinates>100,70,0</coordinates></Point>"
             @test AG.toKML(point, "clampToGround") ==
+                  AG.toKML(wrapped_point, "clampToGround") ==
                   "<Point><altitudeMode>clampToGround</altitudeMode>" *
                   "<coordinates>100,70,0</coordinates></Point>"
             @test AG.toKML(point) ==
+                  AG.toKML(wrapped_point) ==
                   "<Point><coordinates>100,70,0</coordinates></Point>"
             @test AG.toJSON(point) ==
+                  AG.toJSON(wrapped_point) ==
                   "{ \"type\": \"Point\", \"coordinates\": " *
                   "[ 100.0, 70.0, 0.0 ] }"
             @test startswith(
@@ -168,20 +173,31 @@ import JLD2
 
         # Method 2
         point = AG.createpoint(100, 70)
+        tuple_point = (100, 70)
         @test AG.geomdim(point) == 0
+        @test AG.geomdim(tuple_point) == 0
         @test AG.getcoorddim(point) == 2
         AG.setcoorddim!(point, 3)
         @test AG.getcoorddim(point) == 3
         @test AG.isvalid(point) == true
+        @test AG.isvalid(tuple_point) == true
         @test AG.issimple(point) == true
+        @test AG.issimple(tuple_point) == true
         @test AG.isring(point) == false
+        @test AG.isring(tuple_point) == false
         @test AG.getz(point, 0) == 0
         @test typeof(point) == AG.IGeometry{AG.wkbPoint}
         @test sprint(print, AG.envelope(point)) ==
+              sprint(print, AG.envelope(tuple_point)) ==
+              "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
+        @test sprint(print, AG.envelope(tuple_point)) ==
               "GDAL.OGREnvelope(100.0, 100.0, 70.0, 70.0)"
         @test sprint(print, AG.envelope3d(point)) ==
               "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
-        @test AG.toISOWKB(point, AG.wkbNDR) == UInt8[
+        @test sprint(print, AG.envelope3d(tuple_point)) ==
+              "GDAL.OGREnvelope3D(100.0, 100.0, 70.0, 70.0, 0.0, 0.0)"
+        @test AG.toISOWKB(point, AG.wkbNDR) ==
+              AG.toISOWKB(point, tuple_point) == UInt8[
             0x01,
             0xe9,
             0x03,
@@ -212,7 +228,8 @@ import JLD2
             0x00,
             0x00,
         ]
-        @test AG.toISOWKB(point, AG.wkbXDR) == UInt8[
+        @test AG.toISOWKB(point, AG.wkbXDR) ==
+              AG.toISOWKB(tuple_point, AG.wkbXDR) == UInt8[
             0x00,
             0x00,
             0x00,
@@ -244,17 +261,22 @@ import JLD2
             0x00,
         ]
         @test AG.toKML(point, "relativeToGround") ==
+              AG.toKML(tuple_point, "relativeToGround") ==
               "<Point><altitudeMode>relativeToGround</altitudeMode>" *
               "<coordinates>100,70,0</coordinates></Point>"
         @test AG.toKML(point, "clampToGround") ==
+              AG.toKML(tuple_point, "clampToGround") ==
               "<Point><altitudeMode>clampToGround</altitudeMode>" *
               "<coordinates>100,70,0</coordinates></Point>"
         @test AG.toKML(point) ==
+              AG.toKML(tuple_point) ==
               "<Point><coordinates>100,70,0</coordinates></Point>"
         @test AG.toJSON(point) ==
+              AG.toJSON(tuple_point) ==
               "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0, 0.0 ] }"
         @test AG.equals(point, AG.createpoint(100, 70, 0)) == true
         @test AG.equals(point, AG.createpoint((100, 70, 0))) == true
+        @test AG.equals(tuple_point, AG.createpoint(100, 70, 0)) == true
         AG.flattento2d!(point)
         @test AG.getcoorddim(point) == 2
         @test AG.getnonlineargeomflag() == true
@@ -263,7 +285,9 @@ import JLD2
         AG.setnonlineargeomflag!(true)
         @test AG.getnonlineargeomflag() == true
         AG.closerings!(point)
+        closed_tuple = AG.closerings(tuple_point)
         @test AG.toJSON(point) ==
+              AG.toJSON(closed_tuple) ==
               "{ \"type\": \"Point\", \"coordinates\": [ 100.0, 70.0 ] }"
     end
 
@@ -686,19 +710,27 @@ import JLD2
             [4.0, 5.0, 6.0],
             [7.0, 8.0, 9.0],
         )
+        wrapped_geom1 = GeoInterface.convert(GeoInterface, geom1)
+        wrapped_geom2 = GeoInterface.convert(GeoInterface, geom2)
 
         AG.closerings!(geom1)
         @test AG.disjoint(geom1, geom2) == false
+        @test AG.disjoint(wrapped_geom1, wrapped_geom2) == false
         @test AG.touches(geom1, geom2) == true
+        @test AG.touches(wrapped_geom1, wrapped_geom2) == true
         @test AG.crosses(geom1, geom2) == false
+        @test AG.crosses(wrapped_geom1, wrapped_geom2) == false
         @test AG.overlaps(geom1, geom2) == false
+        @test AG.overlaps(wrapped_geom1, wrapped_geom2) == false
 
         @test AG.toWKT(AG.boundary(geom2)) == "GEOMETRYCOLLECTION EMPTY"
+        @test AG.toWKT(AG.boundary(wrapped_geom2)) == "GEOMETRYCOLLECTION EMPTY"
         AG.boundary(geom2) do result
             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
         end
 
         @test AG.toWKT(AG.union(geom1, geom2)) ==
+              AG.toWKT(AG.union(wrapped_geom1, wrapped_geom2)) ==
               "GEOMETRYCOLLECTION (" *
               "POLYGON (" *
               "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
@@ -722,6 +754,7 @@ import JLD2
         end
 
         @test AG.toWKT(AG.difference(geom1, geom2)) ==
+              AG.toWKT(AG.difference(wrapped_geom1, wrapped_geom2)) ==
               "MULTIPOLYGON (" *
               "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
               "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
@@ -782,6 +815,7 @@ import JLD2
         end
 
         @test AG.toWKT(AG.symdifference(geom1, geom2)) ==
+              AG.toWKT(AG.symdifference(wrapped_geom1, wrapped_geom2)) ==
               "GEOMETRYCOLLECTION (" *
               "POLYGON (" *
               "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
@@ -826,7 +860,21 @@ import JLD2
             "(11 1 8,13 1 8,13 3 8,11 3 8,11 1 8))," *
             "POINT EMPTY)",
         )
+        wrapped_geom3 = GeoInterface.convert(GeoInterface, geom3)
         AG.clone(geom3) do geom4
+            @test sprint(print, AG.clone(geom3)) ==
+                  "Geometry: GEOMETRYCOLLECTION (" *
+                  "POINT (2 5 8)," *
+                  "POLYGON ((0 0 8," *
+                  " ... MPTY)"
+            @test sprint(print, AG.clone(geom4)) ==
+                  "Geometry: GEOMETRYCOLLECTION (" *
+                  "POINT (2 5 8)," *
+                  "POLYGON ((0 0 8," *
+                  " ... MPTY)"
+            @test typeof(geom4) == AG.Geometry{AG.wkbGeometryCollection25D}
+        end
+        AG.clone(wrapped_geom3) do geom4
             @test sprint(print, AG.clone(geom3)) ==
                   "Geometry: GEOMETRYCOLLECTION (" *
                   "POINT (2 5 8)," *
@@ -844,6 +892,7 @@ import JLD2
         end
 
         @test AG.toISOWKT(geom3) ==
+              AG.toISOWKT(wrapped_geom3) ==
               "GEOMETRYCOLLECTION Z (" *
               "POINT Z (2 5 8)," *
               "POLYGON Z (" *
