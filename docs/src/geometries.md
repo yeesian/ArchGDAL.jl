@@ -116,6 +116,7 @@ The following predicates return a `Bool`.
 The following methods do not modify `geom`.
 
 * [`ArchGDAL.clone(geom)`](@ref): a copy of the geometry with the original spatial reference system.
+* `copy(geom)` and `deepcopy(geom)`: like `ArchGDAL.clone`, but type-preserving. `ArchGDAL.clone` always returns an `IGeometry`, whereas these return the same wrapper type as `geom`, so copying a `Geometry` gives back a `Geometry` you are responsible for destroying. Both give the copy its own GDAL handle, so a copy stays valid after the original is destroyed.
 * [`ArchGDAL.forceto(geom, targettype)`](@ref): force the provided geometry to the specified geometry type.
 * [`ArchGDAL.simplify(geom, tol)`](@ref): Compute a simplified geometry.
 * [`ArchGDAL.simplifypreservetopology(geom, tol)`](@ref): Simplify the geometry while preserving topology.

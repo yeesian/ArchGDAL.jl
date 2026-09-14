@@ -843,6 +843,23 @@ import JLD2
             @test sprint(print, geom4) == "Geometry: POINT EMPTY"
         end
 
+        geomcopy = copy(geom3)
+        geomdeepcopy = deepcopy(geom3)
+        @test geomcopy isa AG.IGeometry{AG.wkbGeometryCollection25D}
+        @test geomdeepcopy isa AG.IGeometry{AG.wkbGeometryCollection25D}
+        @test geomcopy.ptr != geom3.ptr
+        @test geomdeepcopy.ptr != geom3.ptr
+        @test AG.equals(geomcopy, geom3)
+        @test AG.equals(geomdeepcopy, geom3)
+
+        repeated = deepcopy([geom3, geom3])
+        @test repeated[1] === repeated[2]
+        @test repeated[1].ptr != geom3.ptr
+
+        AG.removeallgeoms!(geomcopy)
+        @test AG.ngeom(geomcopy) == 0
+        @test AG.ngeom(geom3) == 4
+
         @test AG.toISOWKT(geom3) ==
               "GEOMETRYCOLLECTION Z (" *
               "POINT Z (2 5 8)," *
@@ -976,9 +993,51 @@ import JLD2
         geom = AG.IGeometry()
         @test AG.geomname(geom) === missing
         @test sprint(print, AG.clone(geom)) == "NULL Geometry"
+        @test sprint(print, copy(geom)) == "NULL Geometry"
+        @test sprint(print, deepcopy(geom)) == "NULL Geometry"
         AG.clone(geom) do g
             @test sprint(print, g) == "NULL Geometry"
         end
+
+        # `clone` collapses a NULL geometry to `wkbUnknown`, but `deepcopy`
+        # asserts that its result has the same type as its argument.
+        typednull = AG.IGeometry{AG.wkbPoint}(C_NULL)
+        @test copy(typednull) isa AG.IGeometry{AG.wkbPoint}
+        @test deepcopy(typednull) isa AG.IGeometry{AG.wkbPoint}
+        @test sprint(print, deepcopy(typednull)) == "NULL Geometry"
+    end
+
+    @testset "copy and deepcopy" begin
+        # Without a `deepcopy_internal` method, Julia's fallback copies the
+        # `ptr` field verbatim and skips the inner constructor, so the result
+        # would alias the original handle and carry no finalizer.
+        geom =
+            AG.createpolygon([(0.0, 0.0), (0.0, 4.0), (4.0, 0.0), (0.0, 0.0)])
+        for geomcopy in (copy(geom), deepcopy(geom))
+            @test geomcopy isa AG.IGeometry{AG.wkbPolygon}
+            @test geomcopy.ptr != geom.ptr
+            @test AG.equals(geomcopy, geom)
+        end
+
+        # `copy` is type-preserving: a caller-managed `Geometry` copies to a
+        # `Geometry`, not to an `IGeometry`. `deepcopy` errors otherwise.
+        unsafegeom = AG.unsafe_createpoint(1.0, 2.0)
+        unsafecopy = copy(unsafegeom)
+        unsafedeepcopy = deepcopy(unsafegeom)
+        @test unsafecopy isa AG.Geometry{AG.wkbPoint}
+        @test unsafedeepcopy isa AG.Geometry{AG.wkbPoint}
+        @test unsafecopy.ptr != unsafegeom.ptr
+        @test unsafedeepcopy.ptr != unsafegeom.ptr
+        @test AG.equals(unsafecopy, unsafegeom)
+        AG.destroy.((unsafegeom, unsafecopy, unsafedeepcopy))
+
+        # A copy must survive the original being freed.
+        original = AG.createpoint(3.0, 4.0)
+        survivor = deepcopy(original)
+        AG.destroy(original)
+        @test original.ptr == C_NULL
+        @test survivor.ptr != C_NULL
+        @test AG.toWKT(survivor) == "POINT (3 4)"
     end
 
     @testset "Test coordinate dimensions" begin

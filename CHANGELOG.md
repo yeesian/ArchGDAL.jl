@@ -11,6 +11,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 
 - ArchGDAL added `subdatasets` to list the filenames of a dataset's subdatasets. [#489](https://github.com/yeesian/ArchGDAL.jl/pull/489)
+- `Base.copy` and `Base.deepcopy` clone geometries and re-prepare prepared geometries, instead of producing a wrapper that aliases the original's GDAL handle without a finalizer. [#506](https://github.com/yeesian/ArchGDAL.jl/pull/506)
 
 ### Fixed
 
@@ -19,6 +20,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - JuliaFormatter formatted the Julia source and tests. [#495](https://github.com/yeesian/ArchGDAL.jl/pull/495), [#502](https://github.com/yeesian/ArchGDAL.jl/pull/502)
+- `PreparedGeometry` and `IPreparedGeometry` gained a `basegeom` field holding the geometry they were prepared from, since GDAL exposes no way to recover it from an `OGRPreparedGeometryH`. [#506](https://github.com/yeesian/ArchGDAL.jl/pull/506)
 
 ## [0.10.12] - 2026-08-13
 
