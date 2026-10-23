@@ -195,7 +195,6 @@ for gdalfunc in (
     :createfielddefn,
     :creategeom,
     :creategeomcollection,
-    :creategeomfieldcollection,
     :creategeomdefn,
     :createlayer,
     :createlinearring,
