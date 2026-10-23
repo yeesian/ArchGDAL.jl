@@ -287,7 +287,7 @@ function copywholeraster!(
     result = GDAL.gdalrasterbandcopywholeraster(
         source,
         dest,
-        options,
+        _stringlist(options),
         @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
         progressfunc,
     )
@@ -475,7 +475,7 @@ function setcategorynames!(
     band::T,
     names::Vector{String},
 )::T where {T<:AbstractRasterBand}
-    result = GDAL.gdalsetrastercategorynames(band, names)
+    result = GDAL.gdalsetrastercategorynames(band, _stringlist(names))
     @cplerr result "Failed to set category names for this band"
     return band
 end

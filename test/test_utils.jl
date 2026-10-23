@@ -44,6 +44,38 @@ end
         end
     end
 
+    @testset "string lists" begin
+        # Arrays and pointers are converted by `ccall` itself
+        options = ["A=1", "B=2"]
+        @test AG._stringlist(options) === options
+        @test AG._stringlist(AG.StringList(C_NULL)) == C_NULL
+        # Other arrays are copied into a `Vector{String}`
+        @test AG._stringlist(view(["A=1", "B=2", "C=3"], 1:2)) == options
+        @test AG._stringlist(view(split("A=1,B=2", ","), :)) == options
+        @test AG._stringlist(view(split("A=1,B=2", ","), :)) isa Vector{String}
+
+        # The view excludes a third, conflicting option. GDAL must see exactly
+        # the two options in the view, and nothing past its end.
+        alloptions = [
+            "GEOM_POSSIBLE_NAMES=point,linestring",
+            "KEEP_GEOM_COLUMNS=NO",
+            "GEOM_POSSIBLE_NAMES=nonexistent",
+        ]
+        AG.read(
+            joinpath(@__DIR__, "data/multi_geom.csv"),
+            options = view(alloptions, 1:2),
+        ) do dataset
+            layer = AG.getlayer(dataset, 0)
+            @test AG.ngeom(layer) == 2
+            @test AG.nfield(layer) == 3
+        end
+
+        AG.read(joinpath(@__DIR__, "data/utmsmall.tif")) do dataset
+            @test AG.gdalinfo(dataset, view(["-json", "-nomd"], 1:1)) ==
+                  AG.gdalinfo(dataset, ["-json"])
+        end
+    end
+
     @testset "OGR Errors" begin
         @test isnothing(AG.@ogrerr GDAL.OGRERR_NONE "not an error")
         eval_ogrerr(GDAL.OGRERR_NOT_ENOUGH_DATA, "Not enough data.", "foo")
