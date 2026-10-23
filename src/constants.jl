@@ -392,28 +392,30 @@ wkbXDR::OGRwkbByteOrder = 0x00000000
 
 @enum(
     GDALOpenFlag,
-    OF_READONLY = GDAL.GDAL_OF_READONLY,                # 0x00
-    OF_UPDATE = GDAL.GDAL_OF_UPDATE,                  # 0x01
-    # OF_All                  = GDAL.GDAL_OF_ALL,                   # 0x00
-    OF_RASTER = GDAL.GDAL_OF_RASTER,                  # 0x02
-    OF_VECTOR = GDAL.GDAL_OF_VECTOR,                  # 0x04
-    OF_GNM = GDAL.GDAL_OF_GNM,                     # 0x08
-    OF_KIND_MASK = GDAL.GDAL_OF_KIND_MASK,               # 0x1e
-    OF_SHARED = GDAL.GDAL_OF_SHARED,                  # 0x20
-    OF_VERBOSE_ERROR = GDAL.GDAL_OF_VERBOSE_ERROR,           # 0x40
-    OF_INTERNAL = GDAL.GDAL_OF_INTERNAL,                # 0x80
-    # OF_DEFAULT_BLOCK_ACCESS = GDAL.GDAL_OF_DEFAULT_BLOCK_ACCESS,  # 0
-    OF_ARRAY_BLOCK_ACCESS = GDAL.GDAL_OF_ARRAY_BLOCK_ACCESS,      # 0x0100
-    OF_HASHSET_BLOCK_ACCESS = GDAL.GDAL_OF_HASHSET_BLOCK_ACCESS,    # 0x0200
-    # OF_RESERVED_1           = GDAL.GDAL_OF_RESERVED_1,            # 0x0300
-    OF_BLOCK_ACCESS_MASK = GDAL.GDAL_OF_BLOCK_ACCESS_MASK,       # 0x0300
+    OF_READONLY = GDAL.GDAL_OF_READONLY,                             # 0x00
+    OF_UPDATE = GDAL.GDAL_OF_UPDATE,                                 # 0x01
+    # OF_ALL = GDAL.GDAL_OF_ALL,                                     # 0x00
+    OF_RASTER = GDAL.GDAL_OF_RASTER,                                 # 0x02
+    OF_VECTOR = GDAL.GDAL_OF_VECTOR,                                 # 0x04
+    OF_GNM = GDAL.GDAL_OF_GNM,                                       # 0x08
+    OF_MULTIDIM_RASTER = GDAL.GDAL_OF_MULTIDIM_RASTER,               # 0x10
+    OF_KIND_MASK = GDAL.GDAL_OF_KIND_MASK,                           # 0x1e
+    OF_SHARED = GDAL.GDAL_OF_SHARED,                                 # 0x20
+    OF_VERBOSE_ERROR = GDAL.GDAL_OF_VERBOSE_ERROR,                   # 0x40
+    OF_INTERNAL = GDAL.GDAL_OF_INTERNAL,                             # 0x80
+    # OF_DEFAULT_BLOCK_ACCESS = GDAL.GDAL_OF_DEFAULT_BLOCK_ACCESS,   # 0
+    OF_ARRAY_BLOCK_ACCESS = GDAL.GDAL_OF_ARRAY_BLOCK_ACCESS,         # 0x0100
+    OF_HASHSET_BLOCK_ACCESS = GDAL.GDAL_OF_HASHSET_BLOCK_ACCESS,     # 0x0200
+    # OF_RESERVED_1 = GDAL.GDAL_OF_RESERVED_1,                       # 0x0300
+    OF_BLOCK_ACCESS_MASK = GDAL.GDAL_OF_BLOCK_ACCESS_MASK,           # 0x0300
+    # OF_FROM_GDALOPEN = GDAL.GDAL_OF_FROM_GDALOPEN,                 # 0x0400
 )
 
 @enum(
     FieldValidation,
-    F_VAL_NULL = GDAL.OGR_F_VAL_NULL,                      # 0x0001
-    F_VAL_GEOM_TYPE = GDAL.OGR_F_VAL_GEOM_TYPE,                 # 0x0002
-    F_VAL_WIDTH = GDAL.OGR_F_VAL_WIDTH,                     # 0x0004
-    F_VAL_ALLOW_NULL_WHEN_DEFAULT = GDAL.OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT,   # 0x0008
-    F_VAL_ALLOW_DIFFERENT_GEOM_DIM = GDAL.OGR_F_VAL_ALLOW_DIFFERENT_GEOM_DIM,  # 0x0010
+    F_VAL_NULL = GDAL.OGR_F_VAL_NULL,                                           # 0x0001
+    F_VAL_GEOM_TYPE = GDAL.OGR_F_VAL_GEOM_TYPE,                                 # 0x0002
+    F_VAL_WIDTH = GDAL.OGR_F_VAL_WIDTH,                                         # 0x0004
+    F_VAL_ALLOW_NULL_WHEN_DEFAULT = GDAL.OGR_F_VAL_ALLOW_NULL_WHEN_DEFAULT,     # 0x0008
+    F_VAL_ALLOW_DIFFERENT_GEOM_DIM = GDAL.OGR_F_VAL_ALLOW_DIFFERENT_GEOM_DIM,   # 0x0010
 )

@@ -35,17 +35,25 @@ mutable struct CoordTransform
     ptr::GDAL.OGRCoordinateTransformationH
 end
 
+# Multidimensional datasets can track their interactive children
+# (groups, arrays, attributes, dimensions) so that
+# `force_close_mdarray_dataset!` can release them. The field is
+# `nothing` for all other datasets; see `src/mdarray/types.jl`.
 mutable struct Dataset <: AbstractDataset
     ptr::GDAL.GDALDatasetH
+    children::Union{Nothing,Vector{WeakRef}}
 
-    Dataset(ptr::GDAL.GDALDatasetH = C_NULL) = new(ptr)
+    function Dataset(ptr::GDAL.GDALDatasetH = C_NULL; hard_close::Bool = false)
+        return new(ptr, hard_close ? WeakRef[] : nothing)
+    end
 end
 
 mutable struct IDataset <: AbstractDataset
     ptr::GDAL.GDALDatasetH
+    children::Union{Nothing,Vector{WeakRef}}
 
-    function IDataset(ptr::GDAL.GDALDatasetH = C_NULL)
-        dataset = new(ptr)
+    function IDataset(ptr::GDAL.GDALDatasetH = C_NULL; hard_close::Bool = false)
+        dataset = new(ptr, hard_close ? WeakRef[] : nothing)
         finalizer(destroy, dataset)
         return dataset
     end
@@ -641,13 +649,14 @@ end
     wkbNDR::GDAL.wkbNDR,
 )
 
-import Base.|
-
 for T in (GDALOpenFlag, FieldValidation)
     eval(quote
-        |(x::$T, y::UInt8)::UInt8 = UInt8(x) | y
-        |(x::UInt8, y::$T)::UInt8 = x | UInt8(y)
-        |(x::$T, y::$T)::UInt8 = UInt8(x) | UInt8(y)
+        Base.:&(x::$T, y::Unsigned)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:&(x::Unsigned, y::$T)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:&(x::$T, y::$T)::UInt32 = UInt32(x) & UInt32(y)
+        Base.:|(x::$T, y::Unsigned)::UInt32 = UInt32(x) | UInt32(y)
+        Base.:|(x::Unsigned, y::$T)::UInt32 = UInt32(x) | UInt32(y)
+        Base.:|(x::$T, y::$T)::UInt32 = UInt32(x) | UInt32(y)
     end)
 end
 
