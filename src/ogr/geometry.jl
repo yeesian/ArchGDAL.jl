@@ -81,6 +81,7 @@ Equivalent to invoking delete on a geometry, but it guaranteed to take place
 within the context of the GDAL/OGR heap.
 """
 function destroy(geom::AbstractGeometry)::Nothing
+    geom.ptr == C_NULL && return nothing
     GDAL.ogr_g_destroygeometry(geom)
     geom.ptr = C_NULL
     return nothing
@@ -93,6 +94,7 @@ Equivalent to invoking delete on a prepared geometry, but it guaranteed to take 
 within the context of the GDAL/OGR heap.
 """
 function destroy(geom::AbstractPreparedGeometry)::Nothing
+    geom.ptr == C_NULL && return nothing
     GDAL.ogrdestroypreparedgeometry(geom)
     geom.ptr = C_NULL
     return nothing

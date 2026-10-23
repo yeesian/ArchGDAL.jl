@@ -40,6 +40,7 @@ nreference(featuredefn::AbstractFeatureDefn)::Integer =
 
 "Destroy a feature definition object and release all memory associated with it"
 function destroy(featuredefn::FeatureDefn)::Nothing
+    featuredefn.ptr == C_NULL && return nothing
     GDAL.ogr_fd_destroy(featuredefn)
     featuredefn.ptr = C_NULL
     return nothing

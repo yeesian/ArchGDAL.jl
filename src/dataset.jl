@@ -1014,6 +1014,7 @@ function buildoverviews!(
 end
 
 function destroy(dataset::AbstractDataset)::Nothing
+    dataset.ptr == C_NULL && return nothing
     GDAL.gdalclose(dataset)
     dataset.ptr = C_NULL
     return nothing

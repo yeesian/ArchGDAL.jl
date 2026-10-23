@@ -21,6 +21,7 @@ application the memory will be freed onto the application heap which is
 inappropriate.
 """
 function destroy(feature::AbstractFeature)::Nothing
+    feature.ptr == C_NULL && return nothing
     GDAL.ogr_f_destroy(feature)
     feature.ptr = C_NULL
     return nothing

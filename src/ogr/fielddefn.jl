@@ -10,6 +10,7 @@ unsafe_createfielddefn(name::AbstractString, etype::OGRFieldType)::FieldDefn =
 
 "Destroy a field definition."
 function destroy(fielddefn::FieldDefn)::Nothing
+    fielddefn.ptr == C_NULL && return nothing
     GDAL.ogr_fld_destroy(fielddefn)
     fielddefn.ptr = C_NULL
     return nothing
@@ -329,6 +330,7 @@ end
 
 "Destroy a geometry field definition."
 function destroy(geomdefn::GeomFieldDefn)::Nothing
+    geomdefn.ptr == C_NULL && return nothing
     GDAL.ogr_gfld_destroy(geomdefn)
     geomdefn.ptr = C_NULL
     geomdefn.spatialref = SpatialRef()

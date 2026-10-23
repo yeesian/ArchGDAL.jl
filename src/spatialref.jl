@@ -250,6 +250,7 @@ function maybesetaxisorder!(
 end
 
 function destroy(spref::AbstractSpatialRef)::Nothing
+    spref.ptr == C_NULL && return nothing
     GDAL.osrdestroyspatialreference(spref)
     spref.ptr = C_NULL
     return nothing
@@ -814,6 +815,7 @@ end
 
 "OGRCoordinateTransformation destructor."
 function destroy(obj::CoordTransform)::Nothing
+    obj.ptr == C_NULL && return nothing
     GDAL.octdestroycoordinatetransformation(obj)
     obj.ptr = C_NULL
     return nothing

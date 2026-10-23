@@ -16,6 +16,7 @@ unsafe_createRAT(ct::ColorTable)::RasterAttrTable =
 
 "Destroys a RAT."
 function destroy(rat::RasterAttrTable)::Nothing
+    rat.ptr == C_NULL && return nothing
     GDAL.gdaldestroyrasterattributetable(rat)
     rat.ptr = C_NULL
     return nothing

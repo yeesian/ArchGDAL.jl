@@ -8,6 +8,7 @@ unsafe_createcolortable(palette::GDALPaletteInterp)::ColorTable =
 
 "Destroys a color table."
 function destroy(ct::ColorTable)::Nothing
+    ct.ptr == C_NULL && return nothing
     GDAL.gdaldestroycolortable(ct)
     ct.ptr = C_NULL
     return nothing

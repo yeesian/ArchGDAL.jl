@@ -22,6 +22,7 @@ Destroy Style Manager.
 * `stylemanager`: handle to the style manager to destroy.
 """
 function destroy(sm::StyleManager)::Nothing
+    sm.ptr == C_NULL && return nothing
     GDAL.ogr_sm_destroy(sm)
     sm.ptr = C_NULL
     return nothing
@@ -151,6 +152,7 @@ Destroy Style Tool.
 * `styletool`: handle to the style tool to destroy.
 """
 function destroy(styletool::StyleTool)::Nothing
+    styletool.ptr == C_NULL && return nothing
     GDAL.ogr_st_destroy(styletool)
     styletool.ptr = C_NULL
     return nothing
@@ -364,6 +366,7 @@ Destroy Style Table.
 * `styletable`: handle to the style table to destroy.
 """
 function destroy(st::StyleTable)::Nothing
+    st.ptr == C_NULL && return nothing
     GDAL.ogr_stbl_destroy(st)
     st.ptr = C_NULL
     return nothing
