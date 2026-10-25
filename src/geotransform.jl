@@ -17,6 +17,7 @@ function invgeotransform!(
     gt_in::Vector{Float64},
     gt_out::Vector{Float64},
 )::Vector{Float64}
+    @assert length(gt_in) == length(gt_out) == 6
     result = GC.@preserve gt_in gt_out Bool(
         GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)),
     )
@@ -49,6 +50,7 @@ function applygeotransform(
     pixel::Float64,
     line::Float64,
 )::Vector{Float64}
+    @assert length(geotransform) == 6
     geo_xy = Vector{Float64}(undef, 2)
     GC.@preserve geotransform geo_xy begin
         geo_x = pointer(geo_xy)
@@ -83,6 +85,7 @@ function composegeotransform!(
     gt2::Vector{Float64},
     gtout::Vector{Float64},
 )::Vector{Float64}
+    @assert length(gt1) == length(gt2) == length(gtout) == 6
     GC.@preserve gt1 gt2 gtout GDAL.gdalcomposegeotransforms(
         pointer(gt1),
         pointer(gt2),

@@ -43,4 +43,8 @@ import ArchGDAL as AG
         @test AG.getgeotransform(dataset) == [10.0, 0.5, 0.0, 55.0, 0.0, -0.5]
     end
 
+    # GDAL reads and writes six values
+    @test_throws AssertionError AG.invgeotransform([10.0, 0.5])
+    @test_throws AssertionError AG.applygeotransform([10.0, 0.5], 0.0, 0.0)
+    @test_throws AssertionError AG.composegeotransform(gt1, [10.0, 0.5])
 end
