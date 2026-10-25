@@ -915,7 +915,10 @@ function getgeotransform!(
     transform::Vector{Cdouble},
 )::Vector{Cdouble}
     @assert length(transform) == 6
-    result = GDAL.gdalgetgeotransform(dataset, pointer(transform))
+    result = GC.@preserve transform GDAL.gdalgetgeotransform(
+        dataset,
+        pointer(transform),
+    )
     if result != GDAL.CE_None
         # The default geotransform.
         transform .= (0.0, 1.0, 0.0, 0.0, 0.0, 1.0)
@@ -936,7 +939,10 @@ function setgeotransform!(
     transform::Vector{Cdouble},
 )::T where {T<:AbstractDataset}
     @assert length(transform) == 6
-    result = GDAL.gdalsetgeotransform(dataset, pointer(transform))
+    result = GC.@preserve transform GDAL.gdalsetgeotransform(
+        dataset,
+        pointer(transform),
+    )
     @cplerr result "Failed to transform raster dataset"
     return dataset
 end
