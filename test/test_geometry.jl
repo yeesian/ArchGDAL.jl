@@ -1001,23 +1001,43 @@ import JLD2
             @test !GI.ismeasured(point)
             @test !GI.is3d(point)
         end
+        AG.createpointM() do point
+            AG.addpointm!(point, 1, 2, 3)
+            @test GI.ismeasured(point)
+            @test !GI.is3d(point)
+            @test GI.m(point) == 3
+            @test GI.getcoord(point, 3) == 3
+            @test_throws ArgumentError GI.z(point)
+            @test AG.toISOWKT(point) == "POINT M (1 2 3)"
+        end
+        AG.createpointZM() do point
+            AG.addpoint!(point, 1, 2, 3, 4)
+            @test GI.ismeasured(point)
+            @test GI.is3d(point)
+            @test GI.z(point) == 3
+            @test GI.m(point) == 4
+            @test GI.getcoord(point, 4) == 4
+            @test AG.toISOWKT(point) == "POINT ZM (1 2 3 4)"
+        end
     end
 
     @testset "GeoInterface conversion" begin
         struct MyPoint end
         struct MyLine end
 
-        GI.isgeometry(::MyPoint) = true
+        GI.isgeometry(::Type{MyPoint}) = true
         GI.geomtrait(::MyPoint) = GI.PointTrait()
         GI.ncoord(::GI.PointTrait, geom::MyPoint) = 2
         GI.getcoord(::GI.PointTrait, geom::MyPoint, i) = [1.0, 2.0][i]
 
-        GI.isgeometry(::MyLine) = true
+        GI.isgeometry(::Type{MyLine}) = true
         GI.geomtrait(::MyLine) = GI.LineStringTrait()
+        GI.ncoord(::GI.LineStringTrait, geom::MyLine) = 2
         GI.ngeom(::GI.LineStringTrait, geom::MyLine) = 2
         GI.getgeom(::GI.LineStringTrait, geom::MyLine, i) = MyPoint()
 
         geom = MyLine()
+        @test GI.testgeometry(geom)
         ag_geom = GI.convert(AG.IGeometry, geom)
         @test ag_geom isa AG.IGeometry{AG.wkbLineString}
         @test GI.coordinates(ag_geom) ==
@@ -1028,6 +1048,204 @@ import JLD2
         @test GI.coordinates(ag_geom1) ==
               GI.coordinates(ag_geom) ==
               [[1, 2], [1, 2]]
+    end
+
+    @testset "Dimensional geometry constructors" begin
+        for (geom, wkbgeom) in AG.GEOMETRY_CONSTRUCTORS,
+            suffix in ("25D", "M", "ZM")
+
+            create = getfield(AG, Symbol(:create, geom, suffix))
+            wkbtype = getfield(AG, Symbol(wkbgeom, suffix))
+            @test AG.getgeomtype(create()) == wkbtype
+            create() do g
+                @test AG.getgeomtype(g) == wkbtype
+            end
+        end
+        # OGR defines no dimensional variants of wkbLinearRing
+        @test !isdefined(AG, :createlinearring25D)
+        @test AG.getgeomtype(AG.createlinearring()) == AG.wkbLineString
+    end
+
+    @testset "GeoInterface conversion fast paths" begin
+        square(o) = GI.LinearRing([
+            (o + 0.0, o + 0.0),
+            (o + 3.0, o + 0.0),
+            (o + 3.0, o + 3.0),
+            (o + 0.0, o + 0.0),
+        ])
+        square3d = GI.LinearRing([
+            (0.0, 0.0, 1.0),
+            (3.0, 0.0, 1.0),
+            (3.0, 3.0, 1.0),
+            (0.0, 0.0, 1.0),
+        ])
+        hole = GI.LinearRing([(1.0, 1.0), (2.0, 1.0), (2.0, 2.0), (1.0, 1.0)])
+        for (source, wkt, wkbtype) in (
+            (GI.Point((1.0, 2.0)), "POINT (1 2)", AG.wkbPoint),
+            (GI.Point((1.0, 2.0, 3.0)), "POINT (1 2 3)", AG.wkbPoint25D),
+            (
+                GI.LineString([(0.0, 0.0), (1.0, 1.0), (2.0, 0.0)]),
+                "LINESTRING (0 0,1 1,2 0)",
+                AG.wkbLineString,
+            ),
+            (
+                GI.LineString([(0.0, 0.0, 1.0), (1.0, 1.0, 2.0)]),
+                "LINESTRING (0 0 1,1 1 2)",
+                AG.wkbLineString25D,
+            ),
+            (square(0), "LINEARRING (0 0,3 0,3 3,0 0)", AG.wkbLineString),
+            (
+                square3d,
+                "LINEARRING (0 0 1,3 0 1,3 3 1,0 0 1)",
+                AG.wkbLineString,
+            ),
+            (
+                GI.MultiPoint([(0.0, 0.0), (1.0, 1.0)]),
+                "MULTIPOINT (0 0,1 1)",
+                AG.wkbMultiPoint,
+            ),
+            (
+                GI.MultiPoint([(0.0, 0.0, 5.0), (1.0, 1.0, 6.0)]),
+                "MULTIPOINT (0 0 5,1 1 6)",
+                AG.wkbMultiPoint25D,
+            ),
+            (
+                GI.MultiLineString([
+                    [(0.0, 0.0), (1.0, 1.0)],
+                    [(2.0, 2.0), (3.0, 3.0)],
+                ]),
+                "MULTILINESTRING ((0 0,1 1),(2 2,3 3))",
+                AG.wkbMultiLineString,
+            ),
+            (
+                GI.MultiLineString([[(0.0, 0.0, 1.0), (1.0, 1.0, 2.0)]]),
+                "MULTILINESTRING ((0 0 1,1 1 2))",
+                AG.wkbMultiLineString25D,
+            ),
+            (
+                GI.Polygon([square(0), hole]),
+                "POLYGON ((0 0,3 0,3 3,0 0),(1 1,2 1,2 2,1 1))",
+                AG.wkbPolygon,
+            ),
+            (
+                GI.Polygon([square3d]),
+                "POLYGON ((0 0 1,3 0 1,3 3 1,0 0 1))",
+                AG.wkbPolygon25D,
+            ),
+            (
+                GI.MultiPolygon([
+                    GI.Polygon([square(0)]),
+                    GI.Polygon([square(10)]),
+                ]),
+                "MULTIPOLYGON (((0 0,3 0,3 3,0 0))," *
+                "((10 10,13 10,13 13,10 10)))",
+                AG.wkbMultiPolygon,
+            ),
+            (
+                GI.MultiPolygon([GI.Polygon([square3d])]),
+                "MULTIPOLYGON (((0 0 1,3 0 1,3 3 1,0 0 1)))",
+                AG.wkbMultiPolygon25D,
+            ),
+        )
+            geom = GI.convert(AG.IGeometry, source)
+            @test geom isa AG.IGeometry{wkbtype}
+            @test AG.toWKT(geom) == wkt
+            # The generic path routes coordinates through `lookup_method`
+            generic = AG.lookup_method[typeof(GI.geomtrait(source))]
+            @test AG.toWKT(generic(GI.coordinates(source))) == wkt
+        end
+
+        # The generic path has no notion of M, so these only check the fast
+        # path. Measured-only points need the explicit wrapper; a 4-tuple is
+        # ZM by GeoInterface's default coordinate names.
+        pm(x, y, m) = GI.Point{false,true}((x, y, m))
+        squarem = GI.LinearRing([
+            pm(0.0, 0.0, 1.0),
+            pm(3.0, 0.0, 2.0),
+            pm(3.0, 3.0, 3.0),
+            pm(0.0, 0.0, 1.0),
+        ])
+        squarezm = GI.LinearRing([
+            (0.0, 0.0, 1.0, 5.0),
+            (3.0, 0.0, 1.0, 6.0),
+            (3.0, 3.0, 1.0, 7.0),
+            (0.0, 0.0, 1.0, 5.0),
+        ])
+        for (source, isowkt, wkbtype) in (
+            (pm(1.0, 2.0, 3.0), "POINT M (1 2 3)", AG.wkbPointM),
+            (
+                GI.Point((1.0, 2.0, 3.0, 4.0)),
+                "POINT ZM (1 2 3 4)",
+                AG.wkbPointZM,
+            ),
+            (
+                GI.LineString([pm(0.0, 0.0, 1.0), pm(1.0, 1.0, 2.0)]),
+                "LINESTRING M (0 0 1,1 1 2)",
+                AG.wkbLineStringM,
+            ),
+            (
+                GI.LineString([(0.0, 0.0, 1.0, 5.0), (1.0, 1.0, 2.0, 6.0)]),
+                "LINESTRING ZM (0 0 1 5,1 1 2 6)",
+                AG.wkbLineStringZM,
+            ),
+            (
+                squarem,
+                "LINEARRING M (0 0 1,3 0 2,3 3 3,0 0 1)",
+                AG.wkbLineString,
+            ),
+            (
+                squarezm,
+                "LINEARRING ZM (0 0 1 5,3 0 1 6,3 3 1 7,0 0 1 5)",
+                AG.wkbLineString,
+            ),
+            (
+                GI.MultiPoint([pm(0.0, 0.0, 5.0), pm(1.0, 1.0, 6.0)]),
+                "MULTIPOINT M ((0 0 5),(1 1 6))",
+                AG.wkbMultiPointM,
+            ),
+            (
+                GI.MultiPoint([(0.0, 0.0, 5.0, 7.0), (1.0, 1.0, 6.0, 8.0)]),
+                "MULTIPOINT ZM ((0 0 5 7),(1 1 6 8))",
+                AG.wkbMultiPointZM,
+            ),
+            (
+                GI.MultiLineString([[pm(0.0, 0.0, 1.0), pm(1.0, 1.0, 2.0)]]),
+                "MULTILINESTRING M ((0 0 1,1 1 2))",
+                AG.wkbMultiLineStringM,
+            ),
+            (
+                GI.MultiLineString([[
+                    (0.0, 0.0, 1.0, 5.0),
+                    (1.0, 1.0, 2.0, 6.0),
+                ]]),
+                "MULTILINESTRING ZM ((0 0 1 5,1 1 2 6))",
+                AG.wkbMultiLineStringZM,
+            ),
+            (
+                GI.Polygon([squarem]),
+                "POLYGON M ((0 0 1,3 0 2,3 3 3,0 0 1))",
+                AG.wkbPolygonM,
+            ),
+            (
+                GI.Polygon([squarezm]),
+                "POLYGON ZM ((0 0 1 5,3 0 1 6,3 3 1 7,0 0 1 5))",
+                AG.wkbPolygonZM,
+            ),
+            (
+                GI.MultiPolygon([GI.Polygon([squarem])]),
+                "MULTIPOLYGON M (((0 0 1,3 0 2,3 3 3,0 0 1)))",
+                AG.wkbMultiPolygonM,
+            ),
+            (
+                GI.MultiPolygon([GI.Polygon([squarezm])]),
+                "MULTIPOLYGON ZM (((0 0 1 5,3 0 1 6,3 3 1 7,0 0 1 5)))",
+                AG.wkbMultiPolygonZM,
+            ),
+        )
+            geom = GI.convert(AG.IGeometry, source)
+            @test geom isa AG.IGeometry{wkbtype}
+            @test AG.toISOWKT(geom) == isowkt
+        end
     end
 
     @testset "JLD2 serialization" begin
