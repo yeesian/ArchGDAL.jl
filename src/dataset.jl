@@ -32,7 +32,7 @@ function copywholeraster!(
     result = GDAL.gdaldatasetcopywholeraster(
         source,
         dest,
-        options,
+        _stringlist(options),
         @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
         progressfunc,
     )
@@ -104,7 +104,7 @@ function unsafe_copy(
             filename,
             dataset,
             strict,
-            options,
+            _stringlist(options),
             @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
             progressfunc,
         ),
@@ -163,7 +163,7 @@ function copy(
             filename,
             dataset,
             strict,
-            options,
+            _stringlist(options),
             @cfunction(_progresscallback, Cint, (Cdouble, Cstring, Ptr{Cvoid})),
             progressfunc,
         ),
@@ -411,7 +411,7 @@ function unsafe_create(
         height,
         nbands,
         convert(GDALDataType, dtype),
-        options,
+        _stringlist(options),
     )
     return Dataset(result)
 end
@@ -432,7 +432,7 @@ function unsafe_create(
         height,
         nbands,
         convert(GDALDataType, dtype),
-        options,
+        _stringlist(options),
     )
     return Dataset(result)
 end
@@ -484,7 +484,7 @@ function create(
         height,
         nbands,
         convert(GDALDataType, dtype),
-        options,
+        _stringlist(options),
     )
     return IDataset(result)
 end
@@ -505,7 +505,7 @@ function create(
         height,
         nbands,
         convert(GDALDataType, dtype),
-        options,
+        _stringlist(options),
     )
     return IDataset(result)
 end
@@ -578,9 +578,9 @@ function unsafe_read(
     result = GDAL.gdalopenex(
         filename,
         Int(flags),
-        alloweddrivers,
-        options,
-        siblingfiles,
+        _stringlist(alloweddrivers),
+        _stringlist(options),
+        _stringlist(siblingfiles),
     )
     return Dataset(result)
 end
@@ -630,9 +630,9 @@ function read(
     result = GDAL.gdalopenex(
         filename,
         Int(flags),
-        alloweddrivers,
-        options,
-        siblingfiles,
+        _stringlist(alloweddrivers),
+        _stringlist(options),
+        _stringlist(siblingfiles),
     )
     return IDataset(result)
 end

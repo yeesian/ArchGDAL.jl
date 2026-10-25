@@ -34,7 +34,13 @@ function createlayer(;
     options = StringList(C_NULL),
 )::IFeatureLayer
     return IFeatureLayer(
-        GDAL.gdaldatasetcreatelayer(dataset, name, spatialref, geom, options),
+        GDAL.gdaldatasetcreatelayer(
+            dataset,
+            name,
+            spatialref,
+            geom,
+            _stringlist(options),
+        ),
         ownedby = dataset,
         spatialref = spatialref,
     )
@@ -48,7 +54,13 @@ function unsafe_createlayer(;
     options = StringList(C_NULL),
 )::FeatureLayer
     return FeatureLayer(
-        GDAL.gdaldatasetcreatelayer(dataset, name, spatialref, geom, options),
+        GDAL.gdaldatasetcreatelayer(
+            dataset,
+            name,
+            spatialref,
+            geom,
+            _stringlist(options),
+        ),
         ownedby = dataset,
         spatialref = spatialref,
     )
@@ -77,7 +89,7 @@ function copy(
     options = StringList(C_NULL),
 )::IFeatureLayer
     return IFeatureLayer(
-        GDAL.gdaldatasetcopylayer(dataset, layer, name, options),
+        GDAL.gdaldatasetcopylayer(dataset, layer, name, _stringlist(options)),
         ownedby = dataset,
     )
 end
@@ -89,7 +101,7 @@ function unsafe_copy(
     options = StringList(C_NULL),
 )::FeatureLayer
     return FeatureLayer(
-        GDAL.gdaldatasetcopylayer(dataset, layer, name, options),
+        GDAL.gdaldatasetcopylayer(dataset, layer, name, _stringlist(options)),
     )
 end
 
@@ -1121,7 +1133,7 @@ function setignoredfields!(
     layer::L,
     fieldnames,
 )::L where {L<:AbstractFeatureLayer}
-    result = GDAL.ogr_l_setignoredfields(layer, fieldnames)
+    result = GDAL.ogr_l_setignoredfields(layer, _stringlist(fieldnames))
     # OGRERR_NONE if all field names have been resolved (even if the driver
     # does not support this method)
     @ogrerr result "Failed to set ignored fields $fieldnames."

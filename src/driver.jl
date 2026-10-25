@@ -116,7 +116,7 @@ function validate(
     drv::Driver,
     options::Vector{T},
 )::Bool where {T<:AbstractString}
-    return Bool(GDAL.gdalvalidatecreationoptions(drv, options))
+    return Bool(GDAL.gdalvalidatecreationoptions(drv, _stringlist(options)))
 end
 
 """

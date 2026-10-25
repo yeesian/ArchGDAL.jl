@@ -734,7 +734,7 @@ function setfield!(
     i::Integer,
     value::Vector{T},
 )::AbstractFeature where {T<:AbstractString}
-    GDAL.ogr_f_setfieldstringlist(feature, i, value)
+    GDAL.ogr_f_setfieldstringlist(feature, i, _stringlist(value))
     return feature
 end
 
@@ -1177,7 +1177,7 @@ function fillunsetwithdefault!(
     notnull::Bool = true,
     options = StringList(C_NULL),
 )::AbstractFeature
-    GDAL.ogr_f_fillunsetwithdefault(feature, notnull, options)
+    GDAL.ogr_f_fillunsetwithdefault(feature, notnull, _stringlist(options))
     return feature
 end
 

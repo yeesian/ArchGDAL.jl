@@ -285,6 +285,22 @@ end
 # end
 
 """
+    _stringlist(strings)
+
+Prepare `strings` to be passed to a GDAL function expecting a `NULL`-terminated
+list of strings (`char **`, `CSLConstList`, i.e. `Ptr{Cstring}`).
+
+`ccall` converts an `Array` of strings into such a list by itself: it appends
+the terminating `NULL` and keeps the strings alive during the call. Arrays and
+pointers (such as `StringList(C_NULL)`) are therefore passed through unchanged.
+Other arrays (e.g. views) would instead be passed as a pointer to their raw
+storage, without terminator, so they are copied into a `Vector{String}`.
+"""
+_stringlist(strings) = strings
+_stringlist(strings::Array) = strings
+_stringlist(strings::AbstractArray) = String[s for s in strings]
+
+"""
     metadatadomainlist(obj)
 
 Fetch list of (non-empty) metadata domains.

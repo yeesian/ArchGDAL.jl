@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The CompatHelper workflow avoids Julia version parsing failures. [#499](https://github.com/yeesian/ArchGDAL.jl/pull/499)
+- ArchGDAL passes views and other non-`Array` string vectors to GDAL as `NULL`-terminated string lists, instead of passing their raw storage. [#511](https://github.com/yeesian/ArchGDAL.jl/pull/511)
 
 ### Changed
 
