@@ -89,6 +89,41 @@ import ArchGDAL as AG
                 @test AG.findcolumnindex(ratclone, AG.GFU_Red) == -1
             end
 
+            AG.attributeio!(
+                rat,
+                AG.GF_Write,
+                2,
+                1,
+                3,
+                ["x", "y", "z", "unused"],
+            )
+            @test AG.attributeio!(rat, AG.GF_Read, 2, 0, 5, fill("", 5)) ==
+                  ["abc", "x", "y", "z", "abc"]
+            # Reading does not require initialized strings, and leaves the
+            # entries after `nrows` alone
+            data = Vector{String}(undef, 3)
+            AG.attributeio!(rat, AG.GF_Read, 2, 1, 2, data)
+            @test data[1:2] == ["x", "y"]
+            @test !isassigned(data, 3)
+            data = fill(SubString("?"), 2)
+            @test AG.attributeio!(rat, AG.GF_Read, 2, 3, 2, data) ==
+                  ["z", "abc"]
+            @test data isa Vector{SubString{String}}
+
+            # `data` must hold at least `nrows` values
+            for access in (AG.GF_Read, AG.GF_Write)
+                for data in (fill(Cint(0), 2), fill(0.0, 2), fill("", 2))
+                    @test_throws ArgumentError AG.attributeio!(
+                        rat,
+                        access,
+                        0,
+                        0,
+                        3,
+                        data,
+                    )
+                end
+            end
+
             AG.setlinearbinning!(rat, 0, 10)
             @test (@test_logs (
                 :warn,

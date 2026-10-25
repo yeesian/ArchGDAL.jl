@@ -199,10 +199,19 @@ Read or Write a block of data to/from the Attribute Table.
 * `col`         Column of the Attribute Table
 * `startrow`    Row to start reading/writing (zero based)
 * `nrows`       Number of rows to read or write
-* `data`        Vector of Float64, Int32 or AbstractString to read/write. Should
+* `data`        Vector of Float64, Int32 or AbstractString to read/write. Must
                 be at least `nrows` long.
 """
 function attributeio! end
+
+function _checkattributeio(data::Vector, nrows::Integer)::Nothing
+    length(data) >= nrows || throw(
+        ArgumentError(
+            "data has length $(length(data)), but nrows = $nrows rows are accessed",
+        ),
+    )
+    return nothing
+end
 
 function attributeio!(
     rat::RasterAttrTable,
@@ -212,6 +221,7 @@ function attributeio!(
     nrows::Integer,
     data::Vector{Float64},
 )::Vector{Float64}
+    _checkattributeio(data, nrows)
     result =
         GDAL.gdalratvaluesioasdouble(rat, access, col, startrow, nrows, data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
@@ -226,6 +236,7 @@ function attributeio!(
     nrows::Integer,
     data::Vector{Cint},
 )::Vector{Cint}
+    _checkattributeio(data, nrows)
     result =
         GDAL.gdalratvaluesioasinteger(rat, access, col, startrow, nrows, data)
     @cplerr result "Failed to $access at column $col starting at $startrow"
@@ -240,9 +251,41 @@ function attributeio!(
     nrows::Integer,
     data::Vector{T},
 )::Vector{T} where {T<:AbstractString}
-    result =
-        GDAL.gdalratvaluesioasstring(rat, access, col, startrow, nrows, data)
-    @cplerr result "Failed to $access at column $col starting at $startrow"
+    _checkattributeio(data, nrows)
+    if access == GF_Read
+        # GDAL stores newly allocated strings into the array it is passed.
+        # `ccall` would pass a temporary copy of `data`, so we pass our own
+        # array, copy the strings into `data`, and free them.
+        cstrings = fill(Cstring(C_NULL), nrows)
+        try
+            result = GDAL.gdalratvaluesioasstring(
+                rat,
+                access,
+                col,
+                startrow,
+                nrows,
+                cstrings,
+            )
+            @cplerr result "Failed to $access at column $col starting at $startrow"
+            for i in 1:nrows
+                data[i] = unsafe_string(cstrings[i])
+            end
+        finally
+            for cstring in cstrings
+                GDAL.vsifree(pointer(cstring))
+            end
+        end
+    else
+        result = GDAL.gdalratvaluesioasstring(
+            rat,
+            access,
+            col,
+            startrow,
+            nrows,
+            data,
+        )
+        @cplerr result "Failed to $access at column $col starting at $startrow"
+    end
     return data
 end
 
