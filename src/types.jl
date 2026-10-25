@@ -65,9 +65,11 @@ end
 
 mutable struct IFieldDefnView <: AbstractFieldDefn
     ptr::GDAL.OGRFieldDefnH
+    # keeps the object that owns the definition, and its memory, alive
+    ownedby::Any
 
-    function IFieldDefnView(ptr::GDAL.OGRFieldDefnH = C_NULL)
-        fielddefn = new(ptr)
+    function IFieldDefnView(ptr::GDAL.OGRFieldDefnH = C_NULL; ownedby = nothing)
+        fielddefn = new(ptr, ownedby)
         finalizer(destroy, fielddefn)
         return fielddefn
     end
@@ -87,9 +89,14 @@ end
 
 mutable struct IGeomFieldDefnView <: AbstractGeomFieldDefn
     ptr::GDAL.OGRGeomFieldDefnH
+    # keeps the object that owns the definition, and its memory, alive
+    ownedby::Any
 
-    function IGeomFieldDefnView(ptr::GDAL.OGRGeomFieldDefnH = C_NULL)
-        geomdefn = new(ptr)
+    function IGeomFieldDefnView(
+        ptr::GDAL.OGRGeomFieldDefnH = C_NULL;
+        ownedby = nothing,
+    )
+        geomdefn = new(ptr, ownedby)
         finalizer(destroy, geomdefn)
         return geomdefn
     end
@@ -179,9 +186,14 @@ end
 
 mutable struct IFeatureDefnView <: AbstractFeatureDefn
     ptr::GDAL.OGRFeatureDefnH
+    # keeps the object that owns the definition, and its memory, alive
+    ownedby::Any
 
-    function IFeatureDefnView(ptr::GDAL.OGRFeatureDefnH = C_NULL)
-        featuredefn = new(ptr)
+    function IFeatureDefnView(
+        ptr::GDAL.OGRFeatureDefnH = C_NULL;
+        ownedby = nothing,
+    )
+        featuredefn = new(ptr, ownedby)
         finalizer(destroy, featuredefn)
         return featuredefn
     end
