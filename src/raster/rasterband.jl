@@ -29,9 +29,11 @@ for an example of code dealing with these issues.
 """
 function blocksize(band::AbstractRasterBand)::Vector{Cint}
     xy = Vector{Cint}(undef, 2)
-    x = pointer(xy)
-    y = x + sizeof(Cint)
-    GDAL.gdalgetblocksize(band, x, y)
+    GC.@preserve xy begin
+        x = pointer(xy)
+        y = x + sizeof(Cint)
+        GDAL.gdalgetblocksize(band, x, y)
+    end
     return xy
 end
 

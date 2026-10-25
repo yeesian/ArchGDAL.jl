@@ -36,4 +36,15 @@ import ArchGDAL as AG
     for (pixel, line) in ((0.0, 0.0), (3.0, 2.0), (15.5, 9.9))
         @test AG.applygeotransform(gt3, pixel, line) ≈ [pixel, line]
     end
+
+    # GDAL receives the values of an array literal
+    AG.create(AG.getdriver("MEM"), width = 2, height = 2) do dataset
+        AG.setgeotransform!(dataset, [10.0, 0.5, 0.0, 55.0, 0.0, -0.5])
+        @test AG.getgeotransform(dataset) == [10.0, 0.5, 0.0, 55.0, 0.0, -0.5]
+    end
+
+    # GDAL reads and writes six values
+    @test_throws AssertionError AG.invgeotransform([10.0, 0.5])
+    @test_throws AssertionError AG.applygeotransform([10.0, 0.5], 0.0, 0.0)
+    @test_throws AssertionError AG.composegeotransform(gt1, [10.0, 0.5])
 end

@@ -17,7 +17,10 @@ function invgeotransform!(
     gt_in::Vector{Float64},
     gt_out::Vector{Float64},
 )::Vector{Float64}
-    result = Bool(GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)))
+    @assert length(gt_in) == length(gt_out) == 6
+    result = GC.@preserve gt_in gt_out Bool(
+        GDAL.gdalinvgeotransform(pointer(gt_in), pointer(gt_out)),
+    )
     result || error("Geotransform coefficients is uninvertable")
     return gt_out
 end
@@ -47,10 +50,19 @@ function applygeotransform(
     pixel::Float64,
     line::Float64,
 )::Vector{Float64}
+    @assert length(geotransform) == 6
     geo_xy = Vector{Float64}(undef, 2)
-    geo_x = pointer(geo_xy)
-    geo_y = geo_x + sizeof(Float64)
-    GDAL.gdalapplygeotransform(pointer(geotransform), pixel, line, geo_x, geo_y)
+    GC.@preserve geotransform geo_xy begin
+        geo_x = pointer(geo_xy)
+        geo_y = geo_x + sizeof(Float64)
+        GDAL.gdalapplygeotransform(
+            pointer(geotransform),
+            pixel,
+            line,
+            geo_x,
+            geo_y,
+        )
+    end
     return geo_xy
 end
 
@@ -73,7 +85,12 @@ function composegeotransform!(
     gt2::Vector{Float64},
     gtout::Vector{Float64},
 )::Vector{Float64}
-    GDAL.gdalcomposegeotransforms(pointer(gt1), pointer(gt2), pointer(gtout))
+    @assert length(gt1) == length(gt2) == length(gtout) == 6
+    GC.@preserve gt1 gt2 gtout GDAL.gdalcomposegeotransforms(
+        pointer(gt1),
+        pointer(gt2),
+        pointer(gtout),
+    )
     return gtout
 end
 

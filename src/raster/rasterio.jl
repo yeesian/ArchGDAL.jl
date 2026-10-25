@@ -146,7 +146,7 @@ function rasterio!(
     nband = length(bands)
     bands = isa(bands, Vector{Cint}) ? bands : Cint.(collect(bands))
     @assert nband == zbsize
-    result = GDAL.gdaldatasetrasterioex(
+    result = GC.@preserve buffer bands GDAL.gdaldatasetrasterioex(
         dataset,
         access,
         xoffset,
@@ -236,7 +236,7 @@ function rasterio!(
     # `CUBIC`, `CUBICSPLINE`, `LANCZOS`, `AVERAGE` or `MODE`.
     (rasterband == C_NULL) && error("Can't read NULL rasterband")
     xbsize, ybsize = size(buffer)
-    result = GDAL.gdalrasterioex(
+    result = GC.@preserve buffer GDAL.gdalrasterioex(
         rasterband,
         access,
         xoffset,
