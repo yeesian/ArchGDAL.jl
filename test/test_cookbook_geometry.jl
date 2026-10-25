@@ -4,6 +4,10 @@ import GeoInterface
 import ArchGDAL as AG
 
 @testset "test_cookbook_geometry.jl" begin
+    # GEOS 3.15 no longer rotates the rings of overlay results by one vertex
+    # (GH-1412), so compare normalized geometries
+    normalized(geom) = AG.toWKT(AG.IGeometry(AG.GDAL.ogr_g_normalize(geom)))
+    normalized(wkt::String) = normalized(AG.fromWKT(wkt))
     @testset "Create a Point" begin
         x, y = 1198054.34, 648493.09
         wktpoint = "POINT (1198054.34 648493.09)"
@@ -789,14 +793,14 @@ import ArchGDAL as AG
         AG.fromWKT(wkt1) do poly1
             AG.fromWKT(wkt2) do poly2
                 AG.intersection(poly1, poly2) do poly3
-                    @test AG.toWKT(poly3) == wkt3
+                    @test normalized(poly3) == normalized(wkt3)
                 end
             end
         end
 
         # Method 2
-        @test AG.toWKT(AG.intersection(AG.fromWKT(wkt1), AG.fromWKT(wkt2))) ==
-              wkt3
+        @test normalized(AG.intersection(AG.fromWKT(wkt1), AG.fromWKT(wkt2))) ==
+              normalized(wkt3)
     end
 
     @testset "Calculate union between two Geometries" begin
@@ -808,13 +812,14 @@ import ArchGDAL as AG
         AG.fromWKT(wkt1) do poly1
             AG.fromWKT(wkt2) do poly2
                 AG.union(poly1, poly2) do poly3
-                    @test AG.toWKT(poly3) == wkt3
+                    @test normalized(poly3) == normalized(wkt3)
                 end
             end
         end
 
         # Method 2
-        @test AG.toWKT(AG.union(AG.fromWKT(wkt1), AG.fromWKT(wkt2))) == wkt3
+        @test normalized(AG.union(AG.fromWKT(wkt1), AG.fromWKT(wkt2))) ==
+              normalized(wkt3)
     end
 
     @testset "Write Geometry to GeoJSON|GML|WKT|WKB" begin

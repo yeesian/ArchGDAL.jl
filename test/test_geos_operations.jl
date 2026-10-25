@@ -3,6 +3,10 @@ import ArchGDAL as AG
 using Extents
 
 @testset "test_geos_operations.jl" begin
+    # GEOS 3.15 no longer rotates the rings of overlay results by one vertex
+    # (GH-1412), so compare normalized geometries
+    normalized(geom) = AG.toWKT(AG.IGeometry(AG.GDAL.ogr_g_normalize(geom)))
+    normalized(wkt::String) = normalized(AG.fromWKT(wkt))
     function equivalent_to_wkt(geom::AG.Geometry, wkt::String)
         fromWKT(wkt) do test_geom
             @test toWKT(geom) == toWKT(test_geom)
@@ -161,9 +165,9 @@ using Extents
         AG.fromWKT(wkt1) do geom1
             AG.fromWKT(wkt2) do geom2
                 f(geom1, geom2) do result
-                    @test AG.toWKT(result) == wkt3
+                    @test normalized(result) == normalized(wkt3)
                 end
-                @test AG.toWKT(f(geom1, geom2)) == wkt3
+                @test normalized(f(geom1, geom2)) == normalized(wkt3)
             end
         end
     end
@@ -175,7 +179,7 @@ using Extents
     )
         AG.fromWKT(wkt1) do geom1
             AG.fromWKT(wkt2) do geom2
-                @test AG.toWKT(f(geom1, geom2)) == wkt3
+                @test normalized(f(geom1, geom2)) == normalized(wkt3)
             end
         end
     end

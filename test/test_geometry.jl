@@ -5,6 +5,10 @@ import GeoFormatTypes as GFT
 import JLD2
 
 @testset "test_geometry.jl" begin
+    # GEOS 3.15 no longer rotates the rings of overlay results by one vertex
+    # (GH-1412), so compare normalized geometries
+    normalized(geom) = AG.toWKT(AG.IGeometry(AG.GDAL.ogr_g_normalize(geom)))
+    normalized(wkt::String) = normalized(AG.fromWKT(wkt))
     @testset "GeoInterface" begin
         AG.createpoint(100, 70) do point
             @test GI.geomtrait(point) == GI.PointTrait()
@@ -698,118 +702,127 @@ import JLD2
             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
         end
 
-        @test AG.toWKT(AG.union(geom1, geom2)) ==
-              "GEOMETRYCOLLECTION (" *
-              "POLYGON (" *
-              "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-              "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-              "POLYGON (" *
-              "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-              "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
-              "POINT (2 5 8),POINT (3 6 9))"
+        @test normalized(AG.union(geom1, geom2)) == normalized(
+            "GEOMETRYCOLLECTION (" *
+            "POLYGON (" *
+            "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+            "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+            "POLYGON (" *
+            "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+            "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+            "POINT (2 5 8),POINT (3 6 9))",
+        )
         AG.union(geom1, geom2) do result
-            @test AG.toWKT(result) ==
-                  "GEOMETRYCOLLECTION (" *
-                  "POLYGON (" *
-                  "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-                  "POLYGON (" *
-                  "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
-                  "POINT (2 5 8),POINT (3 6 9))"
+            @test normalized(result) == normalized(
+                "GEOMETRYCOLLECTION (" *
+                "POLYGON (" *
+                "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                "POLYGON (" *
+                "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+                "POINT (2 5 8),POINT (3 6 9))",
+            )
             @test AG.hascurvegeom(result, true) == false
             @test AG.hascurvegeom(result, false) == false
         end
 
-        @test AG.toWKT(AG.difference(geom1, geom2)) ==
-              "MULTIPOLYGON (" *
-              "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-              "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-              "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-              "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+        @test normalized(AG.difference(geom1, geom2)) == normalized(
+            "MULTIPOLYGON (" *
+            "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+            "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+            "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+            "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))",
+        )
         AG.difference(geom1, geom2) do result
-            @test AG.toWKT(result) ==
-                  "MULTIPOLYGON (" *
-                  "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-                  "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+            @test normalized(result) == normalized(
+                "MULTIPOLYGON (" *
+                "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))",
+            )
             AG.segmentize!(result, 20)
-            @test AG.toWKT(result) ==
-                  "MULTIPOLYGON (" *
-                  "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-                  "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))"
+            @test normalized(result) == normalized(
+                "MULTIPOLYGON (" *
+                "((0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                "((10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8)))",
+            )
             AG.segmentize!(result, 2)
-            @test AG.toWKT(result) ==
-                  "MULTIPOLYGON (" *
-                  "(" *
-                  "(" *
-                  "0 4 8," *
-                  "2 4 8," *
-                  "4 4 8," *
-                  "4 2 8," *
-                  "4 0 8," *
-                  "2 0 8," *
-                  "0 0 8," *
-                  "0 2 8," *
-                  "0 4 8)," *
-                  "(" *
-                  "3 1 8," *
-                  "3 3 8," *
-                  "1 3 8," *
-                  "1 1 8," *
-                  "3 1 8))," *
-                  "(" *
-                  "(" *
-                  "10 4 8," *
-                  "12 4 8," *
-                  "14 4 8," *
-                  "14 2 8," *
-                  "14 0 8," *
-                  "12 0 8," *
-                  "10 0 8," *
-                  "10 2 8," *
-                  "10 4 8)," *
-                  "(" *
-                  "13 1 8," *
-                  "13 3 8," *
-                  "11 3 8," *
-                  "11 1 8," *
-                  "13 1 8)))"
+            @test normalized(result) == normalized(
+                "MULTIPOLYGON (" *
+                "(" *
+                "(" *
+                "0 4 8," *
+                "2 4 8," *
+                "4 4 8," *
+                "4 2 8," *
+                "4 0 8," *
+                "2 0 8," *
+                "0 0 8," *
+                "0 2 8," *
+                "0 4 8)," *
+                "(" *
+                "3 1 8," *
+                "3 3 8," *
+                "1 3 8," *
+                "1 1 8," *
+                "3 1 8))," *
+                "(" *
+                "(" *
+                "10 4 8," *
+                "12 4 8," *
+                "14 4 8," *
+                "14 2 8," *
+                "14 0 8," *
+                "12 0 8," *
+                "10 0 8," *
+                "10 2 8," *
+                "10 4 8)," *
+                "(" *
+                "13 1 8," *
+                "13 3 8," *
+                "11 3 8," *
+                "11 1 8," *
+                "13 1 8)))",
+            )
             @test typeof(result) == AG.Geometry{AG.wkbMultiPolygon25D}
         end
 
-        @test AG.toWKT(AG.symdifference(geom1, geom2)) ==
-              "GEOMETRYCOLLECTION (" *
-              "POLYGON (" *
-              "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-              "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-              "POLYGON (" *
-              "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-              "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
-              "POINT (2 5 8),POINT (3 6 9))"
+        @test normalized(AG.symdifference(geom1, geom2)) == normalized(
+            "GEOMETRYCOLLECTION (" *
+            "POLYGON (" *
+            "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+            "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+            "POLYGON (" *
+            "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+            "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+            "POINT (2 5 8),POINT (3 6 9))",
+        )
         AG.symdifference(geom1, geom2) do result
             @test GI.geomtrait(result) == GI.GeometryCollectionTrait()
-            @test AG.toWKT(result) ==
-                  "GEOMETRYCOLLECTION (" *
-                  "POLYGON (" *
-                  "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-                  "POLYGON (" *
-                  "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
-                  "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
-                  "POINT (2 5 8)," *
-                  "POINT (3 6 9))"
+            @test normalized(result) == normalized(
+                "GEOMETRYCOLLECTION (" *
+                "POLYGON (" *
+                "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                "POLYGON (" *
+                "(10 4 8,14 4 8,14 0 8,10 0 8,10 4 8)," *
+                "(13 1 8,13 3 8,11 3 8,11 1 8,13 1 8))," *
+                "POINT (2 5 8)," *
+                "POINT (3 6 9))",
+            )
             AG.removegeom!(result, 1)
-            @test AG.toWKT(result) ==
-                  "GEOMETRYCOLLECTION (" *
-                  "POLYGON (" *
-                  "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
-                  "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
-                  "POINT (2 5 8)," *
-                  "POINT (3 6 9))"
+            @test normalized(result) == normalized(
+                "GEOMETRYCOLLECTION (" *
+                "POLYGON (" *
+                "(0 4 8,4 4 8,4 0 8,0 0 8,0 4 8)," *
+                "(3 1 8,3 3 8,1 3 8,1 1 8,3 1 8))," *
+                "POINT (2 5 8)," *
+                "POINT (3 6 9))",
+            )
             AG.removeallgeoms!(result)
             @test AG.toWKT(result) == "GEOMETRYCOLLECTION EMPTY"
             @test typeof(result) == AG.Geometry{AG.wkbGeometryCollection25D}
