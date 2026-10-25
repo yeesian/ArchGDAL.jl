@@ -392,10 +392,14 @@ it in environment variables.
 the value associated to the key, or the default value if not found.
 """
 function getconfigoption(option::AbstractString, default = C_NULL)::String
+    # GDAL would return a pointer to `default`, which may be freed before it's
+    # copied, so the default is applied here instead
     result =
-        @gdal(CPLGetConfigOption::Cstring, option::Cstring, default::Cstring)
-    return (result == C_NULL) ? "" : unsafe_string(result)
+        @gdal(CPLGetConfigOption::Cstring, option::Cstring, C_NULL::Cstring)
+    return (result == C_NULL) ? _default(default) : unsafe_string(result)
 end
+
+_default(default) = default == C_NULL ? "" : String(default)
 
 """
     setthreadconfigoption(option::AbstractString, value)
@@ -440,7 +444,7 @@ function getthreadconfigoption(option::AbstractString, default = C_NULL)::String
     result = @gdal(
         CPLGetThreadLocalConfigOption::Cstring,
         option::Cstring,
-        default::Cstring
+        C_NULL::Cstring
     )
-    return (result == C_NULL) ? "" : unsafe_string(result)
+    return (result == C_NULL) ? _default(default) : unsafe_string(result)
 end

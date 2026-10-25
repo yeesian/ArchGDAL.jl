@@ -14,6 +14,13 @@ import ArchGDAL as AG
         @test AG.getthreadconfigoption("GDAL_CACHEMAX") == "32"
         AG.clearthreadconfigoption("GDAL_CACHEMAX")
         @test AG.getthreadconfigoption("GDAL_CACHEMAX", "128") == "128"
+        # A default that ccall would have to convert to a String first
+        @test AG.getconfigoption("GDAL_CACHEMAX", SubString("cache 128", 7)) ==
+              "128"
+        @test AG.getthreadconfigoption(
+            "GDAL_CACHEMAX",
+            SubString("cache 128", 7),
+        ) == "128"
 
         @test AG.getconfigoption("GDAL_CACHEMAX") == ""
         @test AG.getconfigoption("CPL_LOG_ERRORS") == ""
