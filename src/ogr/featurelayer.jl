@@ -543,7 +543,7 @@ Returns a view of the schema information for this layer.
 The `featuredefn` is owned by the `layer` and should not be modified.
 """
 layerdefn(layer::AbstractFeatureLayer)::IFeatureDefnView =
-    IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer))
+    IFeatureDefnView(GDAL.ogr_l_getlayerdefn(layer), ownedby = layer)
 
 """
     findfieldindex(layer::AbstractFeatureLayer,

@@ -117,7 +117,7 @@ an handle to the field definition (from the `FeatureDefn`). This is an
 internal reference, and should not be deleted or modified.
 """
 getfielddefn(feature::AbstractFeature, i::Integer)::IFieldDefnView =
-    IFieldDefnView(GDAL.ogr_f_getfielddefnref(feature, i))
+    IFieldDefnView(GDAL.ogr_f_getfielddefnref(feature, i), ownedby = feature)
 
 """
     findfieldindex(feature::AbstractFeature, name::Union{AbstractString, Symbol})
@@ -867,7 +867,10 @@ The field definition (from the OGRFeatureDefn). This is an
 internal reference, and should not be deleted or modified.
 """
 function getgeomdefn(feature::AbstractFeature, i::Integer)::IGeomFieldDefnView
-    return IGeomFieldDefnView(GDAL.ogr_f_getgeomfielddefnref(feature, i))
+    return IGeomFieldDefnView(
+        GDAL.ogr_f_getgeomfielddefnref(feature, i),
+        ownedby = feature,
+    )
 end
 
 """
