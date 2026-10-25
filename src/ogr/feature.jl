@@ -331,20 +331,21 @@ asstring(feature::AbstractFeature, i::Integer)::String =
 Fetch field value as a list of integers.
 
 ### Parameters
-* `hFeat`: handle to the feature that owned the field.
-* `iField`: the field to fetch, from 0 to GetFieldCount()-1.
-* `pnCount`: an integer to put the list count (number of integers) into.
+* `feature`: the feature that owns the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
 
 ### Returns
-the field value. This list is internal, and should not be modified, or freed.
-Its lifetime may be very brief. If *pnCount is zero on return the returned
-pointer may be NULL or non-NULL.
+A copy of the field value as a Julia vector, independent of the feature.
+The returned vector may be modified and remains valid after the feature is
+modified or destroyed. An empty field returns an empty vector.
 """
 function asintlist(feature::AbstractFeature, i::Integer)::Vector{Int32}
     n = Ref{Cint}()
-    ptr = GDAL.ogr_f_getfieldasintegerlist(feature, i, n)
-    return (n.x == 0) ? Int32[] :
-           Base.copy(unsafe_wrap(Vector{Int32}, ptr, n.x))
+    return GC.@preserve feature begin
+        ptr = GDAL.ogr_f_getfieldasintegerlist(feature, i, n)
+        return (n.x == 0) ? Int32[] :
+               Base.copy(unsafe_wrap(Vector{Int32}, ptr, n.x))
+    end
 end
 
 """
@@ -353,20 +354,21 @@ end
 Fetch field value as a list of 64 bit integers.
 
 ### Parameters
-* `hFeat`: handle to the feature that owned the field.
-* `iField`: the field to fetch, from 0 to GetFieldCount()-1.
-* `pnCount`: an integer to put the list count (number of integers) into.
+* `feature`: the feature that owns the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
 
 ### Returns
-the field value. This list is internal, and should not be modified, or freed.
-Its lifetime may be very brief. If *pnCount is zero on return the returned
-pointer may be NULL or non-NULL.
+A copy of the field value as a Julia vector, independent of the feature.
+The returned vector may be modified and remains valid after the feature is
+modified or destroyed. An empty field returns an empty vector.
 """
 function asint64list(feature::AbstractFeature, i::Integer)::Vector{Int64}
     n = Ref{Cint}()
-    ptr = GDAL.ogr_f_getfieldasinteger64list(feature, i, n)
-    return (n.x == 0) ? Int64[] :
-           Base.copy(unsafe_wrap(Vector{Int64}, ptr, n.x))
+    return GC.@preserve feature begin
+        ptr = GDAL.ogr_f_getfieldasinteger64list(feature, i, n)
+        return (n.x == 0) ? Int64[] :
+               Base.copy(unsafe_wrap(Vector{Int64}, ptr, n.x))
+    end
 end
 
 """
@@ -375,20 +377,21 @@ end
 Fetch field value as a list of doubles.
 
 ### Parameters
-* `hFeat`: handle to the feature that owned the field.
-* `iField`: the field to fetch, from 0 to GetFieldCount()-1.
-* `pnCount`: an integer to put the list count (number of doubles) into.
+* `feature`: the feature that owns the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
 
 ### Returns
-the field value. This list is internal, and should not be modified, or freed.
-Its lifetime may be very brief. If *pnCount is zero on return the returned
-pointer may be NULL or non-NULL.
+A copy of the field value as a Julia vector, independent of the feature.
+The returned vector may be modified and remains valid after the feature is
+modified or destroyed. An empty field returns an empty vector.
 """
 function asdoublelist(feature::AbstractFeature, i::Integer)::Vector{Float64}
     n = Ref{Cint}()
-    ptr = GDAL.ogr_f_getfieldasdoublelist(feature, i, n)
-    return (n.x == 0) ? Float64[] :
-           Base.copy(unsafe_wrap(Vector{Float64}, ptr, n.x))
+    return GC.@preserve feature begin
+        ptr = GDAL.ogr_f_getfieldasdoublelist(feature, i, n)
+        return (n.x == 0) ? Float64[] :
+               Base.copy(unsafe_wrap(Vector{Float64}, ptr, n.x))
+    end
 end
 
 """
@@ -413,18 +416,21 @@ asstringlist(feature::AbstractFeature, i::Integer)::Vector{String} =
 Fetch field value as binary.
 
 ### Parameters
-* `hFeat`: handle to the feature that owned the field.
-* `iField`: the field to fetch, from 0 to GetFieldCount()-1.
+* `feature`: the feature that owns the field.
+* `i`: the field to fetch, from 0 to GetFieldCount()-1.
 
 ### Returns
-the field value. This list is internal, and should not be modified, or freed.
-Its lifetime may be very brief.
+A copy of the field value as a Julia vector, independent of the feature.
+The returned vector may be modified and remains valid after the feature is
+modified or destroyed. An empty field returns an empty vector.
 """
 function asbinary(feature::AbstractFeature, i::Integer)::Vector{UInt8}
     n = Ref{Cint}()
-    ptr = GDAL.ogr_f_getfieldasbinary(feature, i, n)
-    return (n.x == 0) ? UInt8[] :
-           Base.copy(unsafe_wrap(Vector{UInt8}, ptr, n.x))
+    return GC.@preserve feature begin
+        ptr = GDAL.ogr_f_getfieldasbinary(feature, i, n)
+        return (n.x == 0) ? UInt8[] :
+               Base.copy(unsafe_wrap(Vector{UInt8}, ptr, n.x))
+    end
 end
 
 """
