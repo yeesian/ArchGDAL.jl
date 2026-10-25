@@ -19,6 +19,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Changed
 
 - JuliaFormatter formatted the Julia source and tests. [#495](https://github.com/yeesian/ArchGDAL.jl/pull/495), [#502](https://github.com/yeesian/ArchGDAL.jl/pull/502)
+- With GEOS_jll 3.15, overlay operations such as `union`, `intersection`, `difference` and `symdifference` no longer rotate rings by one vertex ([libgeos/geos#1412](https://github.com/libgeos/geos/pull/1412)), so their rings can start at a different vertex than before. The tests compare normalized geometries, so they pass with both GEOS versions. [#517](https://github.com/yeesian/ArchGDAL.jl/pull/517)
 
 ## [0.10.12] - 2026-08-13
 
