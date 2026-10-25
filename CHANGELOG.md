@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The CompatHelper workflow avoids Julia version parsing failures. [#499](https://github.com/yeesian/ArchGDAL.jl/pull/499)
+- Feature and field definition views from `layerdefn`, `getfeaturedefn`, `getfielddefn` and `getgeomdefn` keep the layer or feature that owns them alive, so they no longer read freed memory once their dataset is collected. [#518](https://github.com/yeesian/ArchGDAL.jl/pull/518)
 
 ### Changed
 
