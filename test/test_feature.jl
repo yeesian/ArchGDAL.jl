@@ -385,4 +385,28 @@ end
             @test AG.nfeature(layer) == 3
         end
     end
+
+    @testset "List fields are copied out of the feature" begin
+        AG.create(AG.getdriver("MEMORY")) do output
+            layer = AG.createlayer(dataset = output, geom = AG.wkbPoint)
+            AG.addfielddefn!(layer, "ints", AG.OFTIntegerList)
+            AG.addfielddefn!(layer, "int64s", AG.OFTInteger64List)
+            AG.addfielddefn!(layer, "doubles", AG.OFTRealList)
+            AG.createfeature(layer) do feature
+                AG.setfield!(feature, 0, Int32[1, 2])
+                AG.setfield!(feature, 1, Int64[1, 2])
+                AG.setfield!(feature, 2, Float64[1, 2])
+                ints = AG.asintlist(feature, 0)
+                int64s = AG.asint64list(feature, 1)
+                doubles = AG.asdoublelist(feature, 2)
+                # GDAL frees the old lists when the fields are set again
+                AG.setfield!(feature, 0, Int32[3, 4])
+                AG.setfield!(feature, 1, Int64[3, 4])
+                AG.setfield!(feature, 2, Float64[3, 4])
+                @test ints == Int32[1, 2]
+                @test int64s == Int64[1, 2]
+                @test doubles == Float64[1, 2]
+            end
+        end
+    end
 end
