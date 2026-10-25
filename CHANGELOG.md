@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The CompatHelper workflow avoids Julia version parsing failures. [#499](https://github.com/yeesian/ArchGDAL.jl/pull/499)
+- `toWKT`, `toPROJ4`, `toXML` and `toMICoordSys` for spatial references free the string GDAL allocates for the result, so they no longer leak memory. [#520](https://github.com/yeesian/ArchGDAL.jl/pull/520)
 
 ### Changed
 
