@@ -392,8 +392,10 @@ it in environment variables.
 the value associated to the key, or the default value if not found.
 """
 function getconfigoption(option::AbstractString, default = C_NULL)::String
-    # GDAL would return a pointer to `default`, which may be freed before it's
-    # copied, so the default is applied here instead
+    # If the option isn't set, GDAL returns the `default` pointer it was given.
+    # A non-String `default` is passed as a temporary String copy, and nothing
+    # keeps that copy alive after the call, so the garbage collector can free
+    # it before unsafe_string has read it. So the default is applied here.
     result =
         @gdal(CPLGetConfigOption::Cstring, option::Cstring, C_NULL::Cstring)
     return (result == C_NULL) ? _default(default) : unsafe_string(result)
