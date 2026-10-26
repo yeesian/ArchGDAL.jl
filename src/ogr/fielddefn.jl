@@ -263,11 +263,11 @@ Get default field value
 * https://gdal.org/development/rfc/rfc53_ogr_notnull_default.html
 """
 function getdefault(fielddefn::AbstractFieldDefn)::Union{String,Nothing}
-    result = @gdal(OGR_Fld_GetDefault::Cstring, fielddefn::GDAL.OGRFieldDefnH)
-    return if result == C_NULL
-        nothing
-    else
-        unsafe_string(result)
+    # keep the field definition, which owns the string, alive until it's copied
+    return GC.@preserve fielddefn begin
+        result =
+            @gdal(OGR_Fld_GetDefault::Cstring, fielddefn::GDAL.OGRFieldDefnH)
+        result == C_NULL ? nothing : unsafe_string(result)
     end
 end
 
