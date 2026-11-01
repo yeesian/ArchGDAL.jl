@@ -15,6 +15,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Fixed
 
 - The CompatHelper workflow avoids Julia version parsing failures. [#499](https://github.com/yeesian/ArchGDAL.jl/pull/499)
+- `GeoInterface.coordnames` and `GeoInterface.ncoord` include M for measured geometries, and the points of measured lines include their M value. [#521](https://github.com/yeesian/ArchGDAL.jl/pull/521)
 
 ### Changed
 
