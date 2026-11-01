@@ -85,7 +85,14 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     end
 
     function GeoInterface.ncoord(::GeometryTraits, geom::AbstractGeometry)
-        return getcoorddim(geom)
+        return 2 + is3d(geom) + ismeasured(geom)
+    end
+    function GeoInterface.coordnames(::GeometryTraits, geom::AbstractGeometry)
+        if is3d(geom)
+            return ismeasured(geom) ? (:X, :Y, :Z, :M) : (:X, :Y, :Z)
+        else
+            return ismeasured(geom) ? (:X, :Y, :M) : (:X, :Y)
+        end
     end
 
     function GeoInterface.x(
@@ -160,19 +167,24 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     )
         return getgeom(geom, i - 1)
     end
-    # Return a tuple point rather than a GDAL point
+    # Return a tuple point rather than a GDAL point, with the coordinates
+    # in the order of `GeoInterface.coordnames(geom)`
+    function _pointtuple(geom::AbstractGeometry, i::Integer, refs)
+        x, y, z = getpoint!(geom, i, refs...)
+        if is3d(geom)
+            return ismeasured(geom) ? (x, y, z, getm(geom, i)) : (x, y, z)
+        else
+            return ismeasured(geom) ? (x, y, getm(geom, i)) : (x, y)
+        end
+    end
     function GeoInterface.getgeom(
         ::GeoInterface.LineStringTrait,
         geom::AbstractGeometry,
         i::Integer,
     )
         # This allocates 3 refs, best to use the iterator method instead
-        p = getpoint(geom, i - 1)
-        if is3d(geom)
-            return (p[1], p[2], p[3])
-        else
-            return (p[1], p[2])
-        end
+        refs = Ref{Float64}(), Ref{Float64}(), Ref{Float64}()
+        return _pointtuple(geom, i - 1, refs)
     end
     # Preallocate `Ref`s to reduce allocations.
     function GeoInterface.getgeom(
@@ -181,17 +193,9 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     )
         # We need three refs, even for 2d points
         refs = Ref{Float64}(), Ref{Float64}(), Ref{Float64}()
-        if is3d(geom)
-            return (
-                (p = getpoint!(geom, i - 1, refs...); (p[1], p[2], p[3])) for
-                i in 1:GeoInterface.npoint(geom)
-            )
-        else
-            return (
-                (p = getpoint!(geom, i - 1, refs...); (p[1], p[2])) for
-                i in 1:GeoInterface.npoint(geom)
-            )
-        end
+        return (
+            _pointtuple(geom, i - 1, refs) for i in 1:GeoInterface.npoint(geom)
+        )
     end
 
     # Operations
