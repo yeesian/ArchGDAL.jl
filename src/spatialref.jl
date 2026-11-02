@@ -636,19 +636,19 @@ end
 Export EPSG code for this coordinate system if available.
 """
 function toEPSG(spref::AbstractSpatialRef)::Int64
-    result = GDAL.osrgetauthorityname(spref.ptr, "PROJCS")
+    result = GDAL.osrgetauthorityname(spref, "PROJCS")
 
     if !isnothing(result)
         projcs = "PROJCS"
     else
-        result = GDAL.osrgetauthorityname(spref.ptr, "GEOGCS")
+        result = GDAL.osrgetauthorityname(spref, "GEOGCS")
         projcs = "GEOGCS"
     end
 
     if isnothing(result)
         error("No PROJCS or GEOGCS Authority found")
     elseif result == "EPSG"
-        epsg = GDAL.osrgetauthoritycode(spref.ptr, projcs)
+        epsg = GDAL.osrgetauthoritycode(spref, projcs)
         epsg = parse(Int64, epsg)
         return epsg
     else
@@ -845,7 +845,7 @@ function transform!(
     n = length(xvertices)
     @assert length(yvertices) == n
     @assert length(zvertices) == n
-    return Bool(
+    return GC.@preserve xvertices yvertices zvertices Bool(
         GDAL.octtransform(
             obj,
             n,
