@@ -7,6 +7,52 @@ using FixedPointNumbers
     MyEnumValue = false
 end
 
+# Force collection between the GDAL getter and the copy without relying on
+# allocation pressure or reading a buffer that a finalizer has already freed.
+mutable struct ListFeature{T} <: AG.AbstractFeature
+    values::Vector{T}
+    collected::Base.RefValue{Bool}
+end
+
+struct ListPointer{T}
+    ptr::Ptr{T}
+    collected::Base.RefValue{Bool}
+end
+
+function temporarylistfeature(values, collected)
+    feature = ListFeature(values, collected)
+    finalizer(feature) do f
+        f.collected[] = true
+    end
+    return feature
+end
+
+@noinline function listfromtemporary(getter::F, values, collected) where {F}
+    return getter(temporarylistfeature(values, collected), 0)
+end
+
+for getter in (
+    :ogr_f_getfieldasintegerlist,
+    :ogr_f_getfieldasinteger64list,
+    :ogr_f_getfieldasdoublelist,
+    :ogr_f_getfieldasbinary,
+)
+    @eval function AG.GDAL.$getter(feature::ListFeature, i, n)
+        n[] = length(feature.values)
+        return ListPointer(pointer(feature.values), feature.collected)
+    end
+end
+
+@noinline function Base.unsafe_wrap(
+    ::Type{Vector{T}},
+    ptr::ListPointer{T},
+    n::Integer,
+) where {T}
+    GC.gc()
+    @test !ptr.collected[]
+    return unsafe_wrap(Vector{T}, ptr.ptr, n)
+end
+
 @testset "test_feature.jl" begin
     AG.read("data/point.geojson") do dataset
         layer = AG.getlayer(dataset, 0)
@@ -383,6 +429,59 @@ end
                 @test AG.nfeature(layer) == 2
             end
             @test AG.nfeature(layer) == 3
+        end
+    end
+
+    @testset "List getters preserve temporary features through the copy" begin
+        for (getter, values) in (
+            (AG.asintlist, Int32[1, 2]),
+            (AG.asint64list, Int64[1, 2]),
+            (AG.asdoublelist, Float64[1, 2]),
+            (AG.asbinary, UInt8[1, 2]),
+        )
+            collected = Ref(false)
+            # Keep the backing buffer safe even if the lifetime assertion fails.
+            GC.@preserve values begin
+                result = listfromtemporary(getter, values, collected)
+                @test result == values
+                result[1] = 0
+                @test values[1] == 1
+            end
+            GC.gc()
+            @test collected[]
+        end
+    end
+
+    @testset "List fields are copied out of the feature" begin
+        AG.create(AG.getdriver("MEMORY")) do output
+            layer = AG.createlayer(dataset = output, geom = AG.wkbPoint)
+            AG.addfielddefn!(layer, "ints", AG.OFTIntegerList)
+            AG.addfielddefn!(layer, "int64s", AG.OFTInteger64List)
+            AG.addfielddefn!(layer, "doubles", AG.OFTRealList)
+            AG.addfielddefn!(layer, "binary", AG.OFTBinary)
+            AG.createfeature(layer) do feature
+                @test AG.asintlist(feature, 0) == Int32[]
+                @test AG.asint64list(feature, 1) == Int64[]
+                @test AG.asdoublelist(feature, 2) == Float64[]
+                @test AG.asbinary(feature, 3) == UInt8[]
+                AG.setfield!(feature, 0, Int32[1, 2])
+                AG.setfield!(feature, 1, Int64[1, 2])
+                AG.setfield!(feature, 2, Float64[1, 2])
+                AG.setfield!(feature, 3, UInt8[1, 2])
+                ints = AG.asintlist(feature, 0)
+                int64s = AG.asint64list(feature, 1)
+                doubles = AG.asdoublelist(feature, 2)
+                binary = AG.asbinary(feature, 3)
+                # GDAL frees the old lists when the fields are set again
+                AG.setfield!(feature, 0, Int32[3, 4])
+                AG.setfield!(feature, 1, Int64[3, 4])
+                AG.setfield!(feature, 2, Float64[3, 4])
+                AG.setfield!(feature, 3, UInt8[3, 4])
+                @test ints == Int32[1, 2]
+                @test int64s == Int64[1, 2]
+                @test doubles == Float64[1, 2]
+                @test binary == UInt8[1, 2]
+            end
         end
     end
 end
