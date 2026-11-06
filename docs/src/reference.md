@@ -4,7 +4,7 @@
 
 ```@autodocs
 Modules = [ArchGDAL]
-Pages   = ["ArchGDAL.jl", "display.jl", "iterators.jl", "types.jl", "utils.jl"]
+Pages   = ["ArchGDAL.jl", "display.jl", "iterators.jl", "src/types.jl", "utils.jl"]
 ```
 
 ## [GDAL Constants](@id API-GDAL-Constants)
@@ -38,7 +38,14 @@ Pages   = ["tables.jl"]
 
 ```@autodocs
 Modules = [ArchGDAL]
-Pages   = ["array.jl", "colortable.jl", "rasterattributetable.jl", "rasterband.jl", "rasterio.jl"]
+Pages   = ["raster/array.jl", "colortable.jl", "rasterattributetable.jl", "rasterband.jl", "rasterio.jl"]
+```
+
+## [Multidimensional Arrays](@id API-Multidimensional-Arrays)
+
+```@autodocs
+Modules = [ArchGDAL]
+Pages   = ["mdarray/attribute.jl", "mdarray/dimension.jl", "mdarray/extendeddatatype.jl", "mdarray/global.jl", "mdarray/group.jl", "mdarray/highlevel.jl", "mdarray/mdarray.jl", "mdarray/types.jl"]
 ```
 
 ## [Spatial Projections](@id API-Spatial-Projections)
