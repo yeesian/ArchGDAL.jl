@@ -22,7 +22,7 @@ end
 function temporarylistfeature(values, collected)
     feature = ListFeature(values, collected)
     finalizer(feature) do f
-        f.collected[] = true
+        return f.collected[] = true
     end
     return feature
 end
