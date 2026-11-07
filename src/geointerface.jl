@@ -365,7 +365,7 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
     function GeoInterface.geomtrait(
         geom::Union{map(T -> AbstractGeometry{T}, linetypes)...},
     )
-        return GeoInterface.LineStringTrait()
+        return isring(geom) ? GeoInterface.LinearRingTrait() : GeoInterface.LineStringTrait()
     end
     function GeoInterface.geomtrait(
         geom::Union{map(T -> AbstractGeometry{T}, multilinetypes)...},
