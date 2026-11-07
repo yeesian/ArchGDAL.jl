@@ -351,6 +351,19 @@ let pointtypes = (wkbPoint, wkbPoint25D, wkbPointM, wkbPointZM),
         )
         return f(GeoInterface.coordinates(geom))
     end
+    function GeoInterface.convert(
+        ::Type{T},
+        type::GeoInterface.GeometryCollectionTrait,
+        geom,
+    ) where {T<:IGeometry}
+        collection = creategeomcollection()
+        map(GeoInterface.getgeom(geom)) do g
+            trait = GeoInterface.geomtrait(g)
+            t = geointerface_geomtype(trait)
+            addgeom!(collection, GeoInterface.convert(t, trait, g))
+        end
+        return collection
+    end
 
     function GeoInterface.geomtrait(
         geom::Union{map(T -> AbstractGeometry{T}, pointtypes)...},
