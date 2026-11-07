@@ -588,6 +588,13 @@ importURL(url::AbstractString; kwargs...)::ISpatialRef =
 unsafe_importURL(url::AbstractString; kwargs...)::SpatialRef =
     importURL!(unsafe_newspatialref(; kwargs...), url)
 
+# Copy a string that GDAL allocated for the caller, and free it
+function takestring(ptr::Cstring)::String
+    str = unsafe_string(ptr)
+    GDAL.vsifree(pointer(ptr))
+    return str
+end
+
 """
     toWKT(spref::AbstractSpatialRef)
 
@@ -597,7 +604,7 @@ function toWKT(spref::AbstractSpatialRef)::String
     wktptr = Ref{Cstring}()
     result = GDAL.osrexporttowkt(spref, wktptr)
     @ogrerr result "Failed to convert this SRS into WKT format"
-    return unsafe_string(wktptr[])
+    return takestring(wktptr[])
 end
 
 """
@@ -615,7 +622,7 @@ function toWKT(spref::AbstractSpatialRef, simplify::Bool)::String
     result = GDAL.osrexporttoprettywkt(spref, wktptr, simplify)
 
     @ogrerr result "Failed to convert this SRS into pretty WKT"
-    return unsafe_string(wktptr[])
+    return takestring(wktptr[])
 end
 
 """
@@ -627,7 +634,7 @@ function toPROJ4(spref::AbstractSpatialRef)::String
     projptr = Ref{Cstring}()
     result = GDAL.osrexporttoproj4(spref, projptr)
     @ogrerr result "Failed to export this SRS to PROJ.4 format"
-    return unsafe_string(projptr[])
+    return takestring(projptr[])
 end
 
 """
@@ -669,7 +676,7 @@ function toXML(spref::AbstractSpatialRef)::String
     xmlptr = Ref{Cstring}()
     result = GDAL.osrexporttoxml(spref, xmlptr, C_NULL)
     @ogrerr result "Failed to convert this SRS into XML"
-    return unsafe_string(xmlptr[])
+    return takestring(xmlptr[])
 end
 
 """
@@ -681,7 +688,7 @@ function toMICoordSys(spref::AbstractSpatialRef)::String
     ptr = Ref{Cstring}()
     result = GDAL.osrexporttomicoordsys(spref, ptr)
     @ogrerr result "Failed to convert this SRS into XML"
-    return unsafe_string(ptr[])
+    return takestring(ptr[])
 end
 
 """
