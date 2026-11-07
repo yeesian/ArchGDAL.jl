@@ -16,6 +16,7 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 - The CompatHelper workflow avoids Julia version parsing failures. [#499](https://github.com/yeesian/ArchGDAL.jl/pull/499)
 - Arrays passed to GDAL by pointer are kept alive during the call, so `setgeotransform!` with an array literal works on Julia 1.13. List and binary field getters return copies instead of GDAL's internal memory, and geotransform functions check for six values. [#516](https://github.com/yeesian/ArchGDAL.jl/pull/516)
+- `getdefault`, `getconfigoption` and `getthreadconfigoption` keep the owner of the string GDAL returns alive until it's copied. [#519](https://github.com/yeesian/ArchGDAL.jl/pull/519)
 
 ### Changed
 
