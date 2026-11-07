@@ -1014,6 +1014,41 @@ import JLD2
             @test !GI.ismeasured(point)
             @test !GI.is3d(point)
         end
+        for (wkt, names, points) in (
+            ("POINT M (1 2 3)", (:X, :Y, :M), nothing),
+            ("POINT ZM (1 2 3 4)", (:X, :Y, :Z, :M), nothing),
+            ("LINESTRING (1 2, 4 5)", (:X, :Y), [(1, 2), (4, 5)]),
+            (
+                "LINESTRING Z (1 2 3, 4 5 6)",
+                (:X, :Y, :Z),
+                [(1, 2, 3), (4, 5, 6)],
+            ),
+            (
+                "LINESTRING M (1 2 3, 4 5 6)",
+                (:X, :Y, :M),
+                [(1, 2, 3), (4, 5, 6)],
+            ),
+            (
+                "LINESTRING ZM (1 2 3 4, 5 6 7 8)",
+                (:X, :Y, :Z, :M),
+                [(1, 2, 3, 4), (5, 6, 7, 8)],
+            ),
+        )
+            AG.fromWKT(wkt) do geom
+                @test GI.coordnames(geom) == names
+                @test GI.ncoord(geom) == length(names)
+                if !isnothing(points)
+                    @test GI.getpoint(geom, 2) == points[2]
+                    @test collect(GI.getpoint(geom)) == points
+                end
+            end
+        end
+        AG.fromWKT("POLYGON M ((0 0 1, 1 0 2, 1 1 3, 0 0 1))") do polygon
+            ring = GI.getgeom(polygon, 1)
+            @test GI.coordnames(ring) == (:X, :Y, :M)
+            @test collect(GI.getpoint(ring)) ==
+                  [(0, 0, 1), (1, 0, 2), (1, 1, 3), (0, 0, 1)]
+        end
     end
 
     @testset "GeoInterface conversion" begin
