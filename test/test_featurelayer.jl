@@ -1,6 +1,13 @@
 using Test
 import ArchGDAL as AG
 
+# Views of a dataset that only the view refers to
+@noinline layerdefn_of(file) = AG.layerdefn(AG.getlayer(AG.read(file), 0))
+@noinline fielddefn_of(file) = AG.getfielddefn(layerdefn_of(file), 1)
+@noinline geomdefn_of(file) = AG.getgeomdefn(layerdefn_of(file), 0)
+@noinline featurefielddefn_of(file) =
+    AG.getfielddefn(first(AG.getlayer(AG.read(file), 0)), 1)
+
 @testset "test_featurelayer.jl" begin
     @testset "Testing FeatureLayer Methods" begin
         AG.read("data/point.geojson") do dataset
@@ -213,6 +220,18 @@ import ArchGDAL as AG
             @test sprint(print, AG.envelope(layer, true)) ==
                   "GDAL.OGREnvelope(100.0, 100.2785, 0.0, 0.0893)"
         end
+    end
+
+    @testset "Views keep the dataset alive" begin
+        featuredefn = layerdefn_of("data/point.geojson")
+        fielddefn = fielddefn_of("data/point.geojson")
+        geomdefn = geomdefn_of("data/point.geojson")
+        featurefielddefn = featurefielddefn_of("data/point.geojson")
+        GC.gc()
+        @test AG.nfield(featuredefn) == 2
+        @test AG.getname(fielddefn) == "pointname"
+        @test AG.gettype(geomdefn) == AG.wkbPoint
+        @test AG.getname(featurefielddefn) == "pointname"
     end
 
     # Not implemented yet:

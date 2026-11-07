@@ -95,7 +95,10 @@ getfielddefn(featuredefn::FeatureDefn, i::Integer)::FieldDefn =
     FieldDefn(GDAL.ogr_fd_getfielddefn(featuredefn, i))
 
 getfielddefn(featuredefn::IFeatureDefnView, i::Integer)::IFieldDefnView =
-    IFieldDefnView(GDAL.ogr_fd_getfielddefn(featuredefn, i))
+    IFieldDefnView(
+        GDAL.ogr_fd_getfielddefn(featuredefn, i),
+        ownedby = featuredefn,
+    )
 
 """
     findfieldindex(featuredefn::AbstractFeatureDefn,
@@ -276,7 +279,10 @@ getgeomdefn(featuredefn::FeatureDefn, i::Integer = 0)::GeomFieldDefn =
     GeomFieldDefn(GDAL.ogr_fd_getgeomfielddefn(featuredefn, i))
 
 getgeomdefn(featuredefn::IFeatureDefnView, i::Integer = 0)::IGeomFieldDefnView =
-    IGeomFieldDefnView(GDAL.ogr_fd_getgeomfielddefn(featuredefn, i))
+    IGeomFieldDefnView(
+        GDAL.ogr_fd_getgeomfielddefn(featuredefn, i),
+        ownedby = featuredefn,
+    )
 
 """
     findgeomindex(featuredefn::AbstractFeatureDefn, name::AbstractString = "")
@@ -370,4 +376,4 @@ end
 Fetch feature definition.
 """
 getfeaturedefn(feature::AbstractFeature)::IFeatureDefnView =
-    IFeatureDefnView(GDAL.ogr_f_getdefnref(feature))
+    IFeatureDefnView(GDAL.ogr_f_getdefnref(feature), ownedby = feature)
